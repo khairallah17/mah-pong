@@ -17,7 +17,6 @@ function Game() {
 		gameContainer?.appendChild(renderer.domElement);
 		const loader = new THREE.TextureLoader();
 		loader.load(backgroundimage, (texture) => {
-			// Once the image is loaded, set it as the background
 			scene.background = texture;
 		});
 		window.addEventListener('resize', () => {
