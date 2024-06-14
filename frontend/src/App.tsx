@@ -3,7 +3,7 @@ import reactLogo from './assets/react.svg'
 import viteLogo from '/vite.svg'
 import './App.css'
 import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-router-dom';
-import Game from './Game';
+import Game2 from './Game2';
 
 function HomePage() {
   const [count, setCount] = useState(0)
@@ -42,7 +42,7 @@ function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/game" element={<Game />} />
+        <Route path="/game" element={<Game2 />} />
         <Route path="/" element={<HomePage />} />
       </Routes>
     </Router>
