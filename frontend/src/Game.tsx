@@ -19,7 +19,8 @@ function Game() {
 		loader.load(backgroundimage, (texture) => {
 			scene.background = texture;
 		});
-		window.addEventListener('resize', () => {
+		window.addEventListener('resize', handleResize)
+		function handleResize() {
 
 			renderer.setSize(window.innerWidth, window.innerHeight);
 
@@ -27,7 +28,7 @@ function Game() {
 			camera.aspect = window.innerWidth / window.innerHeight;
 			camera.updateProjectionMatrix();
 			renderer.render(scene, camera);
-		});
+		};
 		renderer.shadowMap.enabled = true;
 		const tableGeometry = new THREE.BoxGeometry(5, 0.1, 3);
 		const tableMaterial = new THREE.MeshStandardMaterial({ color: 0x8B4513 });
@@ -135,6 +136,8 @@ function Game() {
 		animate();
 		return () => {
 			gameContainer?.removeChild(renderer.domElement);
+			window.removeEventListener('resize', handleResize);
+			renderer.dispose();
 		};
 	}, []);
 
