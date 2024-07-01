@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import axios from 'axios'
 import reactLogo from './assets/react.svg'
 import viteLogo from '/vite.svg'
 import './App.css'
@@ -38,16 +39,32 @@ function HomePage() {
   )
 }
 
+function BackendComponent() {
+  useEffect(() => {
+    axios.get('http://localhost:8000/my_endpoint/')
+      .then((response: any) => {
+        console.log(response.data)
+      })
+  }, [])
+  return (
+    <div>
+      <h1>Backend component</h1>
+    </div>
+  )
+}
+
 function App() {
   return (
     <Router>
       <Routes>
         <Route path="/game" element={<Game2 />} />
         <Route path="/" element={<HomePage />} />
+        <Route path="/backend" element={<BackendComponent />} />
       </Routes>
     </Router>
   )
 }
+
 
 
 export default App

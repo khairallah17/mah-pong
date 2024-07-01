@@ -37,7 +37,7 @@ deactivate () {
 # unset irrelevant variables
 deactivate nondestructive
 
-VIRTUAL_ENV="/goinfre/mkhairal/mah-pong/backend"
+VIRTUAL_ENV="/goinfre/alemsafi/mah-pong/backend"
 export VIRTUAL_ENV
 
 _OLD_VIRTUAL_PATH="$PATH"
