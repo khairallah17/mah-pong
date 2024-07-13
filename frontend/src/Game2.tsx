@@ -8,17 +8,13 @@ import backgroundimage from './assets/background.jpg';
 function Game2() {
     useEffect(() => {
         const gameContainer = document.getElementById("game-container");
-        let restartEvent = new KeyboardEvent('keydown', { key: 'r' });
         const loader = new GLTFLoader();
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
         camera.position.x = 0.75;
-        camera.position.y = 1.5;
+        camera.position.y = 1.25;
         camera.position.z = 1.88;
         camera.rotation.x = -0.5;
-        // camera.rotation.x = -2.59;
-        // camera.rotation.y = 0.188;
-        // camera.rotation.z = 3.02;
         const texture = new THREE.TextureLoader().load(backgroundimage);
         scene.background = texture;
         //camera.lookAt(scene.position);
@@ -37,25 +33,29 @@ function Game2() {
         let ball: THREE.Object3D;
         let table: THREE.Object3D;
         let grid: THREE.Object3D;
-        const paddleXRange = { min: -120, max: 120 };
-        const paddleYRange = { min: -20, max: 10 };
-        const paddleZRange = { min: -10, max: 80 };
         let paddleX = 0;
         let paddleY = 0;
         let paddleZ = 0;
-        //let table: THREE.Mesh;
+        let initBallPos: THREE.Vector3;
         const gravity = -0.04;
         let velocity = new THREE.Vector3(1, 1.5, 3);
-        console.log(camera.position);
-        console.log(camera.rotation);
+        let tableWidth = 148;
+        let tableLength = 67;
+        function mapRange(value: number, fromRange: { min: number, max: number }, toRange: { min: number, max: number }): number {
+            return (value - fromRange.min) * (toRange.max - toRange.min) / (fromRange.max - fromRange.min) + toRange.min;
+        }
+        function restart_game() {
+            ball.position.set(initBallPos.x, initBallPos.y, initBallPos.z);
+            velocity.set(1, 1.5, 3);
+        }
         loader.load('../models/latest.glb', (gltf) => {
             const loadedscene = gltf.scene;
             loadedscene.traverse((object) => {
                 console.log(object.name);
             });
+            scene.add(loadedscene);
             loadedscene.position.set(0, 0, 0);
             loadedscene.rotation.set(0, 0, 0);
-            scene.add(loadedscene);
             const light = new THREE.AmbientLight(0xffffff, 3);
             light.position.set(0, 10, 0);
             light.castShadow = true;
@@ -67,39 +67,40 @@ function Game2() {
             ball = loadedscene.getObjectByName('Ball') as THREE.Object3D;
             table = loadedscene.getObjectByName('table_plate') as THREE.Object3D;
             grid = loadedscene.getObjectByName('table_grid') as THREE.Object3D;
+            initBallPos = ball.position.clone();
             // Create a vector to hold the mouse position
             const mouse = new THREE.Vector2();
             let isListening = true;
 
-            function restart_game() {
-                ball.position.x = 0;
-                ball.position.y = 0;
-                ball.position.z = 0;
-                velocity = new THREE.Vector3(1, 1.5, 3);
-            }
             window.addEventListener('keydown', (event) => {
                 if (event.key.toLowerCase() == 'r')
                     restart_game();
             });
-            function mapRange(value: number, fromRange: { min: number, max: number }, toRange: { min: number, max: number }): number {
-                return (value - fromRange.min) * (toRange.max - toRange.min) / (fromRange.max - fromRange.min) + toRange.min;
-            }
             function onMouseMove(event: MouseEvent) {
                 if (isListening) {
                     mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
                     mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-                    paddleX = mapRange(mouse.x, { min: -1, max: 1 }, paddleXRange);
-                    paddleY = mapRange(mouse.y, { min: -1, max: 1 }, paddleYRange);
-                    paddleZ = mapRange(mouse.y, { min: -1, max: 1 }, paddleZRange);
-                    paddle1?.position.set(paddleX + 72.5, paddleY, -paddleZ + 60);
+                    paddleX = mapRange(mouse.x, { min: -1, max: 1 }, { min: -120, max: 120 });
+                    if (mouse.y > 0)
+                        paddleY = 10;
+                    else
+                        paddleY = mapRange(mouse.y, { min: -1, max: 0 }, { min: -10, max: 10 });
+                    paddleZ = mapRange(mouse.y, { min: -1, max: 1 }, { min: -30, max: 80 });
+                    paddle1?.position.set(paddleX + tableWidth / 2, paddleY, -paddleZ + 60);
+                    camera.position.y = mouse.y / 5 + 1.25;
+                    camera.position.z = -mouse.y / 5 + 1.88;
+                    camera.position.x = mouse.x + 0.75;
+                    camera.lookAt(table.position);
                     animatePaddleRotation();
                 }
             }
             function animatePaddleRotation() {
-                const rotation = -Math.atan2(paddle1.position.y, paddle1.position.x - 72.5);
-                const rotation2 = -Math.atan2(paddle2.position.y, paddle2.position.x - 72.5);
-                paddle1.rotation.y = rotation;
-                paddle2.rotation.y = rotation2;
+                const rotation = Math.atan2(paddle1.position.y, paddle1.position.x - tableWidth / 2);
+                const rotation2 = Math.atan2(paddle2.position.y, paddle2.position.x - tableWidth / 2);
+                // paddle1.rotation.y = rotation;
+                // paddle2.rotation.y = rotation2;
+                paddle1.rotation.z = rotation - Math.PI / 2;
+                //paddle2.rotation.z = rotation2 - Math.PI / 2;
             }
             window.addEventListener('click', () => {
                 isListening = !isListening;
@@ -112,13 +113,10 @@ function Game2() {
             console.error('An error happened', error);
         });
         function animate() {
-            const offsetX = 0;
-            const offsetY = 5;
-            const offsetZ = 10;
-            //camera.position.x = paddle1.position.x + offsetX;
-            //camera.position.y = paddle1.position.y + offsetY;
-            //camera.position.z = paddle1.position.z + offsetZ;
-            //camera.lookAt(ball.position);
+            const speed = 2;
+            const distanceToBall = ball.position.x - paddle2.position.x;
+            const speedModifier = Math.min(Math.abs(distanceToBall) / 10, 1);
+            paddle2.position.x += Math.sign(distanceToBall) * speed * speedModifier;
             const ballBox = new THREE.Box3().setFromObject(ball);
             const paddle1Box = new THREE.Box3().setFromObject(paddle1);
             paddle1Box.expandByScalar(0.05);
@@ -126,8 +124,6 @@ function Game2() {
             paddle2Box.expandByScalar(0.05);
             const tableBox = new THREE.Box3().setFromObject(table);
             const gridBox = new THREE.Box3().setFromObject(grid);
-            let tableWidth = 145;
-            let tableLength = 67;
             ball.position.x += velocity.x;
             ball.position.y += velocity.y;
             ball.position.z += velocity.z;
@@ -153,30 +149,26 @@ function Game2() {
             }
             if (ball.position.z > tableLength){
                 //player 1 scores
-                document.dispatchEvent(restartEvent);
+                restart_game();
             }
             if (ball.position.z < - (3 * tableLength)) {
                 //player 2 scores
-                document.dispatchEvent(restartEvent);
+                restart_game();
             }
             if (ballBox.intersectsBox(paddle1Box)) {
-                const relativePosition = ball.position.clone().sub(paddle1.position);
-                velocity.x = relativePosition.x;
-                velocity.z = relativePosition.z;
-                // velocity.y *= -1;
+                const relativePosition = ball.position.clone().sub(table.position);
+                velocity.x = -mapRange(relativePosition.x - tableWidth / 2, { min: -tableWidth / 2, max: tableWidth / 2 }, { min: -2, max: 2 });
+                velocity.z = -mapRange(relativePosition.z,  { min: 0, max: tableLength }, { min: -2, max: 2 });
+                velocity.y = 1;
 
-                const maxVelocityX = 0.5;
-                const maxVelocityZ = 4;
-                if (Math.abs(velocity.x) > maxVelocityX) {
-                    velocity.x = Math.sign(velocity.x) * maxVelocityX;
-                }
+                const maxVelocityZ = 3;
                 if (Math.abs(velocity.z) > maxVelocityZ) {
                     velocity.z = Math.sign(velocity.z) * maxVelocityZ;
                 }
                 gsap.to(paddle1.scale, {
-                    x: Math.PI / 4,
+                    x: 120,
                     z: 120,
-                    y: 120,
+                    y: Math.PI / 4,
                     duration: 0.1,
                     onComplete: () => {
                         gsap.to(paddle1.scale, {
@@ -189,26 +181,22 @@ function Game2() {
                 });
             }
             if (ballBox.intersectsBox(paddle2Box)) {
-                const relativePosition = ball.position.clone().sub(paddle2.position);
-                velocity.x = relativePosition.x;
-                velocity.z = relativePosition.z;
-                // velocity.y *= -1;
+                const relativePosition = ball.position.clone().sub(table.position);
+                velocity.x = -mapRange(relativePosition.x - tableWidth / 2, { min: -tableWidth / 2, max: tableWidth / 2 }, { min: -1, max: 1 });
+                velocity.z = -mapRange(relativePosition.z, { min: 0, max: tableLength }, { min: -2, max: 2 });
+                velocity.y = 1;
 
-                const maxVelocityX = 0.5;
-                const maxVelocityZ = 4;
-                if (Math.abs(velocity.x) > maxVelocityX) {
-                    velocity.x = Math.sign(velocity.x) * maxVelocityX;
-                }
+                const maxVelocityZ = 3;
                 if (Math.abs(velocity.z) > maxVelocityZ) {
                     velocity.z = Math.sign(velocity.z) * maxVelocityZ;
                 }
-                gsap.to(paddle1.scale, {
-                    x: Math.PI / 4,
+                gsap.to(paddle2.scale, {
+                    x: 120,
                     z: 120,
-                    y: 120,
+                    y: Math.PI / 4,
                     duration: 0.1,
                     onComplete: () => {
-                        gsap.to(paddle1.scale, {
+                        gsap.to(paddle2.scale, {
                             x: 100,
                             y: 100,
                             z: 100,
@@ -225,6 +213,7 @@ function Game2() {
             return () => {
                 // Cleanup code here
                 gameContainer?.removeChild(renderer.domElement);
+                renderer.dispose();
             };
         }
     }, []);
