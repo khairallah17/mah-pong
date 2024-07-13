@@ -158,7 +158,7 @@ function Game2() {
             if (ballBox.intersectsBox(paddle1Box)) {
                 const relativePosition = ball.position.clone().sub(table.position);
                 velocity.x = -mapRange(relativePosition.x - tableWidth / 2, { min: -tableWidth / 2, max: tableWidth / 2 }, { min: -2, max: 2 });
-                velocity.z = -mapRange(relativePosition.z,  { min: 0, max: tableLength }, { min: -2, max: 2 });
+                velocity.z = -mapRange(relativePosition.z,  { min: -3 * tableLength, max: tableLength }, { min: -3, max: 3 });
                 velocity.y = 1;
 
                 const maxVelocityZ = 3;
@@ -183,7 +183,7 @@ function Game2() {
             if (ballBox.intersectsBox(paddle2Box)) {
                 const relativePosition = ball.position.clone().sub(table.position);
                 velocity.x = -mapRange(relativePosition.x - tableWidth / 2, { min: -tableWidth / 2, max: tableWidth / 2 }, { min: -1, max: 1 });
-                velocity.z = -mapRange(relativePosition.z, { min: 0, max: tableLength }, { min: -2, max: 2 });
+                velocity.z = -mapRange(relativePosition.z,  { min: -3 * tableLength, max: tableLength }, { min: -3, max: 3 });
                 velocity.y = 1;
 
                 const maxVelocityZ = 3;
