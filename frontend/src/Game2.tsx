@@ -1,12 +1,14 @@
 import * as THREE from 'three';
 import { useEffect } from 'react';
 //import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
+import { gsap } from 'gsap';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import backgroundimage from './assets/background.jpg';
 
 function Game2() {
     useEffect(() => {
         const gameContainer = document.getElementById("game-container");
+        let restartEvent = new KeyboardEvent('keydown', { key: 'r' });
         const loader = new GLTFLoader();
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -35,15 +37,15 @@ function Game2() {
         let ball: THREE.Object3D;
         let table: THREE.Object3D;
         let grid: THREE.Object3D;
-        const paddleXRange = { min: -80, max: 80 };
-        const paddleYRange = { min: -10, max: 10 };
-        const paddleZRange = { min: -20, max: 50 };
+        const paddleXRange = { min: -120, max: 120 };
+        const paddleYRange = { min: -20, max: 10 };
+        const paddleZRange = { min: -10, max: 80 };
         let paddleX = 0;
         let paddleY = 0;
         let paddleZ = 0;
         //let table: THREE.Mesh;
         const gravity = -0.04;
-        let velocity = new THREE.Vector3(1, 1.5, 2);
+        let velocity = new THREE.Vector3(1, 1.5, 3);
         console.log(camera.position);
         console.log(camera.rotation);
         loader.load('../models/latest.glb', (gltf) => {
@@ -73,8 +75,12 @@ function Game2() {
                 ball.position.x = 0;
                 ball.position.y = 0;
                 ball.position.z = 0;
-                velocity = new THREE.Vector3(1, 1.5, 2);
+                velocity = new THREE.Vector3(1, 1.5, 3);
             }
+            window.addEventListener('keydown', (event) => {
+                if (event.key.toLowerCase() == 'r')
+                    restart_game();
+            });
             function mapRange(value: number, fromRange: { min: number, max: number }, toRange: { min: number, max: number }): number {
                 return (value - fromRange.min) * (toRange.max - toRange.min) / (fromRange.max - fromRange.min) + toRange.min;
             }
@@ -100,10 +106,6 @@ function Game2() {
                 document.body.style.cursor = isListening ? 'none' : 'auto';
             });
             window.addEventListener('mousemove', onMouseMove, false);
-            window.addEventListener('keydown', (event) => {
-                if (event.key == 'R')
-                    restart_game();
-            });
             renderer.render(scene, camera);
             animate();
         }, undefined, function (error) {
@@ -113,14 +115,15 @@ function Game2() {
             const offsetX = 0;
             const offsetY = 5;
             const offsetZ = 10;
-
-            camera.position.x = paddle1.position.x + offsetX;
-            camera.position.y = paddle1.position.y + offsetY;
-            camera.position.z = paddle1.position.z + offsetZ;
+            //camera.position.x = paddle1.position.x + offsetX;
+            //camera.position.y = paddle1.position.y + offsetY;
+            //camera.position.z = paddle1.position.z + offsetZ;
             //camera.lookAt(ball.position);
             const ballBox = new THREE.Box3().setFromObject(ball);
             const paddle1Box = new THREE.Box3().setFromObject(paddle1);
+            paddle1Box.expandByScalar(0.05);
             const paddle2Box = new THREE.Box3().setFromObject(paddle2);
+            paddle2Box.expandByScalar(0.05);
             const tableBox = new THREE.Box3().setFromObject(table);
             const gridBox = new THREE.Box3().setFromObject(grid);
             let tableWidth = 145;
@@ -148,50 +151,71 @@ function Game2() {
                     velocity.y = 1.5;
 
             }
-            if (ball.position.z > tableLength || ball.position.z < - (3 * tableLength)) {
-                velocity.z *= -1;
+            if (ball.position.z > tableLength){
+                //player 1 scores
+                document.dispatchEvent(restartEvent);
+            }
+            if (ball.position.z < - (3 * tableLength)) {
+                //player 2 scores
+                document.dispatchEvent(restartEvent);
             }
             if (ballBox.intersectsBox(paddle1Box)) {
-                // Calculate the new direction based on the position of the ball relative to the center of the paddle
                 const relativePosition = ball.position.clone().sub(paddle1.position);
                 velocity.x = relativePosition.x;
                 velocity.z = relativePosition.z;
-                if (velocity.z > 2)
-                    velocity.z = 2;
-                if (velocity.z < -2)
-                    velocity.z = -2;
-                if (velocity.x > 2)
-                    velocity.x = 2;
-                if (velocity.x < -2)
-                    velocity.x = -2;
-                // Reverse the y direction
-                velocity.y *= -1;
-                const correctionFactor = 0.1; // Adjust this value to change the amount of correction
-                const paddleCenterX = (paddleXRange.min + paddleXRange.max) / 2;
-                const correction = (paddleX - paddleCenterX) * correctionFactor;
+                // velocity.y *= -1;
 
-                velocity.x += correction;
-
-                // Ensure the velocity doesn't exceed a maximum value to prevent the ball from going out of bounds
-                const maxVelocity = 2; // Adjust this value based on your game's requirements
-                if (Math.abs(velocity.x) > maxVelocity) {
-                    velocity.x = Math.sign(velocity.x) * maxVelocity;
+                const maxVelocityX = 0.5;
+                const maxVelocityZ = 4;
+                if (Math.abs(velocity.x) > maxVelocityX) {
+                    velocity.x = Math.sign(velocity.x) * maxVelocityX;
                 }
+                if (Math.abs(velocity.z) > maxVelocityZ) {
+                    velocity.z = Math.sign(velocity.z) * maxVelocityZ;
+                }
+                gsap.to(paddle1.scale, {
+                    x: Math.PI / 4,
+                    z: 120,
+                    y: 120,
+                    duration: 0.1,
+                    onComplete: () => {
+                        gsap.to(paddle1.scale, {
+                            x: 100,
+                            y: 100,
+                            z: 100,
+                            duration: 0.1
+                        });
+                    }
+                });
             }
             if (ballBox.intersectsBox(paddle2Box)) {
-                // Calculate the new direction based on the position of the ball relative to the center of the paddle
                 const relativePosition = ball.position.clone().sub(paddle2.position);
                 velocity.x = relativePosition.x;
                 velocity.z = relativePosition.z;
-                if (velocity.z > 2)
-                    velocity.z = 2;
-                if (velocity.z < -2)
-                    velocity.z = -2;
-                if (velocity.x > 2)
-                    velocity.x = 2;
-                if (velocity.x < -2)
-                    velocity.x = -2;
-                velocity.y *= -1;
+                // velocity.y *= -1;
+
+                const maxVelocityX = 0.5;
+                const maxVelocityZ = 4;
+                if (Math.abs(velocity.x) > maxVelocityX) {
+                    velocity.x = Math.sign(velocity.x) * maxVelocityX;
+                }
+                if (Math.abs(velocity.z) > maxVelocityZ) {
+                    velocity.z = Math.sign(velocity.z) * maxVelocityZ;
+                }
+                gsap.to(paddle1.scale, {
+                    x: Math.PI / 4,
+                    z: 120,
+                    y: 120,
+                    duration: 0.1,
+                    onComplete: () => {
+                        gsap.to(paddle1.scale, {
+                            x: 100,
+                            y: 100,
+                            z: 100,
+                            duration: 0.1
+                        });
+                    }
+                });
             }
             // if (ballBox.intersectsBox(gridBox)) {
             //     velocity.y *= -1;
