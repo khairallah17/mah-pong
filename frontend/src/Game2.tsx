@@ -8,6 +8,7 @@ import backgroundimage from './assets/background.jpg';
 function Game2() {
     useEffect(() => {
         const gameContainer = document.getElementById("game-container");
+        let counter = 0;
         const loader = new GLTFLoader();
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -71,6 +72,7 @@ function Game2() {
             // Create a vector to hold the mouse position
             const mouse = new THREE.Vector2();
             let isListening = true;
+            paddle2.position.z = - 170;
 
             window.addEventListener('keydown', (event) => {
                 if (event.key.toLowerCase() == 'r')
@@ -100,7 +102,7 @@ function Game2() {
                 // paddle1.rotation.y = rotation;
                 // paddle2.rotation.y = rotation2;
                 paddle1.rotation.z = rotation - Math.PI / 2;
-                //paddle2.rotation.z = rotation2 - Math.PI / 2;
+                //paddle2.rotation.z = rotation2 + Math.PI / 2;
             }
             window.addEventListener('click', () => {
                 isListening = !isListening;
@@ -181,8 +183,16 @@ function Game2() {
                 });
             }
             if (ballBox.intersectsBox(paddle2Box)) {
-                const relativePosition = ball.position.clone().sub(table.position);
+                let relativePosition = ball.position.clone().sub(table.position);
                 velocity.x = -mapRange(relativePosition.x - tableWidth / 2, { min: -tableWidth / 2, max: tableWidth / 2 }, { min: -1, max: 1 });
+                if (counter % 3 === 0)
+                {
+                    relativePosition = ball.position.clone().sub(paddle1.position);
+                    velocity.x = -mapRange(relativePosition.x, { min: -tableWidth, max: tableWidth}, { min: -1, max: 1 });
+                    console.log(counter);
+                }
+                console.log(counter);
+                counter++;
                 velocity.z = -mapRange(relativePosition.z,  { min: -3 * tableLength, max: tableLength }, { min: -3, max: 3 });
                 velocity.y = 1;
 
