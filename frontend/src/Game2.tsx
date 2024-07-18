@@ -40,8 +40,8 @@ function Game2() {
         let paddleY = 0;
         let paddleZ = 0;
         let initBallPos: THREE.Vector3;
-        const gravity = -0.04;
-        let velocity = new THREE.Vector3(1, 1.5, 3);
+        const gravity = -0.09;
+        let velocity = new THREE.Vector3(1, 2, 3);
         let tableWidth = 148;
         let tableLength = 67;
         function mapRange(value: number, fromRange: { min: number, max: number }, toRange: { min: number, max: number }): number {
@@ -49,7 +49,7 @@ function Game2() {
         }
         function restart_game() {
             ball.position.set(initBallPos.x, initBallPos.y, initBallPos.z);
-            velocity.set(1, 1.5, 3);
+            velocity.set(1, 2, 3);
         }
         loader.load('../models/latest.glb', (gltf) => {
             const loadedscene = gltf.scene;
@@ -86,12 +86,12 @@ function Game2() {
                     mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
                     paddleX = mapRange(mouse.x, { min: -1, max: 1 }, { min: -120, max: 120 });
                     if (mouse.y > 0) {
-                        paddleY = 5;
+                        paddleY = 2;
                         paddleZ = paddleZ = mapRange(mouse.y, { min: 0, max: 1 }, { min: -3, max: 80 });
                     }
                     else
                     {
-                        paddleY = mapRange(mouse.y, { min: -1, max: 0 }, { min: -20, max: 5 });
+                        paddleY = mapRange(mouse.y, { min: -1, max: 0 }, { min: -20, max: 2 });
                         paddleZ = mapRange(mouse.y, { min: -1, max: 0 }, { min: -30, max: -3 });
                     }
                     paddle1?.position.set(paddleX + tableWidth / 2, paddleY, -paddleZ + 60);
@@ -138,9 +138,9 @@ function Game2() {
             velocity.y += gravity;
             // Apply air resistance
             velocity.multiplyScalar(0.99);
-            if (ball.position.x > tableWidth || ball.position.x < 0) {
-                velocity.x *= -1;
-            }
+            // if (ball.position.x > tableWidth || ball.position.x < 0) {
+            //     velocity.x *= -1;
+            // }
             if (ballBox.intersectsBox(tableBox)) {
                 // Move the ball out of the intersection
                 while (ballBox.intersectsBox(tableBox)) {
@@ -149,7 +149,7 @@ function Game2() {
                 }
                 velocity.y *= -1;
                 if (velocity.y > 0)
-                    velocity.y = 1.5;
+                    velocity.y = 2;
 
             }
             if (ball.position.z > 1.5 * tableLength) {
@@ -163,8 +163,8 @@ function Game2() {
             if (ballBox.intersectsBox(paddle1Box)) {
                 // if (isIntersecting == false) {
                 const relativePosition = ball.position.clone().sub(table.position);
-                velocity.x = -mapRange(relativePosition.x - tableWidth / 2, { min: -tableWidth / 2, max: tableWidth / 2 }, { min: -2, max: 2 });
-                velocity.z = -mapRange(relativePosition.z, { min: -3 * tableLength, max: tableLength }, { min: -4.5, max: 4.5 });
+                velocity.x = -mapRange(relativePosition.x - tableWidth / 2, { min: -tableWidth / 2, max: tableWidth / 2}, { min: -3, max: 3});
+                velocity.z = -mapRange(relativePosition.z, { min: -3 * tableLength, max: tableLength }, { min: -6, max: 6 });
                 velocity.y = 1;
 
                 gsap.to(paddle1.scale, {
@@ -192,16 +192,27 @@ function Game2() {
                     let relativePosition: THREE.Vector3 = ball.position.clone().sub(table.position);
                     console.log(isIntersecting);
                     velocity.x = -mapRange(relativePosition.x - tableWidth / 2, { min: -tableWidth / 2, max: tableWidth / 2 }, { min: -1, max: 1 });
-                    if (velocity.x > 0.35 || velocity.x < -0.35)
-                        velocity.x += velocity.x;
-                    if (Math.floor(counter) % 2 == 0) {
-                        velocity.x += 0.3;
-                        console.log(velocity.x);
-                        // velocity.x = -mapRange(relativePosition.x, { min: -tableWidth / 2, max: tableWidth / 2 }, { min: -2, max: 2 });
+                    if (velocity.x > 0.35)
+                    {
+                        //random value between velocity.x and -1
+                        velocity.x = -1 + Math.random() * (velocity.x - (-1));
                     }
+                    else if (velocity.x < -0.35)
+                    {
+                        velocity.x = velocity.x + Math.random() * (1 - velocity.x);
+                    }
+                    else
+                    {
+                        velocity.x = Math.random() * 2 - 1;
+                    }
+                    // if (velocity.x < 0.35 && velocity.x > -0.35)
+                    //     velocity.x += Math.sign(velocity.x) * -1;
+                    //if v > 
+                    //if (counter % 2 == 0)
                     console.log(counter);
-                    velocity.z = -mapRange(relativePosition.z, { min: -3 * tableLength, max: tableLength }, { min: -4.5, max: 4.5 });
-                    velocity.y = 1;
+                    console.log(velocity.x);
+                    velocity.z = -mapRange(relativePosition.z, { min: -3 * tableLength, max: tableLength }, { min: -6, max: 6 });
+                    velocity.y = 2;
 
                     gsap.to(paddle2.scale, {
                         x: 120,
