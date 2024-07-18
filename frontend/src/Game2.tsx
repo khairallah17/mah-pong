@@ -85,11 +85,15 @@ function Game2() {
                     mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
                     mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
                     paddleX = mapRange(mouse.x, { min: -1, max: 1 }, { min: -120, max: 120 });
-                    if (mouse.y > 0)
-                        paddleY = 10;
+                    if (mouse.y > 0) {
+                        paddleY = 5;
+                        paddleZ = paddleZ = mapRange(mouse.y, { min: 0, max: 1 }, { min: -3, max: 80 });
+                    }
                     else
-                        paddleY = mapRange(mouse.y, { min: -1, max: 0 }, { min: -10, max: 10 });
-                    paddleZ = mapRange(mouse.y, { min: -1, max: 1 }, { min: -30, max: 80 });
+                    {
+                        paddleY = mapRange(mouse.y, { min: -1, max: 0 }, { min: -20, max: 5 });
+                        paddleZ = mapRange(mouse.y, { min: -1, max: 0 }, { min: -30, max: -3 });
+                    }
                     paddle1?.position.set(paddleX + tableWidth / 2, paddleY, -paddleZ + 60);
                     camera.position.y = mouse.y / 5 + 1.25;
                     camera.position.z = -mouse.y / 5 + 1.88;
@@ -132,6 +136,8 @@ function Game2() {
             ball.position.z += velocity.z;
             // Apply gravity
             velocity.y += gravity;
+            // Apply air resistance
+            velocity.multiplyScalar(0.99);
             if (ball.position.x > tableWidth || ball.position.x < 0) {
                 velocity.x *= -1;
             }
@@ -146,11 +152,11 @@ function Game2() {
                     velocity.y = 1.5;
 
             }
-            if (ball.position.z > tableLength) {
+            if (ball.position.z > 1.5 * tableLength) {
                 //player 1 scores
                 restart_game();
             }
-            if (ball.position.z < - (3 * tableLength)) {
+            if (ball.position.z < - (3.5 * tableLength)) {
                 //player 2 scores
                 restart_game();
             }
@@ -158,13 +164,9 @@ function Game2() {
                 // if (isIntersecting == false) {
                 const relativePosition = ball.position.clone().sub(table.position);
                 velocity.x = -mapRange(relativePosition.x - tableWidth / 2, { min: -tableWidth / 2, max: tableWidth / 2 }, { min: -2, max: 2 });
-                velocity.z = -mapRange(relativePosition.z, { min: -3 * tableLength, max: tableLength }, { min: -3, max: 3 });
+                velocity.z = -mapRange(relativePosition.z, { min: -3 * tableLength, max: tableLength }, { min: -4.5, max: 4.5 });
                 velocity.y = 1;
 
-                const maxVelocityZ = 3;
-                if (Math.abs(velocity.z) > maxVelocityZ) {
-                    velocity.z = Math.sign(velocity.z) * maxVelocityZ;
-                }
                 gsap.to(paddle1.scale, {
                     x: 120,
                     z: 120,
@@ -189,25 +191,18 @@ function Game2() {
                     isIntersecting = true;
                     let relativePosition: THREE.Vector3 = ball.position.clone().sub(table.position);
                     console.log(isIntersecting);
-                    console.log(relativePosition);
                     velocity.x = -mapRange(relativePosition.x - tableWidth / 2, { min: -tableWidth / 2, max: tableWidth / 2 }, { min: -1, max: 1 });
                     if (velocity.x > 0.35 || velocity.x < -0.35)
-                    {
-
-                    }
+                        velocity.x += velocity.x;
                     if (Math.floor(counter) % 2 == 0) {
                         velocity.x += 0.3;
                         console.log(velocity.x);
                         // velocity.x = -mapRange(relativePosition.x, { min: -tableWidth / 2, max: tableWidth / 2 }, { min: -2, max: 2 });
                     }
                     console.log(counter);
-                    velocity.z = -mapRange(relativePosition.z, { min: -3 * tableLength, max: tableLength }, { min: -3, max: 3 });
+                    velocity.z = -mapRange(relativePosition.z, { min: -3 * tableLength, max: tableLength }, { min: -4.5, max: 4.5 });
                     velocity.y = 1;
 
-                    const maxVelocityZ = 3;
-                    if (Math.abs(velocity.z) > maxVelocityZ) {
-                        velocity.z = Math.sign(velocity.z) * maxVelocityZ;
-                    }
                     gsap.to(paddle2.scale, {
                         x: 120,
                         z: 120,
