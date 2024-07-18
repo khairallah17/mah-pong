@@ -8,7 +8,6 @@ import backgroundimage from './assets/background.jpg';
 function Game2() {
     useEffect(() => {
         const gameContainer = document.getElementById("game-container");
-        let counter = 0;
         const loader = new GLTFLoader();
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -30,13 +29,14 @@ function Game2() {
             camera.updateProjectionMatrix();
             renderer.render(scene, camera);
         });
-        let isIntersecting: boolean = false;
-        let counter = 0;
         let paddle1: THREE.Object3D;
         let paddle2: THREE.Object3D;
         let ball: THREE.Object3D;
         let table: THREE.Object3D;
         let grid: THREE.Object3D;
+        let firstIntersectionPosition: THREE.Vector3 | null = null;
+        let lastIntersectionPosition: THREE.Vector3 | null = null;
+        let paddlePositionDiff = new THREE.Vector3(0, 0, 0);
         let paddleX = 0;
         let paddleY = 0;
         let paddleZ = 0;
@@ -50,6 +50,7 @@ function Game2() {
         }
         function restart_game() {
             ball.position.set(initBallPos.x, initBallPos.y, initBallPos.z);
+            paddlePositionDiff.set(0, 0, 0);
             velocity.set(1, 2, 3);
         }
         loader.load('../models/latest.glb', (gltf) => {
@@ -91,8 +92,7 @@ function Game2() {
                         paddleY = 2;
                         paddleZ = paddleZ = mapRange(mouse.y, { min: 0, max: 1 }, { min: -3, max: 80 });
                     }
-                    else
-                    {
+                    else {
                         paddleY = mapRange(mouse.y, { min: -1, max: 0 }, { min: -20, max: 2 });
                         paddleZ = mapRange(mouse.y, { min: -1, max: 0 }, { min: -30, max: -3 });
                     }
@@ -144,6 +144,7 @@ function Game2() {
             //     velocity.x *= -1;
             // }
             if (ballBox.intersectsBox(tableBox)) {
+                paddlePositionDiff.set(0, 0, 0);
                 // Move the ball out of the intersection
                 while (ballBox.intersectsBox(tableBox)) {
                     ball.position.y -= Math.sign(velocity.y);
@@ -163,9 +164,12 @@ function Game2() {
                 restart_game();
             }
             if (ballBox.intersectsBox(paddle1Box)) {
-                // if (isIntersecting == false) {
+                if (firstIntersectionPosition === null) {
+                    firstIntersectionPosition = paddle1.position.clone();
+                }
+                lastIntersectionPosition = paddle1.position.clone();
                 const relativePosition = ball.position.clone().sub(table.position);
-                velocity.x = -mapRange(relativePosition.x - tableWidth / 2, { min: -tableWidth / 2, max: tableWidth / 2}, { min: -3, max: 3});
+                velocity.x = -mapRange(relativePosition.x - tableWidth / 2, { min: -tableWidth / 2, max: tableWidth / 2 }, { min: -3, max: 3 });
                 velocity.z = -mapRange(relativePosition.z, { min: -3 * tableLength, max: tableLength }, { min: -6, max: 6 });
                 velocity.y = 1;
 
@@ -183,58 +187,52 @@ function Game2() {
                         });
                     }
                 });
-                // isIntersecting = true;
             }
-            // }
-            // else
-            //     isIntersecting = false;
+            else if (firstIntersectionPosition !== null && lastIntersectionPosition !== null) {
+                paddlePositionDiff = lastIntersectionPosition.clone().sub(firstIntersectionPosition);
+                console.log(paddlePositionDiff);
+                firstIntersectionPosition = null;
+                lastIntersectionPosition = null;
+            }
+            velocity.x -= paddlePositionDiff.x / 200;
+            velocity.y -= paddlePositionDiff.y / 200;
+            velocity.z -= paddlePositionDiff.z / 200;
             if (ballBox.intersectsBox(paddle2Box)) {
-                if (isIntersecting === false) {
-                    isIntersecting = true;
-                    let relativePosition: THREE.Vector3 = ball.position.clone().sub(table.position);
-                    console.log(isIntersecting);
-                    velocity.x = -mapRange(relativePosition.x - tableWidth / 2, { min: -tableWidth / 2, max: tableWidth / 2 }, { min: -1, max: 1 });
-                    if (velocity.x > 0.35)
-                    {
-                        //random value between velocity.x and -1
-                        velocity.x = -1 + Math.random() * (velocity.x - (-1));
-                    }
-                    else if (velocity.x < -0.35)
-                    {
-                        velocity.x = velocity.x + Math.random() * (1 - velocity.x);
-                    }
-                    else
-                    {
-                        velocity.x = Math.random() * 2 - 1;
-                    }
-                    // if (velocity.x < 0.35 && velocity.x > -0.35)
-                    //     velocity.x += Math.sign(velocity.x) * -1;
-                    //if v > 
-                    //if (counter % 2 == 0)
-                    console.log(counter);
-                    console.log(velocity.x);
-                    velocity.z = -mapRange(relativePosition.z, { min: -3 * tableLength, max: tableLength }, { min: -6, max: 6 });
-                    velocity.y = 2;
-
-                    gsap.to(paddle2.scale, {
-                        x: 120,
-                        z: 120,
-                        y: Math.PI / 4,
-                        duration: 0.1,
-                        onComplete: () => {
-                            gsap.to(paddle2.scale, {
-                                x: 100,
-                                y: 100,
-                                z: 100,
-                                duration: 0.1
-                            });
-                        }
-                    });
+                paddlePositionDiff.set(0, 0, 0);
+                let relativePosition: THREE.Vector3 = ball.position.clone().sub(table.position);
+                velocity.x = -mapRange(relativePosition.x - tableWidth / 2, { min: -tableWidth / 2, max: tableWidth / 2 }, { min: -1, max: 1 });
+                if (velocity.x > 0.35) {
+                    //random value between velocity.x and -1
+                    velocity.x = -1 + Math.random() * (velocity.x - (-1));
                 }
-                counter = counter + Math.random();
+                else if (velocity.x < -0.35) {
+                    velocity.x = velocity.x + Math.random() * (1 - velocity.x);
+                }
+                else {
+                    velocity.x = Math.random() * 2 - 1;
+                }
+                // if (velocity.x < 0.35 && velocity.x > -0.35)
+                //     velocity.x += Math.sign(velocity.x) * -1;
+                //if v > 
+                //if (counter % 2 == 0)
+                velocity.z = -mapRange(relativePosition.z, { min: -3 * tableLength, max: tableLength }, { min: -6, max: 6 });
+                velocity.y = 2;
+
+                gsap.to(paddle2.scale, {
+                    x: 120,
+                    z: 120,
+                    y: Math.PI / 4,
+                    duration: 0.1,
+                    onComplete: () => {
+                        gsap.to(paddle2.scale, {
+                            x: 100,
+                            y: 100,
+                            z: 100,
+                            duration: 0.1
+                        });
+                    }
+                });
             }
-            else
-                isIntersecting = false;
             // if (ballBox.intersectsBox(gridBox)) {
             //     velocity.y *= -1;
             // }
