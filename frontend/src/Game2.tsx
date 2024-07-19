@@ -34,6 +34,8 @@ function Game2() {
         let ball: THREE.Object3D;
         let table: THREE.Object3D;
         let grid: THREE.Object3D;
+        let isIntersecting1 = false;
+        let isIntersecting2 = false;
         let firstIntersectionPosition: THREE.Vector3 | null = null;
         let lastIntersectionPosition: THREE.Vector3 | null = null;
         let paddlePositionDiff = new THREE.Vector3(0, 0, 0);
@@ -128,9 +130,9 @@ function Game2() {
             paddle2.position.x += Math.sign(distanceToBall) * speed * speedModifier;
             const ballBox = new THREE.Box3().setFromObject(ball);
             const paddle1Box = new THREE.Box3().setFromObject(paddle1);
-            paddle1Box.expandByScalar(0.05);
+            paddle1Box.expandByScalar(0.03);
             const paddle2Box = new THREE.Box3().setFromObject(paddle2);
-            paddle2Box.expandByScalar(0.05);
+            paddle2Box.expandByScalar(0.03);
             const tableBox = new THREE.Box3().setFromObject(table);
             const gridBox = new THREE.Box3().setFromObject(grid);
             ball.position.x += velocity.x;
@@ -169,20 +171,33 @@ function Game2() {
                 }
                 lastIntersectionPosition = paddle1.position.clone();
                 const relativePosition = ball.position.clone().sub(table.position);
-                velocity.x = -mapRange(relativePosition.x - tableWidth / 2, { min: -tableWidth / 2, max: tableWidth / 2 }, { min: -3, max: 3 });
                 velocity.z = -mapRange(relativePosition.z, { min: -3 * tableLength, max: tableLength }, { min: -6, max: 6 });
                 velocity.y = 1;
-
+                velocity.x = -mapRange(relativePosition.x - tableWidth / 2, { min: -tableWidth / 2, max: tableWidth / 2 }, { min: -3, max: 3 });
                 gsap.to(paddle1.scale, {
                     x: 120,
                     z: 120,
-                    y: Math.PI / 4,
+                    y: 120,
                     duration: 0.1,
                     onComplete: () => {
                         gsap.to(paddle1.scale, {
                             x: 100,
                             y: 100,
                             z: 100,
+                            duration: 0.1
+                        });
+                    }
+                });
+                gsap.to(paddle1.position, {
+                    x: ball.position.x + 3,
+                    y: ball.position.y + 3,
+                    z: ball.position.z + 3,
+                    duration: 0.1,
+                    onComplete: () => {
+                        gsap.to(paddle1.position, {
+                            x: paddleX + tableWidth / 2,
+                            y: paddleY,
+                            z: -paddleZ + 60,
                             duration: 0.1
                         });
                     }
