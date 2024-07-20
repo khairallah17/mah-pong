@@ -145,25 +145,28 @@ function Game2() {
             const tableBox = new THREE.Box3().setFromObject(table);
             const gridBox = new THREE.Box3().setFromObject(grid);
             // set max velocity.y
-            if (Math.abs(velocity.y) > 2)
-                velocity.y = Math.sign(velocity.y) * 2;
+            // if (Math.abs(velocity.y) > 2)
+            //     velocity.y = Math.sign(velocity.y) * 2;
+
             // Move the ball
             ball.position.x += velocity.x;
             ball.position.y += velocity.y;
             ball.position.z += velocity.z;
-            // Apply gravity
-            velocity.multiplyScalar(0.99);
-            velocity.y += gravity;
+
             // Apply air resistance
+            velocity.multiplyScalar(0.99);
+            // Apply gravity
+            velocity.y += gravity;
             // Check for collisions
             if (ballBox.intersectsBox(tableBox)) {
-                paddlePositionDiff.set(0, 0, 0);
+                //paddlePositionDiff.set(0, 0, 0);
                 // Move the ball out of the intersection
                 while (ballBox.intersectsBox(tableBox)) {
-                    ball.position.y -= Math.sign(velocity.y);
+                    ball.position.y += 0.001;
                     ballBox.setFromObject(ball);
                 }
                 velocity.y *= -1;
+                console.log(velocity.y);
             }
             if (ball.position.z > 1.5 * tableLength) {
                 //player 1 scores
@@ -180,7 +183,7 @@ function Game2() {
                 lastIntersectionPosition = paddle1.position.clone();
                 const relativePosition = ball.position.clone().sub(table.position);
                 velocity.z = -mapRange(relativePosition.z, { min: -3 * tableLength, max: tableLength }, { min: -6, max: 6 });
-                velocity.y = 1.5;
+                velocity.y = 0.5;
                 velocity.x = -mapRange(relativePosition.x - tableWidth / 2, { min: -tableWidth / 2, max: tableWidth / 2 }, { min: -3, max: 3 });
                 
                 // gsap.to(paddle1.position, {
@@ -217,9 +220,9 @@ function Game2() {
                 firstIntersectionPosition = null;
                 lastIntersectionPosition = null;
             }
-            velocity.x -= paddlePositionDiff.x / 200;
-            //velocity.y -= paddlePositionDiff.y / 200;
-            velocity.z -= paddlePositionDiff.z / 200;
+            // velocity.x -= paddlePositionDiff.x / 200;
+            // velocity.y -= paddlePositionDiff.y / 200;
+            // velocity.z -= paddlePositionDiff.z / 200;
             if (ballBox.intersectsBox(paddle2Box)) {
                 paddlePositionDiff.set(0, 0, 0);
                 let relativePosition: THREE.Vector3 = ball.position.clone().sub(table.position);
@@ -243,7 +246,7 @@ function Game2() {
                 if (ballBox.getCenter(new THREE.Vector3()).y <= gridBox.max.y) // ball hits the grid
                 {
                     while (ballBox.intersectsBox(gridBox)) {
-                        ball.position.z -= Math.sign(velocity.z);
+                        ball.position.z -= Math.sign(velocity.z) * 0.001;
                         ballBox.setFromObject(ball);
                     }
                     velocity.z *= -0.2;
@@ -251,12 +254,12 @@ function Game2() {
                     velocity.x *= 0.2;
 
                 }
-                else if (ballBox.min.y <= gridBox.max.y) // ball hits the top of the grid
-                {
-                    velocity.y *= 0.7;
-                    velocity.z *= 0.5;
-                    velocity.x = Math.random() * 2 - 1;
-                }
+                // else if (ballBox.min.y <= gridBox.max.y) // ball hits the top of the grid
+                // {
+                //     velocity.y *= 0.7;
+                //     velocity.z *= 0.5;
+                //     velocity.x = Math.random() * 2 - 1;
+                // }
             }
             requestAnimationFrame(animate);
             renderer.render(scene, camera);
