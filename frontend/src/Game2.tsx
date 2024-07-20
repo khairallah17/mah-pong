@@ -74,12 +74,13 @@ function Game2() {
             ball = loadedscene.getObjectByName('Ball') as THREE.Object3D;
             table = loadedscene.getObjectByName('table_plate') as THREE.Object3D;
             grid = loadedscene.getObjectByName('table_grid') as THREE.Object3D;
+            camera.position.add(new THREE.Vector3().subVectors(table.position, camera.position).multiplyScalar(0.1));
             initBallPos = ball.position.clone();
             paddle2.position.setZ(-2.5 * tableLength);
+            paddle2.position.z = - 170;
             // Create a vector to hold the mouse position
             const mouse = new THREE.Vector2();
             let isListening = true;
-            paddle2.position.z = - 170;
 
             window.addEventListener('keydown', (event) => {
                 if (event.key.toLowerCase() == 'r')
@@ -90,28 +91,33 @@ function Game2() {
                     mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
                     mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
                     paddleX = mapRange(mouse.x, { min: -1, max: 1 }, { min: -120, max: 120 });
-                    if (mouse.y > 0) {
-                        paddleY = 2;
-                        paddleZ = paddleZ = mapRange(mouse.y, { min: 0, max: 1 }, { min: -3, max: 80 });
+                    if (mouse.y > -0.4) {
+                        paddleY = 10;
+                        paddleZ = paddleZ = mapRange(mouse.y, { min: -0.4, max: 1 }, { min: -7, max: 80 });
                     }
                     else {
-                        paddleY = mapRange(mouse.y, { min: -1, max: 0 }, { min: -20, max: 2 });
-                        paddleZ = mapRange(mouse.y, { min: -1, max: 0 }, { min: -30, max: -3 });
+                        paddleY = mapRange(mouse.y, { min: -1, max: -0.4 }, { min: -20, max: 10 });
+                        paddleZ = mapRange(mouse.y, { min: -1, max: -0.4 }, { min: -30, max: -7 });
                     }
-                    paddle1?.position.set(paddleX + tableWidth / 2, paddleY, -paddleZ + 60);
+                    paddle1?.position.set(paddleX + tableWidth / 2, paddleY - 10, -paddleZ + 60);
                     camera.position.y = mouse.y / 5 + 1.25;
-                    camera.position.z = -mouse.y / 5 + 1.88;
+                    camera.position.z = -mouse.y / 15 + 1.88;
                     camera.position.x = mouse.x + 0.75;
+                    camera.position.add(new THREE.Vector3().subVectors(table.position, camera.position).multiplyScalar(0.1));
                     camera.lookAt(table.position);
                     animatePaddleRotation();
                 }
             }
             function animatePaddleRotation() {
-                const rotation = Math.atan2(paddle1.position.y, paddle1.position.x - tableWidth / 2);
+                const rotation = Math.atan2(Math.abs(paddleY), paddle1.position.x - tableWidth / 2);
                 const rotation2 = Math.atan2(paddle2.position.y, paddle2.position.x - tableWidth / 2);
-                // paddle1.rotation.y = rotation;
+                const rotationz = Math.atan2(Math.abs(paddleY + 20), paddle1.position.x - tableWidth / 2);
+                paddle1.rotation.y = rotation;
                 // paddle2.rotation.y = rotation2;
-                paddle1.rotation.z = rotation - Math.PI / 2;
+                if (paddle1.position.x - tableWidth / 2 > 0)
+                    paddle1.rotation.z = rotationz - Math.PI / 2;
+                else
+                    paddle1.rotation.z = -rotationz + Math.PI / 2;
                 //paddle2.rotation.z = rotation2 + Math.PI / 2;
             }
             window.addEventListener('click', () => {
@@ -124,27 +130,32 @@ function Game2() {
             console.error('An error happened', error);
         });
         function animate() {
+            //AI for paddle 2
+            //console.log(velocity.y);
             const speed = 2;
             const distanceToBall = ball.position.x - paddle2.position.x;
             const speedModifier = Math.min(Math.abs(distanceToBall) / 10, 1);
             paddle2.position.x += Math.sign(distanceToBall) * speed * speedModifier;
+            // HITBOXES
             const ballBox = new THREE.Box3().setFromObject(ball);
             const paddle1Box = new THREE.Box3().setFromObject(paddle1);
-            paddle1Box.expandByScalar(0.03);
+            paddle1Box.expandByScalar(0.01);
             const paddle2Box = new THREE.Box3().setFromObject(paddle2);
-            paddle2Box.expandByScalar(0.03);
+            paddle2Box.expandByScalar(0.01);
             const tableBox = new THREE.Box3().setFromObject(table);
             const gridBox = new THREE.Box3().setFromObject(grid);
+            // set max velocity.y
+            if (Math.abs(velocity.y) > 2)
+                velocity.y = Math.sign(velocity.y) * 2;
+            // Move the ball
             ball.position.x += velocity.x;
             ball.position.y += velocity.y;
             ball.position.z += velocity.z;
             // Apply gravity
+            velocity.multiplyScalar(0.99);
             velocity.y += gravity;
             // Apply air resistance
-            velocity.multiplyScalar(0.99);
-            // if (ball.position.x > tableWidth || ball.position.x < 0) {
-            //     velocity.x *= -1;
-            // }
+            // Check for collisions
             if (ballBox.intersectsBox(tableBox)) {
                 paddlePositionDiff.set(0, 0, 0);
                 // Move the ball out of the intersection
@@ -153,9 +164,6 @@ function Game2() {
                     ballBox.setFromObject(ball);
                 }
                 velocity.y *= -1;
-                if (velocity.y > 0)
-                    velocity.y = 2;
-
             }
             if (ball.position.z > 1.5 * tableLength) {
                 //player 1 scores
@@ -172,36 +180,36 @@ function Game2() {
                 lastIntersectionPosition = paddle1.position.clone();
                 const relativePosition = ball.position.clone().sub(table.position);
                 velocity.z = -mapRange(relativePosition.z, { min: -3 * tableLength, max: tableLength }, { min: -6, max: 6 });
-                velocity.y = 1;
+                velocity.y = 1.5;
                 velocity.x = -mapRange(relativePosition.x - tableWidth / 2, { min: -tableWidth / 2, max: tableWidth / 2 }, { min: -3, max: 3 });
-                gsap.to(paddle1.scale, {
-                    x: 120,
-                    z: 120,
-                    y: 120,
-                    duration: 0.1,
-                    onComplete: () => {
-                        gsap.to(paddle1.scale, {
-                            x: 100,
-                            y: 100,
-                            z: 100,
-                            duration: 0.1
-                        });
-                    }
-                });
-                gsap.to(paddle1.position, {
-                    x: ball.position.x + 3,
-                    y: ball.position.y + 3,
-                    z: ball.position.z + 3,
-                    duration: 0.1,
-                    onComplete: () => {
-                        gsap.to(paddle1.position, {
-                            x: paddleX + tableWidth / 2,
-                            y: paddleY,
-                            z: -paddleZ + 60,
-                            duration: 0.1
-                        });
-                    }
-                });
+                
+                // gsap.to(paddle1.position, {
+                //     x: ball.position.x + 3,
+                //     y: ball.position.y,
+                //     z: ball.position.z + 3,
+                //     duration: 0.2,
+                //     onComplete: () => {
+                //         gsap.to(paddle1.position, {
+                //             x: paddleX + tableWidth / 2,
+                //             y: paddleY - 10,
+                //             z: -paddleZ + 60,
+                //             duration: 0.3
+                //         });
+                //     }
+                // });
+                if (paddle1.rotation.y < 2.66 && paddle1.rotation.y > 0.52)
+                {
+                    gsap.to(paddle1.rotation, {
+                        y: paddle1.rotation.y / 100,
+                        duration: 0.1,
+                        onComplete: () => {
+                            gsap.to(paddle1.rotation, {
+                                y: paddle1.rotation.y * 100,
+                                duration: 0.3
+                            });
+                        }
+                    });
+                }
             }
             else if (firstIntersectionPosition !== null && lastIntersectionPosition !== null) {
                 paddlePositionDiff = lastIntersectionPosition.clone().sub(firstIntersectionPosition);
@@ -210,7 +218,7 @@ function Game2() {
                 lastIntersectionPosition = null;
             }
             velocity.x -= paddlePositionDiff.x / 200;
-            velocity.y -= paddlePositionDiff.y / 200;
+            //velocity.y -= paddlePositionDiff.y / 200;
             velocity.z -= paddlePositionDiff.z / 200;
             if (ballBox.intersectsBox(paddle2Box)) {
                 paddlePositionDiff.set(0, 0, 0);
@@ -226,31 +234,30 @@ function Game2() {
                 else {
                     velocity.x = Math.random() * 2 - 1;
                 }
-                // if (velocity.x < 0.35 && velocity.x > -0.35)
-                //     velocity.x += Math.sign(velocity.x) * -1;
-                //if v > 
-                //if (counter % 2 == 0)
                 velocity.z = -mapRange(relativePosition.z, { min: -3 * tableLength, max: tableLength }, { min: -6, max: 6 });
-                velocity.y = 2;
-
-                gsap.to(paddle2.scale, {
-                    x: 120,
-                    z: 120,
-                    y: Math.PI / 4,
-                    duration: 0.1,
-                    onComplete: () => {
-                        gsap.to(paddle2.scale, {
-                            x: 100,
-                            y: 100,
-                            z: 100,
-                            duration: 0.1
-                        });
-                    }
-                });
+                velocity.y = 1.5;
             }
-            // if (ballBox.intersectsBox(gridBox)) {
-            //     velocity.y *= -1;
-            // }
+            
+            if (ballBox.intersectsBox(gridBox)) {
+                //make the ball bounce off the grid with lower velocity
+                if (ballBox.getCenter(new THREE.Vector3()).y <= gridBox.max.y) // ball hits the grid
+                {
+                    while (ballBox.intersectsBox(gridBox)) {
+                        ball.position.z -= Math.sign(velocity.z);
+                        ballBox.setFromObject(ball);
+                    }
+                    velocity.z *= -0.2;
+                    velocity.y *= 0;
+                    velocity.x *= 0.2;
+
+                }
+                else if (ballBox.min.y <= gridBox.max.y) // ball hits the top of the grid
+                {
+                    velocity.y *= 0.7;
+                    velocity.z *= 0.5;
+                    velocity.x = Math.random() * 2 - 1;
+                }
+            }
             requestAnimationFrame(animate);
             renderer.render(scene, camera);
             return () => {
