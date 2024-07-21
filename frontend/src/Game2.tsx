@@ -35,10 +35,8 @@ function Game2() {
         let table: THREE.Object3D;
         let grid: THREE.Object3D;
         let isIntersecting1 = false;
-        let isIntersecting2 = false;
-        const clock = new THREE.Clock();
-        let positiveframes = 0;
-        let negativeframes = 0;
+        let waitforpaddle2 = false;
+        let waitfor_ = false;
         let firstIntersectionPosition: THREE.Vector3 | null = null;
         let lastIntersectionPosition: THREE.Vector3 | null = null;
         let paddlePositionDiff = new THREE.Vector3(0, 0, 0);
@@ -56,7 +54,9 @@ function Game2() {
         function restart_game() {
             ball.position.set(initBallPos.x, initBallPos.y, initBallPos.z);
             paddlePositionDiff.set(0, 0, 0);
-            velocity.set(1, 2, 3);
+            velocity.set(1, 2, 2.5);
+            waitforpaddle2 = false;
+            waitfor_ = false;
         }
         loader.load('../models/latest.glb', (gltf) => {
             const loadedscene = gltf.scene;
@@ -81,7 +81,7 @@ function Game2() {
             initBallPos = ball.position.clone();
             paddle2.position.setZ(-2.5 * tableLength);
             paddle2.position.setX(0);
-            paddle2.position.setY(-15);
+            paddle2.position.setY(-20);
             // Create a vector to hold the mouse position
             const mouse = new THREE.Vector2();
             let isListening = true;
@@ -162,7 +162,7 @@ function Game2() {
 
             // Apply gravity
             if (velocity.y < 0)
-                velocity.y += gravity * 0.8;
+                velocity.y += gravity * 0.9;
             else
                 velocity.y += gravity;
             // Apply air resistance
@@ -171,7 +171,9 @@ function Game2() {
             velocity.y -= Math.sign(velocity.y) * 0.02;
             // Check for collisions
             if (ballBox.intersectsBox(tableBox)) {
-                //paddlePositionDiff.set(0, 0, 0);
+                paddlePositionDiff.set(0, 0, 0);
+                waitforpaddle2 = false;
+                waitfor_ = false;
                 // Move the ball out of the intersection
                 while (ballBox.intersectsBox(tableBox)) {
                     ball.position.y += 1;
@@ -188,53 +190,65 @@ function Game2() {
                 restart_game();
             }
             if (ballBox.intersectsBox(paddle1Box)) {
-                if (firstIntersectionPosition === null) {
+                if (firstIntersectionPosition === null)
                     firstIntersectionPosition = paddle1.position.clone();
-                }
-                lastIntersectionPosition = paddle1.position.clone();
-                const relativePosition = ball.position.clone().sub(table.position);
-                velocity.z = -mapRange(relativePosition.z, { min: -3 * tableLength, max: tableLength }, { min: -6, max: 6 });
-                velocity.y = 1.2;
-                velocity.x = -mapRange(relativePosition.x - tableWidth / 2, { min: -tableWidth / 2, max: tableWidth / 2 }, { min: -3, max: 3 });
-                
-                // gsap.to(paddle1.position, {
-                //     x: ball.position.x + 3,
-                //     y: ball.position.y,
-                //     z: ball.position.z + 3,
-                //     duration: 0.2,
-                //     onComplete: () => {
-                //         gsap.to(paddle1.position, {
-                //             x: paddleX + tableWidth / 2,
-                //             y: paddleY - 10,
-                //             z: -paddleZ + 60,
-                //             duration: 0.3
-                //         });
-                //     }
-                // });
-                if (paddle1.rotation.y < 2.66 && paddle1.rotation.y > 0.52)
+                else
+                    lastIntersectionPosition = paddle1.position.clone();
+                if (!waitforpaddle2)
                 {
-                    gsap.to(paddle1.rotation, {
-                        y: paddle1.rotation.y / 100,
-                        duration: 0.1,
+                    console.log('hit');
+                    const relativePosition = ball.position.clone().sub(table.position);
+                    velocity.z = -mapRange(relativePosition.z, { min: -3 * tableLength, max: tableLength }, {min: -5, max: 5 });
+                    velocity.y = 1.6;
+                    velocity.x = -mapRange(relativePosition.x - tableWidth / 2, { min: -tableWidth / 2, max: tableWidth / 2 }, { min: -2, max: 2 });
+                    
+                    gsap.to(paddle1.position, {
+                        x: ball.position.x + 3,
+                        y: ball.position.y,
+                        z: ball.position.z + 3,
+                        duration: 0.2,
                         onComplete: () => {
-                            gsap.to(paddle1.rotation, {
-                                y: paddle1.rotation.y * 100,
+                            gsap.to(paddle1.position, {
+                                x: paddleX + tableWidth / 2,
+                                y: paddleY - 10,
+                                z: -paddleZ + 60,
                                 duration: 0.3
                             });
                         }
                     });
+                    if (paddle1.rotation.y < 2.66 && paddle1.rotation.y > 0.52)
+                    {
+                        gsap.to(paddle1.rotation, {
+                            y: paddle1.rotation.y / 100,
+                            duration: 0.1,
+                            onComplete: () => {
+                                gsap.to(paddle1.rotation, {
+                                    y: paddle1.rotation.y * 100,
+                                    duration: 0.3
+                                });
+                            }
+                        });
+                    }
                 }
+                waitforpaddle2 = true;
             }
-            else if (firstIntersectionPosition !== null && lastIntersectionPosition !== null) {
+            else if (firstIntersectionPosition !== null && lastIntersectionPosition !== null && !waitfor_) {
                 paddlePositionDiff = lastIntersectionPosition.clone().sub(firstIntersectionPosition);
-                console.log(paddlePositionDiff);
+                //set max value for paddlePositionDiff
+                if (Math.abs(paddlePositionDiff.x) > 13)
+                    paddlePositionDiff.x = Math.sign(paddlePositionDiff.x) * 13;
+                if (Math.abs(paddlePositionDiff.z) > 13)
+                    paddlePositionDiff.z = Math.sign(paddlePositionDiff.z) * 13;
+                console.log(paddlePositionDiff, waitfor_);
+                waitfor_ = true;
                 firstIntersectionPosition = null;
                 lastIntersectionPosition = null;
             }
-            // velocity.x -= paddlePositionDiff.x / 200;
-            // velocity.y -= paddlePositionDiff.y / 200;
-            // velocity.z -= paddlePositionDiff.z / 200;
+            velocity.x -= paddlePositionDiff.x / 200;
+            velocity.z -= paddlePositionDiff.z / 500;
             if (ballBox.intersectsBox(paddle2Box)) {
+                waitforpaddle2 = false;
+                waitfor_ = false;
                 paddlePositionDiff.set(0, 0, 0);
                 let relativePosition: THREE.Vector3 = ball.position.clone().sub(table.position);
                 velocity.x = -mapRange(relativePosition.x - tableWidth / 2, { min: -tableWidth / 2, max: tableWidth / 2 }, { min: -1, max: 1 });
@@ -248,11 +262,13 @@ function Game2() {
                 else {
                     velocity.x = Math.random() * 2 - 1;
                 }
-                velocity.z = -mapRange(relativePosition.z, { min: -3 * tableLength, max: tableLength }, { min: -6, max: 6 });
-                velocity.y = 1.2;
+                velocity.z = -mapRange(relativePosition.z, { min: -3 * tableLength, max: tableLength }, { min: -5, max: 5 });
+                velocity.y = 1.6;
             }
             
             if (ballBox.intersectsBox(gridBox)) {
+                waitforpaddle2 = false;
+                waitfor_ = false;
                 //make the ball bounce off the grid with lower velocity
                 if (ballBox.getCenter(new THREE.Vector3()).y <= gridBox.max.y) // ball hits the grid
                 {
