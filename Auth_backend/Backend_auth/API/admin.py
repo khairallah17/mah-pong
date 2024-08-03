@@ -1,9 +1,13 @@
 from django.contrib import admin
-from API.models import User
+from API.models import Profile, User
 # Register your models here.
 
 
-class Admin_User(admin.ModelAdmin):
+class Admin_Users(admin.ModelAdmin):
     details_user_display = ['username', 'email']
 
-admin.register(User, Admin_User)
+class Admin_Profils(admin.ModelAdmin):
+    list_display = ['full_name', 'user']
+
+admin.site.register(User, Admin_Users)
+admin.site.register(Profile, Admin_Profils)

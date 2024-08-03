@@ -41,7 +41,8 @@ INSTALLED_APPS = [
     'rest_framework',
     'corsheaders',
     'rest_framework_simplejwt',
-    'API' # Its My Own APP NAmed API
+    'API' 
+    # Its My Own APP NAmed API
 ]
 
 MIDDLEWARE = [
