@@ -58,7 +58,7 @@ function Pve3d() {
             waitforpaddle2 = false;
             waitfor_ = false;
         }
-        loader.load('../models/latest.glb', (gltf) => {
+        loader.load('../models/scene.glb', (gltf) => {
             const loadedscene = gltf.scene;
             loadedscene.traverse((object) => {
                 console.log(object.name);
@@ -202,20 +202,20 @@ function Pve3d() {
                     velocity.y = 1.6;
                     velocity.x = -mapRange(relativePosition.x - tableWidth / 2, { min: -tableWidth / 2, max: tableWidth / 2 }, { min: -2, max: 2 });
                     
-                    gsap.to(paddle1.position, {
-                        x: ball.position.x + 3,
-                        y: ball.position.y,
-                        z: ball.position.z + 3,
-                        duration: 0.2,
-                        onComplete: () => {
-                            gsap.to(paddle1.position, {
-                                x: paddleX + tableWidth / 2,
-                                y: paddleY - 10,
-                                z: -paddleZ + 60,
-                                duration: 0.3
-                            });
-                        }
-                    });
+                    // gsap.to(paddle1.position, {
+                    //     x: ball.position.x + 3,
+                    //     y: ball.position.y,
+                    //     z: ball.position.z + 3,
+                    //     duration: 0.2,
+                    //     onComplete: () => {
+                    //         gsap.to(paddle1.position, {
+                    //             x: paddleX + tableWidth / 2,
+                    //             y: paddleY - 10,
+                    //             z: -paddleZ + 60,
+                    //             duration: 0.3
+                    //         });
+                    //     }
+                    // });
                     if (paddle1.rotation.y < 2.66 && paddle1.rotation.y > 0.52)
                     {
                         gsap.to(paddle1.rotation, {
