@@ -5,7 +5,7 @@ import { gsap } from 'gsap';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import backgroundimage from './assets/background.jpg';
 
-function Game2() {
+function Pve3d() {
     useEffect(() => {
         const gameContainer = document.getElementById("game-container");
         const loader = new GLTFLoader();
@@ -310,4 +310,4 @@ function Game2() {
     }} />;
 }
 
-export default Game2;
+export default Pve3d;

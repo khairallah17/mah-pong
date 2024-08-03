@@ -1,24 +1,64 @@
-version: '3'
-
-networks:
-  lemah:
-    name: "lemah"
-    driver: "bridge"
+version: '3.8'
 
 services:
-  backend:
+  notifications:
     build:
-      context: "./mahPong"
+      context: "./Notifications"
       dockerfile: Dockerfile
     ports:
-      - 8000:8000
-  
-  db:
+      - 8001:8000
+    depends_on:
+      - notifications_db
+
+  notifications_db:
     image: postgres:15-alpine
     restart: always
-    expose:
-      - 5432
     environment:
-      POSTGRES_PASSWORD: 123123123
-      POSTGRES_USER: postgres
-      POSTGRES_DB: lemah
+      POSTGRES_PASSWORD: notifications_pass
+      POSTGRES_USER: notifications_user
+      POSTGRES_DB: notifications_db
+    volumes:
+      - notifications_db_data:/var/lib/postgresql/data
+
+  tournaments:
+    build:
+      context: "./tournamentManagement"
+      dockerfile: Dockerfile
+    ports:
+      - 8002:8000
+    depends_on:
+      - tournaments_db
+
+  tournaments_db:
+    image: postgres:15-alpine
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: tournaments_pass
+      POSTGRES_USER: tournaments_user
+      POSTGRES_DB: tournaments_db
+    volumes:
+      - tournaments_db_data:/var/lib/postgresql/data
+
+  leaderboard:
+    build:
+      context: "./leaderBoard"
+      dockerfile: Dockerfile
+    ports:
+      - 8003:8000
+    depends_on:
+      - leaderboard_db
+
+  leaderboard_db:
+    image: postgres:15-alpine
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: leaderboard_pass
+      POSTGRES_USER: leaderboard_user
+      POSTGRES_DB: leaderboard_db
+    volumes:
+      - leaderboard_db_data:/var/lib/postgresql/data
+
+volumes:
+  notifications_db_data:
+  tournaments_db_data:
+  leaderboard_db_data:

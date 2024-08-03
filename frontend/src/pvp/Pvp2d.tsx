@@ -2,8 +2,9 @@ import * as THREE from 'three';
 import { useEffect } from 'react';
 // import backgroundimage from './assets/background.jpg';
 
-function Game1() {
+function Pvp2d() {
 	useEffect(() => {
+		let socket = new WebSocket('ws://' + window.location.host + ':8000/ws/game/');
 		const gameContainer = document.getElementById("game-container");
 		let restartEvent = new KeyboardEvent('keydown', { key: 'r' });
 
@@ -84,11 +85,25 @@ function Game1() {
 				paddle2.position.set(2.5, 0.1, 0);
 				renderer.render(scene, camera);
 			} if (event.key === 'ArrowUp') {
-				isPaused = false;
+				socket.send(JSON.stringify({
+					'event': 'player_move_up',
+					'data': {
+						'player_id': 1,
+						'position': paddle1.position
+					}
+				}));
+				// isPaused = false;
 				if (paddle1.position.z - paddle1.geometry.parameters.depth / 2 > table.position.z - table.geometry.parameters.depth / 2)
 					paddle1.position.z -= 0.2;
 			} else if (event.key === 'ArrowDown') {
-				isPaused = false;
+				socket.send(JSON.stringify({
+					'event': 'player_move_down',
+					'data': {
+						'player_id': 1,
+						'position': paddle1.position
+					}
+				}));
+				// isPaused = false;
 				if (paddle1.position.z + paddle1.geometry.parameters.depth / 2 < table.position.z + table.geometry.parameters.depth / 2)
 					paddle1.position.z += 0.2;
 			}
@@ -100,11 +115,32 @@ function Game1() {
 				isPaused = true;
 		})
 
-
+		socket.onmessage = function (event) {
+			const data = JSON.parse(event.data);
+			if (data.event === 'player_move_up') {
+				if (data.data.player_id === 2) {
+					if (paddle2.position.z - paddle2.geometry.parameters.depth / 2 > table.position.z - table.geometry.parameters.depth / 2)
+						paddle2.position.z -= 0.2;
+				}
+			} else if (data.event === 'player_move_down') {
+				if (data.data.player_id === 2) {
+					if (paddle2.position.z + paddle2.geometry.parameters.depth / 2 < table.position.z + table.geometry.parameters.depth / 2)
+						paddle2.position.z += 0.2;
+				}
+			}
+		}
 		let ballDirection = new THREE.Vector3(1, 0, 1);
 		const paddle1Box = new THREE.Box3().setFromObject(paddle1);
 		const paddle2Box = new THREE.Box3().setFromObject(paddle2);
+		socket.onerror = function (e) {
+			// handle error
+			console.error('WebSocket error:', e);
+		};
 
+		socket.onclose = function (e) {
+			// handle close
+			console.log('WebSocket connection closed:', e);
+		};
 
 		const animate = function () {
 			if (isPaused) {
@@ -154,4 +190,4 @@ function Game1() {
 	}} />;
 }
 
-export default Game1;
+export default Pvp2d;

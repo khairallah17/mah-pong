@@ -1,5 +1,5 @@
 """
-WSGI config for mahPong project.
+WSGI config for leaderBoard project.
 
 It exposes the WSGI callable as a module-level variable named ``application``.
 
@@ -11,6 +11,6 @@ import os
 
 from django.core.wsgi import get_wsgi_application
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'mahPong.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'leaderBoard.settings')
 
 application = get_wsgi_application()

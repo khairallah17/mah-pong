@@ -1,5 +1,5 @@
 """
-ASGI config for mahPong project.
+ASGI config for tournamentManagement project.
 
 It exposes the ASGI callable as a module-level variable named ``application``.
 
@@ -11,6 +11,6 @@ import os
 
 from django.core.asgi import get_asgi_application
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'mahPong.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'tournamentManagement.settings')
 
 application = get_asgi_application()
