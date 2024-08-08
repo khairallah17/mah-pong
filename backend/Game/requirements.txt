@@ -5,3 +5,4 @@ typing-extensions==4.12.1
 djangorestframework==3.14
 django-cors-headers==4.0.0
 channels==3.0.4
+channels_redis==4.0.0

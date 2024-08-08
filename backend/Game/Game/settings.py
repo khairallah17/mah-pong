@@ -52,7 +52,7 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'Game.urls'
 
-ASGI_APPLICATION = 'Game.routing.application'
+ASGI_APPLICATION = 'Game.asgi.application'
 
 TEMPLATES = [
     {
@@ -72,6 +72,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'Game.wsgi.application'
 
+SESSION_ENGINE = 'django.contrib.sessions.backends.signed_cookies'
 
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
@@ -124,3 +125,12 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            "hosts": [('redis', 6379)],
+        },
+    },
+}
