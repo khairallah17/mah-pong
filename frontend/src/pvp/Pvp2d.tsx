@@ -1,35 +1,38 @@
 import * as THREE from 'three';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 
 interface Pvp2dProps {
-    ws: WebSocket | null;
+    username: string;
 }
 
-function Pvp2d({ws}: Pvp2dProps) {
+function Pvp2d({ username }: Pvp2dProps) {
     const [isLoading, setIsLoading] = useState(true);
+    const wsRef = useRef<WebSocket | null>(null);
 
     useEffect(() => {
-        if (!ws) {
-            console.error('WebSocket connection not established');
-            return;
-        }
-        const gameContainer = document.getElementById("game-container");
-        let restartEvent = new KeyboardEvent('keydown', { key: 'r' });
-
-        ws.onopen = () => {
-            console.log('matchmaking ws connection established');
-        };
-
-        ws.onmessage = (event) => {
-            const message = JSON.parse(event.data);
-            console.log(message);
-            if (message.type === 'match_found') {
-                setIsLoading(false);
-                startGame();
+        if (username && !wsRef.current) {
+            wsRef.current = new WebSocket('ws://localhost:8000/ws/matchmaking/');
+            wsRef.current.onopen = () => {
+                console.log('WebSocket connection established');
+                wsRef.current!.send(JSON.stringify({ type: 'set_username', username }));
+                console.log('Username sent:', username);
+            };
+            wsRef.current.onmessage = (event) => {
+                const message = JSON.parse(event.data);
+                console.log(message);
+                if (message.type === 'match_found') {
+                    setIsLoading(false);
+                    startGame();
+                }
+            };
+            wsRef.current.onclose = () => {
+                console.log('WebSocket connection closed');
             }
-        };
+        }
 
         const startGame = () => {
+            const gameContainer = document.getElementById("game-container");
+            let restartEvent = new KeyboardEvent('keydown', { key: 'r' });
             const scene = new THREE.Scene();
             const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
             camera.position.z = 5;
@@ -91,24 +94,12 @@ function Pvp2d({ws}: Pvp2dProps) {
             const paddle2Box = new THREE.Box3().setFromObject(paddle2);
 
             document.addEventListener('keydown', onDocumentKeyDown, false);
-            document.addEventListener('click', onDocumentClick, false);
 
             function onDocumentKeyDown(event: KeyboardEvent) {
-                if (event.key === 'p') {
-                    isPaused = !isPaused;
-                } else if (event.key === 'r') {
-                    isPaused = true;
-                    ball.position.set(0, 0.1, 0);
-                    ballDirection.set(1, 0, 1);
-                    paddle1.position.set(-2.5, 0.1, 0);
-                    paddle2.position.set(2.5, 0.1, 0);
-                    renderer.render(scene, camera);
-                } else if (event.key === 'ArrowUp') {
-                    if (!ws) {
-                        console.error('WebSocket connection not established');
-                        return;
-                    }
-                    ws.send(JSON.stringify({
+
+                if (event.key === 'ArrowUp') {
+                    wsRef.current!.send(JSON.stringify({
+                        'type': 'game_event',
                         'event': 'player_move_up',
                         'data': {
                             'player_id': 1,
@@ -118,11 +109,8 @@ function Pvp2d({ws}: Pvp2dProps) {
                     if (paddle1.position.z - paddle1.geometry.parameters.depth / 2 > table.position.z - table.geometry.parameters.depth / 2)
                         paddle1.position.z -= 0.2;
                 } else if (event.key === 'ArrowDown') {
-                    if (!ws) {
-                        console.error('WebSocket connection not established');
-                        return;
-                    }
-                    ws.send(JSON.stringify({
+                    wsRef.current!.send(JSON.stringify({
+                        'type': 'game_event',
                         'event': 'player_move_down',
                         'data': {
                             'player_id': 1,
@@ -133,27 +121,34 @@ function Pvp2d({ws}: Pvp2dProps) {
                         paddle1.position.z += 0.2;
                 }
             }
-
-            function onDocumentClick() {
-                isPaused = !isPaused;
+            if (!wsRef.current)
+            {
+                console.error('WebSocket connection not established 3');
+                return;
             }
-
-            ws.onmessage = function (event) {
+            wsRef.current.onmessage = function (event) {
                 const data = JSON.parse(event.data);
+                console.log(data);
                 if (data.event === 'player_move_up') {
                     if (paddle2.position.z - paddle2.geometry.parameters.depth / 2 > table.position.z - table.geometry.parameters.depth / 2)
                         paddle2.position.z -= 0.2;
                 } else if (data.event === 'player_move_down') {
                     if (paddle2.position.z + paddle2.geometry.parameters.depth / 2 < table.position.z + table.geometry.parameters.depth / 2)
                         paddle2.position.z += 0.2;
+                } else if (data.event === 'game_restart') {
+                    ball.position.set(0, 0.1, 0);
+                    ballDirection.set(1, 0, 1);
+                    paddle1.position.set(-2.5, 0.1, 0);
+                    paddle2.position.set(2.5, 0.1, 0);
+                    renderer.render(scene, camera);
                 }
             };
 
-            ws.onerror = function (e) {
+            wsRef.current.onerror = function (e) {
                 console.error('WebSocket error:', e);
             };
 
-            ws.onclose = function (e) {
+            wsRef.current.onclose = function (e) {
                 console.log('WebSocket connection closed:', e);
             };
 
@@ -182,6 +177,7 @@ function Pvp2d({ws}: Pvp2dProps) {
                 }
 
                 if (goal1.intersectsSphere(ballSphere) || goal2.intersectsSphere(ballSphere)) {
+                    wsRef.current!.send(JSON.stringify({ 'type': 'game_event', 'event': 'game_restart' }));
                     isPaused = true;
                     document.dispatchEvent(restartEvent);
                 }
@@ -199,15 +195,16 @@ function Pvp2d({ws}: Pvp2dProps) {
                 gameContainer?.removeChild(renderer.domElement);
                 window.removeEventListener('resize', onWindowResize, false);
                 document.removeEventListener('keydown', onDocumentKeyDown, false);
-                document.removeEventListener('click', onDocumentClick, false);
-                ws.close();
             };
         };
 
         return () => {
-            ws.close();
+            if (wsRef.current) {
+                wsRef.current.close();
+                wsRef.current = null;
+            }
         };
-    }, [ws]);
+    }, [username]);
 
     return <div id="game-container" style={{
         margin: 0,
