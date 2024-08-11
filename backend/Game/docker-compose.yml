@@ -2,6 +2,7 @@ version: '3.8'
 
 services:
   game:
+    container_name: game
     build:
       context: .
       dockerfile: Dockerfile

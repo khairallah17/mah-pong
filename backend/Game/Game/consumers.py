@@ -60,34 +60,34 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
                         user_channels[self.users[0]],
                         {
                             'type': 'match_found',
-                            'opponent': self.users[1]
+                            'opponent': '0'
                         }
                     )
                     await self.channel_layer.send(
                         user_channels[self.users[1]],
                         {
                             'type': 'match_found',
-                            'opponent': self.users[0]
+                            'opponent': '1'
                         }
                     )
             else:
                 logger.warning("NO USERNAME FOUND")
         else:
             event = data.get('event')
-            if (self.username == self.users[0]):
+            if (self.users and self.username == self.users[0]):
                 await self.channel_layer.send(
                     user_channels[self.users[1]],
                     {
                         'type': 'game_event',
-                        'event': event,
+                        'event': event
                     }
                 )
-            else:
+            elif self.users:
                 await self.channel_layer.send(
                     user_channels[self.users[0]],
                     {
                         'type': 'game_event',
-                        'event': event,
+                        'event': event
                     }
                 )
     @database_sync_to_async
@@ -100,4 +100,10 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
         await self.send(text_data=json.dumps({
             'type': 'match_found',
             'opponent': opponent
+        }))
+    async def game_event(self, event):
+        game_eve = event['event']
+        await self.send(text_data=json.dumps({
+            'type': 'game_event',
+            'event': game_eve
         }))

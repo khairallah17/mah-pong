@@ -1,64 +1,59 @@
 version: '3.8'
 
 services:
+  game:
+    container_name: game
+    build:
+      context: "./Game"
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    depends_on:
+      - redis
+  redis:
+    image: "redis:alpine"
+    ports:
+      - "6379:6379"
+
   notifications:
+    container_name: notifications
     build:
       context: "./Notifications"
       dockerfile: Dockerfile
     ports:
       - 8001:8000
     depends_on:
-      - notifications_db
-
-  notifications_db:
-    image: postgres:15-alpine
-    restart: always
-    environment:
-      POSTGRES_PASSWORD: notifications_pass
-      POSTGRES_USER: notifications_user
-      POSTGRES_DB: notifications_db
-    volumes:
-      - notifications_db_data:/var/lib/postgresql/data
+      - db
 
   tournaments:
+    container_name: tournaments
     build:
       context: "./tournamentManagement"
       dockerfile: Dockerfile
     ports:
       - 8002:8000
     depends_on:
-      - tournaments_db
-
-  tournaments_db:
-    image: postgres:15-alpine
-    restart: always
-    environment:
-      POSTGRES_PASSWORD: tournaments_pass
-      POSTGRES_USER: tournaments_user
-      POSTGRES_DB: tournaments_db
-    volumes:
-      - tournaments_db_data:/var/lib/postgresql/data
+      - db
 
   leaderboard:
+    container_name: leaderboard
     build:
       context: "./leaderBoard"
       dockerfile: Dockerfile
     ports:
       - 8003:8000
     depends_on:
-      - leaderboard_db
+      - db
 
-  leaderboard_db:
+  db:
     image: postgres:15-alpine
     restart: always
     environment:
-      POSTGRES_PASSWORD: leaderboard_pass
-      POSTGRES_USER: leaderboard_user
-      POSTGRES_DB: leaderboard_db
+      POSTGRES_PASSWORD: pass
+      POSTGRES_USER: user
+      POSTGRES_DB: db
     volumes:
-      - leaderboard_db_data:/var/lib/postgresql/data
+      - db_data:/var/lib/postgresql/data
 
 volumes:
-  notifications_db_data:
-  tournaments_db_data:
-  leaderboard_db_data:
+  db_data:

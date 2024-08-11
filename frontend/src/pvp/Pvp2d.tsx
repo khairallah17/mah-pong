@@ -6,7 +6,7 @@ interface Pvp2dProps {
 }
 
 function Pvp2d({ username }: Pvp2dProps) {
-    const [isLoading, setIsLoading] = useState(true);
+    const [isPlayer1, setisPlayer1] = useState(true);
     const wsRef = useRef<WebSocket | null>(null);
 
     useEffect(() => {
@@ -20,10 +20,15 @@ function Pvp2d({ username }: Pvp2dProps) {
             wsRef.current.onmessage = (event) => {
                 const message = JSON.parse(event.data);
                 console.log(message);
+                if (message.opponent === '0' || message.opponent === '1')
+                {
+                    setisPlayer1(false);
+                    console.log("isnotplyer1");
+                }
                 if (message.type === 'match_found') {
-                    setIsLoading(false);
                     startGame();
                 }
+                console.log("isplyr1", isPlayer1)
             };
             wsRef.current.onclose = () => {
                 console.log('WebSocket connection closed');
@@ -75,14 +80,19 @@ function Pvp2d({ username }: Pvp2dProps) {
             paddle1.position.set(-2.5, 0.1, 0);
             paddle1.castShadow = true;
             paddle1.receiveShadow = true;
-            scene.add(paddle1);
-
+            
             const paddle2 = new THREE.Mesh(paddleGeometry, paddleMaterial);
             paddle2.position.set(2.5, 0.1, 0);
             paddle2.castShadow = true;
             paddle2.receiveShadow = true;
+            if (isPlayer1 == false)
+            {
+                paddle1.position.setX(2.5);
+                paddle2.position.setX(-2.5);
+                console.log("flipped")
+            }
+            scene.add(paddle1);
             scene.add(paddle2);
-
             const light = new THREE.DirectionalLight(0xffffff, 3);
             light.position.set(0, 10, 0);
             light.castShadow = true;
@@ -135,12 +145,6 @@ function Pvp2d({ username }: Pvp2dProps) {
                 } else if (data.event === 'player_move_down') {
                     if (paddle2.position.z + paddle2.geometry.parameters.depth / 2 < table.position.z + table.geometry.parameters.depth / 2)
                         paddle2.position.z += 0.2;
-                } else if (data.event === 'game_restart') {
-                    ball.position.set(0, 0.1, 0);
-                    ballDirection.set(1, 0, 1);
-                    paddle1.position.set(-2.5, 0.1, 0);
-                    paddle2.position.set(2.5, 0.1, 0);
-                    renderer.render(scene, camera);
                 }
             };
 
@@ -177,7 +181,6 @@ function Pvp2d({ username }: Pvp2dProps) {
                 }
 
                 if (goal1.intersectsSphere(ballSphere) || goal2.intersectsSphere(ballSphere)) {
-                    wsRef.current!.send(JSON.stringify({ 'type': 'game_event', 'event': 'game_restart' }));
                     isPaused = true;
                     document.dispatchEvent(restartEvent);
                 }
