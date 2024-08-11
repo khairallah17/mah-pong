@@ -6,8 +6,10 @@ interface Pvp2dProps {
 }
 
 function Pvp2d({ username }: Pvp2dProps) {
-    const [isPlayer1, setisPlayer1] = useState(true);
+    let isPlayer1 = true;
     const wsRef = useRef<WebSocket | null>(null);
+    let keyPressed = false;
+    let intervalId: NodeJS.Timeout;
 
     useEffect(() => {
         if (username && !wsRef.current) {
@@ -20,9 +22,9 @@ function Pvp2d({ username }: Pvp2dProps) {
             wsRef.current.onmessage = (event) => {
                 const message = JSON.parse(event.data);
                 console.log(message);
-                if (message.opponent === '0' || message.opponent === '1')
+                if (message.opponent === '0')
                 {
-                    setisPlayer1(false);
+                    isPlayer1 = false;
                     console.log("isnotplyer1");
                 }
                 if (message.type === 'match_found') {
@@ -36,8 +38,8 @@ function Pvp2d({ username }: Pvp2dProps) {
         }
 
         const startGame = () => {
+            console.log('Game started, player 1?:', isPlayer1);
             const gameContainer = document.getElementById("game-container");
-            let restartEvent = new KeyboardEvent('keydown', { key: 'r' });
             const scene = new THREE.Scene();
             const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
             camera.position.z = 5;
@@ -58,6 +60,7 @@ function Pvp2d({ username }: Pvp2dProps) {
             }
 
             renderer.shadowMap.enabled = true;
+            const paddleSpeed = 0.1;
 
             const tableGeometry = new THREE.BoxGeometry(5, 0.1, 3);
             const tableMaterial = new THREE.MeshStandardMaterial({ color: 0x8B4513 });
@@ -89,7 +92,6 @@ function Pvp2d({ username }: Pvp2dProps) {
             {
                 paddle1.position.setX(2.5);
                 paddle2.position.setX(-2.5);
-                console.log("flipped")
             }
             scene.add(paddle1);
             scene.add(paddle2);
@@ -98,39 +100,65 @@ function Pvp2d({ username }: Pvp2dProps) {
             light.castShadow = true;
             scene.add(light);
 
-            let isPaused = false;
+            let isPaused = true;
             let ballDirection = new THREE.Vector3(1, 0, 1);
             const paddle1Box = new THREE.Box3().setFromObject(paddle1);
             const paddle2Box = new THREE.Box3().setFromObject(paddle2);
 
-            document.addEventListener('keydown', onDocumentKeyDown, false);
+            document.addEventListener('keydown', onDocumentKeyDown);
+            document.addEventListener('keyup', onDocumentKeyUp);
+
+            function restart_game() {
+                ball.position.set(0, 0.1, 0);
+                ballDirection = new THREE.Vector3(1, 0, 1);
+                isPaused = true;
+            }
 
             function onDocumentKeyDown(event: KeyboardEvent) {
-
-                if (event.key === 'ArrowUp') {
-                    wsRef.current!.send(JSON.stringify({
-                        'type': 'game_event',
-                        'event': 'player_move_up',
-                        'data': {
-                            'player_id': 1,
-                            'position': paddle1.position
-                        }
-                    }));
-                    if (paddle1.position.z - paddle1.geometry.parameters.depth / 2 > table.position.z - table.geometry.parameters.depth / 2)
-                        paddle1.position.z -= 0.2;
-                } else if (event.key === 'ArrowDown') {
-                    wsRef.current!.send(JSON.stringify({
-                        'type': 'game_event',
-                        'event': 'player_move_down',
-                        'data': {
-                            'player_id': 1,
-                            'position': paddle1.position
-                        }
-                    }));
-                    if (paddle1.position.z + paddle1.geometry.parameters.depth / 2 < table.position.z + table.geometry.parameters.depth / 2)
-                        paddle1.position.z += 0.2;
+                if (!keyPressed) {
+                    keyPressed = true;
+            
+                    if (event.key === 'ArrowUp') {
+                        intervalId = setInterval(() => {
+                            wsRef.current!.send(JSON.stringify({
+                                'type': 'game_event',
+                                'event': 'player_move_up',
+                                'data': {
+                                    'player_id': isPlayer1 ? 1 : 2,
+                                    'position': paddle1.position
+                                }
+                            }));
+                            if (paddle1.position.z - paddle1.geometry.parameters.depth / 2 > table.position.z - table.geometry.parameters.depth / 2)
+                                paddle1.position.z -= paddleSpeed;
+                            isPaused = false;
+                        }, 30);
+                    } else if (event.key === 'ArrowDown') {
+                        intervalId = setInterval(() => {
+                            wsRef.current!.send(JSON.stringify({
+                                'type': 'game_event',
+                                'event': 'player_move_down',
+                                'data': {
+                                    'player_id': isPlayer1 ? 1 : 2,
+                                    'position': paddle1.position
+                                }
+                            }));
+                            if (paddle1.position.z + paddle1.geometry.parameters.depth / 2 < table.position.z + table.geometry.parameters.depth / 2)
+                                paddle1.position.z += paddleSpeed;
+                            isPaused = false;
+                        }, 30);
+                    }
                 }
             }
+
+            function onDocumentKeyUp(event: KeyboardEvent) {
+                if (keyPressed) {
+                    keyPressed = false;            
+                    if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
+                        clearInterval(intervalId);
+                    }
+                }
+            }
+
             if (!wsRef.current)
             {
                 console.error('WebSocket connection not established 3');
@@ -141,10 +169,12 @@ function Pvp2d({ username }: Pvp2dProps) {
                 console.log(data);
                 if (data.event === 'player_move_up') {
                     if (paddle2.position.z - paddle2.geometry.parameters.depth / 2 > table.position.z - table.geometry.parameters.depth / 2)
-                        paddle2.position.z -= 0.2;
+                        paddle2.position.z -= paddleSpeed;
+                    isPaused = false;
                 } else if (data.event === 'player_move_down') {
                     if (paddle2.position.z + paddle2.geometry.parameters.depth / 2 < table.position.z + table.geometry.parameters.depth / 2)
-                        paddle2.position.z += 0.2;
+                        paddle2.position.z += paddleSpeed;
+                    isPaused = false;
                 }
             };
 
@@ -174,15 +204,15 @@ function Pvp2d({ username }: Pvp2dProps) {
 
                 if (paddle1Box.intersectsSphere(ballSphere)) {
                     ballDirection.x *= -1;
-                    ball.position.x += 0.05;
+                    ball.position.x += 0.05 * (isPlayer1 ? 1 : -1);
                 } else if (paddle2Box.intersectsSphere(ballSphere)) {
                     ballDirection.x *= -1;
-                    ball.position.x -= 0.05;
+                    ball.position.x -= 0.05 * (isPlayer1 ? 1 : -1);
                 }
 
                 if (goal1.intersectsSphere(ballSphere) || goal2.intersectsSphere(ballSphere)) {
                     isPaused = true;
-                    document.dispatchEvent(restartEvent);
+                    restart_game();
                 }
 
                 if (ball.position.z < -1.5 || ball.position.z > 1.5) {
@@ -195,12 +225,12 @@ function Pvp2d({ username }: Pvp2dProps) {
             animate();
 
             return () => {
-                gameContainer?.removeChild(renderer.domElement);
                 window.removeEventListener('resize', onWindowResize, false);
                 document.removeEventListener('keydown', onDocumentKeyDown, false);
+                gameContainer?.removeChild(renderer.domElement);
             };
         };
-
+        
         return () => {
             if (wsRef.current) {
                 wsRef.current.close();

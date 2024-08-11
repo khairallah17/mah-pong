@@ -16,10 +16,11 @@ class GameConsumer(AsyncWebsocketConsumer):
 logger = logging.getLogger(__name__)
 matchmaking_pool = []
 user_channels = {}
+matched_users = {}
 
 class MatchmakingConsumer(AsyncWebsocketConsumer):
-    users = []
     async def connect(self):
+        self.users = []
         self.username = None
         await self.accept()
 
@@ -56,6 +57,8 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
                     self.users = matchmaking_pool[:2]
                     matchmaking_pool.remove(self.users[0])
                     matchmaking_pool.remove(self.users[1])
+                    matched_users[self.users[0]] = self.users[1]
+                    matched_users[self.users[1]] = self.users[0]
                     await self.channel_layer.send(
                         user_channels[self.users[0]],
                         {
@@ -72,19 +75,11 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
                     )
             else:
                 logger.warning("NO USERNAME FOUND")
-        else:
+        elif message_type == 'game_event':
             event = data.get('event')
-            if (self.users and self.username == self.users[0]):
+            if self.username in matched_users:
                 await self.channel_layer.send(
-                    user_channels[self.users[1]],
-                    {
-                        'type': 'game_event',
-                        'event': event
-                    }
-                )
-            elif self.users:
-                await self.channel_layer.send(
-                    user_channels[self.users[0]],
+                    user_channels[matched_users[self.username]],
                     {
                         'type': 'game_event',
                         'event': event
