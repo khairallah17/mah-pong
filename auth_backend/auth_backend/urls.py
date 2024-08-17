@@ -1,5 +1,5 @@
 """
-URL configuration for Backend_auth project.
+URL configuration for auth_backend project.
 
 The `urlpatterns` list routes URLs to views. For more information please see:
     https://docs.djangoproject.com/en/4.2/topics/http/urls/
@@ -19,5 +19,5 @@ from django.urls import path, include
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('API/', include('API.urls'))
+    path('api/', include('api.urls'))
 ]

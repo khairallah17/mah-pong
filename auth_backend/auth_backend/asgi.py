@@ -1,5 +1,5 @@
 """
-ASGI config for Backend_auth project.
+ASGI config for auth_backend project.
 
 It exposes the ASGI callable as a module-level variable named ``application``.
 
@@ -11,6 +11,6 @@ import os
 
 from django.core.asgi import get_asgi_application
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'Backend_auth.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'auth_backend.settings')
 
 application = get_asgi_application()
