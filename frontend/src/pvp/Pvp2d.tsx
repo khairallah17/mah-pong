@@ -7,11 +7,11 @@ interface Pvp2dProps {
 
 function Pvp2d({ username }: Pvp2dProps) {
     const wsRef = useRef<WebSocket | null>(null);
-    const gameStateRef = useRef<any>(null); // Ref to store the latest gameState
+    //const gameStateRef = useRef<any>(null);
+    const [gameState, setGameState] = useState<any>(null);
     let isMatched = false;
     let keyPressed = false;
     let isPlayer1 = true;
-    let isPaused = true;
     let ballDirection = new THREE.Vector3(1, 0, 1);
     const PADDLE_SPEED = 0.05;
     const intervalIdRef = useRef<NodeJS.Timeout | null>(null);
@@ -20,6 +20,7 @@ function Pvp2d({ username }: Pvp2dProps) {
     const paddle1Ref = useRef<THREE.Mesh | null>(null);
     const paddle2Ref = useRef<THREE.Mesh | null>(null);
     const ballRef = useRef<THREE.Mesh | null>(null);
+    const isPausedRef = useRef<boolean>(true);
 
     useEffect(() => {
         if (username && !wsRef.current) {
@@ -31,14 +32,15 @@ function Pvp2d({ username }: Pvp2dProps) {
             };
             wsRef.current.onmessage = (event) => {
                 const message = JSON.parse(event.data);
-                console.log(message);
+                //console.log(message);
                 if (message.type === 'match_found') {
                     isMatched = true;
                     if (message.opponent === '0')
                         isPlayer1 = false;
+                    console.log("match found with opponent: ", message.opponent, "isPlayer1: ", isPlayer1);
                 } else if (message.type === 'game_state') {
-                    gameStateRef.current = message.state; // Update the ref with the latest gameState
-                    console.log("game state set to: ", message.state);
+                    //gameStateRef.current = message.game_state;
+                    setGameState(message.game_state);
                 }
             };
             wsRef.current.onclose = () => console.log('WebSocket connection closed');
@@ -52,6 +54,13 @@ function Pvp2d({ username }: Pvp2dProps) {
             }
         };
     }, [username, isMatched]);
+
+    // useEffect(() => {
+    //     if (gameState) {
+    //         console.log("gamestate exists");
+    //         updateScene(gameState);
+    //     }
+    // }, [gameState]);
 
     useEffect(() => {
         if (!rendererRef.current) {
@@ -69,12 +78,9 @@ function Pvp2d({ username }: Pvp2dProps) {
             rendererRef.current = renderer;
 
             const table = createTable();
-            const paddle1 = createPaddle();
-            const paddle2 = createPaddle();
+            const { paddle1, paddle2 } = createPaddles(isPlayer1);
             const ball = createBall();
 
-            paddle1.position.set(-2.5, 0.1, 0);
-            paddle2.position.set(2.5, 0.1, 0);
             paddle1Ref.current = paddle1;
             paddle2Ref.current = paddle2;
             ballRef.current = ball;
@@ -87,7 +93,7 @@ function Pvp2d({ username }: Pvp2dProps) {
             window.addEventListener('resize', onWindowResize);
 
             const animate = function () {
-                if (isPaused) {
+                if (isPausedRef.current) {
                     requestAnimationFrame(animate);
                     return;
                 }
@@ -114,16 +120,12 @@ function Pvp2d({ username }: Pvp2dProps) {
                 }
 
                 if (goal1.intersectsSphere(ballSphere) || goal2.intersectsSphere(ballSphere)) {
-                    isPaused = true;
+                    isPausedRef.current = true;
                     restartGame(ball);
                 }
 
                 if (ball.position.z < -1.5 || ball.position.z > 1.5) {
                     ballDirection.z *= -1;
-                }
-                if (gameStateRef.current) {
-                    console.log("gamestate exists");
-                    updateScene(gameStateRef.current);
                 }
                 renderer.render(scene, camera);
             };
@@ -132,20 +134,20 @@ function Pvp2d({ username }: Pvp2dProps) {
         }
 
         return () => {
-            window.removeEventListener('resize', onWindowResize);
-            document.removeEventListener('keydown', onDocumentKeyDown);
-            document.removeEventListener('keyup', onDocumentKeyUp);
-            const gameContainer = document.getElementById('game-container');
-            if (rendererRef.current && gameContainer) {
-                gameContainer.removeChild(rendererRef.current.domElement);
-            }
+            // window.removeEventListener('resize', onWindowResize);
+            // document.removeEventListener('keydown', onDocumentKeyDown);
+            // document.removeEventListener('keyup', onDocumentKeyUp);
+            // const gameContainer = document.getElementById('game-container');
+            // if (rendererRef.current && gameContainer) {
+            //     gameContainer.removeChild(rendererRef.current.domElement);
+            // }
         };
     }, []);
 
     function restartGame(ball: THREE.Mesh) {
         ball.position.set(0, 0.1, 0);
         ballDirection.set(1, 0, 1);
-        isPaused = true;
+        isPausedRef.current = true;
     }
 
     const onWindowResize = () => {
@@ -157,6 +159,7 @@ function Pvp2d({ username }: Pvp2dProps) {
     };
 
     const onDocumentKeyUp = (event: KeyboardEvent) => {
+        console.log("key released: ", event.key);
         if (keyPressed && (event.key === 'ArrowUp' || event.key === 'ArrowDown')) {
             keyPressed = false;
             if (intervalIdRef.current) {
@@ -166,27 +169,28 @@ function Pvp2d({ username }: Pvp2dProps) {
     };
 
     const onDocumentKeyDown = (event: KeyboardEvent) => {
+        console.log("key pressed: ", event.key);
+        isPausedRef.current = false;
         if (!keyPressed) {
             keyPressed = true;
+            console.log("iskeyPressed?: ", keyPressed);
             const moveDirection = event.key === 'ArrowUp' ? -1 : event.key === 'ArrowDown' ? 1 : 0;
             if (moveDirection !== 0) {
                 intervalIdRef.current = setInterval(() => {
-                    const playerId = isPlayer1 ? 1 : 2;
                     wsRef.current!.send(JSON.stringify({
                         type: 'game_event',
                         event: moveDirection === -1 ? 'player_move_up' : 'player_move_down',
-                        data: {
-                            player_id: playerId,
-                            position: paddle1Ref.current?.position,
-                        },
+                        player_id: isPlayer1 ? 1 : 2,
+                        //position: paddle1Ref.current?.position,
                     }));
+                    
                     const paddle1Geometry = paddle1Ref.current!.geometry as THREE.BoxGeometry;
                     const newPosition = paddle1Ref.current!.position.z + moveDirection * PADDLE_SPEED;
                     const halfPaddleWidth = paddle1Geometry.parameters.depth / 2;
                     const tableLimit = paddle1Ref.current!.position.z + paddle1Geometry.parameters.depth / 2;
+                    console.log("new position: ", newPosition);
                     if (Math.abs(newPosition) + Math.abs(halfPaddleWidth) < tableLimit) {
                         paddle1Ref.current!.position.z = newPosition;
-                        isPaused = false;
                     }
                 }, 30);
             }
@@ -194,11 +198,12 @@ function Pvp2d({ username }: Pvp2dProps) {
     };
 
     const updateScene = (state: any) => {
-        if (paddle1Ref.current && paddle2Ref.current && ballRef.current) {
+        if (paddle1Ref.current && paddle2Ref.current && ballRef.current && isPausedRef.current) {
             paddle1Ref.current.position.z = state.paddle1_z;
             paddle2Ref.current.position.z = state.paddle2_z;
             ballRef.current.position.x = state.ball_x;
             ballRef.current.position.z = state.ball_z;
+            isPausedRef.current = state.is_paused;
         }
     };
 
@@ -210,27 +215,32 @@ function Pvp2d({ username }: Pvp2dProps) {
         return table;
     };
 
-    const createPaddle = () => {
-        const geometry = new THREE.BoxGeometry(0.1, 0.2, 1);
-        const material = new THREE.MeshStandardMaterial({ color: 0x00FF00 });
-        const paddle = new THREE.Mesh(geometry, material);
-        paddle.castShadow = true;
-        paddle.receiveShadow = true;
-        return paddle;
-    };
-
     const createBall = () => {
         const geometry = new THREE.SphereGeometry(0.1, 32, 32);
-        const material = new THREE.MeshStandardMaterial({ color: 0xFF0000 });
+        const material = new THREE.MeshStandardMaterial({ color: 0xffffff });
         const ball = new THREE.Mesh(geometry, material);
+        ball.position.set(0, 0.1, 0);
         ball.castShadow = true;
-        ball.receiveShadow = true;
         return ball;
     };
 
+    const createPaddles = (isPlayer1: boolean) => {
+        const geometry = new THREE.BoxGeometry(0.2, 0.02, 1);
+        const material = new THREE.MeshStandardMaterial({ color: 0x000000 });
+        const paddle1 = new THREE.Mesh(geometry, material);
+        const paddle2 = new THREE.Mesh(geometry, material);
+
+        paddle1.position.set(isPlayer1 ? -2.5 : 2.5, 0.1, 0);
+        paddle2.position.set(isPlayer1 ? 2.5 : -2.5, 0.1, 0);
+
+        paddle1.castShadow = paddle2.castShadow = true;
+
+        return { paddle1, paddle2 };
+    };
+
     const createLight = () => {
-        const light = new THREE.DirectionalLight(0xffffff, 1);
-        light.position.set(5, 10, 7.5);
+        const light = new THREE.DirectionalLight(0xffffff, 3);
+        light.position.set(0, 10, 0);
         light.castShadow = true;
         return light;
     };
