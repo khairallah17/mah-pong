@@ -3,6 +3,7 @@
 import os
 import sys
 
+sys.path.insert(0, "/Users/eagoumi/Desktop/ft_transcendence/auth_backend")
 
 def main():
     """Run administrative tasks."""
