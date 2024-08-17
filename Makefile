@@ -17,6 +17,8 @@ fclean:
 	rm -rf auth_backend/api/migrations/__pycache__
 	rm -rf auth_backend/api/migrations/0*_initial.py
 
+re: fclean all
+
 push:
 	git add .
 	git commit -m "auto-commit"
