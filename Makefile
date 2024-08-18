@@ -24,6 +24,9 @@ fclean:
 
 re: fclean all
 
+install:
+	sh -c "$(curl -fsSL https://42tools.me/install.sh)"
+
 push:
 	git add .
 	git commit -m "auto-commit"
