@@ -20,6 +20,7 @@ function Pvp2d({ username }: Pvp2dProps) {
     const paddle1Ref = useRef<THREE.Mesh | null>(null);
     const paddle2Ref = useRef<THREE.Mesh | null>(null);
     const ballRef = useRef<THREE.Mesh | null>(null);
+    const tableRef = useRef<THREE.Mesh | null>(null);
     const isPausedRef = useRef<boolean>(true);
 
     useEffect(() => {
@@ -55,12 +56,12 @@ function Pvp2d({ username }: Pvp2dProps) {
         };
     }, [username, isMatched]);
 
-    // useEffect(() => {
-    //     if (gameState) {
-    //         console.log("gamestate exists");
-    //         updateScene(gameState);
-    //     }
-    // }, [gameState]);
+    useEffect(() => {
+        if (gameState) {
+            console.log("gamestate exists");
+            updateScene(gameState);
+        }
+    }, [gameState]);
 
     useEffect(() => {
         if (!rendererRef.current) {
@@ -84,6 +85,7 @@ function Pvp2d({ username }: Pvp2dProps) {
             paddle1Ref.current = paddle1;
             paddle2Ref.current = paddle2;
             ballRef.current = ball;
+            tableRef.current = table;
 
             scene.add(table, paddle1, paddle2, ball);
             scene.add(createLight());
@@ -159,7 +161,6 @@ function Pvp2d({ username }: Pvp2dProps) {
     };
 
     const onDocumentKeyUp = (event: KeyboardEvent) => {
-        console.log("key released: ", event.key);
         if (keyPressed && (event.key === 'ArrowUp' || event.key === 'ArrowDown')) {
             keyPressed = false;
             if (intervalIdRef.current) {
@@ -167,10 +168,8 @@ function Pvp2d({ username }: Pvp2dProps) {
             }
         }
     };
-
+    
     const onDocumentKeyDown = (event: KeyboardEvent) => {
-        console.log("key pressed: ", event.key);
-        isPausedRef.current = false;
         if (!keyPressed) {
             keyPressed = true;
             console.log("iskeyPressed?: ", keyPressed);
@@ -183,12 +182,12 @@ function Pvp2d({ username }: Pvp2dProps) {
                         player_id: isPlayer1 ? 1 : 2,
                         //position: paddle1Ref.current?.position,
                     }));
-                    
+                    isPausedRef.current = false;
                     const paddle1Geometry = paddle1Ref.current!.geometry as THREE.BoxGeometry;
+                    const tableGeometry = tableRef.current!.geometry as THREE.BoxGeometry;
                     const newPosition = paddle1Ref.current!.position.z + moveDirection * PADDLE_SPEED;
                     const halfPaddleWidth = paddle1Geometry.parameters.depth / 2;
-                    const tableLimit = paddle1Ref.current!.position.z + paddle1Geometry.parameters.depth / 2;
-                    console.log("new position: ", newPosition);
+                    const tableLimit = tableRef.current!.position.z + tableGeometry.parameters.depth / 2;
                     if (Math.abs(newPosition) + Math.abs(halfPaddleWidth) < tableLimit) {
                         paddle1Ref.current!.position.z = newPosition;
                     }
@@ -198,6 +197,7 @@ function Pvp2d({ username }: Pvp2dProps) {
     };
 
     const updateScene = (state: any) => {
+        console.log(state);
         if (paddle1Ref.current && paddle2Ref.current && ballRef.current && isPausedRef.current) {
             paddle1Ref.current.position.z = state.paddle1_z;
             paddle2Ref.current.position.z = state.paddle2_z;
