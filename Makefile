@@ -1,5 +1,10 @@
 
-all: makemigrations migrate runserver
+all: packs makemigrations migrate runserver
+
+packs:
+	(pip install djangorestframework)
+	(python -m pip install django-cors-headers)
+	(pip install djangorestframework-simplejwt)
 
 makemigrations:
 	( cd auth_backend && python manage.py makemigrations )
