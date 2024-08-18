@@ -61,11 +61,11 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
 
                     await self.channel_layer.send(user_channels[user1], {
                         'type': 'match_found',
-                        'opponent': '0'
+                        'player_id': '1'
                     })
                     await self.channel_layer.send(user_channels[user2], {
                         'type': 'match_found',
-                        'opponent': '1'
+                        'player_id': '2'
                     })
 
                     self.is_matched = True
@@ -129,7 +129,7 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
 
     async def send_game_state_periodically(self):
         while self.is_matched:
-            await asyncio.sleep(1)  # Adjust the interval
+            await asyncio.sleep(0.05)  # Adjust the interval
             if self.username in game_states:
                 self.update_ball_position(game_states[self.username])
                 logger.warning(f"Sending game state to Self: {self.username}")
@@ -160,10 +160,10 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
         }
 
     async def match_found(self, event):
-        opponent = event['opponent']
+        player_id = event['player_id']
         await self.send(text_data=json.dumps({
             'type': 'match_found',
-            'opponent': opponent
+            'player_id': player_id
         }))
 
     async def game_event(self, event):
