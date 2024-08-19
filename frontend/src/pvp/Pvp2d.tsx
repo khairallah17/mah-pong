@@ -100,35 +100,34 @@ function Pvp2d({ username }: Pvp2dProps) {
                     return;
                 }
                 requestAnimationFrame(animate);
+                // ball.position.add(ballDirection.clone().multiplyScalar(0.05));
 
-                ball.position.add(ballDirection.clone().multiplyScalar(0.05));
+                // const paddle1Box = new THREE.Box3().setFromObject(paddle1);
+                // const paddle2Box = new THREE.Box3().setFromObject(paddle2);
+                // const ballSphere = new THREE.Sphere(ball.position, ball.geometry.parameters.radius);
+                // const goal1 = new THREE.Box3(new THREE.Vector3(-3, -1, -1.5), new THREE.Vector3(-2.5, 1, 1.5));
+                // const goal2 = new THREE.Box3(new THREE.Vector3(2.5, -1, -1.5), new THREE.Vector3(3, 1, 1.5));
 
-                const paddle1Box = new THREE.Box3().setFromObject(paddle1);
-                const paddle2Box = new THREE.Box3().setFromObject(paddle2);
-                const ballSphere = new THREE.Sphere(ball.position, ball.geometry.parameters.radius);
-                const goal1 = new THREE.Box3(new THREE.Vector3(-3, -1, -1.5), new THREE.Vector3(-2.5, 1, 1.5));
-                const goal2 = new THREE.Box3(new THREE.Vector3(2.5, -1, -1.5), new THREE.Vector3(3, 1, 1.5));
+                // if (paddle1Box.intersectsSphere(ballSphere)) {
+                //     ballDirection.x *= -1;
+                //     ball.position.x += 0.05 * (isPlayer1 ? 1 : -1);
+                // } else if (paddle2Box.intersectsSphere(ballSphere)) {
+                //     const paddle2Center = new THREE.Vector3();
+                //     paddle2Box.getCenter(paddle2Center);
+                //     const ballPaddleZDiff = ballSphere.center.z - paddle2Center.z;
+                //     //console.log(ballPaddleZDiff);//
+                //     ballDirection.x *= -1;
+                //     ball.position.x -= 0.05 * (isPlayer1 ? 1 : -1);
+                // }
 
-                if (paddle1Box.intersectsSphere(ballSphere)) {
-                    ballDirection.x *= -1;
-                    ball.position.x += 0.05 * (isPlayer1 ? 1 : -1);
-                } else if (paddle2Box.intersectsSphere(ballSphere)) {
-                    const paddle2Center = new THREE.Vector3();
-                    paddle2Box.getCenter(paddle2Center);
-                    const ballPaddleZDiff = ballSphere.center.z - paddle2Center.z;
-                    //console.log(ballPaddleZDiff);//
-                    ballDirection.x *= -1;
-                    ball.position.x -= 0.05 * (isPlayer1 ? 1 : -1);
-                }
+                // if (goal1.intersectsSphere(ballSphere) || goal2.intersectsSphere(ballSphere)) {
+                //     isPausedRef.current = true;
+                //     restartGame(ball);
+                // }
 
-                if (goal1.intersectsSphere(ballSphere) || goal2.intersectsSphere(ballSphere)) {
-                    isPausedRef.current = true;
-                    restartGame(ball);
-                }
-
-                if (ball.position.z < -1.5 || ball.position.z > 1.5) {
-                    ballDirection.z *= -1;
-                }
+                // if (ball.position.z < -1.5 || ball.position.z > 1.5) {
+                //     ballDirection.z *= -1;
+                // }
                 renderer.render(scene, camera);
             };
 
@@ -143,7 +142,7 @@ function Pvp2d({ username }: Pvp2dProps) {
             //     gameContainer.removeChild(rendererRef.current.domElement);
             // }
         };
-    }, [isMatched, isPlayer1]);
+    }, [isMatched, isPlayer1, gameState]);
 
     function restartGame(ball: THREE.Mesh) {
         ball.position.set(0, 0.1, 0);
@@ -181,14 +180,15 @@ function Pvp2d({ username }: Pvp2dProps) {
                         //position: paddle1Ref.current?.position,
                     }));
                     isPausedRef.current = false;
-                    const paddle1Geometry = paddle1Ref.current!.geometry as THREE.BoxGeometry;
+                    // const paddle1Geometry = paddle1Ref.current!.geometry as THREE.BoxGeometry;
                     const tableGeometry = tableRef.current!.geometry as THREE.BoxGeometry;
-                    const newPosition = paddle1Ref.current!.position.z + moveDirection * PADDLE_SPEED;
-                    const halfPaddleWidth = paddle1Geometry.parameters.depth / 2;
+                    // const newPosition = paddle1Ref.current!.position.z + moveDirection * PADDLE_SPEED;
+                    // const halfPaddleWidth = paddle1Geometry.parameters.depth / 2;
                     const tableLimit = tableRef.current!.position.z + tableGeometry.parameters.depth / 2;
-                    if (Math.abs(newPosition) + Math.abs(halfPaddleWidth) < tableLimit) {
-                        paddle1Ref.current!.position.z = newPosition;
-                    }
+                    console.log("tableLimit: ", tableLimit);
+                    // if (Math.abs(newPosition) + Math.abs(halfPaddleWidth) < tableLimit) {
+                    //     paddle1Ref.current!.position.z = newPosition;
+                    // }
                 }, 30);
             }
         }
@@ -196,7 +196,8 @@ function Pvp2d({ username }: Pvp2dProps) {
 
     const updateScene = (state: any) => {
         console.log(state);
-        if (paddle1Ref.current && paddle2Ref.current && ballRef.current && isPausedRef.current) {
+        if (paddle1Ref.current && paddle2Ref.current && ballRef.current && !isPausedRef.current) {
+            console.log("updating scene");
             paddle1Ref.current.position.z = state.paddle1_z;
             paddle2Ref.current.position.z = state.paddle2_z;
             ballRef.current.position.x = state.ball_x;

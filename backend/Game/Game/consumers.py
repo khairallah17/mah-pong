@@ -9,24 +9,23 @@ matchmaking_pool = []
 user_channels = {}
 matched_users = {}
 game_states = {}
-is_paused = false
+tableLimit = 1.5
+paddleWidth = 1
+#is_paused = false
 
 class MatchmakingConsumer(AsyncWebsocketConsumer):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.update_ball_position_event = asyncio.Event()
-
     async def connect(self):
         self.username = None
         self.is_matched = False
         logger.info("connected")
         await self.accept()
         self.update_ball_position_task = asyncio.create_task(self.update_ball_position_periodically())
-        self.update_ball_position_event.clear()
+
 
     async def disconnect(self, close_code):
         self.update_ball_position_task.cancel()
-        self.send_game_state_task.cancel()
+        if self.is_matched:
+            self.send_game_state_task.cancel()
         if self.username:
             if self.username in user_channels:
                 del user_channels[self.username]
@@ -68,9 +67,9 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
                         'type': 'match_found',
                         'player_id': '2'
                     })
-
+                    if self.is_matched == False:
+                        self.send_game_state_task = asyncio.create_task(self.send_game_state_periodically())
                     self.is_matched = True
-                    self.send_game_state_task = asyncio.create_task(self.send_game_state_periodically())
 
         elif message_type == 'game_event':
             event = data.get('event')
@@ -81,18 +80,16 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
 
     async def process_game_event(self, username, event, player_id):
         game_state = game_states[username]
-
-        if player_id == '1':
+        if player_id == 1 and abs(game_state['paddle1_z']) + paddleWidth / 2 < tableLimit:
             if event == 'player_move_up':
                 game_state['paddle1_z'] -= 0.05
             elif event == 'player_move_down':
                 game_state['paddle1_z'] += 0.05
-        elif player_id == '2':
+        elif player_id == 2 and abs(game_state['paddle2_z']) + paddleWidth / 2 < tableLimit:
             if event == 'player_move_up':
                 game_state['paddle2_z'] -= 0.05
             elif event == 'player_move_down':
                 game_state['paddle2_z'] += 0.05
-        self.update_ball_position_event.set()
         game_state['is_paused'] = False
 
     def update_ball_position(self, game_state):
@@ -119,7 +116,7 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
             game_state['ball_direction_x'] *= -1
             game_state['score1' if game_state['ball_x'] > 0 else 'score2'] += 1
             game_state['is_paused'] = True
-            self.update_ball_position_event.clear()
+
 
     async def send_game_state(self, username):
         game_state = game_states[username]
@@ -133,16 +130,14 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
             await asyncio.sleep(0.05)  # Adjust the interval
             if self.username in game_states:
                 self.update_ball_position(game_states[self.username])
-                logger.warning(f"Sending game state to Self: {self.username}")
                 await self.send_game_state(self.username)
                 opponent = matched_users.get(self.username)
                 if opponent:
-                    logger.warning(f"Sending game state to Opponent: {opponent}")
                     await self.send_game_state(opponent)
 
     async def update_ball_position_periodically(self):
         while True:
-            await self.update_ball_position_event.wait()
+
             if self.username in game_states:
                 self.update_ball_position(game_states[self.username])
             await asyncio.sleep(0.05)  # Adjust the interval
