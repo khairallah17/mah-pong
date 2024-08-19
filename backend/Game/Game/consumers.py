@@ -9,6 +9,7 @@ matchmaking_pool = []
 user_channels = {}
 matched_users = {}
 game_states = {}
+is_paused = false
 
 class MatchmakingConsumer(AsyncWebsocketConsumer):
     def __init__(self, *args, **kwargs):
