@@ -181,11 +181,10 @@ function Pvp2d({ username }: Pvp2dProps) {
                     }));
                     isPausedRef.current = false;
                     // const paddle1Geometry = paddle1Ref.current!.geometry as THREE.BoxGeometry;
-                    const tableGeometry = tableRef.current!.geometry as THREE.BoxGeometry;
+                    // const tableGeometry = tableRef.current!.geometry as THREE.BoxGeometry;
                     // const newPosition = paddle1Ref.current!.position.z + moveDirection * PADDLE_SPEED;
                     // const halfPaddleWidth = paddle1Geometry.parameters.depth / 2;
-                    const tableLimit = tableRef.current!.position.z + tableGeometry.parameters.depth / 2;
-                    console.log("tableLimit: ", tableLimit);
+                    // const tableLimit = tableRef.current!.position.z + tableGeometry.parameters.depth / 2;
                     // if (Math.abs(newPosition) + Math.abs(halfPaddleWidth) < tableLimit) {
                     //     paddle1Ref.current!.position.z = newPosition;
                     // }
@@ -195,14 +194,18 @@ function Pvp2d({ username }: Pvp2dProps) {
     };
 
     const updateScene = (state: any) => {
-        console.log(state);
         if (paddle1Ref.current && paddle2Ref.current && ballRef.current && !isPausedRef.current) {
-            console.log("updating scene");
-            paddle1Ref.current.position.z = state.paddle1_z;
-            paddle2Ref.current.position.z = state.paddle2_z;
+            if (isPlayer1) {
+                paddle1Ref.current.position.z = state.paddle1_z;
+                paddle2Ref.current.position.z = state.paddle2_z;
+            }
+            else {
+                paddle1Ref.current.position.z = state.paddle2_z;
+                paddle2Ref.current.position.z = state.paddle1_z;
+            }
             ballRef.current.position.x = state.ball_x;
             ballRef.current.position.z = state.ball_z;
-            isPausedRef.current = state.is_paused;
+            //isPausedRef.current = state.is_paused;
         }
     };
 

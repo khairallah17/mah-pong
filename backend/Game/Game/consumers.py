@@ -80,16 +80,21 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
 
     async def process_game_event(self, username, event, player_id):
         game_state = game_states[username]
-        if player_id == 1 and abs(game_state['paddle1_z']) + paddleWidth / 2 < tableLimit:
+        newPosition = 0
+        if player_id == 1:
             if event == 'player_move_up':
-                game_state['paddle1_z'] -= 0.05
+                newPosition = game_state['paddle1_z'] - 0.05
             elif event == 'player_move_down':
-                game_state['paddle1_z'] += 0.05
-        elif player_id == 2 and abs(game_state['paddle2_z']) + paddleWidth / 2 < tableLimit:
+                newPosition = game_state['paddle1_z'] + 0.05
+            if abs(newPosition) + paddleWidth / 2 < tableLimit:
+                game_state['paddle1_z'] = newPosition
+        elif player_id == 2:
             if event == 'player_move_up':
-                game_state['paddle2_z'] -= 0.05
+                newPosition = game_state['paddle2_z'] - 0.05
             elif event == 'player_move_down':
-                game_state['paddle2_z'] += 0.05
+                newPosition = game_state['paddle2_z'] + 0.05
+            if abs(newPosition) + paddleWidth / 2 < tableLimit:
+                game_state['paddle2_z'] = newPosition
         game_state['is_paused'] = False
 
     def update_ball_position(self, game_state):
@@ -110,7 +115,7 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
             game_state['ball_direction_x'] *= -1
 
         # Reset the ball if it goes past the paddles (goal scored)
-        if game_state['ball_x'] < -3 or game_state['ball_x'] > 3:
+        if game_state['ball_x'] < -2.56 or game_state['ball_x'] > 2.56:
             game_state['ball_x'] = 0
             game_state['ball_z'] = 0
             game_state['ball_direction_x'] *= -1
