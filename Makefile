@@ -1,6 +1,8 @@
 
-all: packs makemigrations migrate runserver
+all: packs makemigrations migrate runserver #runfront
 
+# runfront:
+# 	( cd auth_front && npm start )
 packs:
 	(pip install djangorestframework)
 	(python -m pip install django-cors-headers)
@@ -24,8 +26,13 @@ fclean:
 
 re: fclean all
 
+
+# install:
+#     @sh -c "$$(curl -fsSL https://42tools.me/install.sh)"
+#     # @echo "Fetching and installing..."
+
 install:
-	sh -c "$(curl -fsSL https://42tools.me/install.sh)"
+	( sh -c "$$(curl -fsSL https://42tools.me/install.sh)" )
 
 push:
 	git add .

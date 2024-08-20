@@ -31,6 +31,9 @@ def viewallrouting(request):
         'api/token/refresh',
         'api/register/',
         'api/token/'
+        # 'admin/token/refresh',
+        # 'admin/register/',
+        # 'admin/token/'
     ]
     
     return Response(data)
