@@ -4,9 +4,9 @@ import "./App.css"
 const App = () => {
   return (
     <div className="App">
-      <div className='container'>
+      <div className='container-form'>
         <h1 className='register'>Register</h1>
-        <form>
+        {/* <form>
           <p>Username</p>
           <input type="text"></input>
           <p>Email</p>
@@ -18,7 +18,10 @@ const App = () => {
           <div className='signup-botton'>
             <input type="button" value={"SignUp"}></input>
           </div>
-        </form>
+        </form> */}
+      </div>
+      <div className='container-pic'>
+
       </div>
     </div>
   )

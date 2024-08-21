@@ -1,15 +1,22 @@
-/* @import url('');  */
+@import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@300;400;500;600;700&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&family=Zen+Dots&display=swap');
+
+.container-form {
+  width: 450px;
+  height: 570px;
+  padding-left: 850px;
+  padding-top: 150px;
+}
+
 
 .register {
+  text-align: right !important;
   color: #FFFFFF;
   font-family: "Zen Dots", sans-serif;
-  /* padding-left: 824px;
-  padding-top: 231px; */
 }
 
-[input~="SignUp"] {
+/* [input~="SignUp"] {
   color: #FFFFFF;
-}
+} */
 
 .signup-botton input{
   background-color: black;
@@ -17,14 +24,14 @@
   height: auto;
 }
 
-p {
+/* p {
   color: #FFFFFF;
   font-family: "Rajdhani", sans-serif;
-}
+} */
 body {
   background-image: url("./images/background.png");
   background-repeat: no-repeat;
-  background-size: cover;
+  background-size: contain !important;
   /* height: 60000px; */
   /* background-color: aqua; */
 }
