@@ -1,0 +1,43 @@
+<link rel="stylesheet" href="style.css">
+<form class="form">
+    <div class="login-row">
+        <a href="#" title="Logo">
+            <img src="path-image-logo" alt="Logo" class="logo">
+        </a>
+        <h1>You Must sign in to join</h1>
+    </div>
+    <div class="social-row">
+        <a href="#" title="Use Google">
+            <img src="google.png" alt="Google">
+            Sign in with Google
+        </a>
+        <a href="#" title="Use 42">
+            <img src="google.png" alt="42">
+            Sign in with 42
+        </a>
+        <!-- ....More auth social. -->
+    </div>
+    <div class="lines">
+        <div class="line"></div>
+        OR
+        <div class="line"></div>
+    </div>
+    <div class="text-field">
+        <label for="email">Email</label>
+        <input
+        type="email" id="email" name="email" autocomplete="off" placeholder="exemple@exemple.com" required>
+        <input
+        type="password" id="password" name="password" autocomplete="off" placeholder="password" required>
+        <div class="error-message">Email incorrect</div>
+        <!-- ....More auth field. -->
+    </div>
+    <button type="submit" class="form-button">Login</button>
+    <div class="form-action">
+        <div class="form-row">
+            <span>Don't have account?</span>
+            <a href="#" title="Create Account">
+                Sign Up
+            </a>
+        </div>
+    </div>
+</form>
