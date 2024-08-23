@@ -31,7 +31,7 @@
 body {
   background-image: url("./images/background.png");
   background-repeat: no-repeat;
-  background-size: contain !important;
+  background-size: cover !important;
   /* height: 60000px; */
   /* background-color: aqua; */
 }
