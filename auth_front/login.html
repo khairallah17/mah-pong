@@ -1,51 +1,53 @@
 <link rel="stylesheet" href="style.css">
-<form class="form">
-    <div class="login-row">
-        <a href="#" title="Logo">
-            <img src="path-image-logo" alt="Logo" class="logo">
-        </a>
-        <h1>You Must sign in to join</h1>
-    </div>
-    <div class="text-field">
-        <!-- <label for="email">Email</label> -->
-        <input
-        type="email" id="email" name="email" autocomplete="off" placeholder="EMAIL" required>
-        <input
-        type="password" id="password" name="password" autocomplete="off" placeholder="PASSWORD" required>
-        <div class="error-message">Email incorrect</div>
-        <!-- ....More auth field. -->
-    </div>
-    <button type="submit" class="form-button">Login</button>
-    <div class="form-action">
-        <div class="form-row">
-            <span>Don't have account?</span>
-            <a href="#" title="Create Account">
-                Sign Up
+<div class="container-form">
+    <form class="form">
+        <div class="login-row">
+            <a href="#" title="Logo">
+                <img src="path-image-logo" alt="Logo" class="logo">
             </a>
+            <h1>You Must sign in to join</h1>
         </div>
-    </div>
-    <div class="lines">
-        <div class="line"></div>
-        OR
-        <div class="line"></div>
-    </div>
+        <div class="text-field">
+            <!-- <label for="email">Email</label> -->
+            <input
+            type="email" id="email" name="email" autocomplete="off" placeholder="EMAIL" required>
+            <input
+            type="password" id="password" name="password" autocomplete="off" placeholder="PASSWORD" required>
+            <div class="error-message">Email incorrect</div>
+            <!-- ....More auth field. -->
+        </div>
+        <button type="submit" class="form-button">Login</button>
+        <div class="form-action">
+            <div class="form-row">
+                <span>Don't have account?</span>
+                <a href="#" title="Create Account">
+                    Sign Up
+                </a>
+            </div>
+        </div>
+        <div class="lines">
+            <div class="line"></div>
+            OR
+            <div class="line"></div>
+        </div>
+        <div>
+            <div class="social-row google-social">
+                <a href="#" title="Use Google">
+                    <img src="./src/images/google_logo.png" alt="Google">
+                    Sign in with Google
+                </a>
+            </div>
+            <div class="social-row intra-social">
+                <a href="#" title="Use 42">
+                    <img src="./src/images/42_Logo.png" alt="Intra">
+                    Sign in with 42
+                </a>
+            </div>
+        </div>
+            <!-- ....More auth social. -->
+        </div>
+    </form>
     <div>
-        <div class="social-row google-social">
-            <a href="#" title="Use Google">
-                <img src="./src/images/google_logo.png" alt="Google">
-                Sign in with Google
-            </a>
-        </div>
-        <div class="social-row intra-social">
-            <a href="#" title="Use 42">
-                <img src="./src/images/42_Logo.png" alt="Intra">
-                Sign in with 42
-            </a>
-        </div>
+        <img src="./src/images/pong right.png" alt="Pong" class="pong-row" style="left: 750px;">
     </div>
-        <!-- ....More auth social. -->
-    </div>
-</form>
-<div>
-    <img src="./src/images/pong right.png" alt="Pong" class="pong-row" style="left: 750px;">
 </div>
