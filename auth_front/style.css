@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Zen+Dots&display=swap');
+
 :root {
     --primary: #605dff
     --primary-dark: #4a00e0
@@ -15,24 +17,26 @@
     color: rgb(0, 136, 255);
 }
 
-.container-form {
+/* .container-form {
     width: 1440px;
     margin: 0 auto;
-}
+} */
 
 
 body {
-    font-size: 16px;
-    font-family: 'work sans', sans-serif;
+    /* font-size: 18px; */
     height: 100vh;
-    padding: 1rem;
+    /* padding: 1rem; */
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     justify-content: center;
+    justify-items: center;
     align-items: center;
     background: url("./src/images/background.png");
-    background-repeat: initial;
+    background-position: center;
+    background-repeat: no-repeat;
     background-size: cover;
+    color: #ffffff;
 }
 
 .pong-row {
@@ -47,13 +51,22 @@ body {
 }
 
 @media  only screen and  (max-width: 1024px) {
+    .pong-row {
+        display: none !important;
+    }
     .container-form {
-        width: auto;
-        height: auto;
+        /* width: auto; */
+        /* height: auto; */
+        margin: 0 auto;
         display: flex;
     }
     body {
+        width: auto;
         grid-template-columns: 1fr;
+        justify-content: center;
+        background-position: center;
+        background-repeat: no-repeat;
+        background-size: cover;
     }
     /* .flex {
         justify-content: center;
@@ -61,11 +74,8 @@ body {
     } */
 }
 
-@media (max-width: 1024px) {
-    .pong-row {
-        display: none !important;
-    }
-}
+/* @media (max-width: 1024px) {
+} */
 
 
 .social-row img {
@@ -126,7 +136,11 @@ body {
 }
 
 .login-row h1 {
+    /* justify-content: right; */
+    text-align: left;
+    font-family: 'zen dots', sans-serif;
     color: white;
+    /* font-family: 'Zen Dots' sans-serif; */
 }
 
 .lines {
@@ -139,13 +153,14 @@ body {
 }
 
 .line {
-    border: 1px solid black;
-    height: 5px;
+    /* border: 1px solid black; */
+    height: 3px;
     flex: 1;
-    background: #78787b;
+    background: #ffffff;
 }
 
 .text-field {
+    font-family: 'Rajdhani' sans-serif;
     display: flex;
     flex-direction: column;
     gap: .5rem;
@@ -174,6 +189,10 @@ body {
     font-weight: 800;
     letter-spacing: .05rem;
     color: #ffffff 40%;
+}
+
+.text-field input::selection::placeholder {
+    display: none;
 }
 
 .text-field label {
@@ -244,8 +263,13 @@ body {
 .form-action  a:hover {
     text-decoration: underline;
 }
-
+.form-row span {
+    color: #ffffff;
+}
 .form-row {
+    font-size: 18 medium;
+
+    text-transform: uppercase;
     display: flex;
     gap: 0.5rem;
     justify-content: space-between;
