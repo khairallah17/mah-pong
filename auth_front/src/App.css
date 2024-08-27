@@ -1,41 +1,32 @@
-@import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@300;400;500;600;700&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&family=Zen+Dots&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Zen+Dots&display=swap');
 
-.container-form {
-  width: 450px;
-  height: 570px;
-  padding-left: 850px;
-  padding-top: 150px;
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  border: 1px solid --primary;
 }
 
-
-.register {
-  text-align: right !important;
-  color: #FFFFFF;
-  font-family: "Zen Dots", sans-serif;
+*::selection {
+  background: white;
+  color: rgb(0, 136, 255);
 }
 
-/* [input~="SignUp"] {
-  color: #FFFFFF;
-} */
-
-.signup-botton input{
-  background-color: black;
-  width: 100px;
-  height: auto;
-}
-
-/* p {
-  color: #FFFFFF;
-  font-family: "Rajdhani", sans-serif;
-} */
 body {
-  background-image: url("./images/background.png");
+  grid-template-columns: repeat(2, 1fr);
+  display: grid;
+  /* align-items: center; */
+  color: white;
+  font-family: "Zen Dots", sans-serif;
+  flex-direction: column;
+  background: url(./images/background.png);
   background-repeat: no-repeat;
-  background-size: cover !important;
-  /* height: 60000px; */
-  /* background-color: aqua; */
+  background-size: cover;
+  justify-items: center;
 }
 
-
-
-
+.login {
+  padding-top: 300px;
+  
+}

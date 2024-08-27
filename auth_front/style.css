@@ -29,7 +29,7 @@ body {
     /* padding: 1rem; */
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    justify-content: center;
+    /* justify-content: center; */
     justify-items: center;
     align-items: center;
     background: url("./src/images/background.png");
@@ -37,6 +37,7 @@ body {
     background-repeat: no-repeat;
     background-size: cover;
     color: #ffffff;
+    cursor: url("./src/images/42_Logo.png"), alias;
 }
 
 .pong-row {
@@ -171,7 +172,7 @@ body {
     max-width: 100%;
     width: 100%;
     border: none;
-    border-bottom: 4px solid rgb(255, 255, 255);
+    border-bottom: 2px solid rgb(255, 255, 255);
     /* border-top: none;
     border-right: none;
     border-left: none; */
@@ -191,8 +192,31 @@ body {
     color: #ffffff 40%;
 }
 
-.text-field input::selection::placeholder {
-    display: none;
+.text-field input:focus {
+
+    &::-webkit-input-placeholder {
+        color: transparent;
+        -webkit-transition: color 0.2s ease;
+        transition: color 0.2s ease;
+    }
+
+    &:-moz-placeholder { /* Firefox 18- */
+        color: transparent;
+        -webkit-transition: color 0.2s ease;
+        transition: color 0.2s ease;
+     }
+ 
+     &::-moz-placeholder {  /* Firefox 19+ */
+        color: transparent;
+        -webkit-transition: color 0.2s ease;
+        transition: color 0.2s ease;
+     }
+ 
+     &:-ms-input-placeholder {  
+        color: transparent;
+        -webkit-transition: color 0.2s ease;
+        transition: color 0.2s ease;
+     }
 }
 
 .text-field label {
