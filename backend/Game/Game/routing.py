@@ -1,4 +1,4 @@
-from channels.routing import ProtocolTypeRouter, URLRouter
+from channels.routing import ProtocolTypeRouter, URLRouter # type: ignore
 from django.urls import path
 from . import consumers  # replace with the actual location of your consumers
 

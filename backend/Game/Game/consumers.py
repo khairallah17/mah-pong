@@ -1,8 +1,8 @@
 import asyncio
-from channels.generic.websocket import AsyncWebsocketConsumer
+from channels.generic.websocket import AsyncWebsocketConsumer # type: ignore
 import json
 import logging
-from channels.db import database_sync_to_async
+from channels.db import database_sync_to_async # type: ignore
 
 logger = logging.getLogger(__name__)
 matchmaking_pool = []
@@ -98,8 +98,8 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
         game_state['is_paused'] = False
 
     def update_ball_position(self, game_state):
-        game_state['ball_x'] += game_state['ball_direction_x'] * 0.05
-        game_state['ball_z'] += game_state['ball_direction_z'] * 0.05
+        game_state['ball_x'] += game_state['ball_direction_x'] * 0.015
+        game_state['ball_z'] += game_state['ball_direction_z'] * 0.015
 
         # Handle collisions with paddles and walls
         self.handle_collisions(game_state)
@@ -132,7 +132,7 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
 
     async def send_game_state_periodically(self):
         while self.is_matched:
-            await asyncio.sleep(0.05)  # Adjust the interval
+            await asyncio.sleep(0.015)  # Adjust the interval
             if self.username in game_states:
                 self.update_ball_position(game_states[self.username])
                 await self.send_game_state(self.username)
@@ -145,7 +145,7 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
 
             if self.username in game_states:
                 self.update_ball_position(game_states[self.username])
-            await asyncio.sleep(0.05)  # Adjust the interval
+            await asyncio.sleep(0.015)  # Adjust the interval
 
     def init_game_state(self):
         return {
