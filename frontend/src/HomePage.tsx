@@ -46,12 +46,39 @@ const HomePage: React.FC<HomePageProps> = ({ onUsernameSubmit }) => {
         </div>
       )}
       <div className='team-container'>
+        <h1 style={{position: 'absolute', top: "-35vh"}}>Meet the team</h1>
         <div className="team-member">
           <img src={aub} alt='pfp'/>
           <h2>Name</h2>
           <p>position @ School</p>
           <p>“This section is about the team member, what he know, and what part he work in this project.”</p>
         </div>
+        <div className="team-member">
+          <img src={aub} alt='pfp'/>
+          <h2>Name</h2>
+          <p>position @ School</p>
+          <p>“This section is about the team member, what he know, and what part he work in this project.”</p>
+        </div>
+        <div className="team-member">
+          <img src={aub} alt='pfp'/>
+          <h2>Name</h2>
+          <p>position @ School</p>
+          <p>“This section is about the team member, what he know, and what part he work in this project.”</p>
+        </div>
+        <div className="team-member">
+          <img src={aub} alt='pfp'/>
+          <h2>Name</h2>
+          <p>position @ School</p>
+          <p>“This section is about the team member, what he know, and what part he work in this project.”</p>
+        </div>
+        <div className="team-member">
+          <img src={aub} alt='pfp'/>
+          <h2>Name</h2>
+          <p>position @ School</p>
+          <p>“This section is about the team member, what he know, and what part he work in this project.”</p>
+        </div>
+      </div>
+      <div className='space'>
       </div>
     </div>
   );
