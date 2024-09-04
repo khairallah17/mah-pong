@@ -115,3 +115,17 @@ h2 {
 .space {
   height: 1000px;
 }
+
+.headline {
+  text-align: left;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 15vh;
+}
+
+.headline img {
+  width: 200px;
+  height: 200px;
+
+}
