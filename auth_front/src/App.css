@@ -10,7 +10,7 @@
 
 *::selection {
   background: white;
-  color: rgb(0, 136, 255);
+  color: navy;
 }
 
 body {
@@ -19,14 +19,14 @@ body {
   /* align-items: center; */
   color: white;
   font-family: "Zen Dots", sans-serif;
-  flex-direction: column;
+  flex-direction: row;
   background: url(./images/background.png);
   background-repeat: no-repeat;
   background-size: cover;
-  justify-items: center;
+  /* justify-items: center; */
 }
 
 .login {
   padding-top: 300px;
-  
+  padding-left: 300px;
 }
