@@ -112,6 +112,13 @@ h2 {
   margin-top: 30vh;
 }
 
+.navigation-buttons {
+  display: flex;
+  justify-content: space-between;
+  width: 50%;
+  margin-top: 30vh;
+}
+
 .space {
   height: 1000px;
 }
