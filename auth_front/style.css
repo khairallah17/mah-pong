@@ -1,15 +1,15 @@
 @import url('https://fonts.googleapis.com/css2?family=Zen+Dots&display=swap');
 
-:root {
+/* :root {
     --primary: #605dff
     --primary-dark: #4a00e0
-}
+} */
 
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    border: 1px solid --primary;
+    /* border: 1px solid --primary; */
 }
 
 *::selection {
@@ -37,12 +37,15 @@ body {
     background-repeat: no-repeat;
     background-size: cover;
     color: #ffffff;
-    cursor: url("./src/images/42_Logo.png"), alias;
+    /* cursor: url("./src/images/42_Logo.png"), alias; */
 }
 
 .pong-row {
-    max-width: 100%;
-    height: auto;
+    /* max-width: 100%; */
+    /*height: auto; */
+    /* width: 100%; */
+    width: 775px;
+    height: 780px;
 }
 
 .social-row {
@@ -51,7 +54,7 @@ body {
     flex-wrap: wrap;
 }
 
-@media  only screen and  (max-width: 1024px) {
+@media  only screen and  (max-width: 1048px) {
     .pong-row {
         display: none !important;
     }
@@ -62,12 +65,18 @@ body {
         display: flex;
     }
     body {
+        font-size: smaller;
         width: auto;
         grid-template-columns: 1fr;
         justify-content: center;
         background-position: center;
         background-repeat: no-repeat;
         background-size: cover;
+    }
+    .form {
+        /* width: 100%; */
+        max-width: 1000px;
+        height: fit-content;
     }
     /* .flex {
         justify-content: center;
@@ -230,12 +239,13 @@ body {
     position: relative;
     gap: 1rem;
     background: rgba(255, 255, 255, 0);
-    width: 100%;
-    max-width: 32rem;
+    /* width: 100%; */
+    width: 450px;
     padding: 3rem 2rem;
-    border-radius: 2rem;
-    box-shadow: rgba(99, 99, 99, 0.05) 0px 2px 8px 8px;
-    height: fit-content;
+    /* border-radius: 2rem; */
+    /* box-shadow: rgba(99, 99, 99, 0.05) 0px 2px 8px 8px; */
+    height: 570px;
+    margin: 170px, 227px, 227px, 820px;
 }
 
 .form-button {
