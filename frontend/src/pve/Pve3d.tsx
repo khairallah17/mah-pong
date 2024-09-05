@@ -84,7 +84,7 @@ function Pve3d() {
             grid: Mesh
         }) => void): void {
             const loader = new GLTFLoader();
-            loader.load('../models/scene.glb', (gltf) => {
+            loader.load('../../models/scene.glb', (gltf) => {
                 const loadedScene = gltf.scene;
                 scene.add(loadedScene);
                 const objects = {
