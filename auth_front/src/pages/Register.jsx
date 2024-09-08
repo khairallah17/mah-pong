@@ -1,6 +1,6 @@
 import React from 'react'
 // import { Link } from 'react-router-dom'
-// import Auth_context from "../context_login_Register/Auth_context"
+// import AuthContext from "../context_login_Register/AuthContext"
 
 export const Register = () => {
   return (

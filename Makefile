@@ -15,7 +15,7 @@ migrate:
 	( cd auth_backend && python manage.py migrate )
 
 runserver:
-	( cd auth_backend && python manage.py runserver )
+	( cd auth_backend && python manage.py runserver)
 
 fclean:
 	rm -rf auth_backend/*.sqlite3

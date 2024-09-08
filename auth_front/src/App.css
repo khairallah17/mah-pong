@@ -24,13 +24,14 @@ body {
   color: white;
   font-family: "Zen Dots", sans-serif;
   flex-direction: row;
-  /* background: url(./images/background.png); */
+  background: url(./images/background.png);
   background-repeat: no-repeat;
   background-size: cover;
-  /* justify-items: center; */
+  justify-items: center;
 }
 
 .login {
   padding-top: 300px;
   padding-left: 300px;
 }
+
