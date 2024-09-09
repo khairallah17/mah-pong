@@ -2,9 +2,9 @@ import React from "react"
 import "./App.css"
 
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom"
-// import ProtectRouter from "./protection_axios/ProtectRouter"
+import ProtectRouter from "./protection_axios/ProtectRouter"
 import { AuthProvider } from "./context_login_Register/AuthContext"
-import { Login } from "./pages"
+import { Profile, Register, Login } from "./pages"
 
 const App = () => {
   return (
@@ -12,9 +12,19 @@ const App = () => {
       <div className="container">
           <Router>
             <AuthProvider>
-              <Routes>
-                <Route path="/login" element={<Login />} />
-              </Routes>
+                <Routes>
+                    <Route path='/Profile' element={
+                      <ProtectRouter> 
+                        <Profile />
+                      </ProtectRouter>
+                    }/>
+                    <Route path='/login' element={
+                      <Login />
+                    }/>
+                    <Route path='/register' element={
+                      <Register />
+                    }/>
+                </Routes>
             </AuthProvider>
           </Router>
       </div>

@@ -228,9 +228,9 @@ body {
      }
 }
 
-.text-field label {
-    color: rgb(121, 0, 242);
-}
+/* .text-field label {
+    color: rgb(255, 0, 0);
+} */
 
 .form {
     display: flex;
