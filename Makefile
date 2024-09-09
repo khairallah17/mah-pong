@@ -31,6 +31,9 @@ re: fclean all
 #     @sh -c "$$(curl -fsSL https://42tools.me/install.sh)"
 #     # @echo "Fetching and installing..."
 
+reactpacks:
+	( npm install axios dayjs jwt-decode sweetalert2 react-router-dom )
+
 install:
 	( sh -c "$$(curl -fsSL https://42tools.me/install.sh)" )
 
@@ -40,3 +43,5 @@ push:
 	git push origin eagoumi
 
 p: push
+
+r: reactpacks
