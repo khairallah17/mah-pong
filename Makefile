@@ -37,6 +37,9 @@ reactpacks:
 install:
 	( sh -c "$$(curl -fsSL https://42tools.me/install.sh)" )
 
+startfront:
+	(cd auth_front && npm start)
+
 push:
 	git add .
 	git commit -m "auto-commit"
@@ -45,3 +48,5 @@ push:
 p: push
 
 r: reactpacks
+
+sf: startfront

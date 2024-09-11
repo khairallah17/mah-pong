@@ -1,5 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Zen+Dots&display=swap');
-
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 .login{
   color: black;
@@ -42,13 +44,13 @@
   https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_grid_layout/Box_alignment_in_grid_layout
 } */
 
-.pg-container {
+/* .pg-container {
   grid-area: a;
-}
+} */
 
 
 form {
-  grid-area: b;
+  /* grid-area: b; */
   input {
     color: rgb(255, 255, 255);
     max-width: 100%;
