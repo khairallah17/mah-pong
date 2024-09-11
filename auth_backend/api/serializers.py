@@ -19,8 +19,6 @@ class   Get_Token_serial(TokenObtainPairSerializer):
         token['full_name'] = user.profile.full_name
         token['username'] = user.username
         token['email'] = user.email
-        # token['bio'] = user.profile.bio
-        # token['lvl'] = user.profile.bio
         # token['wallet'] = user.profile.bio
         
         return token
