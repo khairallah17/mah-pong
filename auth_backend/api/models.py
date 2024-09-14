@@ -8,9 +8,11 @@ from django.db.models.signals import    post_save
 
 #User are inhiriting from AbstractUser Class
 class User(AbstractUser):
+    fullname = models.CharField(max_length=50)
     username = models.CharField(max_length=50)
     email = models.EmailField(unique=True)
     
+    # EMAIL_FIELD = 'email'
     USERNAME_FIELD = 'email' #email not username #[ 'username', 'email' ] # the user can login unsing username or email on the username feild
     REQUIRED_FIELDS = [ 'username' ] # on login username feils are important to field
     
