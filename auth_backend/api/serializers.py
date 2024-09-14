@@ -16,9 +16,11 @@ class   Get_Token_serial(TokenObtainPairSerializer):
         token = super().get_token(user)
         
         # stock it on Dectionary
-        token['full_name'] = user.profile.full_name
+        token['fullname'] = user.profile.fullname
         token['username'] = user.username
         token['email'] = user.email
+        # token['bio'] = user.profile.bio
+        # token['lvl'] = user.profile.bio
         # token['wallet'] = user.profile.bio
         
         return token
@@ -26,11 +28,11 @@ class   Get_Token_serial(TokenObtainPairSerializer):
 class   RegistrationSerial(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, required=True, validators=[validate_password])
     confirm_password = serializers.CharField(write_only=True, required=True)
-    full_name = serializers.CharField(write_only=True, required=True)
+    fullname = serializers.CharField(write_only=True, required=True)
     
     class Meta:
         model = User
-        field = ['full_name', 'username', 'email', 'password', 'confirm_password']
+        fields = ['fullname', 'username', 'email', 'password', 'confirm_password']
     
     def validate(self, attribute):
         if attribute['password'] != attribute['confirm_password']:
@@ -47,9 +49,8 @@ class   RegistrationSerial(serializers.ModelSerializer):
         
         user.save()
         
-        if "full_name" in validated_data:
-            user.profile.full_name = validated_data['full_name']
+        if "fullname" in validated_data:
+            user.profile.fullname = validated_data['fullname']
             user.profile.save()
         
         return user
-

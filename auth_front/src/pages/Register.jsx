@@ -11,35 +11,46 @@ export const Register = () => {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [confirmpassword, setConfirmpassword] = useState("")
+  
+  const {registerUsers} = useContext(AuthContext)
+
+  const registersubmit =  async (event) =>  {
+    event.preventDefault();
+    console.log(fullname);
+    console.log(username);
+    console.log(email);
+    registerUsers(fullname, username, email, password, confirmpassword)
+  }
+  
   return (
     <div className='register'>
-      <h1>Register</h1>
       <form className='form-container'>
-        <input type="text" name="fullname" onChange={(e)=>setFullname(e.target.value)} required placeholder='FULLNAME'/>
-        <input type="text" name="username" onChange={(e)=>setUsername(e.target.value)} required placeholder='USERNAME'/>
-        <input type="email" name="email" onChange={(e)=>setEmail(e.target.value)} required placeholder='EMAIL'/>
-        <input type="password" name="password" onChange={(e)=>setPassword(e.target.value)} required placeholder='PASSWORD'/>
-        <input type="password" name="confirmpassword" onChange={(e)=>setConfirmpassword(e.target.value)} required placeholder='CONFIRM PASSWORD'/>
+      <h1>Register</h1>
+        <input type="text" name="fullname" autoComplete='off' onChange={(e)=>setFullname(e.target.value)} required placeholder='FULLNAME'/>
+        <input type="text" name="username" autoComplete='off' onChange={(e)=>setUsername(e.target.value)} required placeholder='USERNAME'/>
+        <input type="email" name="email" autoComplete='off' onChange={(e)=>setEmail(e.target.value)} required placeholder='EMAIL'/>
+        <input type="password" name="password" autoComplete='off' onChange={(e)=>setPassword(e.target.value)} required placeholder='PASSWORD'/>
+        <input type="password" name="confirmpassword" autoComplete='off' onChange={(e)=>setConfirmpassword(e.target.value)} required placeholder='CONFIRM PASSWORD'/>
         <div className='btn-register'>
-          <button type='button'>SIGN UP</button>
+          <button  type='button' onClick={registersubmit}>SIGN UP</button>
         </div>
-        <div class="lines">
-            <div class="line"></div>
+        <div className="lines">
+            <div className="line"></div>
             OR
-            <div class="line"></div>
+            <div className="line"></div>
         </div>
         <div>
-            <div class="social-row google-social">
-                <a href="#" title="Use Google">
+            <div className="social-row google-social">
+                <Link to={'#'}>
                     <img src={google_logo} alt="Google" />
                     Log in with Google
-                </a>
+                  </Link>
             </div>
-            <div class="social-row intra-social">
-                <a href="#" title="Use 42">
+            <div className="social-row intra-social">
+                <Link to={'#'}>
                     <img src={intra_logo} alt="Intra" />
                     Log in with 42
-                </a>
+                  </Link>
             </div>
         </div>
         <span>Don't have account?
@@ -49,10 +60,9 @@ export const Register = () => {
         </span>
       </form>
       <div className='pg-container'>
-        <img src={pong_rihgt} alt="Pong" class="pong-row" />
+        <img src={pong_rihgt} alt="Pong" className="pong-row" />
       </div>
     </div>
   )
 }
-
 export default Register

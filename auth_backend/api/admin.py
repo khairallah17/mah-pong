@@ -7,7 +7,7 @@ class Admin_Users(admin.ModelAdmin):
     details_user_display = ['username', 'email']
 
 class Admin_Profils(admin.ModelAdmin):
-    list_display = ['full_name', 'user']
+    list_display = ['fullname', 'user']
 
 admin.site.register(User, Admin_Users)
 admin.site.register(Profile, Admin_Profils)
