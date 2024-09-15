@@ -55,10 +55,11 @@ export const AuthProvider = ({ children }) => {
     const loginUsers = async (email, password) => {
         let tokenUrl = "http://localhost:8000/api/token/" 
         const response = await fetch(tokenUrl,{
+            credentials: 'include',
             method: "POST",
             body: JSON.stringify({email, password}), // JSON.stringify: Coverting javascrit value to JSON string
             headers: {
-                "content-type": "application/json"
+                "Content-Type": "application/json"
             },
         })
         
@@ -68,11 +69,17 @@ export const AuthProvider = ({ children }) => {
             
     const JsonData = await response.json()
     
-    if (JsonData.status === 200)
+    // console.log("heeeer = ",JsonData.access);
+    // console.log("heeeereeee = ",JsonData.status);
+    // console.log("heeeereeee = ",JsonData.status);
+
+    if (response.status === 200)
         {
+            console.log("hhhhhhhh")
             setAuthToken(JsonData) //JsonData have access token an the refresh token
-            setUserInfo(jwtDecode(JsonData.access)) // decode access token
+            setUserInfo(JsonData.access) // decode access token
             localStorage.getItem("AuthToken", JSON.stringify(JsonData));
+
             navigation("/dashboard") // Routing the USERS after he loggedin "Success"
             alert.fire({
                 position: "top-end",
@@ -89,8 +96,8 @@ export const AuthProvider = ({ children }) => {
             console.error("An Error Occurred")
             alert.fire({
                 position: "top-end",
-                title: "The email address or Username you entered isn't connected to an account",
                 icon: "error",
+                title: "The email address or Username you entered isn't connected to an account",
                 showConfirmButton: true,
                 timerProgressBar: true,
                 timer: 3000
@@ -103,22 +110,22 @@ export const AuthProvider = ({ children }) => {
     let tokenUrlregister = "http://localhost:8000/api/register/"
     const response = await fetch(tokenUrlregister ,{
         method: 'POST',
-        headers: {
-            'content-type': 'application/json',
-        },
         body: JSON.stringify({fullname, username, email, password, confirm_password}), // JSON.stringify: Coverting javascrit value to JSON string
+        headers: {
+            'Content-Type': 'application/json',
+        },
     })
-    console.log(response.status)
+    // console.log(response.status)
 
 
-    const JsonData = await response.json()
-    
-    if (JsonData.status === 201) // 201 status Created
+    const JsonData =  await response.json()
+    // console.log("here == ", JsonData) // hna katerje3 400
+    if (response.status === 201) // 201 status Created
     {
         // setAuthToken(JsonData) //JsonData have access token an the refresh token
         // setUserInfo(jwtDecode(JsonData.access)) // decode access token
         // localStorage.getItem("AuthToken", JSON.stringify(JsonData));
-        navigation("/dashboard") // Routing the USERS after he loggedin "Success"
+        navigation("/login") // Routing the USERS after he loggedin "Success"
         alert.fire({
             position: "top-end",
             title: "you have successfully Registred",

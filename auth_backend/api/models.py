@@ -8,7 +8,7 @@ from django.db.models.signals import    post_save
 
 #User are inhiriting from AbstractUser Class
 class User(AbstractUser):
-    fullname = models.CharField(max_length=50)
+    # fullname = models.CharField(max_length=50)
     username = models.CharField(max_length=50)
     email = models.EmailField(unique=True)
     

@@ -26,11 +26,11 @@ export const Register = () => {
     <div className='register'>
       <form className='form-container'>
       <h1>Register</h1>
-        <input type="text" name="fullname" autoComplete='off' onChange={(e)=>setFullname(e.target.value)} required placeholder='FULLNAME'/>
-        <input type="text" name="username" autoComplete='off' onChange={(e)=>setUsername(e.target.value)} required placeholder='USERNAME'/>
-        <input type="email" name="email" autoComplete='off' onChange={(e)=>setEmail(e.target.value)} required placeholder='EMAIL'/>
-        <input type="password" name="password" autoComplete='off' onChange={(e)=>setPassword(e.target.value)} required placeholder='PASSWORD'/>
-        <input type="password" name="confirmpassword" autoComplete='off' onChange={(e)=>setConfirmpassword(e.target.value)} required placeholder='CONFIRM PASSWORD'/>
+        <input type="text" name="fullname" autoComplete='off' onChange={(event)=>setFullname(event.target.value)} required placeholder='FULLNAME'/>
+        <input type="text" name="username" autoComplete='off' onChange={(event)=>setUsername(event.target.value)} required placeholder='USERNAME'/>
+        <input type="email" name="email" autoComplete='off' onChange={(event)=>setEmail(event.target.value)} required placeholder='EMAIL'/>
+        <input type="password" name="password" autoComplete='off' onChange={(event)=>setPassword(event.target.value)} required placeholder='PASSWORD'/>
+        <input type="password" name="confirmpassword" autoComplete='off' onChange={(event)=>setConfirmpassword(event.target.value)} required placeholder='CONFIRM PASSWORD'/>
         <div className='btn-register'>
           <button  type='button' onClick={registersubmit}>SIGN UP</button>
         </div>

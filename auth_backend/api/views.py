@@ -29,10 +29,12 @@ def protectedview(requst):
 def viewallrouting(request):
     data = [
         'api/token/refresh',
-        'api/register/',
-        'api/token/',
+        'api/register',
+        'api/token',
         # 'admin/token/refresh',
         # 'admin/register/',
         # 'admin/token/'
     ]
     return Response(data)
+
+#att rah yalah 7yetha hhhhhhh lkhod3a
