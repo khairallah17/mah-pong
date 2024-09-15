@@ -33,41 +33,41 @@ const HomePage: React.FC<HomePageProps> = ({ onUsernameSubmit }) => {
     setIsSubmitted(true);
   };
 
-  useEffect(() => {
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-    const renderer = new THREE.WebGLRenderer();
+  // useEffect(() => {
+  //   const scene = new THREE.Scene();
+  //   const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+  //   const renderer = new THREE.WebGLRenderer();
   
-    const loader = new GLTFLoader();
-    loader.load('../../models/scene.glb', function (gltf: any) {
-      scene.add(gltf.scene);
-      addLights(scene);
-    }, undefined, function (error: any) {
-      console.error(error);
-    });
+  //   const loader = new GLTFLoader();
+  //   loader.load('../../models/scene.glb', function (gltf: any) {
+  //     scene.add(gltf.scene);
+  //     addLights(scene);
+  //   }, undefined, function (error: any) {
+  //     console.error(error);
+  //   });
   
-    camera.position.set(0.75, 1.25, 1.88);
-    camera.rotation.x = -0.5;
-    renderer.setSize(window.innerWidth, window.innerHeight);
+  //   camera.position.set(0.75, 1.25, 1.88);
+  //   camera.rotation.x = -0.5;
+  //   renderer.setSize(window.innerWidth, window.innerHeight);
   
-    const animate = function () {
-      requestAnimationFrame(animate);
-      renderer.render(scene, camera);
-    };
+  //   const animate = function () {
+  //     requestAnimationFrame(animate);
+  //     renderer.render(scene, camera);
+  //   };
 
-  function addLights(scene: THREE.Scene): void {
-      const light = new THREE.AmbientLight(0xffffff, 3);
-      light.position.set(0, 10, 0);
-      light.castShadow = true;
-      scene.add(light);
-  }
-    animate();
+  // function addLights(scene: THREE.Scene): void {
+  //     const light = new THREE.AmbientLight(0xffffff, 3);
+  //     light.position.set(0, 10, 0);
+  //     light.castShadow = true;
+  //     scene.add(light);
+  // }
+  //   animate();
 
-    mount.current!.appendChild(renderer.domElement);
-    return () => {
-      mount.current!.removeChild(renderer.domElement);
-    }
-  }, []);
+  //   mount.current!.appendChild(renderer.domElement);
+  //   return () => {
+  //     mount.current!.removeChild(renderer.domElement);
+  //   }
+  // }, []);
 
   return (
     <div className="homepage">

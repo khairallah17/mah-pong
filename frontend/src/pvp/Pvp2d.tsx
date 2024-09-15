@@ -11,7 +11,7 @@ function Pvp2d({ username }: Pvp2dProps) {
     const [gameState, setGameState] = useState<any>(null);
     const [isMatched, setIsMatched] = useState(false);
     let keyPressed = false;
-    const [isPlayer1, setIsPlayer1] = useState(true)
+    const [isPlayer1, setIsPlayer1] = useState(true);
     let ballDirection = new THREE.Vector3(1, 0, 1);
     const PADDLE_SPEED = 0.05;
     const intervalIdRef = useRef<NodeJS.Timeout | null>(null);
@@ -37,8 +37,10 @@ function Pvp2d({ username }: Pvp2dProps) {
                 if (message.type === 'match_found') {
                     setIsMatched(true)
                     if (message.player_id === '2')
-                        setIsPlayer1(false)
+                        setIsPlayer1(false);
                     console.log("match found with player_id: ", message.player_id, "isPlayer1: ", isPlayer1);
+                } else if (message.type === 'game_event') {
+                    updateScene(message.event);
                 } else if (message.type === 'game_state') {
                     //gameStateRef.current = message.game_state;
                     setGameState(message.game_state);
@@ -56,12 +58,12 @@ function Pvp2d({ username }: Pvp2dProps) {
         };
     }, [username]);
 
-    useEffect(() => {
-        if (gameState) {
-            console.log("gamestate exists");
-            updateScene(gameState);
-        }
-    }, [gameState]);
+    // useEffect(() => {
+    //     if (gameState) {
+    //         console.log("gamestate exists");
+    //         updateScene(gameState);
+    //     }
+    // }, [gameState]);
 
     useEffect(() => {
         if (!rendererRef.current && isMatched) {
@@ -100,34 +102,34 @@ function Pvp2d({ username }: Pvp2dProps) {
                     return;
                 }
                 requestAnimationFrame(animate);
-                // ball.position.add(ballDirection.clone().multiplyScalar(0.05));
+                ball.position.add(ballDirection.clone().multiplyScalar(0.05));
 
-                // const paddle1Box = new THREE.Box3().setFromObject(paddle1);
-                // const paddle2Box = new THREE.Box3().setFromObject(paddle2);
-                // const ballSphere = new THREE.Sphere(ball.position, ball.geometry.parameters.radius);
-                // const goal1 = new THREE.Box3(new THREE.Vector3(-3, -1, -1.5), new THREE.Vector3(-2.5, 1, 1.5));
-                // const goal2 = new THREE.Box3(new THREE.Vector3(2.5, -1, -1.5), new THREE.Vector3(3, 1, 1.5));
+                const paddle1Box = new THREE.Box3().setFromObject(paddle1);
+                const paddle2Box = new THREE.Box3().setFromObject(paddle2);
+                const ballSphere = new THREE.Sphere(ball.position, ball.geometry.parameters.radius);
+                const goal1 = new THREE.Box3(new THREE.Vector3(-3, -1, -1.5), new THREE.Vector3(-2.5, 1, 1.5));
+                const goal2 = new THREE.Box3(new THREE.Vector3(2.5, -1, -1.5), new THREE.Vector3(3, 1, 1.5));
 
-                // if (paddle1Box.intersectsSphere(ballSphere)) {
-                //     ballDirection.x *= -1;
-                //     ball.position.x += 0.05 * (isPlayer1 ? 1 : -1);
-                // } else if (paddle2Box.intersectsSphere(ballSphere)) {
-                //     const paddle2Center = new THREE.Vector3();
-                //     paddle2Box.getCenter(paddle2Center);
-                //     const ballPaddleZDiff = ballSphere.center.z - paddle2Center.z;
-                //     //console.log(ballPaddleZDiff);//
-                //     ballDirection.x *= -1;
-                //     ball.position.x -= 0.05 * (isPlayer1 ? 1 : -1);
-                // }
+                if (paddle1Box.intersectsSphere(ballSphere)) {
+                    ballDirection.x *= -1;
+                    ball.position.x += 0.05 * (isPlayer1 ? 1 : -1);
+                } else if (paddle2Box.intersectsSphere(ballSphere)) {
+                    const paddle2Center = new THREE.Vector3();
+                    paddle2Box.getCenter(paddle2Center);
+                    const ballPaddleZDiff = ballSphere.center.z - paddle2Center.z;
+                    //console.log(ballPaddleZDiff);//
+                    ballDirection.x *= -1;
+                    ball.position.x -= 0.05 * (isPlayer1 ? 1 : -1);
+                }
 
-                // if (goal1.intersectsSphere(ballSphere) || goal2.intersectsSphere(ballSphere)) {
-                //     isPausedRef.current = true;
-                //     restartGame(ball);
-                // }
+                if (goal1.intersectsSphere(ballSphere) || goal2.intersectsSphere(ballSphere)) {
+                    isPausedRef.current = true;
+                    restartGame(ball);
+                }
 
-                // if (ball.position.z < -1.5 || ball.position.z > 1.5) {
-                //     ballDirection.z *= -1;
-                // }
+                if (ball.position.z < -1.5 || ball.position.z > 1.5) {
+                    ballDirection.z *= -1;
+                }
                 renderer.render(scene, camera);
             };
 
@@ -166,48 +168,63 @@ function Pvp2d({ username }: Pvp2dProps) {
             }
         }
     };
-    
+
     const onDocumentKeyDown = (event: KeyboardEvent) => {
         if (!keyPressed) {
             keyPressed = true;
             const moveDirection = event.key === 'ArrowUp' ? -1 : event.key === 'ArrowDown' ? 1 : 0;
             if (moveDirection !== 0) {
                 intervalIdRef.current = setInterval(() => {
-                    wsRef.current!.send(JSON.stringify({
-                        type: 'game_event',
-                        event: moveDirection === -1 ? 'player_move_up' : 'player_move_down',
-                        player_id: isPlayer1 ? 1 : 2,
-                        //position: paddle1Ref.current?.position,
-                    }));
                     isPausedRef.current = false;
-                    // const paddle1Geometry = paddle1Ref.current!.geometry as THREE.BoxGeometry;
-                    // const tableGeometry = tableRef.current!.geometry as THREE.BoxGeometry;
-                    // const newPosition = paddle1Ref.current!.position.z + moveDirection * PADDLE_SPEED;
-                    // const halfPaddleWidth = paddle1Geometry.parameters.depth / 2;
-                    // const tableLimit = tableRef.current!.position.z + tableGeometry.parameters.depth / 2;
-                    // if (Math.abs(newPosition) + Math.abs(halfPaddleWidth) < tableLimit) {
-                    //     paddle1Ref.current!.position.z = newPosition;
-                    // }
+                    const paddle1Geometry = paddle1Ref.current!.geometry as THREE.BoxGeometry;
+                    const tableGeometry = tableRef.current!.geometry as THREE.BoxGeometry;
+                    console.log("paddle1Ref.current!.position.x: ", paddle1Ref.current!.position.x);
+                    console.log("paddle2Ref.current!.position.x: ", paddle2Ref.current!.position.x);
+                    const newPosition = paddle1Ref.current!.position.z + moveDirection * PADDLE_SPEED;
+                    const halfPaddleWidth = paddle1Geometry.parameters.depth / 2;
+                    const tableLimit = tableRef.current!.position.z + tableGeometry.parameters.depth / 2;
+                    if (Math.abs(newPosition) + Math.abs(halfPaddleWidth) < tableLimit) {
+                        wsRef.current!.send(JSON.stringify({
+                            type: 'game_event',
+                            event: moveDirection === -1 ? 'player_move_up' : 'player_move_down',
+                            player_id: isPlayer1 ? 1 : 2,
+                            //position: paddle1Ref.current?.position,
+                        }));
+                        paddle1Ref.current!.position.z = newPosition;
+                    }
                 }, 30);
             }
         }
     };
 
-    const updateScene = (state: any) => {
-        if (paddle1Ref.current && paddle2Ref.current && ballRef.current && !isPausedRef.current) {
-            if (isPlayer1) {
-                paddle1Ref.current.position.z = state.paddle1_z;
-                paddle2Ref.current.position.z = state.paddle2_z;
-            }
-            else {
-                paddle1Ref.current.position.z = state.paddle2_z;
-                paddle2Ref.current.position.z = state.paddle1_z;
-            }
-            ballRef.current.position.x = state.ball_x;
-            ballRef.current.position.z = state.ball_z;
-            //isPausedRef.current = state.is_paused;
+    // const updateScene = (state: any) => {
+    //     if (paddle1Ref.current && paddle2Ref.current && ballRef.current && !isPausedRef.current) {
+    //         if (isPlayer1) {
+    //             paddle1Ref.current.position.z = state.paddle1_z;
+    //             paddle2Ref.current.position.z = state.paddle2_z;
+    //         }
+    //         else {
+    //             paddle1Ref.current.position.z = state.paddle2_z;
+    //             paddle2Ref.current.position.z = state.paddle1_z;
+    //         }
+    //         ballRef.current.position.x = state.ball_x;
+    //         ballRef.current.position.z = state.ball_z;
+    //         //isPausedRef.current = state.is_paused;
+    //     }
+    // };
+
+    const updateScene = (event: string) => {
+        if (isPausedRef.current) {
+            isPausedRef.current = false;
         }
-    };
+        if (paddle1Ref.current && paddle2Ref.current) {
+            if (event === 'player_move_up') {
+                paddle2Ref.current.position.z -= PADDLE_SPEED;
+            } else if (event === 'player_move_down') {
+                paddle2Ref.current.position.z += PADDLE_SPEED;
+            }
+        }
+    }
 
     const createTable = () => {
         const geometry = new THREE.BoxGeometry(5, 0.1, 3);
