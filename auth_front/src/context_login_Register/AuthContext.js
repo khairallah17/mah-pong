@@ -118,8 +118,7 @@ export const AuthProvider = ({ children }) => {
     // console.log(response.status)
 
 
-    const JsonData =  await response.json()
-    // console.log("here == ", JsonData) // hna katerje3 400
+    // const JsonData =  await response.json()
     if (response.status === 201) // 201 status Created
     {
         // setAuthToken(JsonData) //JsonData have access token an the refresh token

@@ -60,7 +60,7 @@ export const Register = () => {
         </span>
       </form>
       <div className='pg-container'>
-        <img src={pong_rihgt} alt="Pong" className="pong-row" />
+        <img src={pong_rihgt} alt="Pong" className="pong-right" />
       </div>
     </div>
   )

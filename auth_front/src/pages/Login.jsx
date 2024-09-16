@@ -1,8 +1,8 @@
-import { React, useContext, useState } from 'react'
-// import { Link } from 'react-router-dom'
-// import google_logo from '../images/google_logo.png'
-// import intra_logo from '../images/42_Logo.png'
-// import pong_rihgt from "../images/pong right.png"
+import { React, useContext } from 'react'
+import { Link } from 'react-router-dom'
+import google_logo from '../images/google_logo.png'
+import intra_logo from '../images/42_Logo.png'
+import pong_right from "../images/pong right.png"
 import AuthContext from "../context_login_Register/AuthContext"
 
 export const Login = () => {
@@ -22,15 +22,45 @@ export const Login = () => {
   }
 
   return (
-    <div className='login text-white'>
-          <form onSubmit={loginsubmit}>
-            <h1 className='font-bold rgb(255, 255, 255)'>LOGIN</h1>
-            <input type="email" autoComplete='off'  name="email"   placeholder='EMAIL' required/>
-            <input type="password" autoComplete='off' name='password'  placeholder='PASSWORD' required/>
-            <div className='btn-login'>
-                <button type="submit">SIGN IN</button>
+    <div className='cnt-lg grid grid-cols-2 gap-2 p-2 text-white justify-items-center'>
+      <div className=' w-full h-full content-center'>
+        <form onSubmit={loginsubmit} className='w-[454px] h-[531px] '>
+              <h1 className='font-bold rgb(255, 255, 255)'>LOGIN</h1>
+              <input type="email" autoComplete='off'  name="email"   placeholder='EMAIL' required/>
+              <input type="password" autoComplete='off' name='password'  placeholder='PASSWORD' required/>
+              <div className='content-center'>
+                  <button type="submit">SIGN IN</button>
+              </div>
+              <div className="lines">
+          <div className="line bg-gray-500 flex-1 h-[3px]"></div>
+            <p className='text-gray-500'>OR</p>
+          <div className="line bg-gray-500 flex-1 h-[3px]"></div>
+        </div>
+        <div>
+            <div className="social-row google-social">
+                <Link to={'#'}>
+                    <img src={google_logo} alt="Google" />
+                    Log in with Google
+                  </Link>
             </div>
-          </form>
+            <div className="social-row intra-social">
+                <Link to={'#'}>
+                    <img src={intra_logo} alt="Intra" />
+                    Log in with 42
+                  </Link>
+            </div>
+        </div>
+        <div className="text-white uppercase flex gap-2 justify-between text-sm leading-loose">
+            <span>Don't have account?</span>
+            <Link to={'/register'} className='btn-signup hover:text-aqua-600'>
+            SIGN UP
+            </Link>
+        </div>
+        </form>
+      </div>
+        <div className='pong-row w-full h-full md:h-screen content-center grid-cols-2'>
+          <img src={pong_right} alt="Pong" className="pong-right w-[730px] h-[730px]"/>
+        </div>
     </div>
   )
 }
