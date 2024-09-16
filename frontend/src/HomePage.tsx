@@ -2,9 +2,16 @@ import React, { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { useNavigate } from 'react-router-dom';
+import { Swiper, SwiperSlide } from 'swiper/react';
+import 'swiper/css';
 import './App.css';
 import aub from './assets/aub.jpeg';
-import { add } from 'three/examples/jsm/nodes/Nodes.js';
+import khr from "./assets/khr.jpg";
+import hdl from './assets/headline.png';
+import agm from './assets/agm.jpg';
+import zou from './assets/Zou.jpg';
+import hmz from './assets/hasalam.jpg';
+import bg from './assets/bg.jpg';
 
 interface HomePageProps {
   onUsernameSubmit: (username: string) => void;
@@ -21,7 +28,20 @@ const HomePage: React.FC<HomePageProps> = ({ onUsernameSubmit }) => {
   const aboutRef = useRef(null);
   const mount = useRef<HTMLDivElement | null>(null);
   
+  const calculateSlidesPerView = () => {
+    const width = window.innerWidth;
+  
+    if (width <= 500) {
+      return 1;
+    } else if (width <= 900) {
+      return 2;
+    } else {
+      return 3;
+    }
+  };
+
   const scrollToRef = (ref: any) => {
+    console.log(document.body.scrollHeight);
     window.scrollTo({
       top: ref.current.offsetTop - window.innerHeight / 2,
       behavior: 'smooth'
@@ -88,40 +108,56 @@ const HomePage: React.FC<HomePageProps> = ({ onUsernameSubmit }) => {
           <p>“This section is about the game, what is it, what is the goal, and how to play it.”</p>
           <button>Play now</button>
         </div>
-        <img src='https://shorturl.at/bcvdo' alt='Game'/>
+        <img src={hdl} alt='Game'/>
       </div>
       <div className='team-container' ref={teamRef}>
-        <h1 style={{position: 'absolute', top: "-35vh"}}>Meet the team</h1>
-        <div className="team-member">
-          <img src={aub} alt='pfp'/>
+      <h1 style={{position: 'absolute', top: "3vh", margin: "0"}}>Meet the team</h1>
+      <Swiper spaceBetween={15}
+      slidesPerView={calculateSlidesPerView()}
+      style={{height: "40vh", width: "100%"}}>
+      <div className='fadein'></div>
+        <SwiperSlide style={{paddingTop: "6vh"}}>
+        <div className="team-member" >
+          <img src={aub} alt='pfp' style={{zIndex: "100"}} />
           <h2>Name</h2>
           <p>position @ School</p>
           <p>“This section is about the team member, what he knows, and the part on which he worked on.”</p>
         </div>
+        </SwiperSlide>
+        <SwiperSlide style={{paddingTop: "6vh"}}>
         <div className="team-member">
-          <img src={aub} alt='pfp'/>
+          <img src={khr} alt='pfp'/>
           <h2>Name</h2>
           <p>position @ School</p>
           <p>“This section is about the team member, what he knows, and the part on which he worked on.”</p>
         </div>
+        </SwiperSlide>
+        <SwiperSlide style={{paddingTop: "6vh"}}>
         <div className="team-member">
-          <img src={aub} alt='pfp'/>
+          <img src={hmz} alt='pfp'/>
           <h2>Name</h2>
           <p>position @ School</p>
           <p>“This section is about the team member, what he knows, and the part on which he worked on.”</p>
         </div>
+        </SwiperSlide>
+        <SwiperSlide style={{paddingTop: "6vh"}}>
         <div className="team-member">
-          <img src={aub} alt='pfp'/>
+          <img src={zou} alt='pfp'/>
           <h2>Name</h2>
           <p>position @ School</p>
           <p>“This section is about the team member, what he knows, and the part on which he worked on.”</p>
         </div>
+        </SwiperSlide>
+        <SwiperSlide style={{paddingTop: "6vh"}}>
         <div className="team-member">
-          <img src={aub} alt='pfp'/>
+          <img src={agm} alt='pfp'/>
           <h2>Name</h2>
           <p>position @ School</p>
           <p>“This section is about the team member, what he knows, and the part on which he worked on.”</p>
         </div>
+        </SwiperSlide>
+        <div className='fadeout'></div>
+      </Swiper>
       </div>
       {!isSubmitted ? (
         <div className="username-input">
