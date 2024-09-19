@@ -53,32 +53,38 @@ export const AuthProvider = ({ children }) => {
     const navigation = useNavigate()
 
     const loginUsers = async (email, password) => {
-        let tokenUrl = "http://localhost:8000/api/token/" 
-        const response = await fetch(tokenUrl,{
+    let tokenUrl = "http://localhost:8000/api/token/" 
+        const response = await fetch(tokenUrl ,{
             credentials: 'include',
             method: "POST",
             body: JSON.stringify({email, password}), // JSON.stringify: Coverting javascrit value to JSON string
             headers: {
                 "Content-Type": "application/json"
             },
-        })
-        
-        // if (!response.ok){
-            //     throw new Error(`Response status: ${response.status}`);
-            // }
-            
-    const JsonData = await response.json()
-    
-    // console.log("heeeer = ",JsonData.access);
-    // console.log("heeeereeee = ",JsonData.status);
-    // console.log("heeeereeee = ",JsonData.status);
-
-    if (response.status === 200)
+        });
+            // console.log("heeeer = ",JsonData.access);
+            // console.log("heeeereeee = ",JsonData.status);
+            // console.log("heeeereeee = ",JsonData.status);
+        if (response.status === 401)
         {
+            console.error("401: Unauthorized access you should to register")
+            alert.fire({
+                position: "top-end",
+                title: "you don't have an account you should to register",
+                icon: "error",
+                showConfirmButton: true,
+                timerProgressBar: true,
+                timer: 6000
+            })
+            navigation("/register")
+        }
+        else if (response.status === 200)
+        {
+            const JsonData = await response.json()
             console.log("hhhhhhhh")
             setAuthToken(JsonData) //JsonData have access token an the refresh token
             setUserInfo(JsonData.access) // decode access token
-            localStorage.getItem("AuthToken", JSON.stringify(JsonData));
+            localStorage.getItem("AuthToken", JSON.stringify(JsonData))
 
             navigation("/dashboard") // Routing the USERS after he loggedin "Success"
             alert.fire({
@@ -89,8 +95,8 @@ export const AuthProvider = ({ children }) => {
                 timerProgressBar: true,
                 timer: 3000
             }) 
-        } 
-        else 
+        }
+        else
         {
             console.log(response.status)
             console.error("An Error Occurred")
@@ -104,6 +110,7 @@ export const AuthProvider = ({ children }) => {
             })
         }
     }
+
     
     const registerUsers = async (fullname, username, email, password, confirm_password) => {
 
@@ -116,7 +123,7 @@ export const AuthProvider = ({ children }) => {
         },
     })
     // console.log(response.status)
-
+    
 
     // const JsonData =  await response.json()
     if (response.status === 201) // 201 status Created
