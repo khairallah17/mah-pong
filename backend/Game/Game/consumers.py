@@ -81,7 +81,8 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
                     {
                         'type': 'game_event',
                         'event': event,
-                        'player_id': player_id
+                        'player_id': player_id,
+                        'position': data.get('position')
                     }
                 )
     @database_sync_to_async
@@ -101,7 +102,8 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
         await self.send(text_data=json.dumps({
             'type': 'game_event',
             'event': game_eve,
-            'player_id': player_id
+            'player_id': player_id,
+            'position': event['position']
         }))
 
 # Complex logic for matchmaking

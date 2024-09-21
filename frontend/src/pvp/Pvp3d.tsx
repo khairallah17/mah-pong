@@ -18,6 +18,7 @@ interface Pve3dProps {
 function Pve3d({ username }: Pve3dProps) {
     const gameContainerRef = useRef<HTMLDivElement | null>(null);
     const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
+    const paddle2Ref = useRef<THREE.Mesh | null>(null);
     const wsRef = useRef<WebSocket | null>(null);
     const [isMatched, setIsMatched] = useState(false);
     const [isPlayer1, setIsPlayer1] = useState(true);
@@ -39,7 +40,7 @@ function Pve3d({ username }: Pve3dProps) {
                         setIsPlayer1(false);
                     console.log("match found with player_id: ", message.player_id, "isPlayer1: ", isPlayer1);
                 } else if (message.type === 'game_event') {
-                    updateScene(message.event);
+                    updateScene(message.event, message.position);
                 } else if (message.type === 'game_state') {
                     //gameStateRef.current = message.game_state;
                     //setGameState(message.game_state);
@@ -57,10 +58,14 @@ function Pve3d({ username }: Pve3dProps) {
         };
     }, [username]);
 
-    const updateScene = (event: string) => {
-        console.log("event: ", event);
+    const updateScene = (event: string, position: any) => {
         if (event === 'player_move') {
-            console.log("player_move");
+            //console.log("received with position: ", position);
+            if (isPlayer1) {
+                paddle2Ref.current!.position.set(position.x, position.y, position.z);
+            }
+            else
+                paddle2Ref.current!.position.set(position.x, position.y, position.z);
         }
     };
 
@@ -94,6 +99,7 @@ function Pve3d({ username }: Pve3dProps) {
             // Load Scene and Start Animation
             loadScene(scene, (objects) => {
                 ({ paddle1, paddle2, ball, table, grid } = objects);
+                paddle2Ref.current = paddle2;
                 initBallPos = ball.position.clone();
                 paddle1.rotation.set(0, 0, 0);
                 paddle2.rotation.set(0, 0, 0);
@@ -140,8 +146,8 @@ function Pve3d({ username }: Pve3dProps) {
                     const loadedScene = gltf.scene;
                     scene.add(loadedScene);
                     const objects = {
-                        paddle1: loadedScene.getObjectByName('Paddle_1') as Mesh,
-                        paddle2: loadedScene.getObjectByName('Paddle_2') as Mesh,
+                        paddle1: isPlayer1 ? loadedScene.getObjectByName('Paddle_1') as Mesh : loadedScene.getObjectByName('Paddle_2') as Mesh,
+                        paddle2: isPlayer1 ? loadedScene.getObjectByName('Paddle_2') as Mesh : loadedScene.getObjectByName('Paddle_1') as Mesh,
                         ball: loadedScene.getObjectByName('Ball') as Mesh,
                         table: loadedScene.getObjectByName('table_plate') as Mesh,
                         grid: loadedScene.getObjectByName('table_grid') as Mesh
@@ -264,7 +270,7 @@ function Pve3d({ username }: Pve3dProps) {
 
             function animate(): void {
                 // Update AI for paddle 2
-                updatePaddle2AI();
+                // updatePaddle2AI();
 
                 // Move the ball
                 moveBall();
