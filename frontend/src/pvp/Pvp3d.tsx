@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { useEffect, useRef } from 'react';
 import { gsap } from 'gsap';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
+import { InteractiveGroup } from 'three/examples/jsm/Addons.js';
 
 type Vector3 = THREE.Vector3;
 type Scene = THREE.Scene;
@@ -10,7 +11,11 @@ type WebGLRenderer = THREE.WebGLRenderer;
 type Mesh = THREE.Mesh;
 type Box3 = THREE.Box3;
 
-function Pve3d() {
+interface Pve3dProps {
+    username: string;
+}
+
+function Pve3d({username}: Pve3dProps) {
     const gameContainerRef = useRef<HTMLDivElement | null>(null);
 
     useEffect(() => {
