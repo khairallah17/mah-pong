@@ -59,7 +59,8 @@ function Pve3d() {
         }
 
         function createRenderer(container: HTMLDivElement | null): WebGLRenderer {
-            const renderer = new THREE.WebGLRenderer();
+            const renderer = new THREE.WebGLRenderer({antialias: true , alpha: true});
+            renderer.setPixelRatio(window.devicePixelRatio);
             renderer.setSize(window.innerWidth, window.innerHeight);
             if (container && container.childNodes.length === 0) {
                 container.appendChild(renderer.domElement);

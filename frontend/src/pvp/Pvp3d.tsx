@@ -61,11 +61,7 @@ function Pve3d({ username }: Pve3dProps) {
     const updateScene = (event: string, position: any) => {
         if (event === 'player_move') {
             //console.log("received with position: ", position);
-            if (isPlayer1) {
-                paddle2Ref.current!.position.set(position.x, position.y, position.z);
-            }
-            else
-                paddle2Ref.current!.position.set(position.x, position.y, position.z);
+            paddle2Ref.current!.position.set(position.x, position.y, position.z);
         }
     };
 
@@ -112,12 +108,16 @@ function Pve3d({ username }: Pve3dProps) {
             function createCamera(): PerspectiveCamera {
                 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
                 camera.position.set(0.75, 1.25, 1.88);
+                if(!isPlayer1){
+                    //camera.position.set(0.75, 1.25, 1.88);
+                }
                 camera.rotation.x = -0.5;
                 return camera;
             }
 
             function createRenderer(container: HTMLDivElement | null): WebGLRenderer {
-                const renderer = new THREE.WebGLRenderer();
+                const renderer = new THREE.WebGLRenderer({antialias: true , alpha: true});
+                renderer.setPixelRatio(window.devicePixelRatio);
                 renderer.setSize(window.innerWidth, window.innerHeight);
                 if (container && container.childNodes.length === 0) {
                     container.appendChild(renderer.domElement);
@@ -235,7 +235,7 @@ function Pve3d({ username }: Pve3dProps) {
                 camera: PerspectiveCamera,
                 table: Mesh
             ): void {
-                const paddleX = mapRange(mouse.x, { min: -1, max: 1 }, { min: -120, max: 120 });
+                let paddleX = mapRange(mouse.x, { min: -1, max: 1 }, { min: -120, max: 120 });
                 let paddleY, paddleZ;
 
                 if (mouse.y > -0.4) {
@@ -244,6 +244,17 @@ function Pve3d({ username }: Pve3dProps) {
                 } else {
                     paddleY = mapRange(mouse.y, { min: -1, max: -0.4 }, { min: -20, max: 10 });
                     paddleZ = mapRange(mouse.y, { min: -1, max: -0.4 }, { min: -30, max: -7 });
+                }
+
+                if (!isPlayer1) {
+                    if (mouse.y > -0.4) {
+                        paddleY = 10;
+                        paddleZ = mapRange(mouse.y, { min: -0.4, max: 1 }, { min: 148, max: 80 });
+                    } else {
+                        paddleY = mapRange(mouse.y, { min: -1, max: -0.4 }, { min: -20, max: 10 });
+                        paddleZ = mapRange(mouse.y, { min: -1, max: -0.4 }, { min: 160, max: 148 });
+                    }
+                    paddleX = -paddleX;
                 }
 
                 paddle1.position.set(paddleX + tableDimensions.width / 2, paddleY - 10, -paddleZ + 60);
