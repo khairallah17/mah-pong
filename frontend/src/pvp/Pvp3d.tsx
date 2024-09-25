@@ -38,7 +38,6 @@ function Pve3d({ username }: Pve3dProps) {
                     setIsMatched(true)
                     if (message.player_id === '2')
                         setIsPlayer1(false);
-                    console.log("match found with player_id: ", message.player_id, "isPlayer1: ", isPlayer1);
                 } else if (message.type === 'game_event') {
                     updateScene(message.event, message.position);
                 } else if (message.type === 'game_state') {
@@ -99,6 +98,8 @@ function Pve3d({ username }: Pve3dProps) {
                 initBallPos = ball.position.clone();
                 paddle1.rotation.set(0, 0, 0);
                 paddle2.rotation.set(0, 0, 0);
+                const tablebox = new THREE.Box3().setFromObject(table);
+                console.log(tablebox.min.z, tablebox.max.z);
                 setInitialPaddle2Position(paddle2, TABLE_DIMENSIONS);
                 addLights(scene);
                 startGameListeners(mouse, paddle1, camera, table, paddle2, velocity, renderer, scene);
@@ -109,9 +110,9 @@ function Pve3d({ username }: Pve3dProps) {
                 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
                 camera.position.set(0.75, 1.25, 1.88);
                 if(!isPlayer1){
-                    //camera.position.set(0.75, 1.25, 1.88);
+                    camera.position.set(0.75, 1.25, -1.88);
                 }
-                camera.rotation.x = -0.5;
+                //camera.rotation.x = -0.5;
                 return camera;
             }
 
@@ -249,10 +250,10 @@ function Pve3d({ username }: Pve3dProps) {
                 if (!isPlayer1) {
                     if (mouse.y > -0.4) {
                         paddleY = 10;
-                        paddleZ = mapRange(mouse.y, { min: -0.4, max: 1 }, { min: 148, max: 80 });
+                        paddleZ = mapRange(mouse.y, { min: -0.4, max: 1 }, { min: 200, max: 148 });
                     } else {
                         paddleY = mapRange(mouse.y, { min: -1, max: -0.4 }, { min: -20, max: 10 });
-                        paddleZ = mapRange(mouse.y, { min: -1, max: -0.4 }, { min: 160, max: 148 });
+                        paddleZ = mapRange(mouse.y, { min: -1, max: -0.4 }, { min: 300, max: 200 });
                     }
                     paddleX = -paddleX;
                 }
@@ -264,6 +265,9 @@ function Pve3d({ username }: Pve3dProps) {
 
             function updateCameraPosition(mouse: THREE.Vector2, camera: PerspectiveCamera, table: Mesh): void {
                 camera.position.set(mouse.x + 0.75, mouse.y / 5 + 1.25, -mouse.y / 15 + 1.88);
+                if (!isPlayer1) {
+                    camera.position.set(-mouse.x + 0.75, mouse.y / 5 + 1.25, -mouse.y / 15 - 2);
+                }
                 camera.position.add(new THREE.Vector3().subVectors(table.position, camera.position).multiplyScalar(0.1));
                 camera.lookAt(table.position);
             }
