@@ -1,11 +1,12 @@
 2d:
-	move game logic from frontend to backend
 	upgrade game design
 	add score
 	add winner screen
 	add matchmaking screen
 3d:
-	refactor code to improve structure, readability and reuseablity
 	implement multiplayer (server side game logic)
+		fix paddle position and rotation
+		remove paddle2 collision logic and make it work the same way
+
 	add 3d models for shop assets
 	improve animations
