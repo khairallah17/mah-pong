@@ -98,8 +98,12 @@ function Pve3d({ username }: Pve3dProps) {
                 initBallPos = ball.position.clone();
                 paddle1.rotation.set(0, 0, 0);
                 paddle2.rotation.set(0, 0, 0);
+                if (isPlayer1)
+                    paddle2.rotation.set(Math.PI, 0, 0);
+                else
+                    paddle1.rotation.set(Math.PI, 0, 0);
                 const tablebox = new THREE.Box3().setFromObject(table);
-                console.log(tablebox.min.z, tablebox.max.z);
+                console.log(tablebox.min, tablebox.max);
                 setInitialPaddle2Position(paddle2, TABLE_DIMENSIONS);
                 addLights(scene);
                 startGameListeners(mouse, paddle1, camera, table, paddle2, velocity, renderer, scene);
@@ -280,6 +284,9 @@ function Pve3d({ username }: Pve3dProps) {
                     paddle1.rotation.z = rotationz - Math.PI / 2;
                 } else {
                     paddle1.rotation.z = -rotationz + Math.PI / 2;
+                }
+                if (!isPlayer1) {
+                    paddle1.rotation.set(-paddle1.rotation.x, paddle1.rotation.y, -paddle1.rotation.z);
                 }
             }
 
