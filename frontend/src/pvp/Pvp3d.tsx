@@ -98,6 +98,11 @@ function Pve3d({ username }: Pve3dProps) {
                 initBallPos = ball.position.clone();
                 paddle1.rotation.set(0, 0, 0);
                 paddle2.rotation.set(0, 0, 0);
+                if (!isPlayer1) {
+                    paddle1.position.set(0, -20, 2.5 * TABLE_DIMENSIONS.length);
+                    paddle2.position.set(0, -20, -2.5 * TABLE_DIMENSIONS.length);
+                    //paddle1.rotation.set(0, Math.PI, 0);
+                }
                 const tablebox = new THREE.Box3().setFromObject(table);
                 console.log(tablebox.min.z, tablebox.max.z);
                 setInitialPaddle2Position(paddle2, TABLE_DIMENSIONS);
@@ -143,7 +148,7 @@ function Pve3d({ username }: Pve3dProps) {
                 grid: Mesh
             }) => void): void {
                 const loader = new GLTFLoader();
-                loader.load('../../models/scene.glb', (gltf) => {
+                loader.load('../../models/optim.glb', (gltf) => {
                     const loadedScene = gltf.scene;
                     scene.add(loadedScene);
                     const objects = {
@@ -250,10 +255,10 @@ function Pve3d({ username }: Pve3dProps) {
                 if (!isPlayer1) {
                     if (mouse.y > -0.4) {
                         paddleY = 10;
-                        paddleZ = mapRange(mouse.y, { min: -0.4, max: 1 }, { min: 200, max: 148 });
+                        paddleZ = mapRange(mouse.y, { min: -0.4, max: 1 }, { min: 287, max: 188 });
                     } else {
                         paddleY = mapRange(mouse.y, { min: -1, max: -0.4 }, { min: -20, max: 10 });
-                        paddleZ = mapRange(mouse.y, { min: -1, max: -0.4 }, { min: 300, max: 200 });
+                        paddleZ = mapRange(mouse.y, { min: -1, max: -0.4 }, { min: 300, max: 287 });
                     }
                     paddleX = -paddleX;
                 }
