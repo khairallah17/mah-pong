@@ -13,32 +13,33 @@ from django.contrib.auth import authenticate
 
 class Get_MyTokenObtainPairView(TokenObtainPairView):
     serializer_class = Get_Token_serial
-    def post(self, request, *args, **keyword):
-        email = request.data.get('email')
-        password = request.data.get('password')
-        user = authenticate(request, email=email, password=password)
-        if user is None:
-            output = f"This user are not on database{request.user}"
-            return Response({'response' : output}, status=status.HTTP_200_OK) #we should to return another HTTP request not 200 OK request
-    def get(self, request):
-        output = f"Welcome {request.user}, Request Accepted You can Login Now"
-        return Response({'response' : output}, status=status.HTTP_202_ACCEPTED)
+    #rechecking for user on Post fuction if the user are not in database also impliment get function to catch http request and sending access token and refresh token
+    # def post(self, request):
+    #     email = request.data.get('email')
+    #     password = request.data.get('password')
+    #     user = authenticate(request, email=email, password=password)
+    #     if user is None:
+    #         output = f"This user are not on database{request.user}"
+    #         return Response({'response' : output}, status=status.HTTP_200_OK) #we should to return another HTTP request not 200 OK request
+    # def get(self, request):
+    #     output = f"Welcome {request.user}, Request Accepted You can Login Now"
+    #     return Response({'response' : output}, status=status.HTTP_202_ACCEPTED)
     
 class RegisterationView(generics.CreateAPIView):
     queryset = User.objects.all()
     permission_classes = (AllowAny,)
     serializer_class = RegistrationSerial
     def get(self, request):
-        output = f"Welcome {request.user}, Request Accepted You can Register Now"
+        output = f"Welcome Registration Request Accepted, You can Register Now!"
         return Response({'response' : output}, status=status.HTTP_202_ACCEPTED)
-    
-@api_view(['GET'])
+    #checking for post function if the user are aready registred or not
+# @api_view(['GET'])
 @permission_classes([IsAuthenticated]) # thats mean no one can pass to here util they authenticated 
-def protectedview(requst):
-    output = f"Welcome {requst.user}, Auth Succ"
-    return Response({'response' : output}, status=status.HTTP_200_OK)
+# def protectedview(requst):
+#     output = f"Welcome {requst.user}, Auth Succ"
+#     return Response({'response' : output}, status=status.HTTP_200_OK)
 
-@api_view(['GET'])
+# @api_view(['GET'])
 
 def viewallrouting(request):
     data = [
@@ -51,4 +52,3 @@ def viewallrouting(request):
     ]
     return Response(data)
 
-#att rah yalah 7yetha hhhhhhh lkhod3a
