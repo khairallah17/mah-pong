@@ -99,9 +99,9 @@ class RegisterationView(generics.CreateAPIView):
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated]) # thats mean no one can pass to here util they authenticated 
-def protectedview(request):
-    output = f"Welcome {request.user}, Auth Succ"
-    return Response({'response' : output}, status=status.HTTP_200_OK)
+# def protectedview(request):
+#     output = f"Welcome {request.user}, Auth Succ"
+#     return Response({'response' : output}, status=status.HTTP_200_OK)
 
 # @api_view(['GET'])
 
