@@ -20,7 +20,7 @@ class User(AbstractUser):
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)#,  unique=True) ==> if we use "models.ForeignKey(User, on_delete=models.CASCADE, unique=True)"  #mean When We delete User Profile will delete also
     fullname = models.CharField(max_length=100)
-    # bio, Wallet, Level, XP
+    # bi, Wallet, Level, XP
 
 #fuction Creating once we create User we create His Profile
 def create_profile_for_user(sender, instance, created, **keyargs):

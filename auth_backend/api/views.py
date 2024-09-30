@@ -13,6 +13,40 @@ from django.contrib.auth import authenticate
 
 class Get_MyTokenObtainPairView(TokenObtainPairView):
     serializer_class = Get_Token_serial
+    
+    
+    # This POST and GET allow checking for authentication before the token are generated
+    # and Raising Our own HTTP response if the user is not authenticated
+    def post(self, request):
+        email = request.data.get('email')
+        password = request.data.get('password')
+        
+        user = authenticate(email=email, password=password) # this function are default Django to check user exist and credentials are valid
+        
+        if user is None:
+            return Response(
+                {"error": "Invalid Credentials or user does not exist"},
+                status=status.HTTP_200_OK
+            )
+        
+        # here if the user are authenticate sper() call the parent class post method to generate new token
+        return super().post(request) 
+    
+    def get(self, request):
+        if not request.user.is_authenticated: #checking if the user are not authenticate before 
+            return Response(
+                {"error": "User is not authenticated"},
+                status=status.HTTP_202_ACCEPTED
+            ) #returning HTTP request if the user are not existed
+        
+        # here if the user are authenticate we return user info, to generate new token
+        return Response(
+            {
+                "username": request.user.username,
+                "email": request.user.email,
+                "is_authenticated": True
+            }, status=status.HTTP_200_OK
+        )
     #rechecking for user on Post fuction if the user are not in database also impliment get function to catch http request and sending access token and refresh token
     # def post(self, request):
     #     email = request.data.get('email')
@@ -29,15 +63,45 @@ class RegisterationView(generics.CreateAPIView):
     queryset = User.objects.all()
     permission_classes = (AllowAny,)
     serializer_class = RegistrationSerial
+    
+    
+    def create(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        # Here i called the create method in serializer, to create requirments user fieled
+        user = serializer.save()
+        headers = self.get_success_headers(serializer.data) #
+        return Response(
+            {
+                "message": "User Registered Successfully",
+                "User": serializer.data
+            }, status=status.HTTP_201_CREATED,
+            headers=headers
+        )
+    
     def get(self, request):
-        output = f"Welcome Registration Request Accepted, You can Register Now!"
-        return Response({'response' : output}, status=status.HTTP_202_ACCEPTED)
-    #checking for post function if the user are aready registred or not
-# @api_view(['GET'])
+        user = request.user
+        if user.is_authenticated:
+            return Response(
+                {
+                    "message": "User is already authenticated",
+                    "username": user.username,
+                    "email": user.email,
+                    # "fullname": user.fullname,  # Uncomment if fullname is available
+                },
+                status=status.HTTP_200_OK
+            )
+        else:
+            return Response(
+                {"message": "User is not authenticated"},
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+@api_view(['GET'])
 @permission_classes([IsAuthenticated]) # thats mean no one can pass to here util they authenticated 
-# def protectedview(requst):
-#     output = f"Welcome {requst.user}, Auth Succ"
-#     return Response({'response' : output}, status=status.HTTP_200_OK)
+def protectedview(request):
+    output = f"Welcome {request.user}, Auth Succ"
+    return Response({'response' : output}, status=status.HTTP_200_OK)
 
 # @api_view(['GET'])
 
