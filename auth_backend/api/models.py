@@ -1,5 +1,5 @@
 # pylint: disable=no-member
-
+import uuid
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.db.models.signals import    post_save
@@ -9,6 +9,7 @@ from django.db.models.signals import    post_save
 #User are inhiriting from AbstractUser Class
 class User(AbstractUser):
     # fullname = models.CharField(max_length=50)
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     username = models.CharField(max_length=50)
     email = models.EmailField(unique=True)
     

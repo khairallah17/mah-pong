@@ -7,7 +7,8 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework import generics
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework import status
-from django.contrib.auth import authenticate
+from django.contrib.auth import authenticate, get_user_model
+import uuid
 # Create your views here.
 
 
@@ -26,18 +27,18 @@ class Get_MyTokenObtainPairView(TokenObtainPairView):
         if user is None:
             return Response(
                 {"error": "Invalid Credentials or user does not exist"},
-                status=status.HTTP_200_OK
+                status=status.HTTP_400_BAD_REQUEST
             )
         
         # here if the user are authenticate sper() call the parent class post method to generate new token
-        return super().post(request) 
+        return super().post(request)
     
     def get(self, request):
-        if not request.user.is_authenticated: #checking if the user are not authenticate before 
+        if not request.user.is_authenticated: # checking if the user are not authenticate before 
             return Response(
                 {"error": "User is not authenticated"},
-                status=status.HTTP_202_ACCEPTED
-            ) #returning HTTP request if the user are not existed
+                status=status.HTTP_400_BAD_REQUEST
+            ) # returning HTTP request if the user are not existed
         
         # here if the user are authenticate we return user info, to generate new token
         return Response(
@@ -59,6 +60,8 @@ class Get_MyTokenObtainPairView(TokenObtainPairView):
     #     output = f"Welcome {request.user}, Request Accepted You can Login Now"
     #     return Response({'response' : output}, status=status.HTTP_202_ACCEPTED)
     
+# User = get_user_model()
+
 class RegisterationView(generics.CreateAPIView):
     queryset = User.objects.all()
     permission_classes = (AllowAny,)
@@ -68,34 +71,50 @@ class RegisterationView(generics.CreateAPIView):
     def create(self, request):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
+        
+        # Checking for existence of email or username before registration ====> for email are already handled in django by default
+        username = serializer.validated_data.get('username')
+        if User.objects.filter(username=username).exists():
+            return Response(
+                {"error": "A user with that username already exists."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # If checks pass, create the user
         # Here i called the create method in serializer, to create requirments user fieled
-        user = serializer.save()
+        # this hande object creation, and (serializer.data) provides the representation of the created object
+        # Generate a UUID for the new user
+        user_id = uuid.uuid4()
+        
+        # Pass the generated UUID to the serializer's save method
+        user = serializer.save(id=user_id)
+        
         headers = self.get_success_headers(serializer.data) #
         return Response(
             {
                 "message": "User Registered Successfully",
-                "User": serializer.data
+                "UserInfo": {"username": user.username, "email": user.email, "id": str(user.id)}
             }, status=status.HTTP_201_CREATED,
             headers=headers
         )
-    
+
     def get(self, request):
-        user = request.user
-        if user.is_authenticated:
-            return Response(
-                {
-                    "message": "User is already authenticated",
-                    "username": user.username,
-                    "email": user.email,
-                    # "fullname": user.fullname,  # Uncomment if fullname is available
-                },
-                status=status.HTTP_200_OK
-            )
-        else:
-            return Response(
-                {"message": "User is not authenticated"},
-                status=status.HTTP_401_UNAUTHORIZED
-            )
+        # user = request.user
+        # if user.is_authenticated: # no needed we already check for unique username
+        #     return Response(
+        #         {
+        #             "message": "User is already authenticated",
+        #             "username": user.username,
+        #             "email": user.email,
+        #             # "fullname": user.fullname,  # Uncomment if fullname is available
+        #         },
+        #         status=status.HTTP_400_BAD_REQUEST
+        #     )
+        # else:
+        return Response(
+            {"message": "User is not authenticated"},
+            status=status.HTTP_202_ACCEPTED
+        )
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated]) # thats mean no one can pass to here util they authenticated 
@@ -115,4 +134,3 @@ def viewallrouting(request):
         # 'admin/token/'
     ]
     return Response(data)
-

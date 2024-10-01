@@ -4,10 +4,10 @@ from api.models import Profile, User
 
 
 class Admin_Users(admin.ModelAdmin):
-    details_user_display = ['username', 'email']
+    details_user_display = ['id','username', 'email']
 
 class Admin_Profils(admin.ModelAdmin):
-    list_display = ['fullname', 'user']
+    list_display = ['id','fullname', 'user']
 
 admin.site.register(User, Admin_Users)
 admin.site.register(Profile, Admin_Profils)

@@ -4,8 +4,11 @@ from django.contrib.auth.password_validation import validate_password
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
+import uuid
 
 class   UserSerial(serializers.ModelSerializer):
+    id = serializers.UUIDField(read_only=True)
+    
     class   Meta:
         model = User
         fields = ['id', 'username', 'email']
@@ -40,10 +43,13 @@ class   RegistrationSerial(serializers.ModelSerializer):
                 {'password' : "Password are not match Retry Please"}
             )
         return attribute
+    
+    # generate an [ID (uuid.uuid4()), username, email] for any user in database
     def create(self, validated_data):
         user = User.objects.create(
             username=validated_data['username'],
-            email=validated_data['email']
+            email=validated_data['email'],
+            id=uuid.uuid4() # Generate ID for all user in database
         ) #create validate user
         user.set_password(validated_data['password']) #it will be Hashed
         
