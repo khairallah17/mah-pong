@@ -4,9 +4,11 @@ all: packs makemigrations migrate runserver #runfront
 # runfront:
 # 	( cd auth_front && npm start )
 packs:
-	(pip install djangorestframework)
-	(python -m pip install django-cors-headers)
-	(pip install djangorestframework-simplejwt)
+	( python -m pip install djangorestframework )
+	( python -m pip install django-cors-headers )
+	( python -m pip install djangorestframework-simplejwt )
+	( python -m pip install django-allauth )
+	( python -m pip install requests )
 
 makemigrations:
 	( cd auth_backend && python manage.py makemigrations )
