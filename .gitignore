@@ -3,3 +3,4 @@ __pycache__
 *.pyo
 *.sqlite3
 0*_initial.py
+.env
