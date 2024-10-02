@@ -1,6 +1,6 @@
 import { React, useContext } from 'react'
 import { Link } from 'react-router-dom'
-import google_logo from '../images/google_logo.png'
+import GoogleLoginLink from './GoogleLoginLink'
 import intra_logo from '../images/42_Logo.png'
 import pong_right from "../images/pong right.png"
 import AuthContext from "../context_login_Register/AuthContext"
@@ -9,6 +9,7 @@ export const Login = () => {
 
   // const [email, setEmail] = useState("")
   // const [password, setPassword] = useState("")
+
 
   const {loginUsers} = useContext(AuthContext)
 
@@ -38,10 +39,7 @@ export const Login = () => {
         </div>
         <div>
             <div className="social-row google-social">
-                <Link to={'#'}>
-                    <img src={google_logo} alt="Google" />
-                    Log in with Google
-                  </Link>
+              <GoogleLoginLink />
             </div>
             <div className="social-row intra-social">
                 <Link to={'#'}>
