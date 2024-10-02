@@ -26,11 +26,16 @@ function Pve3d({ username }: Pve3dProps) {
     const GRAVITY = -0.09;
     const INITIAL_VELOCITY = new THREE.Vector3(1, 2, 2.5);
     const TABLE_DIMENSIONS = { width: 148, length: 67 };
+    const isPlayer1Ref = useRef(isPlayer1);
+
+    useEffect(() => {
+        isPlayer1Ref.current = isPlayer1;
+    }, [isPlayer1]);
 
     function animatePaddleRotation(paddle1: Mesh, paddle2: Mesh): void {
         let rotationy = Math.atan2(Math.abs(paddle1.position.y), paddle1.position.x * 5);
         let rotationz = Math.atan2(Math.abs(paddle1.position.y), paddle1.position.x);
-        paddle1.rotation.y = rotationy;
+        paddle1.rotation.y = isPlayer1Ref.current! ? rotationy : -rotationy;
         if (paddle1.position.x > 0) {
             paddle1.rotation.z = rotationz - Math.PI / 2;
         } else {
@@ -38,16 +43,12 @@ function Pve3d({ username }: Pve3dProps) {
         }
         rotationy = Math.atan2(Math.abs(paddle2.position.y), paddle2.position.x * 5);
         rotationz = Math.atan2(Math.abs(paddle2.position.y), paddle2.position.x);
-        paddle2.rotation.y = rotationy;
+        paddle2.rotation.y = isPlayer1Ref.current! ? -rotationy : rotationy;
         if (paddle2.position.x > 0) {
             paddle2.rotation.z = rotationz - Math.PI / 2;
         } else {
             paddle2.rotation.z = -rotationz + Math.PI / 2;
         }
-        // if (!isPlayer1) {
-        //     paddle1.rotation.z = -paddle1.rotation.z;
-        //     paddle2.rotation.z = -paddle2.rotation.z;
-        // }
     }
 
     useEffect(() => {
@@ -140,7 +141,7 @@ function Pve3d({ username }: Pve3dProps) {
             function createCamera(): PerspectiveCamera {
                 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
                 camera.position.set(0, 1.25, 2);
-                if(!isPlayer1){
+                if (!isPlayer1) {
                     camera.position.set(0, 1.25, -2);
                 }
                 //camera.rotation.x = -0.5;
@@ -148,7 +149,7 @@ function Pve3d({ username }: Pve3dProps) {
             }
 
             function createRenderer(container: HTMLDivElement | null): WebGLRenderer {
-                const renderer = new THREE.WebGLRenderer({antialias: true , alpha: true});
+                const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
                 renderer.setPixelRatio(window.devicePixelRatio);
                 renderer.setSize(window.innerWidth, window.innerHeight);
                 if (container && container.childNodes.length === 0) {
@@ -248,7 +249,7 @@ function Pve3d({ username }: Pve3dProps) {
                     }));
                     updateMousePosition(event, mouse);
                     updatePaddle1Position(mouse, paddle1, TABLE_DIMENSIONS, camera, table);
-                    
+
                 }
             }
 
@@ -508,10 +509,10 @@ function Pve3d({ username }: Pve3dProps) {
                 velocity.copy(INITIAL_VELOCITY);
                 paddlePositionDiff.set(0, 0, 0);
                 ball.position.copy(initBallPos);
-                wsRef.current!.send(JSON.stringify({
-                    type: 'game_event',
-                    event: 'restart',
-                }));
+                // wsRef.current!.send(JSON.stringify({
+                //     type: 'game_event',
+                //     event: 'restart',
+                // }));
             }
 
             return () => {

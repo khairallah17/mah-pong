@@ -4,9 +4,8 @@
 	add winner screen
 	add matchmaking screen
 3d:
-	implement multiplayer (server side game logic)
-		fix paddle position and rotation
-		remove paddle2 collision logic and make it work the same way as paddle1
+	implement multiplayer
+	remove paddle2 collision logic and make it work the same way as paddle1
 
 	add 3d models for shop assets
 	improve animations
