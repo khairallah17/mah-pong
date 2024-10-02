@@ -25,7 +25,6 @@ fclean:
 	rm -rf auth_backend/auth_backend/__pycache__
 	rm -rf auth_backend/api/migrations/__pycache__
 	rm -rf auth_backend/api/migrations/0*_initial.py
-	# ( python -m pip uninstall requests -y )
 
 re: fclean all
 
