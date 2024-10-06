@@ -48,9 +48,14 @@
   align-items: center;
   justify-content: center;
   flex-direction: column;
-  background-image: url('./assets/bg.png');
+  /* background-image: url('./assets/bg.png');
   background-size: cover;
-  background-position: center;
+  background-position: center; */
+
+  /* background: linear-gradient(to right, #07072C 0%, 24.13793057203293%, #12115C 48.27586114406586%, 74.13793057203293%, #090A38 100%); */
+
+  background: rgb(18,17,92);
+  background: radial-gradient(circle, rgba(18,17,92,1) 17%, rgba(9,10,56,1) 68%);
 }
 
 .navbar {
@@ -109,10 +114,12 @@
   rotate: 180deg;
   right: 0;
   top: 0;
+  transform: translateX(-5px) ;
 }
 .fadein {
   z-index: 2;
-  background: linear-gradient(90deg, #13125E 0%, rgba(18, 17, 93, 0) 100%);
+  /* background: linear-gradient(90deg, #13125E 0%, rgba(18, 17, 93, 0) 100%); */
+  background: linear-gradient(90deg, #0E0E4E 0%, rgba(14, 14, 78, 0) 100%);
   height: 100%;
   width: 10%;
   position: absolute;
