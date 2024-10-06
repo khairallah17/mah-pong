@@ -22,8 +22,8 @@ function Pve3d({ username }: Pve3dProps) {
     const wsRef = useRef<WebSocket | null>(null);
     const [isMatched, setIsMatched] = useState(false);
     const [isPlayer1, setIsPlayer1] = useState(true);
-    const GRAVITY = -0.009;
-    const INITIAL_VELOCITY = new THREE.Vector3(0.01, 0.02, 0.025);
+    const GRAVITY = -0.0035;
+    const INITIAL_VELOCITY = new THREE.Vector3(0.005, 0.01, 0.025);
     const TABLE_DIMENSIONS = { width: 1.45, length: 2.6 };
     const isPlayer1Ref = useRef(isPlayer1);
 
@@ -118,6 +118,7 @@ function Pve3d({ username }: Pve3dProps) {
                 ({ paddle1, paddle2, ball, table, grid } = objects);
                 paddle2Ref.current = paddle2;
                 paddle1Ref.current = paddle1;
+                ball.position.set(0, 1, 0);
                 initBallPos = ball.position.clone();
                 if (!isPlayer1) {
                     paddle1.position.set(0, 1, -1);
@@ -129,7 +130,6 @@ function Pve3d({ username }: Pve3dProps) {
                 }
                 const tablebox = new THREE.Box3().setFromObject(table);
                 console.log(tablebox.min.z, tablebox.max.z);
-                //setInitialPaddle2Position(paddle2, TABLE_DIMENSIONS);
                 addLights(scene);
                 startGameListeners(mouse, paddle1, camera, table, paddle2, velocity, renderer, scene);
                 animate();
@@ -141,7 +141,6 @@ function Pve3d({ username }: Pve3dProps) {
                 if (!isPlayer1) {
                     camera.position.set(0, 1.25, -2);
                 }
-                //camera.rotation.x = -0.5;
                 return camera;
             }
 
@@ -298,11 +297,11 @@ function Pve3d({ username }: Pve3dProps) {
 
             function animate(): void {
                 // updatePaddle2AI();
-
-                moveBall();
-
+                
                 applyGravity();
-                applyAirResistance();
+                moveBall();
+                
+                //applyAirResistance();
 
                 handleCollisions();
 
@@ -327,15 +326,15 @@ function Pve3d({ username }: Pve3dProps) {
 
             function applyGravity(): void {
                 if (velocity.y < 0)
-                    velocity.y += GRAVITY * 0.9;
+                    velocity.y += GRAVITY;
                 else
                     velocity.y += GRAVITY;
             }
 
             function applyAirResistance(): void {
-                velocity.x -= Math.sign(velocity.x) * 0.02;
-                velocity.z -= Math.sign(velocity.z) * 0.02;
-                velocity.y -= Math.sign(velocity.y) * 0.02;
+                velocity.x -= velocity.x * 0.01;
+                velocity.z -= velocity.z * 0.01;
+                velocity.y -= velocity.y * 0.01;
             }
 
             function handleCollisions(): void {
@@ -349,11 +348,14 @@ function Pve3d({ username }: Pve3dProps) {
                     handleTableCollision(ballBox, tableBox);
                 }
 
-                if (ball.position.z > 1) {
+                if (ball.position.z > 1.5) {
                     // Player 1 scores
                     restartGame(ball, velocity, paddlePositionDiff, initBallPos);
-                } else if (ball.position.z < -1) {
+                } else if (ball.position.z < -1.5) {
                     // Player 2 scores
+                    restartGame(ball, velocity, paddlePositionDiff, initBallPos);
+                }
+                else if (ball.position.y < 0.2) {
                     restartGame(ball, velocity, paddlePositionDiff, initBallPos);
                 }
 
@@ -361,15 +363,15 @@ function Pve3d({ username }: Pve3dProps) {
                     handlePaddle1Collision(ballBox, paddle1Box);
                 }
 
-                handleSpin();
+                //handleSpin();
 
                 if (ballBox.intersectsBox(paddle2Box)) {
                     handlePaddle2Collision(ballBox, paddle2Box);
                 }
 
-                if (ballBox.intersectsBox(gridBox)) {
-                    handleGridCollision(ballBox, gridBox);
-                }
+                // if (ballBox.intersectsBox(gridBox)) {
+                //     handleGridCollision(ballBox, gridBox);
+                // }
             }
 
             function handleSpin(): void {
@@ -398,7 +400,7 @@ function Pve3d({ username }: Pve3dProps) {
                     ballBox.setFromObject(ball);
                 }
 
-                velocity.y *= -1;
+                velocity.y *= -0.9;
             }
 
             function handlePaddle1Collision(ballBox: THREE.Box3, paddleBox: THREE.Box3): void {
@@ -410,9 +412,9 @@ function Pve3d({ username }: Pve3dProps) {
                 if (!waitforpaddle2) {
                     console.log('hit');
                     const relativePosition = ball.position.clone().sub(table.position);
-                    velocity.z = -mapRange(relativePosition.z, { min: -1, max: 1 }, { min: -0.5, max: 0.5 });
-                    velocity.y = 0.01; //here
-                    velocity.x = -mapRange(relativePosition.x, { min: -TABLE_DIMENSIONS.width / 2, max: TABLE_DIMENSIONS.width / 2 }, { min: -0.2, max: 0.2 });
+                    velocity.z = -mapRange(relativePosition.z, { min: -1.5, max: 1.5 }, { min: -0.01, max: 0.01 });
+                    velocity.y = 0.04; //here
+                    velocity.x = -mapRange(relativePosition.x, { min: -TABLE_DIMENSIONS.width / 2, max: TABLE_DIMENSIONS.width / 2 }, { min: -0.05, max: 0.05 });
 
                     //animatePaddle1();
 
@@ -437,8 +439,8 @@ function Pve3d({ username }: Pve3dProps) {
                 //     velocity.x = Math.random() * 2 - 1;
                 // }
 
-                velocity.z = -mapRange(relativePosition.z, { min: -1, max: 1 }, { min: -0.5, max: 0.5 });
-                velocity.y = 0.01; //here
+                velocity.z = -mapRange(relativePosition.z, { min: -1.5, max: 1.5 }, { min: -0.01, max: 0.01 });
+                velocity.y = 0.04; //here
             }
 
             function handleGridCollision(ballBox: THREE.Box3, gridBox: THREE.Box3): void {
@@ -504,13 +506,22 @@ function Pve3d({ username }: Pve3dProps) {
             }
 
             return () => {
-                if (gameContainer) {
+                if (gameContainer && renderer.domElement) {
                     gameContainer.removeChild(renderer.domElement);
                 }
+                renderer.dispose();
+            
+                paddle1?.geometry.dispose();
+                paddle2?.geometry.dispose();
+                ball?.geometry.dispose();
+                table?.geometry.dispose();
+                grid?.geometry.dispose();
+            
                 window.removeEventListener('resize', () => onWindowResize(camera, renderer));
                 window.removeEventListener('keydown', onRestartKey);
                 window.removeEventListener('click', onToggleListening);
                 window.removeEventListener('mousemove', (event) => onMouseMove(event, mouse, paddle1, camera, table));
+                scene.clear();
             };
         }
     }, [isMatched, isPlayer1]);
