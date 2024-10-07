@@ -22,7 +22,7 @@ function Pve3d({ username }: Pve3dProps) {
     const wsRef = useRef<WebSocket | null>(null);
     const [isMatched, setIsMatched] = useState(false);
     const [isPlayer1, setIsPlayer1] = useState(true);
-    const GRAVITY = -0.0035;
+    const GRAVITY = -0.0015;
     const INITIAL_VELOCITY = new THREE.Vector3(0.005, 0.01, 0.025);
     const TABLE_DIMENSIONS = { width: 1.45, length: 2.6 };
     const isPlayer1Ref = useRef(isPlayer1);
@@ -325,9 +325,6 @@ function Pve3d({ username }: Pve3dProps) {
             }
 
             function applyGravity(): void {
-                if (velocity.y < 0)
-                    velocity.y += GRAVITY;
-                else
                     velocity.y += GRAVITY;
             }
 
@@ -412,13 +409,13 @@ function Pve3d({ username }: Pve3dProps) {
                 if (!waitforpaddle2) {
                     console.log('hit');
                     const relativePosition = ball.position.clone().sub(table.position);
-                    velocity.z = -mapRange(relativePosition.z, { min: -1.5, max: 1.5 }, { min: -0.01, max: 0.01 });
-                    velocity.y = 0.04; //here
-                    velocity.x = -mapRange(relativePosition.x, { min: -TABLE_DIMENSIONS.width / 2, max: TABLE_DIMENSIONS.width / 2 }, { min: -0.05, max: 0.05 });
+                    velocity.z = -mapRange(relativePosition.z, { min: -1.5, max: 1.5 }, { min: -0.08, max: 0.08 });
+                    velocity.y = 0.018;
+                    velocity.x = -mapRange(relativePosition.x, { min: -TABLE_DIMENSIONS.width / 2, max: TABLE_DIMENSIONS.width / 2 }, { min: -0.039, max: 0.039 });
 
                     //animatePaddle1();
 
-                    if (paddle1.rotation.y < 2.66 && paddle1.rotation.y > 0.52) {//
+                    if (paddle1.rotation.y < 2.66 && paddle1.rotation.y > 0.52) {
                         animatePaddle1Rotation();
                     }
                 }
@@ -429,7 +426,9 @@ function Pve3d({ username }: Pve3dProps) {
                 waitforpaddle2 = false;
 
                 const relativePosition = ball.position.clone().sub(table.position);
-                velocity.x = -mapRange(relativePosition.x, { min: -TABLE_DIMENSIONS.width / 2, max: TABLE_DIMENSIONS.width / 2 }, { min: -0.2, max: 0.2 });
+                velocity.z = -mapRange(relativePosition.z, { min: -1.5, max: 1.5 }, { min: -0.08, max: 0.08 });
+                velocity.y = 0.018;
+                velocity.x = -mapRange(relativePosition.x, { min: -TABLE_DIMENSIONS.width / 2, max: TABLE_DIMENSIONS.width / 2 }, { min: -0.039, max: 0.039 });
 
                 // if (velocity.x > 0.35) {
                 //     velocity.x = -1 + Math.random() * (velocity.x - (-1));
@@ -439,8 +438,6 @@ function Pve3d({ username }: Pve3dProps) {
                 //     velocity.x = Math.random() * 2 - 1;
                 // }
 
-                velocity.z = -mapRange(relativePosition.z, { min: -1.5, max: 1.5 }, { min: -0.01, max: 0.01 });
-                velocity.y = 0.04; //here
             }
 
             function handleGridCollision(ballBox: THREE.Box3, gridBox: THREE.Box3): void {

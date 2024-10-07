@@ -12,6 +12,7 @@ import agm from './assets/agm.jpg';
 import zou from './assets/Zou.jpg';
 import hmz from './assets/hasalam.jpg';
 import bg from './assets/bg.jpg';
+import { EffectCoverflow, Navigation, Pagination } from 'swiper/modules';
 
 interface HomePageProps {
   onUsernameSubmit: (username: string) => void;
@@ -31,13 +32,14 @@ const HomePage: React.FC<HomePageProps> = ({ onUsernameSubmit }) => {
   const calculateSlidesPerView = () => {
     const width = window.innerWidth;
   
-    if (width <= 500) {
+    if (width <= 500)
       return 1;
-    } else if (width <= 900) {
+    else if (width <= 750)
       return 2;
-    } else {
+    else if (width <= 900)
       return 3;
-    }
+    else 
+      return 4;
   };
 
   const scrollToRef = (ref: any) => {
@@ -114,6 +116,12 @@ const HomePage: React.FC<HomePageProps> = ({ onUsernameSubmit }) => {
       <h1 style={{position: 'absolute', top: "3vh", margin: "0"}}>Meet the team</h1>
       <Swiper spaceBetween={15}
       slidesPerView={calculateSlidesPerView()}
+      pagination={{
+        clickable: true,
+      }}
+      navigation={true}
+      modules={[Pagination, Navigation]}
+      loop={true}
       style={{height: "40vh", width: "100%"}}>
       <div className='fadein'></div>
         <SwiperSlide style={{paddingTop: "6vh"}}>
