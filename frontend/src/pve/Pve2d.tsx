@@ -34,7 +34,7 @@ function Pve2d() {
 			camera.aspect = window.innerWidth / window.innerHeight;
 			camera.updateProjectionMatrix();
 			renderer.render(scene, camera);
-		});
+		};
 		renderer.shadowMap.enabled = true;
 		const tableGeometry = new THREE.BoxGeometry(5, 0.1, 3);
 		const tableMaterial = new THREE.MeshStandardMaterial({ color: 0x8B4513 });
@@ -142,6 +142,8 @@ function Pve2d() {
 		animate();
 		return () => {
 			gameContainer?.removeChild(renderer.domElement);
+			window.removeEventListener('resize', handleResize);
+			renderer.dispose();
 		};
 	}, []);
 
