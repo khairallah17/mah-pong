@@ -1,53 +1,31 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
-import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-router-dom';
-import Game from './Game';
-
-function HomePage() {
-  const [count, setCount] = useState(0)
-  const navigate = useNavigate()
-
-  return (
-    <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <button onClick={() => navigate('/game')}>
-          Go to game
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
-}
+import React, { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import HomePage from './HomePage';
+import Pve3d from './pve/Pve3d';
+import Pvp2d from './pvp/Pvp2d';
+import Pve2d from './pve/Pve2d';
+import Pvp3d from './pvp/Pvp3d';
 
 function App() {
+  const [username, setUsername] = useState<string>('');
+
+
+  const handleUsernameSubmit = (username: string) => {
+    sessionStorage.setItem('username', username);
+    setUsername(username);
+  };
+
   return (
     <Router>
       <Routes>
-        <Route path="/game" element={<Game />} />
-        <Route path="/" element={<HomePage />} />
+        <Route path="/" element={<HomePage onUsernameSubmit={handleUsernameSubmit} />} />
+        <Route path="/pve3d" element={<Pve3d />} />
+        <Route path="/pvp3d" element={<Pvp3d username= {username} />} />
+        <Route path="/pvp2d" element={<Pvp2d username= {username} />} />
+        <Route path="/pve2d" element={<Pve2d />} />
       </Routes>
     </Router>
-  )
+  );
 }
 
-
-export default App
+export default App;

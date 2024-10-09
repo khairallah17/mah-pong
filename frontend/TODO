@@ -1,0 +1,11 @@
+2d:
+	upgrade game design
+	add score
+	add winner screen
+	add matchmaking screen
+3d:
+	implement multiplayer
+	remove paddle2 collision logic and make it work the same way as paddle1
+
+	add 3d models for shop assets
+	improve animations

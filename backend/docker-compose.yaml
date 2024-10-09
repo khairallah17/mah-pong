@@ -1,24 +1,59 @@
-version: '3'
-
-networks:
-  lemah:
-    name: "lemah"
-    driver: "bridge"
+version: '3.8'
 
 services:
-  backend:
+  game:
+    container_name: game
     build:
-      context: "./mahPong"
+      context: "./Game"
       dockerfile: Dockerfile
     ports:
-      - 8000:8000
-  
+      - "8000:8000"
+    depends_on:
+      - redis
+  redis:
+    image: "redis:alpine"
+    ports:
+      - "6379:6379"
+
+  notifications:
+    container_name: notifications
+    build:
+      context: "./Notifications"
+      dockerfile: Dockerfile
+    ports:
+      - 8001:8000
+    depends_on:
+      - db
+
+  tournaments:
+    container_name: tournaments
+    build:
+      context: "./tournamentManagement"
+      dockerfile: Dockerfile
+    ports:
+      - 8002:8000
+    depends_on:
+      - db
+
+  leaderboard:
+    container_name: leaderboard
+    build:
+      context: "./leaderBoard"
+      dockerfile: Dockerfile
+    ports:
+      - 8003:8000
+    depends_on:
+      - db
+
   db:
     image: postgres:15-alpine
     restart: always
-    expose:
-      - 5432
     environment:
-      POSTGRES_PASSWORD: 123123123
-      POSTGRES_USER: postgres
-      POSTGRES_DB: lemah
+      POSTGRES_PASSWORD: pass
+      POSTGRES_USER: user
+      POSTGRES_DB: db
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+volumes:
+  db_data:
