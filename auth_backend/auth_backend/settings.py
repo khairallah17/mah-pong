@@ -205,33 +205,33 @@ SIMPLE_JWT = {
 }
 
 
-SOCIALACCOUNT_PROVIDERS = {
+# SOCIALACCOUNT_PROVIDERS = {
 
-    'google': {
+#     'google': {
 
-        'APP': {
-	'client_id' : "SOCIAL_AUTH_GOOGLE_OAUTH2_KEY",
-	'secret' : "SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET",
-        },
+#         'APP': {
+# 	'client_id' : "SOCIAL_AUTH_GOOGLE_OAUTH2_KEY",
+# 	'secret' : "SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET",
+#         },
 
-        'SCOPE': [
-            'profile',
-            'email',
-        ],
+#         'SCOPE': [
+#             'profile',
+#             'email',
+#         ],
 
-        'AUTH_PARAMS': {
-            'access_type': 'online',
-        },
+#         'AUTH_PARAMS': {
+#             'access_type': 'online',
+#         },
 
-        'OAUTH_PKCE_ENABLED': True,
-    }
-}
+#         'OAUTH_PKCE_ENABLED': True,
+#     }
+# }
 
 
-LOGIN_URL = 'http://localhost:3000/login'
-LOGOUT_URL = 'http://localhost:3000/logout'
-LOGIN_REDIRECT_URL = 'http://localhost:3000/dashboard'
-LOGOUT_REDIRECT_URL = 'http://localhost:3000/login'
+# LOGIN_URL = 'http://localhost:3000/login'
+# LOGOUT_URL = 'http://localhost:3000/logout'
+# LOGIN_REDIRECT_URL = 'http://localhost:3000/dashboard'
+# LOGOUT_REDIRECT_URL = 'http://localhost:3000/login'
 
-SOCIALACCOUNT_AUTO_SIGNUP = True
-SOCIALACCOUNT_LOGIN_ON_GET = True
+# SOCIALACCOUNT_AUTO_SIGNUP = True
+# SOCIALACCOUNT_LOGIN_ON_GET = True
