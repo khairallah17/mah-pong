@@ -1,7 +1,8 @@
 import { React, useContext } from 'react'
 import { Link } from 'react-router-dom'
-import GoogleLoginLink from './GoogleLoginLink'
+// import GoogleLoginLink from './GoogleLoginLink'
 import intra_logo from '../images/42_Logo.png'
+import google_logo from '../images/google_logo'
 import pong_right from "../images/pong right.png"
 import AuthContext from "../context_login_Register/AuthContext"
 
@@ -21,6 +22,11 @@ export const Login = () => {
     // console.log(password);
     loginUsers(email, password)
   }
+  const GoogleLoginLink = () => {
+    const clientID = SOCIAL_AUTH_GOOGLE_OAUTH2_KEY;
+        const callBackURI = "http://localhost:8000/";
+        window.location.replace(`https://accounts.google.com/o/oauth2/v2/auth?redirect_uri=${callBackURI}&prompt=consent&response_type=code&client_id=${clientID}&scope=openid%20email%20profile&access_type=offline`)
+  }
 
   return (
     <div className='cnt-lg grid grid-cols-2 gap-2 p-2 text-white justify-items-center'>
@@ -39,7 +45,10 @@ export const Login = () => {
         </div>
         <div>
             <div className="social-row google-social">
-              <GoogleLoginLink />
+              <Link onClick={GoogleLoginLink}>
+                  <img src={google_logo} alt="Intra" />
+                  Log in with Google
+                </Link>
             </div>
             <div className="social-row intra-social">
                 <Link to={'#'}>
