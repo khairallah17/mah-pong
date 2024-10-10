@@ -1,48 +1,40 @@
 import * as THREE from 'three';
 import { useEffect, useRef, useState } from 'react';
 
-interface Pvp2dProps {
-    username: string;
-}
-
-function Pvp2d({ username }: Pvp2dProps) {
-    const wsRef = useRef<WebSocket | null>(null);
-    //const gameStateRef = useRef<any>(null);
-    const [gameState, setGameState] = useState<any>(null);
+function Pvp2d({ username }) {
+    const wsRef = useRef(null);
+    const [gameState, setGameState] = useState(null);
     const [isMatched, setIsMatched] = useState(false);
     let keyPressed = false;
     const [isPlayer1, setIsPlayer1] = useState(true);
     let ballDirection = new THREE.Vector3(1, 0, 1);
     const PADDLE_SPEED = 0.05;
-    const intervalIdRef = useRef<NodeJS.Timeout | null>(null);
-    const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
-    const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
-    const paddle1Ref = useRef<THREE.Mesh | null>(null);
-    const paddle2Ref = useRef<THREE.Mesh | null>(null);
-    const ballRef = useRef<THREE.Mesh | null>(null);
-    const tableRef = useRef<THREE.Mesh | null>(null);
-    const isPausedRef = useRef<boolean>(true);
+    const intervalIdRef = useRef(null);
+    const rendererRef = useRef(null);
+    const cameraRef = useRef(null);
+    const paddle1Ref = useRef(null);
+    const paddle2Ref = useRef(null);
+    const ballRef = useRef(null);
+    const tableRef = useRef(null);
+    const isPausedRef = useRef(true);
 
     useEffect(() => {
         if (username && !wsRef.current) {
             wsRef.current = new WebSocket('ws://localhost:8000/ws/matchmaking/');
             wsRef.current.onopen = () => {
                 console.log('WebSocket connection established');
-                wsRef.current!.send(JSON.stringify({ type: 'set_username', username }));
+                wsRef.current.send(JSON.stringify({ type: 'set_username', username }));
                 console.log("username set to: ", username);
             };
             wsRef.current.onmessage = (event) => {
                 const message = JSON.parse(event.data);
-                //console.log(message);
                 if (message.type === 'match_found') {
-                    setIsMatched(true)
-                    if (message.player_id === '2')
-                        setIsPlayer1(false);
+                    setIsMatched(true);
+                    if (message.player_id === '2') setIsPlayer1(false);
                     console.log("match found with player_id: ", message.player_id, "isPlayer1: ", isPlayer1);
                 } else if (message.type === 'game_event') {
                     updateScene(message.event);
                 } else if (message.type === 'game_state') {
-                    //gameStateRef.current = message.game_state;
                     setGameState(message.game_state);
                 }
             };
@@ -58,13 +50,6 @@ function Pvp2d({ username }: Pvp2dProps) {
         };
     }, [username]);
 
-    // useEffect(() => {
-    //     if (gameState) {
-    //         console.log("gamestate exists");
-    //         updateScene(gameState);
-    //     }
-    // }, [gameState]);
-
     useEffect(() => {
         if (!rendererRef.current && isMatched) {
             const gameContainer = document.getElementById('game-container');
@@ -72,7 +57,7 @@ function Pvp2d({ username }: Pvp2dProps) {
             const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
             camera.position.set(0, 5, 5);
             camera.lookAt(scene.position);
-            cameraRef.current = camera; // Store the camera reference
+            cameraRef.current = camera;
 
             const renderer = new THREE.WebGLRenderer();
             renderer.setSize(window.innerWidth, window.innerHeight);
@@ -117,7 +102,6 @@ function Pvp2d({ username }: Pvp2dProps) {
                     const paddle2Center = new THREE.Vector3();
                     paddle2Box.getCenter(paddle2Center);
                     const ballPaddleZDiff = ballSphere.center.z - paddle2Center.z;
-                    //console.log(ballPaddleZDiff);//
                     ballDirection.x *= -1;
                     ball.position.x -= 0.05 * (isPlayer1 ? 1 : -1);
                 }
@@ -135,18 +119,9 @@ function Pvp2d({ username }: Pvp2dProps) {
 
             animate();
         }
-        return () => {
-            // window.removeEventListener('resize', onWindowResize);
-            // document.removeEventListener('keydown', onDocumentKeyDown);
-            // document.removeEventListener('keyup', onDocumentKeyUp);
-            // const gameContainer = document.getElementById('game-container');
-            // if (rendererRef.current && gameContainer) {
-            //     gameContainer.removeChild(rendererRef.current.domElement);
-            // }
-        };
     }, [isMatched, isPlayer1, gameState]);
 
-    function restartGame(ball: THREE.Mesh) {
+    function restartGame(ball) {
         ball.position.set(0, 0.1, 0);
         ballDirection.set(1, 0, 1);
         isPausedRef.current = true;
@@ -160,7 +135,7 @@ function Pvp2d({ username }: Pvp2dProps) {
         }
     };
 
-    const onDocumentKeyUp = (event: KeyboardEvent) => {
+    const onDocumentKeyUp = (event) => {
         if (keyPressed && (event.key === 'ArrowUp' || event.key === 'ArrowDown')) {
             keyPressed = false;
             if (intervalIdRef.current) {
@@ -169,51 +144,32 @@ function Pvp2d({ username }: Pvp2dProps) {
         }
     };
 
-    const onDocumentKeyDown = (event: KeyboardEvent) => {
+    const onDocumentKeyDown = (event) => {
         if (!keyPressed) {
             keyPressed = true;
             const moveDirection = event.key === 'ArrowUp' ? -1 : event.key === 'ArrowDown' ? 1 : 0;
             if (moveDirection !== 0) {
                 intervalIdRef.current = setInterval(() => {
                     isPausedRef.current = false;
-                    const paddle1Geometry = paddle1Ref.current!.geometry as THREE.BoxGeometry;
-                    const tableGeometry = tableRef.current!.geometry as THREE.BoxGeometry;
-                    console.log("paddle1Ref.current!.position.x: ", paddle1Ref.current!.position.x);
-                    console.log("paddle2Ref.current!.position.x: ", paddle2Ref.current!.position.x);
-                    const newPosition = paddle1Ref.current!.position.z + moveDirection * PADDLE_SPEED;
+                    const paddle1Geometry = paddle1Ref.current.geometry;
+                    const tableGeometry = tableRef.current.geometry;
+                    const newPosition = paddle1Ref.current.position.z + moveDirection * PADDLE_SPEED;
                     const halfPaddleWidth = paddle1Geometry.parameters.depth / 2;
-                    const tableLimit = tableRef.current!.position.z + tableGeometry.parameters.depth / 2;
+                    const tableLimit = tableRef.current.position.z + tableGeometry.parameters.depth / 2;
                     if (Math.abs(newPosition) + Math.abs(halfPaddleWidth) < tableLimit) {
-                        wsRef.current!.send(JSON.stringify({
+                        wsRef.current.send(JSON.stringify({
                             type: 'game_event',
                             event: moveDirection === -1 ? 'player_move_up' : 'player_move_down',
                             player_id: isPlayer1 ? 1 : 2,
-                            //position: paddle1Ref.current?.position,
                         }));
-                        paddle1Ref.current!.position.z = newPosition;
+                        paddle1Ref.current.position.z = newPosition;
                     }
                 }, 30);
             }
         }
     };
 
-    // const updateScene = (state: any) => {
-    //     if (paddle1Ref.current && paddle2Ref.current && ballRef.current && !isPausedRef.current) {
-    //         if (isPlayer1) {
-    //             paddle1Ref.current.position.z = state.paddle1_z;
-    //             paddle2Ref.current.position.z = state.paddle2_z;
-    //         }
-    //         else {
-    //             paddle1Ref.current.position.z = state.paddle2_z;
-    //             paddle2Ref.current.position.z = state.paddle1_z;
-    //         }
-    //         ballRef.current.position.x = state.ball_x;
-    //         ballRef.current.position.z = state.ball_z;
-    //         //isPausedRef.current = state.is_paused;
-    //     }
-    // };
-
-    const updateScene = (event: string) => {
+    const updateScene = (event) => {
         if (isPausedRef.current) {
             isPausedRef.current = false;
         }
@@ -224,7 +180,7 @@ function Pvp2d({ username }: Pvp2dProps) {
                 paddle2Ref.current.position.z += PADDLE_SPEED;
             }
         }
-    }
+    };
 
     const createTable = () => {
         const geometry = new THREE.BoxGeometry(5, 0.1, 3);
@@ -243,7 +199,7 @@ function Pvp2d({ username }: Pvp2dProps) {
         return ball;
     };
 
-    const createPaddles = (isPlayer1: boolean) => {
+    const createPaddles = (isPlayer1) => {
         const geometry = new THREE.BoxGeometry(0.2, 0.02, 1);
         const material = new THREE.MeshStandardMaterial({ color: 0x000000 });
         const paddle1 = new THREE.Mesh(geometry, material);
@@ -259,24 +215,16 @@ function Pvp2d({ username }: Pvp2dProps) {
 
     const createLight = () => {
         const light = new THREE.DirectionalLight(0xffffff, 3);
-        light.position.set(0, 10, 0);
+        light.position.set(10, 10, 0);
         light.castShadow = true;
         return light;
     };
 
     return (
-        <div
-            id="game-container"
-            style={{
-                margin: 0,
-                padding: 0,
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                width: '100%',
-                height: '100%',
-            }}
-        />
+        <>
+            {!isMatched && <h1>Looking for an opponent...</h1>}
+            <div id="game-container"></div>
+        </>
     );
 }
 

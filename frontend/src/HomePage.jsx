@@ -11,23 +11,18 @@ import hdl from './assets/headline.png';
 import agm from './assets/agm.jpg';
 import zou from './assets/Zou.jpg';
 import hmz from './assets/hasalam.jpg';
-import bg from './assets/bg.jpg';
 import { EffectCoverflow, Navigation, Pagination } from 'swiper/modules';
 
-interface HomePageProps {
-  onUsernameSubmit: (username: string) => void;
-}
 
-
-const HomePage: React.FC<HomePageProps> = ({ onUsernameSubmit }) => {
-  const [username, setUsername] = useState<string>('');
-  const [isSubmitted, setIsSubmitted] = useState<boolean>(false);
+const HomePage = ({ onUsernameSubmit }) => {
+  const [username, setUsername] = useState('');
+  const [isSubmitted, setIsSubmitted] = useState(false);
   const navigate = useNavigate();
   const headlineRef = useRef(null);
   const teamRef = useRef(null);
   const contactUsRef = useRef(null);
   const aboutRef = useRef(null);
-  const mount = useRef<HTMLDivElement | null>(null);
+  const mount = useRef(null);
   
   const calculateSlidesPerView = () => {
     const width = window.innerWidth;
@@ -42,7 +37,7 @@ const HomePage: React.FC<HomePageProps> = ({ onUsernameSubmit }) => {
       return 4;
   };
 
-  const scrollToRef = (ref: any) => {
+  const scrollToRef = (ref) => {
     console.log(document.body.scrollHeight);
     window.scrollTo({
       top: ref.current.offsetTop - window.innerHeight / 2,

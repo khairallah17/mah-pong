@@ -7,10 +7,10 @@ import Pve2d from './pve/Pve2d';
 import Pvp3d from './pvp/Pvp3d';
 
 function App() {
-  const [username, setUsername] = useState<string>('');
+  const [username, setUsername] = useState('');
 
 
-  const handleUsernameSubmit = (username: string) => {
+  const handleUsernameSubmit = (username) => {
     sessionStorage.setItem('username', username);
     setUsername(username);
   };

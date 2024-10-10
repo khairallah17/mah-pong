@@ -3,23 +3,13 @@ import { useEffect, useRef, useState } from 'react';
 import { gsap } from 'gsap';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 
-type Vector3 = THREE.Vector3;
-type Scene = THREE.Scene;
-type PerspectiveCamera = THREE.PerspectiveCamera;
-type WebGLRenderer = THREE.WebGLRenderer;
-type Mesh = THREE.Mesh;
-type Box3 = THREE.Box3;
 
-interface Pve3dProps {
-    username: string;
-}
-
-function Pve3d({ username }: Pve3dProps) {
-    const gameContainerRef = useRef<HTMLDivElement | null>(null);
-    const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
-    const paddle2Ref = useRef<THREE.Mesh | null>(null);
-    const paddle1Ref = useRef<THREE.Mesh | null>(null);
-    const wsRef = useRef<WebSocket | null>(null);
+function Pve3d({ username }) {
+    const gameContainerRef = useRef(null);
+    const rendererRef = useRef(null);
+    const paddle2Ref = useRef(null);
+    const paddle1Ref = useRef(null);
+    const wsRef = useRef(null);
     const [isMatched, setIsMatched] = useState(false);
     const [isPlayer1, setIsPlayer1] = useState(true);
     const GRAVITY = -0.0015;
@@ -31,10 +21,10 @@ function Pve3d({ username }: Pve3dProps) {
         isPlayer1Ref.current = isPlayer1;
     }, [isPlayer1]);
 
-    function animatePaddleRotation(paddle1: Mesh, paddle2: Mesh): void {
+    function animatePaddleRotation(paddle1, paddle2) {
         let rotationy = Math.atan2(Math.abs(paddle1.position.y), paddle1.position.x * 5);
         let rotationz = Math.atan2(Math.abs(paddle1.position.y), paddle1.position.x);
-        paddle1.rotation.y = isPlayer1Ref.current! ? rotationy : -rotationy;
+        paddle1.rotation.y = isPlayer1Ref.current ? rotationy : -rotationy;
         if (paddle1.position.x > 0) {
             paddle1.rotation.z = rotationz - Math.PI / 2;
         } else {
@@ -42,7 +32,7 @@ function Pve3d({ username }: Pve3dProps) {
         }
         rotationy = Math.atan2(Math.abs(paddle2.position.y), paddle2.position.x * 5);
         rotationz = Math.atan2(Math.abs(paddle2.position.y), paddle2.position.x);
-        paddle2.rotation.y = isPlayer1Ref.current! ? -rotationy : rotationy;
+        paddle2.rotation.y = isPlayer1Ref.current ? -rotationy : rotationy;
         if (paddle2.position.x > 0) {
             paddle2.rotation.z = rotationz - Math.PI / 2;
         } else {
@@ -55,7 +45,7 @@ function Pve3d({ username }: Pve3dProps) {
             wsRef.current = new WebSocket('ws://localhost:8000/ws/matchmaking/');
             wsRef.current.onopen = () => {
                 console.log('WebSocket connection established');
-                wsRef.current!.send(JSON.stringify({ type: 'set_username', username }));
+                wsRef.current.send(JSON.stringify({ type: 'set_username', username }));
                 console.log("username set to: ", username);
             };
             wsRef.current.onmessage = (event) => {
@@ -84,11 +74,11 @@ function Pve3d({ username }: Pve3dProps) {
         };
     }, [username]);
 
-    const updateScene = (event: string, position: any) => {
+    const updateScene = (event, position) => {
         if (event === 'player_move') {
-            paddle2Ref.current!.position.set(position.x, position.y, position.z);
+            paddle2Ref.current.position.set(position.x, position.y, position.z);
         }
-        animatePaddleRotation(paddle1Ref.current!, paddle2Ref.current!);
+        animatePaddleRotation(paddle1Ref.current, paddle2Ref.current);
     };
 
     useEffect(() => {
@@ -106,12 +96,12 @@ function Pve3d({ username }: Pve3dProps) {
             let isListening = true;
 
             // Objects
-            let paddle1: Mesh, paddle2: Mesh, ball: Mesh, table: Mesh, grid: Mesh;
+            let paddle1, paddle2, ball, table, grid;
             let velocity = INITIAL_VELOCITY.clone();
             let paddlePositionDiff = new THREE.Vector3(0, 0, 0);
-            let firstIntersectionPosition: Vector3 | null = null;
-            let lastIntersectionPosition: Vector3 | null = null;
-            let initBallPos: Vector3;
+            let firstIntersectionPosition = null;
+            let lastIntersectionPosition = null;
+            let initBallPos;
 
             // Load Scene and Start Animation
             loadScene(scene, (objects) => {
@@ -135,7 +125,7 @@ function Pve3d({ username }: Pve3dProps) {
                 animate();
             });
 
-            function createCamera(): PerspectiveCamera {
+            function createCamera() {
                 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
                 camera.position.set(0, 1.25, 2);
                 if (!isPlayer1) {
@@ -144,7 +134,7 @@ function Pve3d({ username }: Pve3dProps) {
                 return camera;
             }
 
-            function createRenderer(container: HTMLDivElement | null): WebGLRenderer {
+            function createRenderer(container) {
                 const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
                 renderer.setPixelRatio(window.devicePixelRatio);
                 renderer.setSize(window.innerWidth, window.innerHeight);
@@ -155,7 +145,7 @@ function Pve3d({ username }: Pve3dProps) {
                 return renderer;
             }
 
-            function onError(err: unknown): void {
+            function onError(err){
                 if (err instanceof ErrorEvent) {
                     console.error('An error happened:', err.message);
                 } else {
@@ -163,29 +153,23 @@ function Pve3d({ username }: Pve3dProps) {
                 }
             }
 
-            function loadScene(scene: Scene, callback: (objects: {
-                paddle1: Mesh,
-                paddle2: Mesh,
-                ball: Mesh,
-                table: Mesh,
-                grid: Mesh
-            }) => void): void {
+            function loadScene(scene, callback) {
                 const loader = new GLTFLoader();
                 loader.load('../../models/loadedscene.glb', (gltf) => {
                     const loadedScene = gltf.scene;
                     scene.add(loadedScene);
                     const objects = {
-                        paddle1: isPlayer1 ? loadedScene.getObjectByName('Paddle_1') as Mesh : loadedScene.getObjectByName('Paddle_2') as Mesh,
-                        paddle2: isPlayer1 ? loadedScene.getObjectByName('Paddle_2') as Mesh : loadedScene.getObjectByName('Paddle_1') as Mesh,
-                        ball: loadedScene.getObjectByName('Ball') as Mesh,
-                        table: loadedScene.getObjectByName('table_plate') as Mesh,
-                        grid: loadedScene.getObjectByName('table_grid') as Mesh
+                        paddle1: isPlayer1 ? loadedScene.getObjectByName('Paddle_1') : loadedScene.getObjectByName('Paddle_2'),
+                        paddle2: isPlayer1 ? loadedScene.getObjectByName('Paddle_2') : loadedScene.getObjectByName('Paddle_1'),
+                        ball: loadedScene.getObjectByName('Ball'),
+                        table: loadedScene.getObjectByName('table_plate'),
+                        grid: loadedScene.getObjectByName('table_grid')
                     };
                     callback(objects);
                 }, undefined, onError);
             }
 
-            function addLights(scene: Scene): void {
+            function addLights(scene) {
                 const light = new THREE.AmbientLight(0xffffff, 3);
                 light.position.set(0, 10, 0);
                 light.castShadow = true;
@@ -193,47 +177,47 @@ function Pve3d({ username }: Pve3dProps) {
             }
 
             function startGameListeners(
-                mouse: THREE.Vector2,
-                paddle1: Mesh,
-                camera: PerspectiveCamera,
-                table: Mesh,
-                paddle2: Mesh,
-                velocity: Vector3,
-                renderer: WebGLRenderer,
-                scene: Scene
-            ): void {
+                mouse,
+                paddle1,
+                camera,
+                table,
+                paddle2,
+                velocity,
+                renderer,
+                scene
+            ){
                 window.addEventListener('keydown', onRestartKey);
                 window.addEventListener('click', () => onToggleListening());
                 window.addEventListener('mousemove', (event) => onMouseMove(event, mouse, paddle1, camera, table));
             }
 
-            function onWindowResize(camera: PerspectiveCamera, renderer: WebGLRenderer): void {
+            function onWindowResize(camera, renderer) {
                 renderer.setSize(window.innerWidth, window.innerHeight);
                 camera.aspect = window.innerWidth / window.innerHeight;
                 camera.updateProjectionMatrix();
                 renderer.render(scene, camera);
             }
 
-            function onRestartKey(event: KeyboardEvent): void {
+            function onRestartKey(event) {
                 if (event.key.toLowerCase() === 'r') {
                     restartGame(ball, velocity, paddlePositionDiff, initBallPos);
                 }
             }
 
-            function onToggleListening(): void {
+            function onToggleListening() {
                 isListening = !isListening;
                 document.body.style.cursor = isListening ? 'none' : 'auto';
             }
 
             function onMouseMove(
-                event: MouseEvent,
-                mouse: THREE.Vector2,
-                paddle1: Mesh,
-                camera: PerspectiveCamera,
-                table: Mesh
-            ): void {
+                event,
+                mouse,
+                paddle1,
+                camera,
+                table
+            ) {
                 if (isListening) {
-                    wsRef.current!.send(JSON.stringify({
+                    wsRef.current.send(JSON.stringify({
                         type: 'game_event',
                         event: 'player_move',
                         player_id: isPlayer1 ? 1 : 2,
@@ -245,22 +229,22 @@ function Pve3d({ username }: Pve3dProps) {
                 }
             }
 
-            function updateMousePosition(event: MouseEvent, mouse: THREE.Vector2): void {
+            function updateMousePosition(event, mouse) {
                 mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
                 mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
             }
 
-            function mapRange(value: number, from: { min: number, max: number }, to: { min: number, max: number }): number {
+            function mapRange(value, from, to) {
                 return (value - from.min) * (to.max - to.min) / (from.max - from.min) + to.min;
             }
 
             function updatePaddle1Position(
-                mouse: THREE.Vector2,
-                paddle1: Mesh,
-                tableDimensions: { width: number, length: number },
-                camera: PerspectiveCamera,
-                table: Mesh
-            ): void {
+                mouse,
+                paddle1,
+                tableDimensions,
+                camera,
+                table
+            ) {
                 let paddleX = mapRange(mouse.x, { min: -1, max: 1 }, { min: -1, max: 1 });
                 let paddleY, paddleZ;
 
@@ -286,7 +270,7 @@ function Pve3d({ username }: Pve3dProps) {
                 animatePaddleRotation(paddle1, paddle2);
             }
 
-            function updateCameraPosition(mouse: THREE.Vector2, camera: PerspectiveCamera, table: Mesh): void {
+            function updateCameraPosition(mouse, camera, table) {
                 camera.position.set(mouse.x, mouse.y / 5 + 1.25, -mouse.y / 15 + 2);
                 if (!isPlayer1) {
                     camera.position.set(-mouse.x, mouse.y / 5 + 1.25, -mouse.y / 15 - 2);
@@ -295,7 +279,7 @@ function Pve3d({ username }: Pve3dProps) {
                 camera.lookAt(table.position);
             }
 
-            function animate(): void {
+            function animate() {
                 // updatePaddle2AI();
                 
                 applyGravity();
@@ -309,7 +293,7 @@ function Pve3d({ username }: Pve3dProps) {
                 requestAnimationFrame(animate);
             }
 
-            // function updatePaddle2AI(): void {
+            // function updatePaddle2AI() {
             //     const speed = 3;
             //     const XdistanceToBall = ball.position.x - paddle2.position.x;
             //     const speedModifier = Math.min(Math.abs(XdistanceToBall) / 10, 1);
@@ -318,23 +302,23 @@ function Pve3d({ username }: Pve3dProps) {
             //     // paddle2.position.y += Math.sign(YdistanceToBall) * speed * speedModifier;
             // }
 
-            function moveBall(): void {
+            function moveBall() {
                 ball.position.x += velocity.x;
                 ball.position.y += velocity.y;
                 ball.position.z += velocity.z;
             }
 
-            function applyGravity(): void {
+            function applyGravity() {
                     velocity.y += GRAVITY;
             }
 
-            function applyAirResistance(): void {
+            function applyAirResistance() {
                 velocity.x -= velocity.x * 0.01;
                 velocity.z -= velocity.z * 0.01;
                 velocity.y -= velocity.y * 0.01;
             }
 
-            function handleCollisions(): void {
+            function handleCollisions() {
                 const ballBox = new THREE.Box3().setFromObject(ball);
                 const paddle1Box = new THREE.Box3().setFromObject(paddle1).expandByScalar(0.01);
                 const paddle2Box = new THREE.Box3().setFromObject(paddle2).expandByScalar(0.01);
@@ -371,7 +355,7 @@ function Pve3d({ username }: Pve3dProps) {
                 // }
             }
 
-            function handleSpin(): void {
+            function handleSpin() {
                 if (firstIntersectionPosition !== null && lastIntersectionPosition !== null) {
                     paddlePositionDiff = lastIntersectionPosition.clone().sub(firstIntersectionPosition);
                     //set max value for paddlePositionDiff
@@ -387,7 +371,7 @@ function Pve3d({ username }: Pve3dProps) {
                 velocity.z -= paddlePositionDiff.z / 500;
             }
 
-            function handleTableCollision(ballBox: THREE.Box3, tableBox: THREE.Box3): void {
+            function handleTableCollision(ballBox, tableBox) {
                 paddlePositionDiff.set(0, 0, 0);
                 waitforpaddle2 = false;
 
@@ -400,7 +384,7 @@ function Pve3d({ username }: Pve3dProps) {
                 velocity.y *= -0.9;
             }
 
-            function handlePaddle1Collision(ballBox: THREE.Box3, paddleBox: THREE.Box3): void {
+            function handlePaddle1Collision(ballBox, paddleBox) {
                 if (firstIntersectionPosition === null)
                     firstIntersectionPosition = paddle1.position.clone();
                 else
@@ -422,7 +406,7 @@ function Pve3d({ username }: Pve3dProps) {
                 waitforpaddle2 = true;
             }
 
-            function handlePaddle2Collision(ballBox: THREE.Box3, paddleBox: THREE.Box3): void {
+            function handlePaddle2Collision(ballBox, paddleBox) {
                 waitforpaddle2 = false;
 
                 const relativePosition = ball.position.clone().sub(table.position);
@@ -440,7 +424,7 @@ function Pve3d({ username }: Pve3dProps) {
 
             }
 
-            function handleGridCollision(ballBox: THREE.Box3, gridBox: THREE.Box3): void {
+            function handleGridCollision(ballBox, gridBox) {
                 waitforpaddle2 = false;
 
                 if (ballBox.getCenter(new THREE.Vector3()).y <= gridBox.max.y) {
@@ -462,7 +446,7 @@ function Pve3d({ username }: Pve3dProps) {
                 }
             }
 
-            // function animatePaddle1(): void {
+            // function animatePaddle1() {
             //     gsap.to(paddle1.position, {
             //         x: ball.position.x + 3,
             //         y: ball.position.y,
@@ -479,7 +463,7 @@ function Pve3d({ username }: Pve3dProps) {
             //     });
             // }
 
-            function animatePaddle1Rotation(): void {
+            function animatePaddle1Rotation() {
                 gsap.to(paddle1.rotation, {
                     y: paddle1.rotation.y / 100,
                     duration: 0.1,
@@ -492,11 +476,11 @@ function Pve3d({ username }: Pve3dProps) {
                 });
             }
 
-            function restartGame(ball: Mesh, velocity: Vector3, paddlePositionDiff: Vector3, initBallPos: Vector3): void {
+            function restartGame(ball, velocity, paddlePositionDiff, initBallPos) {
                 velocity.copy(INITIAL_VELOCITY);
                 paddlePositionDiff.set(0, 0, 0);
                 ball.position.copy(initBallPos);
-                // wsRef.current!.send(JSON.stringify({
+                // wsRef.current.send(JSON.stringify({
                 //     type: 'game_event',
                 //     event: 'restart',
                 // }));
