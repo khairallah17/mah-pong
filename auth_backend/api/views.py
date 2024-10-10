@@ -1,6 +1,8 @@
+import email
 from django.shortcuts import render
+from django.http import HttpResponse
 from .models import User
-from .serializers import Get_Token_serial, RegistrationSerial
+from .serializers import Get_Token_serial, RegistrationSerial, UserSerial
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenObtainPairView
@@ -8,9 +10,19 @@ from rest_framework import generics
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework import status
 from django.contrib.auth import authenticate, get_user_model
+# For Google Login/registring api
+from allauth.socialaccount.providers.google.views import GoogleOAuth2Adapter
+from allauth.socialaccount.providers.oauth2.client import OAuth2Client
+from dj_rest_auth.registration.views import SocialLoginView
+from django.conf import settings
 import uuid
+from allauth.socialaccount.adapter import DefaultSocialAccountAdapter
+from django.views import View
+from django.views.decorators.csrf import csrf_exempt
+from django.http import JsonResponse
+import requests
+from rest_framework.views import APIView
 # Create your views here.
-
 
 class Get_MyTokenObtainPairView(TokenObtainPairView):
     serializer_class = Get_Token_serial
@@ -116,21 +128,93 @@ class RegisterationView(generics.CreateAPIView):
             status=status.HTTP_202_ACCEPTED
         )
 
+# class GoogleLogin(SocialLoginView):
+#     # adapter_class = GoogleOAuth2Adapter
+#     callback_url = "http://localhost:3000/"
+#     # client_class = OAuth2Client
+#     def get(self, request):
+#         print ("sdjaskdjalskdjaskldjaskldjaksldjaskldjaklsdjaksldjaklsdjaksld")
+#         code = request.args.get("code")
+#         print (code)
+#         return ("Hello User DONE!")
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated]) # thats mean no one can pass to here util they authenticated 
-# def protectedview(request):
-#     output = f"Welcome {request.user}, Auth Succ"
-#     return Response({'response' : output}, status=status.HTTP_200_OK)
 
-# @api_view(['GET'])
+# Creating Views For Google Login/Signup User using dj-rest-auth's Package
+
+class GoogleLogin(SocialLoginView):
+    adapter_class = GoogleOAuth2Adapter
+    callback_url = "http://localhost:3000/"
+    client_class = OAuth2Client
+    
+
+
+# Creating Google login CallBack views
+class GoogleLoginCallback(APIView):
+    def get(self, request, *args, **kwargs):
+        # user = super().get(request)
+        code = request.GET.get("code")
+        if code is None:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        token_url  = "https://oauth2.googleapis.com/token"
+        token_data = {
+        "code"          : code,
+        "client_id"     : #SOCIAL_AUTH_GOOGLE_OAUTH2_KEY, # check .env file
+        "client_secret" : #SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET, # check .env file
+        "redirect_uri"  : "http://localhost:8000/api/v2/auth/googlelogin/callback/",
+        "grant_type"    : "authorization_code"
+        }
+        token_response = requests.post(token_url, data = token_data)
+        token_JSON = token_response.json()
+        # if not ('access_token')
+        getInfo = requests.get("https://www.googleapis.com/oauth2/v2/userinfo", params = {'access_token': token_JSON["access_token"]}) # Getting Token To Extraction User Data
+        
+        email = getInfo.json()["email"]
+        # Here i want to getting info from database or create if dosent exist
+        try:
+            user = User.objects.get(
+                email=User.objects.get(email=email)
+            )
+            print ("ff")
+        except User.DoesNotExist:
+            user = User.objects.create(
+                fullname=getInfo.json()['name'],
+                username=getInfo.json()['email'].split('@')[0],
+                email=email
+            )
+            # u
+            user.save()
+        print(user.username)
+        # print(user.fullname)
+        print (token_JSON['access_token'])
+        print ("ssss")
+        print (token_JSON['refresh_token'])
+        return Response({
+            'user ': UserSerial(user).data,
+            'access_token ' : token_JSON["access_token"],
+            'refresh_token ' : token_JSON["refresh_token"]
+        })
+            
+            
+        # User.id = getInfo.json().get('id')
+        # User.fullname = getInfo.json().get('name')
+        # User.email = getInfo.json()['email']
+        # print ("User.email = ", User.email)
+        # # user = User.save()
+
 
 def viewallrouting(request):
     data = [
         'api/token/refresh',
         'api/register',
         'api/token',
+        # 'api/googlelogin'
+        # 'api/googlelogin/callback/'
         # 'admin/token/refresh',
         # 'admin/register/',
         # 'admin/token/'
     ]
     return Response(data)
+
+
