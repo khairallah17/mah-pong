@@ -9,10 +9,12 @@ function Pve3d({ username }) {
     const rendererRef = useRef(null);
     const paddle2Ref = useRef(null);
     const paddle1Ref = useRef(null);
+    const ballRef = useRef(null);
+    const paddlePositionDiffRef = useRef(null);
     const wsRef = useRef(null);
     const [isMatched, setIsMatched] = useState(false);
     const [isPlayer1, setIsPlayer1] = useState(true);
-    const GRAVITY = -0.0015;
+    const GRAVITY = -0.0012;
     const INITIAL_VELOCITY = new THREE.Vector3(0.005, 0.01, 0.025);
     const TABLE_DIMENSIONS = { width: 1.45, length: 2.6 };
     const isPlayer1Ref = useRef(isPlayer1);
@@ -56,6 +58,8 @@ function Pve3d({ username }) {
                     if (message.player_id === '2')
                         setIsPlayer1(false);
                 } else if (message.type === 'game_event') {
+                    if (message.event === 'restart') 
+                        restartGame(ballRef.current, INITIAL_VELOCITY, paddlePositionDiffRef.current, new THREE.Vector3(0, 1, 0));
                     updateScene(message.event, message.position);
                 } else if (message.type === 'game_state') {
                     //gameStateRef.current = message.game_state;
@@ -101,6 +105,8 @@ function Pve3d({ username }) {
             let paddlePositionDiff = new THREE.Vector3(0, 0, 0);
             let firstIntersectionPosition = null;
             let lastIntersectionPosition = null;
+            paddlePositionDiffRef.current = paddlePositionDiff;
+            ballRef.current = ball;
             let initBallPos;
 
             // Load Scene and Start Animation
@@ -344,7 +350,7 @@ function Pve3d({ username }) {
                     handlePaddle1Collision(ballBox, paddle1Box);
                 }
 
-                //handleSpin();
+                handleSpin();
 
                 if (ballBox.intersectsBox(paddle2Box)) {
                     handlePaddle2Collision(ballBox, paddle2Box);
@@ -400,8 +406,11 @@ function Pve3d({ username }) {
                     //animatePaddle1();
 
                     if (paddle1.rotation.y < 2.66 && paddle1.rotation.y > 0.52) {
-                        animatePaddle1Rotation();
+                        collisionAnimation(paddle1);
                     }
+                    velocity.y *= 0.8;
+                    velocity.z *= 0.8;
+                    velocity.x *= 0.8;
                 }
                 waitforpaddle2 = true;
             }
@@ -421,7 +430,12 @@ function Pve3d({ username }) {
                 // } else {
                 //     velocity.x = Math.random() * 2 - 1;
                 // }
-
+                if (paddle1.rotation.y < 2.66 && paddle1.rotation.y > 0.52) {
+                    collisionAnimation(paddle2);
+                }
+                velocity.y *= 0.8;
+                velocity.z *= 0.8;
+                velocity.x *= 0.8;
             }
 
             function handleGridCollision(ballBox, gridBox) {
@@ -463,13 +477,13 @@ function Pve3d({ username }) {
             //     });
             // }
 
-            function animatePaddle1Rotation() {
-                gsap.to(paddle1.rotation, {
-                    y: paddle1.rotation.y / 100,
+            function collisionAnimation(paddle) {
+                gsap.to(paddle.rotation, {
+                    y: paddle.rotation.y / 100,
                     duration: 0.1,
                     onComplete: () => {
-                        gsap.to(paddle1.rotation, {
-                            y: paddle1.rotation.y * 100,
+                        gsap.to(paddle.rotation, {
+                            y: paddle.rotation.y * 100,
                             duration: 0.3
                         });
                     }
@@ -480,10 +494,10 @@ function Pve3d({ username }) {
                 velocity.copy(INITIAL_VELOCITY);
                 paddlePositionDiff.set(0, 0, 0);
                 ball.position.copy(initBallPos);
-                // wsRef.current.send(JSON.stringify({
-                //     type: 'game_event',
-                //     event: 'restart',
-                // }));
+                wsRef.current.send(JSON.stringify({
+                    type: 'game_event',
+                    event: 'restart',
+                }));
             }
 
             return () => {
