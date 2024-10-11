@@ -58,9 +58,10 @@ function Pve3d({ username }) {
                     if (message.player_id === '2')
                         setIsPlayer1(false);
                 } else if (message.type === 'game_event') {
-                    if (message.event === 'restart') 
+                    if (message.event === 'restart')
                         restartGame(ballRef.current, INITIAL_VELOCITY, paddlePositionDiffRef.current, new THREE.Vector3(0, 1, 0));
-                    updateScene(message.event, message.position);
+                    else
+                        updateScene(message.event, message.position);
                 } else if (message.type === 'game_state') {
                     //gameStateRef.current = message.game_state;
                     //setGameState(message.game_state);
@@ -106,7 +107,6 @@ function Pve3d({ username }) {
             let firstIntersectionPosition = null;
             let lastIntersectionPosition = null;
             paddlePositionDiffRef.current = paddlePositionDiff;
-            ballRef.current = ball;
             let initBallPos;
 
             // Load Scene and Start Animation
@@ -115,6 +115,7 @@ function Pve3d({ username }) {
                 paddle2Ref.current = paddle2;
                 paddle1Ref.current = paddle1;
                 ball.position.set(0, 1, 0);
+                ballRef.current = ball;
                 initBallPos = ball.position.clone();
                 if (!isPlayer1) {
                     paddle1.position.set(0, 1, -1);
@@ -151,7 +152,7 @@ function Pve3d({ username }) {
                 return renderer;
             }
 
-            function onError(err){
+            function onError(err) {
                 if (err instanceof ErrorEvent) {
                     console.error('An error happened:', err.message);
                 } else {
@@ -191,7 +192,7 @@ function Pve3d({ username }) {
                 velocity,
                 renderer,
                 scene
-            ){
+            ) {
                 window.addEventListener('keydown', onRestartKey);
                 window.addEventListener('click', () => onToggleListening());
                 window.addEventListener('mousemove', (event) => onMouseMove(event, mouse, paddle1, camera, table));
@@ -206,7 +207,10 @@ function Pve3d({ username }) {
 
             function onRestartKey(event) {
                 if (event.key.toLowerCase() === 'r') {
-                    restartGame(ball, velocity, paddlePositionDiff, initBallPos);
+                    wsRef.current.send(JSON.stringify({
+                        type: 'game_event',
+                        event: 'restart',
+                    }));
                 }
             }
 
@@ -287,10 +291,10 @@ function Pve3d({ username }) {
 
             function animate() {
                 // updatePaddle2AI();
-                
+
                 applyGravity();
                 moveBall();
-                
+
                 //applyAirResistance();
 
                 handleCollisions();
@@ -315,7 +319,7 @@ function Pve3d({ username }) {
             }
 
             function applyGravity() {
-                    velocity.y += GRAVITY;
+                velocity.y += GRAVITY;
             }
 
             function applyAirResistance() {
@@ -337,13 +341,22 @@ function Pve3d({ username }) {
 
                 if (ball.position.z > 1.5) {
                     // Player 1 scores
-                    restartGame(ball, velocity, paddlePositionDiff, initBallPos);
+                    wsRef.current.send(JSON.stringify({
+                        type: 'game_event',
+                        event: 'restart',
+                    }));
                 } else if (ball.position.z < -1.5) {
                     // Player 2 scores
-                    restartGame(ball, velocity, paddlePositionDiff, initBallPos);
+                    wsRef.current.send(JSON.stringify({
+                        type: 'game_event',
+                        event: 'restart',
+                    }));
                 }
                 else if (ball.position.y < 0.2) {
-                    restartGame(ball, velocity, paddlePositionDiff, initBallPos);
+                    wsRef.current.send(JSON.stringify({
+                        type: 'game_event',
+                        event: 'restart',
+                    }));
                 }
 
                 if (ballBox.intersectsBox(paddle1Box)) {
@@ -490,28 +503,18 @@ function Pve3d({ username }) {
                 });
             }
 
-            function restartGame(ball, velocity, paddlePositionDiff, initBallPos) {
-                velocity.copy(INITIAL_VELOCITY);
-                paddlePositionDiff.set(0, 0, 0);
-                ball.position.copy(initBallPos);
-                wsRef.current.send(JSON.stringify({
-                    type: 'game_event',
-                    event: 'restart',
-                }));
-            }
-
             return () => {
                 if (gameContainer && renderer.domElement) {
                     gameContainer.removeChild(renderer.domElement);
                 }
                 renderer.dispose();
-            
+
                 paddle1?.geometry.dispose();
                 paddle2?.geometry.dispose();
                 ball?.geometry.dispose();
                 table?.geometry.dispose();
                 grid?.geometry.dispose();
-            
+
                 window.removeEventListener('resize', () => onWindowResize(camera, renderer));
                 window.removeEventListener('keydown', onRestartKey);
                 window.removeEventListener('click', onToggleListening);
@@ -520,6 +523,13 @@ function Pve3d({ username }) {
             };
         }
     }, [isMatched, isPlayer1]);
+
+    function restartGame(ball, velocity, paddlePositionDiff, initBallPos) {
+        velocity.copy(INITIAL_VELOCITY);
+        paddlePositionDiff.set(0, 0, 0);
+        ball.position.copy(initBallPos);
+
+    }
 
     return <div ref={gameContainerRef} id="game-container" style={{
         margin: 0,
