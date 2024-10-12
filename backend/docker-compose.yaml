@@ -15,33 +15,13 @@ services:
     ports:
       - "6379:6379"
 
-  notifications:
-    container_name: notifications
+  userManagement:
+    container_name: userManagement
     build:
-      context: "./Notifications"
+      context: "./userManagement"
       dockerfile: Dockerfile
     ports:
       - 8001:8000
-    depends_on:
-      - db
-
-  tournaments:
-    container_name: tournaments
-    build:
-      context: "./tournamentManagement"
-      dockerfile: Dockerfile
-    ports:
-      - 8002:8000
-    depends_on:
-      - db
-
-  leaderboard:
-    container_name: leaderboard
-    build:
-      context: "./leaderBoard"
-      dockerfile: Dockerfile
-    ports:
-      - 8003:8000
     depends_on:
       - db
 
@@ -54,6 +34,37 @@ services:
       POSTGRES_DB: db
     volumes:
       - db_data:/var/lib/postgresql/data
+
+  # notifications:
+  #   container_name: notifications
+  #   build:
+  #     context: "./Notifications"
+  #     dockerfile: Dockerfile
+  #   ports:
+  #     - 8001:8000
+  #   depends_on:
+  #     - db
+
+  # tournaments:
+  #   container_name: tournaments
+  #   build:
+  #     context: "./tournamentManagement"
+  #     dockerfile: Dockerfile
+  #   ports:
+  #     - 8002:8000
+  #   depends_on:
+  #     - db
+
+  # leaderboard:
+  #   container_name: leaderboard
+  #   build:
+  #     context: "./leaderBoard"
+  #     dockerfile: Dockerfile
+  #   ports:
+  #     - 8003:8000
+  #   depends_on:
+  #     - db
+
 
 volumes:
   db_data:
