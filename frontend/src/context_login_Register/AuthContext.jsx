@@ -1,12 +1,11 @@
 import { useState, useEffect, createContext } from "react";
 import { jwtDecode } from "jwt-decode"
 import { useNavigate } from "react-router-dom"
+import Swal from 'sweetalert2'
 
 
 
 
-
-const alert = require('sweetalert2')
 
 const AuthContext = createContext()
 
@@ -53,7 +52,7 @@ export const AuthProvider = ({ children }) => {
     const navigation = useNavigate()
 
     const loginUsers = async (email, password) => {
-    let tokenUrl = "http://localhost:8000/api/token/" 
+    let tokenUrl = "http://localhost:8001/api/token/" 
         const response = await fetch(tokenUrl ,{
             credentials: 'include',
             method: "POST",
@@ -68,7 +67,7 @@ export const AuthProvider = ({ children }) => {
         if (response.status === 401)
         {
             console.error("401: Unauthorized access you should to register")
-            alert.fire({
+            Swal.fire({
                 position: "top-end",
                 title: "you don't have an account you should to register",
                 icon: "error",
@@ -87,7 +86,7 @@ export const AuthProvider = ({ children }) => {
             localStorage.getItem("AuthToken", JSON.stringify(JsonData))
 
             navigation("/dashboard") // Routing the USERS after he loggedin "Success"
-            alert.fire({
+            Swal.fire({
                 position: "top-end",
                 title: "you have successfully logged in",
                 icon: "success",
@@ -100,7 +99,7 @@ export const AuthProvider = ({ children }) => {
         {
             console.log(response.status)
             console.error("An Error Occurred")
-            alert.fire({
+            Swal.fire({
                 position: "top-end",
                 icon: "error",
                 title: "The email address or Username you entered isn't connected to an account",
@@ -114,10 +113,10 @@ export const AuthProvider = ({ children }) => {
     
     const registerUsers = async (fullname, username, email, password, confirm_password) => {
 
-    let tokenUrlregister = "http://localhost:8000/api/register/"
+    let tokenUrlregister = "http://localhost:8001/api/register/"
     const response = await fetch(tokenUrlregister ,{
         method: 'POST',
-        body: JSON.stringify({fullname, username, email, password, confirm_password}), // JSON.stringify: Coverting javascrit value to JSON string
+        body: JSON.stringify({fullname, username, email, password, confirm_password}), // JSON.stringify: Coverting javascript value to JSON string
         headers: {
             'Content-Type': 'application/json',
         },
@@ -132,7 +131,7 @@ export const AuthProvider = ({ children }) => {
         // setUserInfo(jwtDecode(JsonData.access)) // decode access token
         // localStorage.getItem("AuthToken", JSON.stringify(JsonData));
         navigation("/login") // Routing the USERS after he loggedin "Success"
-        alert.fire({
+        Swal.fire({
             position: "top-end",
             title: "you have successfully Registred",
             icon: "success",
@@ -145,7 +144,7 @@ export const AuthProvider = ({ children }) => {
     {
         console.log(response.status)
         console.error("An Error Occurred")
-        alert.fire({
+        Swal.fire({
             position: "top-end",
             title: "There is some error in Your registration",
             showConfirmButton: true,
@@ -162,7 +161,7 @@ export const AuthProvider = ({ children }) => {
         setUserInfo(null)
         localStorage.removeItem("AuthToken")
         navigation("/login")
-        alert.fire({
+        Swal.fire({
             position: "top-end",
             title: "you have been successfully Logged out",
             icon: "success",

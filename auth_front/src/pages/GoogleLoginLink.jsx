@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import google_logo from '../images/google_logo.png'
 
 const GoogleLoginLink = () => {
-  const googleLoginUrl = 'http://localhost:8000/accounts/google/login'|| 'http://127.0.0.1:8000/accounts/google/login';
+  const googleLoginUrl = 'http://localhost:8001/accounts/google/login'|| 'http://127.0.0.1:8000/accounts/google/login';
 
 
   const linkContent = (

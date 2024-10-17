@@ -94,7 +94,7 @@ const HomePage = ({ onUsernameSubmit }) => {
           <button onClick={() => {scrollToRef(aboutRef)}}>About</button>
           <button onClick={() => {scrollToRef(teamRef)}}>Team</button>
           <button onClick={() => {scrollToRef(contactUsRef)}}>Contact Us</button>
-          <button onClick={() => {scrollToRef(headlineRef)}} style={{backgroundColor: "black"}}>Play now</button>
+          <button onClick={() => navigate('/profile')}>Play now</button>
         </nav>
       </header>
       {/* <div className='scene' ref={mount}></div> */}
@@ -103,7 +103,7 @@ const HomePage = ({ onUsernameSubmit }) => {
         <div style={{paddingRight: "20%"}}>
           <h1>“Title - Headline”</h1>
           <p>“This section is about the game, what is it, what is the goal, and how to play it.”</p>
-          <button>Play now</button>
+          <button onClick={() => navigate('/profile')}>Play now</button>
         </div>
         <img src={hdl} alt='Game'/>
       </div>

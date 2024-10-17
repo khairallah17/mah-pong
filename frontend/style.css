@@ -170,7 +170,7 @@ body {
 }
 
 .text-field {
-    font-family: 'Rajdhani' sans-serif;
+    font-family: 'Zen Dots', sans-serif;
     display: flex;
     flex-direction: column;
     gap: .5rem;
@@ -198,7 +198,7 @@ body {
     font-size: 1.5rem;
     font-weight: 800;
     letter-spacing: .05rem;
-    color: #ffffff 40%;
+    color: #ffffff;
 }
 
 .text-field input:focus {
@@ -245,7 +245,7 @@ body {
     /* border-radius: 2rem; */
     /* box-shadow: rgba(99, 99, 99, 0.05) 0px 2px 8px 8px; */
     height: 570px;
-    margin: 170px, 227px, 227px, 820px;
+    margin: 170px 227px 227px 820px;
 }
 
 .form-button {
@@ -301,7 +301,7 @@ body {
     color: #ffffff;
 }
 .form-row {
-    font-size: 18 medium;
+    font-size: 18px;
 
     text-transform: uppercase;
     display: flex;

@@ -4,10 +4,11 @@ import os
 import sys
 
 # sys.path.insert(0, "/Users/eagoumi/Desktop/ft_transcendence/auth_backend")
+sys.path.insert(0, "/goinfre/alemsafi/mah-pong/backend")
 
 def main():
     """Run administrative tasks."""
-    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'userManagement.settings')
+    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'usermanagement.settings')
     try:
         from django.core.management import execute_from_command_line
     except ImportError as exc:

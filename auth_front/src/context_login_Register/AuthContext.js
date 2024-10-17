@@ -53,7 +53,7 @@ export const AuthProvider = ({ children }) => {
     const navigation = useNavigate()
 
     const loginUsers = async (email, password) => {
-    let tokenUrl = "http://localhost:8000/api/token/" 
+    let tokenUrl = "http://localhost:8001/api/token/" 
         const response = await fetch(tokenUrl ,{
             credentials: 'include',
             method: "POST",
@@ -114,7 +114,7 @@ export const AuthProvider = ({ children }) => {
     
     const registerUsers = async (fullname, username, email, password, confirm_password) => {
 
-    let tokenUrlregister = "http://localhost:8000/api/register/"
+    let tokenUrlregister = "http://localhost:8001/api/register/"
     const response = await fetch(tokenUrlregister ,{
         method: 'POST',
         body: JSON.stringify({fullname, username, email, password, confirm_password}), // JSON.stringify: Coverting javascrit value to JSON string

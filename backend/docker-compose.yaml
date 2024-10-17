@@ -15,10 +15,10 @@ services:
     ports:
       - "6379:6379"
 
-  userManagement:
-    container_name: userManagement
+  usermanagement:
+    container_name: usermanagement
     build:
-      context: "./userManagement"
+      context: "./usermanagement"
       dockerfile: Dockerfile
     ports:
       - 8001:8000
