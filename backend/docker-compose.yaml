@@ -3,6 +3,8 @@ version: '3.8'
 services:
   game:
     container_name: game
+    env_file:
+      - .env
     build:
       context: "./Game"
       dockerfile: Dockerfile
@@ -17,6 +19,8 @@ services:
 
   usermanagement:
     container_name: usermanagement
+    env_file:
+      - .env
     build:
       context: "./usermanagement"
       dockerfile: Dockerfile

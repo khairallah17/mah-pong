@@ -4,7 +4,7 @@ import { gsap } from 'gsap';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 
 
-function Pve3d({ username }) {
+function Pvp3d() {
     const gameContainerRef = useRef(null);
     const rendererRef = useRef(null);
     const paddle2Ref = useRef(null);
@@ -18,6 +18,7 @@ function Pve3d({ username }) {
     const INITIAL_VELOCITY = new THREE.Vector3(0.005, 0.01, 0.025);
     const TABLE_DIMENSIONS = { width: 1.45, length: 2.6 };
     const isPlayer1Ref = useRef(isPlayer1);
+    let token = localStorage.getItem('AuthToken');
 
     useEffect(() => {
         isPlayer1Ref.current = isPlayer1;
@@ -43,12 +44,10 @@ function Pve3d({ username }) {
     }
 
     useEffect(() => {
-        if (username && !wsRef.current) {
-            wsRef.current = new WebSocket('ws://localhost:8000/ws/matchmaking/');
+        if (token && !wsRef.current) {
+            wsRef.current = new WebSocket('ws://localhost:8000/ws/matchmaking/?token=' + token);
             wsRef.current.onopen = () => {
                 console.log('WebSocket connection established');
-                wsRef.current.send(JSON.stringify({ type: 'set_username', username }));
-                console.log("username set to: ", username);
             };
             wsRef.current.onmessage = (event) => {
                 const message = JSON.parse(event.data);
@@ -77,7 +76,7 @@ function Pve3d({ username }) {
                 wsRef.current = null;
             }
         };
-    }, [username]);
+    }, [token]);
 
     const updateScene = (event, position) => {
         if (event === 'player_move') {
@@ -162,7 +161,7 @@ function Pve3d({ username }) {
 
             function loadScene(scene, callback) {
                 const loader = new GLTFLoader();
-                loader.load('../../models/loadedscene.glb', (gltf) => {
+                loader.load('../assets/models/loadedscene.glb', (gltf) => {
                     const loadedScene = gltf.scene;
                     scene.add(loadedScene);
                     const objects = {
@@ -541,4 +540,4 @@ function Pve3d({ username }) {
     />;
 }
 
-export default Pve3d;
+export default Pvp3d;

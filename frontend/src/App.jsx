@@ -24,8 +24,8 @@ function App() {
         <Routes>
           <Route path="/" element={<HomePage onUsernameSubmit={handleUsernameSubmit} />} />
           <Route path="/pve3d" element={<Pve3d />} />
-          <Route path="/pvp3d" element={<Pvp3d username={username} />} />
-          <Route path="/pvp2d" element={<Pvp2d username={username} />} />
+          <Route path="/pvp3d" element={<Pvp3d />} />
+          <Route path="/pvp2d" element={<Pvp2d />} />
           <Route path="/pve2d" element={<Pve2d />} />
           <Route path='/Profile' element={
             <ProtectRouter> 
