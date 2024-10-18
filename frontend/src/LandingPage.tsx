@@ -12,14 +12,14 @@ import agm from './assets/agm.jpg';
 import zou from './assets/Zou.jpg';
 import hmz from './assets/hasalam.jpg';
 import bg from './assets/bg.jpg';
-import { EffectCoverflow, Navigation, Pagination } from 'swiper/modules';
+import { Navigation, Pagination } from 'swiper/modules';
 
-interface HomePageProps {
+interface LandingPageProps {
   onUsernameSubmit: (username: string) => void;
 }
 
 
-const HomePage: React.FC<HomePageProps> = ({ onUsernameSubmit }) => {
+const LandingPage: React.FC<LandingPageProps> = ({ onUsernameSubmit }) => {
   const [username, setUsername] = useState<string>('');
   const [isSubmitted, setIsSubmitted] = useState<boolean>(false);
   const navigate = useNavigate();
@@ -92,7 +92,7 @@ const HomePage: React.FC<HomePageProps> = ({ onUsernameSubmit }) => {
   // }, []);
 
   return (
-    <div className="homepage">
+    <div className="landingpage">
       <header>
         <nav className='navbar'>
           <img className='logo' src='Logo' alt='Logo'/>
@@ -191,4 +191,4 @@ const HomePage: React.FC<HomePageProps> = ({ onUsernameSubmit }) => {
   );
 };
 
-export default HomePage;
+export default LandingPage;
