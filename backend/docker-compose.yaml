@@ -3,8 +3,6 @@ version: '3.8'
 services:
   game:
     container_name: game
-    env_file:
-      - .env
     build:
       context: "./Game"
       dockerfile: Dockerfile
@@ -12,6 +10,8 @@ services:
       - "8000:8000"
     depends_on:
       - redis
+    env_file:
+      - .env
   redis:
     image: "redis:alpine"
     ports:
@@ -19,8 +19,6 @@ services:
 
   usermanagement:
     container_name: usermanagement
-    env_file:
-      - .env
     build:
       context: "./usermanagement"
       dockerfile: Dockerfile
@@ -28,6 +26,8 @@ services:
       - 8001:8000
     depends_on:
       - db
+    env_file:
+      - .env
 
   db:
     image: postgres:15-alpine

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import ProtectRouter from "./protection_axios/ProtectRouter"
 import { AuthProvider } from "./context_login_Register/AuthContext.jsx"
-import { Profile, Register, Login } from "./pages"
+import { Profile, Register, Login, Dashboard } from "./pages"
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import HomePage from './HomePage';
 import Pve3d from './pve/Pve3d';
@@ -30,6 +30,11 @@ function App() {
           <Route path='/Profile' element={
             <ProtectRouter> 
               <Profile />
+            </ProtectRouter>
+          }/>
+          <Route path='/dashboard' element={
+            <ProtectRouter>
+              <Dashboard />
             </ProtectRouter>
           }/>
           <Route path='/login' element={<Login />}/>
