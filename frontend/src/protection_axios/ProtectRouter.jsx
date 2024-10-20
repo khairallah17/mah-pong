@@ -8,7 +8,7 @@ const ProtectRouter = ({Children}) => {
 
     if (!user){
         console.log("You Should To be Authenticate First")
-        return <Navigate to="/login" replace/>
+        return <Navigate to="/login" replace />
     }
     return Children
 
