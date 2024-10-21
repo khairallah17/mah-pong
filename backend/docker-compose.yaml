@@ -10,8 +10,6 @@ services:
       - "8000:8000"
     depends_on:
       - redis
-    env_file:
-      - .env
   redis:
     image: "redis:alpine"
     ports:
@@ -26,8 +24,6 @@ services:
       - 8001:8000
     depends_on:
       - db
-    env_file:
-      - .env
 
   db:
     image: postgres:15-alpine

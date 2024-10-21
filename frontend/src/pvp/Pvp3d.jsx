@@ -4,7 +4,7 @@ import { gsap } from 'gsap';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 
 
-function Pvp3d() {
+function Pve3d({ username }) {
     const gameContainerRef = useRef(null);
     const rendererRef = useRef(null);
     const paddle2Ref = useRef(null);
@@ -44,8 +44,9 @@ function Pvp3d() {
     }
 
     useEffect(() => {
-        if (token && !wsRef.current) {
-            wsRef.current = new WebSocket('ws://localhost:8000/ws/matchmaking/?token=' + token);
+        if (username && !wsRef.current) {
+            const accessToken = JSON.parse(localStorage.getItem('AuthToken')).access;
+            wsRef.current = new WebSocket('ws://localhost:8000/ws/matchmaking/?token=' + accessToken);
             wsRef.current.onopen = () => {
                 console.log('WebSocket connection established');
             };
@@ -76,7 +77,7 @@ function Pvp3d() {
                 wsRef.current = null;
             }
         };
-    }, [token]);
+    }, [username]);
 
     const updateScene = (event, position) => {
         if (event === 'player_move') {
@@ -161,7 +162,7 @@ function Pvp3d() {
 
             function loadScene(scene, callback) {
                 const loader = new GLTFLoader();
-                loader.load('../assets/models/loadedscene.glb', (gltf) => {
+                loader.load('../../models/loadedscene.glb', (gltf) => {
                     const loadedScene = gltf.scene;
                     scene.add(loadedScene);
                     const objects = {
@@ -540,4 +541,4 @@ function Pvp3d() {
     />;
 }
 
-export default Pvp3d;
+export default Pve3d;

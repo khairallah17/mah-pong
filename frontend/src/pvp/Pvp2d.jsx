@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { useEffect, useRef, useState } from 'react';
 
-function Pvp2d() {
+function Pvp2d({ username }) {
     const wsRef = useRef(null);
     const [gameState, setGameState] = useState(null);
     const [isMatched, setIsMatched] = useState(false);
@@ -20,8 +20,9 @@ function Pvp2d() {
     let token = localStorage.getItem('AuthToken');
 
     useEffect(() => {
-        if (token && !wsRef.current) {
-            wsRef.current = new WebSocket(`ws://localhost:8000/ws/matchmaking/?token=${token}`);
+        if (username && !wsRef.current) {
+            const accessToken = JSON.parse(localStorage.getItem('AuthToken')).access;
+            wsRef.current = new WebSocket('ws://localhost:8000/ws/matchmaking/?token=' + accessToken);
             wsRef.current.onopen = () => {
                 console.log('WebSocket connection established');
             };
@@ -47,7 +48,7 @@ function Pvp2d() {
                 wsRef.current = null;
             }
         };
-    }, [token]);
+    }, [username]);
 
     useEffect(() => {
         if (!rendererRef.current && isMatched) {
