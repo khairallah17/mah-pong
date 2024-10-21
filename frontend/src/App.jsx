@@ -27,7 +27,7 @@ function App() {
           <Route path="/pvp3d" element={<Pvp3d />} />
           <Route path="/pvp2d" element={<Pvp2d />} />
           <Route path="/pve2d" element={<Pve2d />} />
-          <Route path='/Profile' element={
+          <Route path='/profile' element={
             <ProtectRouter> 
               <Profile />
             </ProtectRouter>
