@@ -27,7 +27,7 @@ export const AuthProvider = ({ children }) => {
 
     //GETTING TOKEN
     const [AuthToken, setAuthToken] = useState( () =>
-        localStorage.getItem("AuthToken") ? JSON.parse("AuthToken") : null
+        localStorage.getItem("AuthToken") ? JSON.parse(localStorage.getItem("AuthToken")) : null
     );
     // useEffect(() => { 
     //     const token = localStorage.getItem("AuthToken");
@@ -38,7 +38,7 @@ export const AuthProvider = ({ children }) => {
     // }, []);
 
     //GETTING NOW THE DECODE OF THE TOKEN AND STORE ==> {FULLNAME, USERNAME, EMAIL}
-    const [user, setUser] = useState(localStorage.getItem("AuthToken") ? jwtDecode("AuthToken") : null);
+    const [user, setUser] = useState(localStorage.getItem("AuthToken") ? jwtDecode(localStorage.getItem("AuthToken")) : null);
     // useEffect(() => {
     //     const userinfo = localStorage.getItem("AuthToken") // fullname, username, email
     //     if (userinfo)
@@ -82,8 +82,8 @@ export const AuthProvider = ({ children }) => {
             const JsonData = await response.json()
             console.log("hhhhhhhh")
             setAuthToken(JsonData) //JsonData have access token an the refresh token
-            setUser(JsonData.access) // decode access token
-            localStorage.getItem("AuthToken", JSON.stringify(JsonData))
+            setUser(jwtDecode(JsonData.access)) // decode access token
+            localStorage.setItem("AuthToken", JSON.stringify(JsonData))
 
             navigation("/dashboard") // Routing the USERS after he loggedin "Success"
             Swal.fire({

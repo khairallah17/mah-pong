@@ -5,6 +5,8 @@ import { useNavigate } from 'react-router-dom';
 const Dashboard = () => {
   const navigate = useNavigate();
 
+  console.log('Dashboard')
+
   return (
     <div>
       <h1>Dashboard</h1>
