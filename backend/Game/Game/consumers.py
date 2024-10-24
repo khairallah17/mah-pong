@@ -2,6 +2,8 @@ import asyncio
 from channels.generic.websocket import AsyncWebsocketConsumer # type: ignore
 import json
 import logging
+import jwt
+from django.conf import settings
 from channels.db import database_sync_to_async # type: ignore
 
 logger = logging.getLogger(__name__)
@@ -20,6 +22,10 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
         self.users = []
         self.username = None
         await self.accept()
+        token = self.scope['query_string'].decode().split('=')[1]
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=['HS256'])
+        logger.warning(payload)
+        logger.warning(settings.SECRET_KEY)
 
     async def disconnect(self, close_code):
         # Remove the user's channel name from the dictionary
