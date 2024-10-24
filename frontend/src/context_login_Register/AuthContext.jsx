@@ -1,7 +1,8 @@
 import { useState, useEffect, createContext } from "react";
 import { jwtDecode } from "jwt-decode"
 import { useNavigate } from "react-router-dom"
-import Swal from 'sweetalert2'
+import Swal from "sweetalert2";
+
 
 
 const AuthContext = createContext()
@@ -35,7 +36,7 @@ export const AuthProvider = ({ children }) => {
     // }, []);
 
     //GETTING NOW THE DECODE OF THE TOKEN AND STORE ==> {FULLNAME, USERNAME, EMAIL}
-    const [user, setUser] = useState(localStorage.getItem("AuthToken") ? jwtDecode(localStorage.getItem("AuthToken")) : null);
+    const [UsersInfo, setUserInfo] = useState( () => localStorage.getItem("AuthToken") ? jwtDecode("AuthToken") : null);
     // useEffect(() => {
     //     const userinfo = localStorage.getItem("AuthToken") // fullname, username, email
     //     if (userinfo)
@@ -79,8 +80,8 @@ export const AuthProvider = ({ children }) => {
             const JsonData = await response.json()
             console.log("hhhhhhhh")
             setAuthToken(JsonData) //JsonData have access token an the refresh token
-            setUser(jwtDecode(JsonData.access)) // decode access token
-            localStorage.setItem("AuthToken", JSON.stringify(JsonData))
+            setUserInfo(JsonData.access) // decode access token
+            localStorage.getItem("AuthToken", JSON.stringify(JsonData))
 
             navigation("/dashboard") // Routing the USERS after he loggedin "Success"
             Swal.fire({
@@ -113,7 +114,7 @@ export const AuthProvider = ({ children }) => {
     let tokenUrlregister = "http://localhost:8001/api/register/"
     const response = await fetch(tokenUrlregister ,{
         method: 'POST',
-        body: JSON.stringify({fullname, username, email, password, confirm_password}), // JSON.stringify: Coverting javascript value to JSON string
+        body: JSON.stringify({fullname, username, email, password, confirm_password}), // JSON.stringify: Coverting javascrit value to JSON string
         headers: {
             'Content-Type': 'application/json',
         },
@@ -125,7 +126,7 @@ export const AuthProvider = ({ children }) => {
     if (response.status === 201) // 201 status Created
     {
         // setAuthToken(JsonData) //JsonData have access token an the refresh token
-        // setUser(jwtDecode(JsonData.access)) // decode access token
+        // setUserInfo(jwtDecode(JsonData.access)) // decode access token
         // localStorage.getItem("AuthToken", JSON.stringify(JsonData));
         navigation("/login") // Routing the USERS after he loggedin "Success"
         Swal.fire({
@@ -155,7 +156,7 @@ export const AuthProvider = ({ children }) => {
     // To Logout the user we should just delete the tokens
     const logoutUsers = () => {
         setAuthToken(null)
-        setUser(null)
+        setUserInfo(null)
         localStorage.removeItem("AuthToken")
         navigation("/login")
         Swal.fire({
@@ -169,13 +170,13 @@ export const AuthProvider = ({ children }) => {
     }
 
     const contextData = {
-        AuthToken, setAuthToken, user, setUser, loginUsers, registerUsers, logoutUsers 
+        AuthToken, setAuthToken, UsersInfo, setUserInfo, loginUsers, registerUsers, logoutUsers 
     }
 
     useEffect(() => {
         if (AuthToken)
         {
-            setUser(jwtDecode(AuthToken.access))
+            setUserInfo(jwtDecode(AuthToken.access))
         }
         setloading(false)
     }, [AuthToken, loading])
