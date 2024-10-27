@@ -24,20 +24,20 @@ services:
       dockerfile: Dockerfile
     ports:
       - 8001:8000
-    depends_on:
-      - db
     env_file:
       - .env
+    # depends_on:
+    #   - db
 
-  db:
-    image: postgres:15-alpine
-    restart: always
-    environment:
-      POSTGRES_PASSWORD: pass
-      POSTGRES_USER: user
-      POSTGRES_DB: db
-    volumes:
-      - db_data:/var/lib/postgresql/data
+  # db:
+  #   image: postgres:15-alpine
+  #   restart: always
+  #   environment:
+  #     POSTGRES_PASSWORD: pass
+  #     POSTGRES_USER: user
+  #     POSTGRES_DB: db
+  #   volumes:
+  #     - db_data:/var/lib/postgresql/data
 
   # notifications:
   #   container_name: notifications

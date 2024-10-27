@@ -7,7 +7,7 @@ import AuthContext from "../context_login_Register/AuthContext";
 const baseURL = "http://localhost:8001/api/"
 
 const useAxios  = () => {
-    const {AuthToken, setUser, setAuthToken} = useContext(AuthToken)
+    const {AuthToken, setUserInfo, setAuthToken} = useContext(AuthToken)
 
     const axiosInstance = axios.create({
         baseURL,
@@ -32,7 +32,7 @@ const useAxios  = () => {
             });
             localStorage.setItem("AuthToken", JSON.stringify(newToken.contextData));
             setAuthToken(newToken.contextData); // Change the old Token with New Refreshed Token
-            setUser(jwtDecode(newToken.contextData.access))
+            setUserInfo(jwtDecode(newToken.contextData.access))
 
             newToken.headers.Autorisation = `Bearer ${jwtDecode(newToken.contextData.access)}`
 
