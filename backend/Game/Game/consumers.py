@@ -22,10 +22,54 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
         self.users = []
         self.username = None
         await self.accept()
-        logger.warning(settings.SECRET_KEY)
         token = self.scope['query_string'].decode().split('=')[1]
-        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=['HS256'])
-        logger.warning(payload)
+        try:
+            payload = jwt.decode(token, settings.SECRET_KEY, algorithms=['HS256'])
+            self.username = payload.get('username')
+            if not self.username:
+                raise jwt.InvalidTokenError("Username not found in token")
+            # Add the user's channel name to the dictionary
+            user_channels[self.username] = self.channel_name
+            await self.save_username_to_session(self.username)
+            
+            # Add the user to the matchmaking pool
+            matchmaking_pool.append(self.username)
+            await self.channel_layer.group_add("matchmaking_pool", self.channel_name)
+            
+            # Check if there are two users in the pool
+            if len(matchmaking_pool) >= 2:
+                logger.warning("MATCH FOUND")
+                self.users = matchmaking_pool[:2]
+                matchmaking_pool.remove(self.users[0])
+                matchmaking_pool.remove(self.users[1])
+                matched_users[self.users[0]] = self.users[1]
+                matched_users[self.users[1]] = self.users[0]
+                await self.channel_layer.send(
+                    user_channels[self.users[0]],
+                    {
+                        'type': 'match_found',
+                        'player_id': '1'
+                    }
+                )
+                await self.channel_layer.send(
+                    user_channels[self.users[1]],
+                    {
+                        'type': 'match_found',
+                        'player_id': '2'
+                    }
+                )
+        except jwt.ExpiredSignatureError:
+            logger.warning("Token has expired")
+            await self.send(text_data=json.dumps({
+                'type': 'token_expired',
+            }))
+            await self.close(code=4001)
+        except jwt.InvalidTokenError as e:
+            logger.warning(f"Invalid token: {e}")
+            await self.send(text_data=json.dumps({
+                'type': 'invalid_token',
+            }))
+            await self.close(code=4002)
 
     async def disconnect(self, close_code):
         # Remove the user's channel name from the dictionary
@@ -41,44 +85,7 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
         if message_type is None:
             logger.warning("No message type found", data)
         logger.warning(data)
-        if message_type == 'set_username':
-            self.username = data.get('username')
-            if self.username:
-                # Add the user's channel name to the dictionary
-                user_channels[self.username] = self.channel_name
-
-                await self.save_username_to_session(self.username)
-                logger.info(f"Username set to {self.username}")
-                
-                # Add the user to the matchmaking pool
-                matchmaking_pool.append(self.username)
-                await self.channel_layer.group_add("matchmaking_pool", self.channel_name)
-                
-                # Check if there are two users in the pool
-                if len(matchmaking_pool) >= 2:
-                    logger.warning("MATCH FOUND")
-                    self.users = matchmaking_pool[:2]
-                    matchmaking_pool.remove(self.users[0])
-                    matchmaking_pool.remove(self.users[1])
-                    matched_users[self.users[0]] = self.users[1]
-                    matched_users[self.users[1]] = self.users[0]
-                    await self.channel_layer.send(
-                        user_channels[self.users[0]],
-                        {
-                            'type': 'match_found',
-                            'player_id': '1'
-                        }
-                    )
-                    await self.channel_layer.send(
-                        user_channels[self.users[1]],
-                        {
-                            'type': 'match_found',
-                            'player_id': '2'
-                        }
-                    )
-            else:
-                logger.warning("NO USERNAME FOUND")
-        elif message_type == 'game_event':
+        if message_type == 'game_event':
             event = data.get('event')
             player_id = data.get('player_id')
             if self.username in matched_users:
@@ -91,6 +98,7 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
                         'position': data.get('position')
                     }
                 )
+
     @database_sync_to_async
     def save_username_to_session(self, username):
         self.scope['session']['username'] = username
@@ -102,6 +110,7 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
             'type': 'match_found',
             'player_id': player_id
         }))
+
     async def game_event(self, event):
         game_eve = event['event']
         player_id = event['player_id']

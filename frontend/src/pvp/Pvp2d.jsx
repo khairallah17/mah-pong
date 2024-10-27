@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { useEffect, useRef, useState } from 'react';
 
-function Pvp2d({ username }) {
+function Pvp2d() {
     const wsRef = useRef(null);
     const [gameState, setGameState] = useState(null);
     const [isMatched, setIsMatched] = useState(false);
@@ -20,14 +20,25 @@ function Pvp2d({ username }) {
     let token = localStorage.getItem('AuthToken');
 
     useEffect(() => {
-        if (username && !wsRef.current) {
+        if (token && !wsRef.current) {
             const accessToken = JSON.parse(localStorage.getItem('AuthToken')).access;
             wsRef.current = new WebSocket('ws://localhost:8000/ws/matchmaking/?token=' + accessToken);
             wsRef.current.onopen = () => {
                 console.log('WebSocket connection established');
             };
-            wsRef.current.onmessage = (event) => {
+            wsRef.current.onmessage = async (event) => {
                 const message = JSON.parse(event.data);
+                if (message.type === 'token_expired') {
+                    const newToken = await refreshToken();
+                    if (newToken) {
+                        localStorage.setItem('AuthToken', JSON.stringify(newToken));
+                        wsRef.current = new WebSocket('ws://localhost:8000/ws/matchmaking/?token=' + newToken.access);
+                        console.log('WebSocket connection established with new token');
+                    } else {
+                        localStorage.removeItem('AuthToken');
+                        window.location.href = '/login';
+                    }
+                }
                 if (message.type === 'match_found') {
                     setIsMatched(true);
                     if (message.player_id === '2') setIsPlayer1(false);
@@ -41,14 +52,31 @@ function Pvp2d({ username }) {
             wsRef.current.onclose = () => console.log('WebSocket connection closed');
             wsRef.current.onerror = (e) => console.error('WebSocket error:', e);
         }
+        // return () => {
+        //     if (wsRef.current) {
+        //         wsRef.current.close();
+        //         wsRef.current = null;
+        //     }
+        // };
+    }, [token]);
 
-        return () => {
-            if (wsRef.current) {
-                wsRef.current.close();
-                wsRef.current = null;
+    const refreshToken = async () => {
+        try {
+            const response = await fetch('/api/token/refresh', {
+                method: 'POST',
+                credentials: 'include'
+            });
+            if (response.ok) {
+                const data = await response.json();
+                return data;
+            } else {
+                return null;
             }
-        };
-    }, [username]);
+        } catch (error) {
+            console.error('Failed to refresh token:', error);
+            return null;
+        }
+    };
 
     useEffect(() => {
         if (!rendererRef.current && isMatched) {

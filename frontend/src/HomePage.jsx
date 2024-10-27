@@ -94,7 +94,7 @@ const HomePage = ({ onUsernameSubmit }) => {
           <button onClick={() => {scrollToRef(aboutRef)}}>About</button>
           <button onClick={() => {scrollToRef(teamRef)}}>Team</button>
           <button onClick={() => {scrollToRef(contactUsRef)}}>Contact Us</button>
-          <button onClick={() => navigate('/profile')}>Play now</button>
+          <button onClick={() => navigate('/dashboard')}>Play now</button>
         </nav>
       </header>
       {/* <div className='scene' ref={mount}></div> */}
@@ -103,7 +103,7 @@ const HomePage = ({ onUsernameSubmit }) => {
         <div style={{paddingRight: "20%"}}>
           <h1>“Title - Headline”</h1>
           <p>“This section is about the game, what is it, what is the goal, and how to play it.”</p>
-          <button onClick={() => navigate('/profile')}>Play now</button>
+          <button onClick={() => navigate('/dashboard')}>Play now</button>
         </div>
         <img src={hdl} alt='Game'/>
       </div>
@@ -162,6 +162,8 @@ const HomePage = ({ onUsernameSubmit }) => {
         <div className='fadeout'></div>
       </Swiper>
       </div>
+      <div className='space'>
+      </div>
       {!isSubmitted ? (
         <div className="username-input">
           <input
@@ -174,6 +176,7 @@ const HomePage = ({ onUsernameSubmit }) => {
         </div>
       ) : (
         <div className="navigation-buttons">
+          
           <button onClick={() => navigate('/pve2d')}>PVE 2D</button>
           <button onClick={() => navigate('/pvp2d')}>PVP 2D</button>
           <button onClick={() => navigate('/pve3d')}>PVE 3D</button>

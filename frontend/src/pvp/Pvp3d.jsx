@@ -4,7 +4,7 @@ import { gsap } from 'gsap';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 
 
-function Pve3d({ username }) {
+function Pve3d() {
     const gameContainerRef = useRef(null);
     const rendererRef = useRef(null);
     const paddle2Ref = useRef(null);
@@ -24,35 +24,27 @@ function Pve3d({ username }) {
         isPlayer1Ref.current = isPlayer1;
     }, [isPlayer1]);
 
-    function animatePaddleRotation(paddle1, paddle2) {
-        let rotationy = Math.atan2(Math.abs(paddle1.position.y), paddle1.position.x * 5);
-        let rotationz = Math.atan2(Math.abs(paddle1.position.y), paddle1.position.x);
-        paddle1.rotation.y = isPlayer1Ref.current ? rotationy : -rotationy;
-        if (paddle1.position.x > 0) {
-            paddle1.rotation.z = rotationz - Math.PI / 2;
-        } else {
-            paddle1.rotation.z = -rotationz + Math.PI / 2;
-        }
-        rotationy = Math.atan2(Math.abs(paddle2.position.y), paddle2.position.x * 5);
-        rotationz = Math.atan2(Math.abs(paddle2.position.y), paddle2.position.x);
-        paddle2.rotation.y = isPlayer1Ref.current ? -rotationy : rotationy;
-        if (paddle2.position.x > 0) {
-            paddle2.rotation.z = rotationz - Math.PI / 2;
-        } else {
-            paddle2.rotation.z = -rotationz + Math.PI / 2;
-        }
-    }
 
     useEffect(() => {
-        if (username && !wsRef.current) {
+        if (token && !wsRef.current) {
             const accessToken = JSON.parse(localStorage.getItem('AuthToken')).access;
             wsRef.current = new WebSocket('ws://localhost:8000/ws/matchmaking/?token=' + accessToken);
             wsRef.current.onopen = () => {
                 console.log('WebSocket connection established');
             };
-            wsRef.current.onmessage = (event) => {
+            wsRef.current.onmessage = async (event) => {
                 const message = JSON.parse(event.data);
-                //console.log(message);
+                if (message.type === 'token_expired') {
+                    const newToken = await refreshToken();
+                    if (newToken) {
+                        localStorage.setItem('AuthToken', JSON.stringify(newToken));
+                        wsRef.current = new WebSocket('ws://localhost:8000/ws/matchmaking/?token=' + newToken.access);
+                        console.log('WebSocket connection established with new token');
+                    } else {
+                        localStorage.removeItem('AuthToken');
+                        window.location.href = '/login';
+                    }
+                }
                 if (message.type === 'match_found') {
                     setIsMatched(true)
                     if (message.player_id === '2')
@@ -71,13 +63,13 @@ function Pve3d({ username }) {
             wsRef.current.onerror = (e) => console.error('WebSocket error:', e);
         }
 
-        return () => {
-            if (wsRef.current) {
-                wsRef.current.close();
-                wsRef.current = null;
-            }
-        };
-    }, [username]);
+        // return () => {
+        //     if (wsRef.current) {
+        //         wsRef.current.close();
+        //         wsRef.current = null;
+        //     }
+        // };
+    }, [token]);
 
     const updateScene = (event, position) => {
         if (event === 'player_move') {
@@ -85,6 +77,24 @@ function Pve3d({ username }) {
         }
         animatePaddleRotation(paddle1Ref.current, paddle2Ref.current);
     };
+    function animatePaddleRotation(paddle1, paddle2) {
+        let rotationy = Math.atan2(Math.abs(paddle1.position.y), paddle1.position.x * 5);
+        let rotationz = Math.atan2(Math.abs(paddle1.position.y), paddle1.position.x);
+        paddle1.rotation.y = isPlayer1Ref.current ? rotationy : -rotationy;
+        if (paddle1.position.x > 0) {
+            paddle1.rotation.z = rotationz - Math.PI / 2;
+        } else {
+            paddle1.rotation.z = -rotationz + Math.PI / 2;
+        }
+        rotationy = Math.atan2(Math.abs(paddle2.position.y), paddle2.position.x * 5);
+        rotationz = Math.atan2(Math.abs(paddle2.position.y), paddle2.position.x);
+        paddle2.rotation.y = isPlayer1Ref.current ? -rotationy : rotationy;
+        if (paddle2.position.x > 0) {
+            paddle2.rotation.z = rotationz - Math.PI / 2;
+        } else {
+            paddle2.rotation.z = -rotationz + Math.PI / 2;
+        }
+    }
 
     useEffect(() => {
         if (!rendererRef.current && isMatched) {
@@ -509,11 +519,11 @@ function Pve3d({ username }) {
                 }
                 renderer.dispose();
 
-                paddle1?.geometry.dispose();
-                paddle2?.geometry.dispose();
-                ball?.geometry.dispose();
-                table?.geometry.dispose();
-                grid?.geometry.dispose();
+                // paddle1?.geometry.dispose();
+                // paddle2?.geometry.dispose();
+                // ball?.geometry.dispose();
+                // table?.geometry.dispose();
+                // grid?.geometry.dispose();
 
                 window.removeEventListener('resize', () => onWindowResize(camera, renderer));
                 window.removeEventListener('keydown', onRestartKey);
