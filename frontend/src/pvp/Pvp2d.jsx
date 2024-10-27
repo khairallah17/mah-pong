@@ -3,6 +3,8 @@ import { useEffect, useRef, useState } from 'react';
 
 function Pvp2d() {
     const wsRef = useRef(null);
+    const [{ score1, score2 }, setScores] = useState({ score1: 0, score2: 0 });
+    const [winner, setWinner] = useState(null);
     const [gameState, setGameState] = useState(null);
     const [isMatched, setIsMatched] = useState(false);
     let keyPressed = false;
@@ -18,6 +20,12 @@ function Pvp2d() {
     const tableRef = useRef(null);
     const isPausedRef = useRef(true);
     let token = localStorage.getItem('AuthToken');
+
+    useEffect(() => {
+        if (winner) {
+            isPausedRef.current = true;
+        }
+    }, [winner]);
 
     useEffect(() => {
         if (token && !wsRef.current) {
@@ -52,12 +60,12 @@ function Pvp2d() {
             wsRef.current.onclose = () => console.log('WebSocket connection closed');
             wsRef.current.onerror = (e) => console.error('WebSocket error:', e);
         }
-        // return () => {
-        //     if (wsRef.current) {
-        //         wsRef.current.close();
-        //         wsRef.current = null;
-        //     }
-        // };
+        return () => {
+            if (wsRef.current) {
+                wsRef.current.close();
+                wsRef.current = null;
+            }
+        };
     }, [token]);
 
     const refreshToken = async () => {
@@ -134,8 +142,23 @@ function Pvp2d() {
                     ball.position.x -= 0.05 * (isPlayer1 ? 1 : -1);
                 }
 
-                if (goal1.intersectsSphere(ballSphere) || goal2.intersectsSphere(ballSphere)) {
+                if (goal1.intersectsSphere(ballSphere) ) {
                     isPausedRef.current = true;
+                    setScores(prevScores => {
+                        const newScores = { score1: prevScores.score1, score2: prevScores.score2 + 1 };
+                        if (newScores.score2 >= 10) setWinner('Player 2');
+                        return newScores;
+                    });
+                    restartGame(ball);
+                }
+
+                if (goal2.intersectsSphere(ballSphere)) {
+                    isPausedRef.current = true;
+                    setScores(prevScores => {
+                        const newScores = { score1: prevScores.score1 + 1, score2: prevScores.score2 };
+                        if (newScores.score1 >= 10) setWinner('Player 1');
+                        return newScores;
+                    });
                     restartGame(ball);
                 }
 
@@ -251,7 +274,15 @@ function Pvp2d() {
     return (
         <>
             {!isMatched && <h1>Looking for an opponent...</h1>}
+            {winner && (
+                <div className="popup">
+                    <h2>{winner} Wins!</h2>
+                    <button onClick={() => window.location.reload()}>Restart Game</button>
+                </div>
+            )}
             <div id="game-container"></div>
+            <div id="score1">Player 1: {score1}</div>
+            <div id="score2">Player 2: {score2}</div>
         </>
     );
 }

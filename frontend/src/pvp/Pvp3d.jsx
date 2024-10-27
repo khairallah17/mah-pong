@@ -63,13 +63,32 @@ function Pve3d() {
             wsRef.current.onerror = (e) => console.error('WebSocket error:', e);
         }
 
-        // return () => {
-        //     if (wsRef.current) {
-        //         wsRef.current.close();
-        //         wsRef.current = null;
-        //     }
-        // };
+        return () => {
+            if (wsRef.current) {
+                wsRef.current.close();
+                wsRef.current = null;
+            }
+        };
     }, [token]);
+
+    const refreshToken = async () => {
+        try {
+            const response = await fetch('/api/token/refresh', {
+                method: 'POST',
+                credentials: 'include'
+            });
+            if (response.ok) {
+                const data = await response.json();
+                return data;
+            } else {
+                return null;
+            }
+        } catch (error) {
+            console.error('Failed to refresh token:', error);
+            return null;
+        }
+    };
+
 
     const updateScene = (event, position) => {
         if (event === 'player_move') {
@@ -541,14 +560,19 @@ function Pve3d() {
 
     }
 
-    return <div ref={gameContainerRef} id="game-container" style={{
-        margin: 0,
-        padding: 0,
-        position: 'absolute',
-        top: 0,
-        left: 0
-    }}
-    />;
+    return (
+        <>
+            {!isMatched && <h1>Looking for an opponent...</h1>}
+            <div ref={gameContainerRef} id="game-container" style={{
+                margin: 0,
+                padding: 0,
+                position: 'absolute',
+                top: 0,
+                left: 0
+            }}
+            />
+        </>
+    );
 }
 
 export default Pve3d;
