@@ -31,7 +31,26 @@ class Get_MyTokenObtainPairView(TokenObtainPairView):
             )
         
         # here if the user are authenticate sper() call the parent class post method to generate new token
-        return super().post(request)
+        response = super().post(request)
+        token = response.data.get('access')
+        refresh_token = response.data.get('refresh')
+        
+        response.set_cookie(
+            key='access_token',
+            value=token,
+            httponly=True,
+            secure=False,  # Set to True if using HTTPS
+            samesite='Lax'
+        )
+        response.set_cookie(
+            key='refresh_token',
+            value=refresh_token,
+            httponly=True,
+            secure=False,  # Set to True if using HTTPS
+            samesite='Lax'
+        )
+        # here we set the token to the http only cookies to be used in the frontend for more security
+        return response
     
     def get(self, request):
         if not request.user.is_authenticated: # checking if the user are not authenticate before 

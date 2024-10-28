@@ -12,7 +12,7 @@ const useAxios  = () => {
     const axiosInstance = axios.create({
         baseURL,
         headers: {
-            Autorisation: `Bearer ${AuthToken?.access}` // To avoid injection ${AuthToken?.access} to return every check to refresh token from the backend
+            Autorisation: `Barer ${AuthToken?.access}` // To avoid injection ${AuthToken?.access} to return every check to refresh token from the backend
         }
     })
     

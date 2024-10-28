@@ -1,9 +1,9 @@
-asgiref
-Django
-sqlparse
-typing-extensions
-djangorestframework
-django-cors-headers
-channels
-channels_redis
+asgiref==3.8.1
+Django==4.2.13
+sqlparse==0.5.0
+typing-extensions==4.12.1
+djangorestframework==3.14
+django-cors-headers==4.0.0
+channels==3.0.4
+channels_redis==4.0.0
 pyjwt
