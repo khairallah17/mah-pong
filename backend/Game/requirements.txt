@@ -7,3 +7,4 @@ django-cors-headers==4.0.0
 channels==3.0.4
 channels_redis==4.0.0
 pyjwt
+psycopg2-binary
