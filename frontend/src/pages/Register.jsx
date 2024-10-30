@@ -13,6 +13,8 @@ export const Register = () => {
   const [confirmpassword, setConfirmpassword] = useState("")
   
   const {registerUsers} = useContext(AuthContext)
+  const {GoogleLogin} = useContext(AuthContext)
+  const {Intra42Login} = useContext(AuthContext)
 
   const registersubmit =  async (event) =>  {
     event.preventDefault();
@@ -41,13 +43,13 @@ export const Register = () => {
         </div>
         <div>
             <div className="social-row google-social">
-                <Link to={'#'}>
+                <Link onClick={GoogleLogin}>
                     <img src={google_logo} alt="Google" />
                     Log in with Google
                   </Link>
             </div>
             <div className="social-row intra-social">
-                <Link to={'#'}>
+                <Link onClick={Intra42Login}>
                     <img src={intra_logo} alt="Intra" />
                     Log in with 42
                   </Link>

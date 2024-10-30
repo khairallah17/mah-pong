@@ -7,4 +7,5 @@ django-cors-headers
 djangorestframework-simplejwt
 django-allauth
 requests
+dj_rest_auth
 cryptography

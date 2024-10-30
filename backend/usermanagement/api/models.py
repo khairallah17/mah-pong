@@ -41,5 +41,6 @@ def create_profile_for_user(sender, instance, created, **keyargs):
 def saving_user_profile(sender, instance, **keyargs):
     instance.profile.save()
 
+
 post_save.connect(create_profile_for_user, sender=User)
 post_save.connect(saving_user_profile, sender=User)

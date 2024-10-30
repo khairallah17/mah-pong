@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'rest_framework.authtoken',
     'corsheaders',
     'rest_framework_simplejwt',
     'api', # Its My Own APP NAmed API
@@ -48,8 +49,11 @@ INSTALLED_APPS = [
     'allauth.account',
     'allauth.socialaccount',
     'allauth.socialaccount.providers.google',
+    'dj_rest_auth',
     
 ]
+
+SITE_ID = 1
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -111,7 +115,7 @@ WSGI_APPLICATION = 'usermanagement.wsgi.application'
 
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend', # default auth backend
-    'allauth.account.auth_backends.AuthenticationBackend', #for Google Auth backend //
+    'allauth.account.auth_backends.AuthenticationBackend', #for Google Auth backend
 ]
 
 # Database
@@ -206,33 +210,12 @@ SIMPLE_JWT = {
 }
 
 
-SOCIALACCOUNT_PROVIDERS = {
+# SMTP GMAIL
 
-    'google': {
-
-        'APP': {
-	'client_id' : "SOCIAL_AUTH_GOOGLE_OAUTH2_KEY",
-	'secret' : "SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET",
-        },
-
-        'SCOPE': [
-            'profile',
-            'email',
-        ],
-
-        'AUTH_PARAMS': {
-            'access_type': 'online',
-        },
-
-        'OAUTH_PKCE_ENABLED': True,
-    }
-}
-
-
-LOGIN_URL = 'http://localhost:3000/login'
-LOGOUT_URL = 'http://localhost:3000/logout'
-LOGIN_REDIRECT_URL = 'http://localhost:3000/dashboard'
-LOGOUT_REDIRECT_URL = 'http://localhost:3000/login'
-
-SOCIALACCOUNT_AUTO_SIGNUP = True
-SOCIALACCOUNT_LOGIN_ON_GET = True
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_POST = 587
+EMAIL_USE_TLS = True
+EMAIL_USE_SSL = False  # Don't use both SSL and TLS
+EMAIL_HOST_USER ='agoumi82@gmail.com' # Create new email for the verification 
+EMAIL_HOST_PASSWORD ='eojjpvdixvviggbf' # putting password of this email

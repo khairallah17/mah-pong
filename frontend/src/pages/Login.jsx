@@ -1,17 +1,21 @@
 import { React, useContext } from 'react'
-import { Link } from 'react-router-dom'
-import GoogleLoginLink from './GoogleLoginLink'
+import { Link, useNavigate } from 'react-router-dom'
+// import GoogleLoginLink from './GoogleLoginLink'
 import intra_logo from '../images/42_Logo.png'
+import google_logo from '../images/google_logo.png'
 import pong_right from "../images/pong right.png"
 import AuthContext from "../context_login_Register/AuthContext"
+import ForgetPsdEmail from './VerifyPsdEmail.jsx'
 
 export const Login = () => {
 
   // const [email, setEmail] = useState("")
   // const [password, setPassword] = useState("")
-
+  const navigate = useNavigate();
 
   const {loginUsers} = useContext(AuthContext)
+  const {GoogleLogin} = useContext(AuthContext)
+  const {Intra42Login} = useContext(AuthContext)
 
   const loginsubmit = (event) => {
     event.preventDefault();
@@ -21,6 +25,7 @@ export const Login = () => {
     // console.log(password);
     loginUsers(email, password)
   }
+  
 
   return (
     <div className='cnt-lg grid grid-cols-2 gap-2 p-2 text-white justify-items-center'>
@@ -29,6 +34,12 @@ export const Login = () => {
               <h1 className='font-bold rgb(255, 255, 255)'>LOGIN</h1>
               <input type="email" autoComplete='off'  name="email"   placeholder='EMAIL' required/>
               <input type="password" autoComplete='off' name='password'  placeholder='PASSWORD' required/>
+              <div className='text-red'>
+                <span 
+                onClick={() => navigate('/password-reset')}
+                className="cursor-pointer hover:text-red-600"
+                >Forgot your password?</span>
+              </div>
               <div className='content-center'>
                   <button type="submit">SIGN IN</button>
               </div>
@@ -39,19 +50,22 @@ export const Login = () => {
         </div>
         <div>
             <div className="social-row google-social">
-              <GoogleLoginLink />
+              <Link onClick={GoogleLogin}>
+                  <img src={google_logo} alt="google" />
+                  Log in with Google
+                </Link>
             </div>
             <div className="social-row intra-social">
-                <Link to={'#'}>
+                <Link onClick={Intra42Login}>
                     <img src={intra_logo} alt="Intra" />
                     Log in with 42
-                  </Link>
+                </Link>
             </div>
         </div>
         <div className="text-white uppercase flex gap-2 justify-between text-sm leading-loose">
             <span>Don't have account?</span>
             <Link to={'/register'} className='btn-signup hover:text-aqua-600'>
-            SIGN UP
+                SIGN UP
             </Link>
         </div>
         </form>

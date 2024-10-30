@@ -18,8 +18,11 @@ services:
 
   redis:
     image: "redis:alpine"
-    ports:
-      - "6379:6379"
+    container_name: redis
+    networks:
+      - game-network
+    expose:
+      - 6379
 
   usermanagement:
     container_name: usermanagement

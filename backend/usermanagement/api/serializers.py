@@ -11,7 +11,7 @@ class   UserSerial(serializers.ModelSerializer):
     
     class   Meta:
         model = User
-        fields = ['id', 'username', 'email']
+        fields = ['id', 'fullname' ,'username', 'email']
 
 class   Get_Token_serial(TokenObtainPairSerializer):
     @classmethod
@@ -19,7 +19,8 @@ class   Get_Token_serial(TokenObtainPairSerializer):
         token = super().get_token(user)
         
         # stock it on Dectionary
-        token['fullname'] = user.profile.fullname
+        token['fullname'] = user.fullname
+        # print(user.fullname)
         token['username'] = user.username
         token['email'] = user.email
         # token['bio'] = user.profile.bio

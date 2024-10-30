@@ -26,3 +26,5 @@ class Admin_Profils(admin.ModelAdmin):
         
 admin.site.register(User, Admin_Users)
 admin.site.register(Profile, Admin_Profils)
+
+
