@@ -69,8 +69,9 @@ function Pvp2d() {
     }, [token]);
 
     const refreshToken = async () => {
+        let refreshtokenUrl = "http://localhost:8001/api/token/refresh/"
         try {
-            const response = await fetch('/api/token/refresh', {
+            const response = await fetch(refreshtokenUrl , {
                 method: 'POST',
                 credentials: 'include'
             });
