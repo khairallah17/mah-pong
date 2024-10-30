@@ -142,7 +142,7 @@ function Pve2d() {
 		animate();
 		return () => {
 			gameContainer?.removeChild(renderer.domElement);
-			window.removeEventListener('resize', handleResize);
+			// window.removeEventListener('resize', handleResize);
 			renderer.dispose();
 		};
 	}, []);
