@@ -61,10 +61,10 @@ function Pvp2d() {
             wsRef.current.onerror = (e) => console.error('WebSocket error:', e);
         }
         return () => {
-            if (wsRef.current) {
-                wsRef.current.close();
-                wsRef.current = null;
-            }
+            // if (wsRef.current) {
+            //     wsRef.current.close();
+            //     wsRef.current = null;
+            // }
         };
     }, [token]);
 
@@ -202,18 +202,18 @@ function Pvp2d() {
             const moveDirection = event.key === 'ArrowUp' ? -1 : event.key === 'ArrowDown' ? 1 : 0;
             if (moveDirection !== 0) {
                 intervalIdRef.current = setInterval(() => {
-                    isPausedRef.current = false;
                     const paddle1Geometry = paddle1Ref.current.geometry;
                     const tableGeometry = tableRef.current.geometry;
                     const newPosition = paddle1Ref.current.position.z + moveDirection * PADDLE_SPEED;
                     const halfPaddleWidth = paddle1Geometry.parameters.depth / 2;
                     const tableLimit = tableRef.current.position.z + tableGeometry.parameters.depth / 2;
-                    if (Math.abs(newPosition) + Math.abs(halfPaddleWidth) < tableLimit) {
+                    if (Math.abs(newPosition) + Math.abs(halfPaddleWidth) < tableLimit && winner === null) {
                         wsRef.current.send(JSON.stringify({
                             type: 'game_event',
                             event: moveDirection === -1 ? 'player_move_up' : 'player_move_down',
                             player_id: isPlayer1 ? 1 : 2,
                         }));
+                        isPausedRef.current = false;
                         paddle1Ref.current.position.z = newPosition;
                     }
                 }, 30);
