@@ -1,10 +1,11 @@
 import * as THREE from 'three';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { useEffect, useRef, useState } from 'react';
 
 function Pvp2d() {
     const wsRef = useRef(null);
     const [{ score1, score2 }, setScores] = useState({ score1: 0, score2: 0 });
-    const [winner, setWinner] = useState(null);
+    const winnerRef = useRef(null);
     const [gameState, setGameState] = useState(null);
     const [isMatched, setIsMatched] = useState(false);
     let keyPressed = false;
@@ -22,10 +23,10 @@ function Pvp2d() {
     let token = localStorage.getItem('AuthToken');
 
     useEffect(() => {
-        if (winner) {
+        if (winnerRef.current) {
             isPausedRef.current = true;
         }
-    }, [winner]);
+    }, [winnerRef.current]);
 
     useEffect(() => {
         if (token && !wsRef.current) {
@@ -96,13 +97,20 @@ function Pvp2d() {
             camera.lookAt(scene.position);
             cameraRef.current = camera;
 
-            const renderer = new THREE.WebGLRenderer();
+            const renderer = new THREE.WebGLRenderer( { antialias: true, alpha: true } );
+            renderer.setPixelRatio(window.devicePixelRatio);
             renderer.setSize(window.innerWidth, window.innerHeight);
             renderer.shadowMap.enabled = true;
             gameContainer?.appendChild(renderer.domElement);
             rendererRef.current = renderer;
 
+            const controls = new OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.25;
+            controls.enableZoom = true;
+
             const table = createTable();
+            const tableaddons = createTableAddons();
             const { paddle1, paddle2 } = createPaddles(isPlayer1);
             const ball = createBall();
 
@@ -111,7 +119,7 @@ function Pvp2d() {
             ballRef.current = ball;
             tableRef.current = table;
 
-            scene.add(table, paddle1, paddle2, ball);
+            scene.add(table, tableaddons, paddle1, paddle2, ball);
             scene.add(createLight());
 
             document.addEventListener('keydown', onDocumentKeyDown);
@@ -120,7 +128,9 @@ function Pvp2d() {
 
             const animate = function () {
                 if (isPausedRef.current) {
+                    controls.update();
                     requestAnimationFrame(animate);
+                    renderer.render(scene, camera);
                     return;
                 }
                 requestAnimationFrame(animate);
@@ -147,7 +157,7 @@ function Pvp2d() {
                     isPausedRef.current = true;
                     setScores(prevScores => {
                         const newScores = { score1: prevScores.score1, score2: prevScores.score2 + 1 };
-                        if (newScores.score2 >= 10) setWinner('Player 2');
+                        if (newScores.score2 >= 10) winnerRef.current = 'Player 2';
                         return newScores;
                     });
                     restartGame(ball);
@@ -157,7 +167,7 @@ function Pvp2d() {
                     isPausedRef.current = true;
                     setScores(prevScores => {
                         const newScores = { score1: prevScores.score1 + 1, score2: prevScores.score2 };
-                        if (newScores.score1 >= 10) setWinner('Player 1');
+                        if (newScores.score1 >= 10) winnerRef.current = 'Player 1';
                         return newScores;
                     });
                     restartGame(ball);
@@ -207,7 +217,7 @@ function Pvp2d() {
                     const newPosition = paddle1Ref.current.position.z + moveDirection * PADDLE_SPEED;
                     const halfPaddleWidth = paddle1Geometry.parameters.depth / 2;
                     const tableLimit = tableRef.current.position.z + tableGeometry.parameters.depth / 2;
-                    if (Math.abs(newPosition) + Math.abs(halfPaddleWidth) < tableLimit && winner === null) {
+                    if (Math.abs(newPosition) + Math.abs(halfPaddleWidth) < tableLimit && winnerRef.current === null) {
                         wsRef.current.send(JSON.stringify({
                             type: 'game_event',
                             event: moveDirection === -1 ? 'player_move_up' : 'player_move_down',
@@ -242,6 +252,43 @@ function Pvp2d() {
         return table;
     };
 
+    const createTableAddons = () => {
+        const stripeColor = 0x000000; // Same color as paddles
+        const stripeThickness = 0.05;
+    
+        const stripes = [
+            new THREE.Mesh(new THREE.BoxGeometry(5, 0.02, stripeThickness), new THREE.MeshStandardMaterial({ color: stripeColor })),  // Top edge
+            new THREE.Mesh(new THREE.BoxGeometry(5, 0.02, stripeThickness), new THREE.MeshStandardMaterial({ color: stripeColor })),  // Bottom edge
+            new THREE.Mesh(new THREE.BoxGeometry(stripeThickness, 0.02, 3), new THREE.MeshStandardMaterial({ color: stripeColor })),  // Right edge
+            new THREE.Mesh(new THREE.BoxGeometry(stripeThickness, 0.02, 3), new THREE.MeshStandardMaterial({ color: stripeColor })),  // Left edge
+            new THREE.Mesh(new THREE.BoxGeometry(stripeThickness, 0.02, 3), new THREE.MeshStandardMaterial({ color: stripeColor })),  // Center stripe
+        ];
+    
+        stripes[0].position.set(0, 0.06, 1.5);    // Top edge
+        stripes[1].position.set(0, 0.06, -1.5);   // Bottom edge
+        stripes[2].position.set(2.5, 0.06, 0);    // Right edge
+        stripes[3].position.set(-2.5, 0.06, 0);   // Left edge
+        stripes[4].position.set(0, 0.06, 0);     // Center stripe
+    
+        const legGeometry = new THREE.CylinderGeometry(0.1, 0.1, 1, 32);
+        const legMaterial = new THREE.MeshStandardMaterial({ color: 0x8B4513 });
+        const legs = [
+            new THREE.Mesh(legGeometry, legMaterial),
+            new THREE.Mesh(legGeometry, legMaterial),
+            new THREE.Mesh(legGeometry, legMaterial),
+            new THREE.Mesh(legGeometry, legMaterial),
+        ];
+    
+        legs[0].position.set(2.4, -0.55, 1.4);  // Front-right
+        legs[1].position.set(-2.4, -0.55, 1.4); // Front-left
+        legs[2].position.set(2.4, -0.55, -1.4); // Back-right
+        legs[3].position.set(-2.4, -0.55, -1.4); // Back-left
+
+        const tableAddons = new THREE.Group();
+        tableAddons.add(...stripes, ...legs);
+        return tableAddons;
+    }
+
     const createBall = () => {
         const geometry = new THREE.SphereGeometry(0.1, 32, 32);
         const material = new THREE.MeshStandardMaterial({ color: 0xffffff });
@@ -275,9 +322,9 @@ function Pvp2d() {
     return (
         <>
             {!isMatched && <h1>Looking for an opponent...</h1>}
-            {winner && (
+            {winnerRef.current && (
                 <div className="popup">
-                    <h2>{winner} Wins!</h2>
+                    <h2>{winnerRef.current} Wins!</h2>
                     <button onClick={() => window.location.reload()}>Restart Game</button>
                 </div>
             )}
