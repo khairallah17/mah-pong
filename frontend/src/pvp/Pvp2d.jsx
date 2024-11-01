@@ -157,7 +157,14 @@ function Pvp2d() {
                     isPausedRef.current = true;
                     setScores(prevScores => {
                         const newScores = { score1: prevScores.score1, score2: prevScores.score2 + 1 };
-                        if (newScores.score2 >= 10) winnerRef.current = 'Player 2';
+                        if (newScores.score2 >= 10){
+                            winnerRef.current = 'Player 2'
+                            wsRef.current.send(JSON.stringify({
+                                type: 'game_event',
+                                event: 'game_over',
+                                winner: 'Player 2',
+                            }));
+                        }
                         return newScores;
                     });
                     restartGame(ball);
@@ -167,7 +174,15 @@ function Pvp2d() {
                     isPausedRef.current = true;
                     setScores(prevScores => {
                         const newScores = { score1: prevScores.score1 + 1, score2: prevScores.score2 };
-                        if (newScores.score1 >= 10) winnerRef.current = 'Player 1';
+                        if (newScores.score1 >= 10){ 
+                            winnerRef.current = 'Player 1'
+                            wsRef.current.send(JSON.stringify({
+                                type: 'game_event',
+                                event: 'game_over',
+                                winner: 'Player 1',
+                                score: newScores,
+                            }));
+                        }
                         return newScores;
                     });
                     restartGame(ball);

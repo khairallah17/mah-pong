@@ -1,25 +1,22 @@
 import asyncio
-from channels.generic.websocket import AsyncWebsocketConsumer # type: ignore
+from channels.generic.websocket import AsyncWebsocketConsumer
 import json
 import logging
 import jwt
 from django.conf import settings
-from channels.db import database_sync_to_async # type: ignore
+from channels.db import database_sync_to_async
+from Match.models import Match
 
 logger = logging.getLogger(__name__)
 matchmaking_pool = []
 user_channels = {}
 matched_users = {}
 game_states = {}
-tableLimit = 1.5
-paddleWidth = 1
-#is_paused = false
-
-#matchmaking with simple logic
+TABLE_LIMIT = 1.5
+PADDLE_WIDTH = 1
 
 class MatchmakingConsumer(AsyncWebsocketConsumer):
     async def connect(self):
-        self.users = []
         self.username = None
         await self.accept()
         token = self.scope['query_string'].decode().split('=')[1]
@@ -28,76 +25,108 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
             self.username = payload.get('username')
             if not self.username:
                 raise jwt.InvalidTokenError("Username not found in token")
-            # Add the user's channel name to the dictionary
+            
             user_channels[self.username] = self.channel_name
             await self.save_username_to_session(self.username)
             
-            # Add the user to the matchmaking pool
-            matchmaking_pool.append(self.username)
-            await self.channel_layer.group_add("matchmaking_pool", self.channel_name)
+            if self.username not in matchmaking_pool:
+                matchmaking_pool.append(self.username)
+                await self.channel_layer.group_add("matchmaking_pool", self.channel_name)
             
-            # Check if there are two users in the pool
             if len(matchmaking_pool) >= 2:
-                logger.warning("MATCH FOUND")
-                self.users = matchmaking_pool[:2]
-                matchmaking_pool.remove(self.users[0])
-                matchmaking_pool.remove(self.users[1])
-                matched_users[self.users[0]] = self.users[1]
-                matched_users[self.users[1]] = self.users[0]
-                await self.channel_layer.send(
-                    user_channels[self.users[0]],
-                    {
-                        'type': 'match_found',
-                        'player_id': '1'
-                    }
-                )
-                await self.channel_layer.send(
-                    user_channels[self.users[1]],
-                    {
-                        'type': 'match_found',
-                        'player_id': '2'
-                    }
-                )
+                await self.match_users()
         except jwt.ExpiredSignatureError:
-            logger.warning("Token has expired")
-            await self.send(text_data=json.dumps({
-                'type': 'token_expired',
-            }))
-            await self.close(code=4001)
+            await self.send_error_message('token_expired', 4001)
         except jwt.InvalidTokenError as e:
-            logger.warning(f"Invalid token: {e}")
-            await self.send(text_data=json.dumps({
-                'type': 'invalid_token',
-            }))
-            await self.close(code=4002)
+            await self.send_error_message('invalid_token', 4002, str(e))
 
     async def disconnect(self, close_code):
-        # Remove the user's channel name from the dictionary
-        if self.username and self.username in user_channels:
-            del user_channels[self.username]
-        if self.username and self.username in matchmaking_pool:
-            matchmaking_pool.remove(self.username)
-        await self.channel_layer.group_discard("matchmaking_pool", self.channel_name)
+        if self.username:
+            user_channels.pop(self.username, None)
+            if self.username in matchmaking_pool:
+                matchmaking_pool.remove(self.username)
+            await self.channel_layer.group_discard("matchmaking_pool", self.channel_name)
 
     async def receive(self, text_data):
         data = json.loads(text_data)
         message_type = data.get('type')
-        if message_type is None:
-            logger.warning("No message type found", data)
-        logger.warning(data)
+        if not message_type:
+            logger.warning("No message type found in data: %s", data)
+            return
+
         if message_type == 'game_event':
-            event = data.get('event')
-            player_id = data.get('player_id')
-            if self.username in matched_users:
-                await self.channel_layer.send(
-                    user_channels[matched_users[self.username]],
-                    {
-                        'type': 'game_event',
-                        'event': event,
-                        'player_id': player_id,
-                        'position': data.get('position')
-                    }
-                )
+            await self.handle_game_event(data)
+
+    async def handle_game_event(self, data):
+        event = data.get('event')
+        player_id = data.get('player_id')
+        if event == 'game_over':
+            await self.handle_game_over(data)
+        elif self.username in matched_users:
+            opponent = matched_users[self.username]
+            await self.channel_layer.send(
+                user_channels[opponent],
+                {
+                    'type': 'game_event',
+                    'event': event,
+                    'player_id': player_id,
+                    'position': data.get('position')
+                }
+            )
+
+    async def handle_game_over(self, data):
+        winner = data.get('winner')
+        # score = data.get('score')
+        player1, player2 = self.username, matched_users[self.username]
+        await self.update_game_result(player1, player2, winner)
+
+    async def match_users(self):
+        users = matchmaking_pool[:2]
+        matchmaking_pool.remove(users[0])
+        matchmaking_pool.remove(users[1])
+        matched_users[users[0]] = users[1]
+        matched_users[users[1]] = users[0]
+
+        await self.create_game(users[0], users[1])
+
+        await self.channel_layer.send(
+            user_channels[users[0]],
+            {
+                'type': 'match_found',
+                'player_id': '1'
+            }
+        )
+        await self.channel_layer.send(
+            user_channels[users[1]],
+            {
+                'type': 'match_found',
+                'player_id': '2'
+            }
+        )
+
+    @database_sync_to_async
+    def create_game(self, username1, username2):
+        Match.objects.create(
+            username1=username1,
+            username2=username2,
+            score={"player1": 0, "player2": 0},
+            winner=None
+        )
+
+    @database_sync_to_async
+    def update_game_result(self, username1, username2, winner):
+        match = Match.objects.filter(username1=username1, username2=username2).latest('datetime')
+        # match.score = score
+        match.winner = winner
+        match.save()
+
+    async def send_error_message(self, error_type, code, message=None):
+        logger.warning(f"{error_type}: {message}")
+        await self.send(text_data=json.dumps({
+            'type': error_type,
+            'message': message
+        })) 
+        await self.close(code=code)
 
     @database_sync_to_async
     def save_username_to_session(self, username):
@@ -112,13 +141,13 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
         }))
 
     async def game_event(self, event):
-        game_eve = event['event']
+        game_event = event['event']
         player_id = event['player_id']
         await self.send(text_data=json.dumps({
             'type': 'game_event',
-            'event': game_eve,
+            'event': game_event,
             'player_id': player_id,
-            'position': event['position']
+            'position': event.get('position')
         }))
 
 # Complex logic for matchmaking
