@@ -9,3 +9,4 @@ django-allauth
 requests
 dj_rest_auth
 cryptography
+python-dotenv

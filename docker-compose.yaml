@@ -4,7 +4,7 @@ services:
   game:
     container_name: game
     build:
-      context: "./Game"
+      context: "./backend/Game"
       dockerfile: Dockerfile
     ports:
       - "8000:8000"
@@ -27,7 +27,7 @@ services:
   usermanagement:
     container_name: usermanagement
     build:
-      context: "./usermanagement"
+      context: "./backend/usermanagement"
       dockerfile: Dockerfile
     ports:
       - 8001:8000
@@ -48,10 +48,19 @@ services:
     networks:
       - game-network
 
+  frontend:
+    build: 
+      context: "./frontend"
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    network_mode: "host"
+
+
   # notifications:
   #   container_name: notifications
   #   build:
-  #     context: "./Notifications"
+  #     context: "./backend/Notifications"
   #     dockerfile: Dockerfile
   #   ports:
   #     - 8001:8000
@@ -61,7 +70,7 @@ services:
   # tournaments:
   #   container_name: tournaments
   #   build:
-  #     context: "./tournamentManagement"
+  #     context: "./backend/tournamentManagement"
   #     dockerfile: Dockerfile
   #   ports:
   #     - 8002:8000
@@ -71,7 +80,7 @@ services:
   # leaderboard:
   #   container_name: leaderboard
   #   build:
-  #     context: "./leaderBoard"
+  #     context: "./backend/leaderBoard"
   #     dockerfile: Dockerfile
   #   ports:
   #     - 8003:8000

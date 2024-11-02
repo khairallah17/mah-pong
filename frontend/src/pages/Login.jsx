@@ -1,4 +1,4 @@
-import { React, useContext } from 'react'
+import { React, useContext, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 // import GoogleLoginLink from './GoogleLoginLink'
 import intra_logo from '../images/42_Logo.png'
@@ -11,11 +11,20 @@ export const Login = () => {
 
   // const [email, setEmail] = useState("")
   // const [password, setPassword] = useState("")
+  const { user, authtoken } = useContext(AuthContext);
   const navigate = useNavigate();
 
   const {loginUsers} = useContext(AuthContext)
   const {GoogleLogin} = useContext(AuthContext)
   const {Intra42Login} = useContext(AuthContext)
+  // const {authtoken} = useContext(AuthContext);
+
+
+  useEffect(() => {
+    if (authtoken || localStorage.getItem('authtoken')) {
+        navigate('/profil', { replace: true });
+    }
+}, [authtoken, navigate]);
 
   const loginsubmit = (event) => {
     event.preventDefault();

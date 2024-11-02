@@ -29,7 +29,7 @@ import os
 import sys
 
 #sys.path.insert(0, "/Users/eagoumi/Desktop/mergeing_trance/backend")
-sys.path.insert(0, "/goinfre/alemsafi/mah-pong/backend")
+# sys.path.insert(0, "/goinfre/alemsafi/mah-pong/backend")
 
 def main():
     """Run administrative tasks."""

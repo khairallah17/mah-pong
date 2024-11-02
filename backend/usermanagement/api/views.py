@@ -2,7 +2,7 @@ from django.shortcuts import redirect
 from django.shortcuts import render
 from django.http import HttpResponse
 from .models import User
-from .serializers import Get_Token_serial, RegistrationSerial, UserSerial
+from .serializers import Get_Token_serial, RegistrationSerial, UserSerial, LogoutSerial
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenObtainPairView
@@ -27,16 +27,12 @@ from django.utils.encoding import force_bytes, force_str
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from .token_reset_passwordd import account_activation_token
 from django.core.mail import send_mail, EmailMessage
-import os
+from dotenv import load_dotenv
 
-GCLIENT_ID = os.getenv('GCLIENT_ID')
-GCLIENT_SECRET = os.getenv('GCLIENT_SECRET')
-CLIENT_ID = os.getenv('CLIENT_ID')
-CLIENT_SECRET = os.getenv('CLIENT_SECRET')
+# Load environment variables from .env file
+load_dotenv()
 
 # Create your views here.
-
-
 class Get_MyTokenObtainPairView(TokenObtainPairView):
     serializer_class = Get_Token_serial
     
@@ -398,11 +394,37 @@ def send_resetpass(request):
 #     except Exception as e:
 #         return Response({'error': 'Invalid reset link'}, status=400)
 
+class LogoutViews(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        try:
+            refresh_token = request.data.get('refresh')
+            if not refresh_token:
+                return Response(
+                    {'error': 'Refresh token is required'}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            token = RefreshToken(refresh_token)
+            token.blacklist()
+
+            return Response(
+                {'message': 'Successfully logged out'}, 
+                status=status.HTTP_200_OK
+            )
+        except TokenError as e:
+            return Response(
+                {'error': 'Invalid token'}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
 def viewallrouting(request):
     data = [
         'api/token/refresh',
         'api/register',
         'api/token',
+        'api/logout',
         'api/password-reset'
         # 'api/googlelogin/callback/'
         # 'admin/token/refresh',

@@ -1,8 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import ProtectRouter from "./protection_axios/ProtectRouter"
+import ProtectLogin from "./protection_axios/ProtectLogin.jsx"
 import { AuthProvider } from "./context_login_Register/AuthContext.jsx"
 import { Profile, Register, Login, Dashboard } from "./pages"
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { Navigate } from "react-router-dom";
 import HomePage from './HomePage';
 import Pve3d from './pve/Pve3d';
 import Pvp2d from './pvp/Pvp2d';
@@ -22,23 +24,32 @@ function App() {
     <Router>
       <AuthProvider>
         <Routes>
-          <Route path="/" element={<HomePage onUsernameSubmit={handleUsernameSubmit} />} />
-          <Route path="/pve3d" element={<Pve3d />} />
-          <Route path="/pvp3d" element={<Pvp3d/>} />
-          <Route path="/pvp2d" element={<Pvp2d/>} />
-          <Route path="/pve2d" element={<Pve2d />} />
-          <Route path='/Profile' element={
-            <ProtectRouter> 
-              <Profile />
-            </ProtectRouter>
-          }/>
-          <Route path='/dashboard' element={
-            <ProtectRouter> 
-              <Dashboard />
-            </ProtectRouter>
-          }/>
-          <Route path='/login' element={<Login />}/>
-          <Route path='/register' element={<Register />}/>
+          <Route path="/" element={<HomePage />} />
+          {/* ProtectLogin componnent Private if are already logged in */}
+          <Route path="/login" element={
+            // <ProtectLogin>
+              <Login />
+            // </ProtectLogin>
+          } />
+          <Route path="/register" element={
+            // <ProtectLogin>
+              <Register />
+            // </ProtectLogin>
+          } />
+
+          {/* ProtectRouter component Private if are not logged in */}
+          <Route element={<ProtectRouter />}>
+            <Route path="/profil" element={<Profile />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/pve3d" element={<Pve3d />} />
+            <Route path="/pvp3d" element={<Pvp3d />} />
+            <Route path="/pvp2d" element={<Pvp2d />} />
+            <Route path="/pve2d" element={<Pve2d />} />
+          </Route>
+
+          {/* Catch all other routes */}
+            {/* <Route path="*" element={<Navigate to="/" replace />} /> */}
+            {/* we should to replace / to /404-error page (Error 404 Page )*/}
         </Routes>
       </AuthProvider>
     </Router>
