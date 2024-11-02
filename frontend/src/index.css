@@ -12,7 +12,9 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
-
+/* h1{
+  color: aqua;
+} */
 a {
   font-weight: 500;
   color: #646cff;

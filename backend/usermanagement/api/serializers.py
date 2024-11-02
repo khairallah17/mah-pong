@@ -5,6 +5,7 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 import uuid
+from rest_framework_simplejwt.tokens import RefreshToken, TokenError
 
 class   UserSerial(serializers.ModelSerializer):
     id = serializers.UUIDField(read_only=True)
@@ -61,3 +62,17 @@ class   RegistrationSerial(serializers.ModelSerializer):
             user.profile.save()
         
         return user
+    
+    
+class LogoutSerial(serializers.Serializer):
+    refresh = serializers.CharField()
+    
+    def validate(self, attrs):# i am cheking if the refresh token are valid or not 
+        self.token = attrs['refresh']
+        return attrs
+    
+    def save(self, **kwargs):
+        try:
+            RefreshToken(self.token).blacklist()
+        except TokenError:
+            raise serializers.ValidationError('Invalid or expired token')

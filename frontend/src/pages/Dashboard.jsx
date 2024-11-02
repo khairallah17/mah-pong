@@ -1,9 +1,16 @@
-import React from 'react'
-import { useNavigate } from 'react-router-dom';
+import { React, useContext } from 'react'
+import AuthContext from "../context_login_Register/AuthContext"
 
 
-const Dashboard = () => {
-  const navigate = useNavigate();
+export const Dashboard = () => {
+
+  const {logoutUsers} = useContext(AuthContext);
+
+  const handleLogout = (e) => {
+    e.preventDefault();
+    console.log("hellllo");
+    logoutUsers();
+  }
 
   return (
     <div style={{display:'flex', alignItems: 'center', justifyContent: 'center'}}>
@@ -14,6 +21,11 @@ const Dashboard = () => {
         <button onClick={() => navigate('/pve3d')}>PVE 3D</button>
         <button onClick={() => navigate('/pvp3d')}>PVP 3D</button>
       </div>
+      <form onSubmit={handleLogout}>
+        <div className='btn-register'>
+            <button  type='submit'>SIGN UP</button>
+        </div>
+      </form>
     </div>
   )
 }

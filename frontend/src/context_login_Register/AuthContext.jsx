@@ -1,50 +1,34 @@
-import { useState, useEffect, createContext } from "react";
+import { useState, useEffect, createContext, useCallback } from "react";
 import { jwtDecode } from "jwt-decode"
-import { useNavigate } from "react-router-dom"
+import { useNavigate, useLocation } from "react-router-dom"
 import Swal from 'sweetalert2'
 
+
+// const Swal = require('sweetSwal2')
 
 const AuthContext = createContext()
 
 export default AuthContext
 
-// export const AuthProvider = ({Children}) => {
-//     const [authToken, setAuthToken] = useState(() => 
-//         {
-//             if(localStorage.getItem('authToken'))
-//                 JSON.parse('authToken')
-//             else 
-//                 return null
-//         }
-
-//     )
-// }
-
 export const AuthProvider = ({ children }) => {
 
     //GETTING TOKEN
-    const [AuthToken, setAuthToken] = useState( () =>
-        localStorage.getItem("AuthToken") ? JSON.parse(localStorage.getItem("AuthToken")) : null
-    );
-    // useEffect(() => { 
-    //     const token = localStorage.getItem("AuthToken");
-    //     if (token)
-    //         setAuthToken(JSON.parse("token")); // if token exit we send it to parse and set it 
-    //     else
-    //         setAuthToken(null); // other way if the token are not existed we should to set null
-    // }, []);
+    const [authtoken, setAuthToken] = useState(() => {
+        // Check localStorage for existing token
+        const token = localStorage.getItem("authtoken");
+        return token ? JSON.parse(token) : null;
+    });
 
     //GETTING NOW THE DECODE OF THE TOKEN AND STORE ==> {FULLNAME, USERNAME, EMAIL}
-    const [user, setUser] = useState(localStorage.getItem("AuthToken") ? jwtDecode(localStorage.getItem("AuthToken")) : null);
-    // useEffect(() => {
-    //     const userinfo = localStorage.getItem("AuthToken") // fullname, username, email
-    //     if (userinfo)
-    //         setAuthToken(jwtDecode("AuthToken"));
-    //     else
-    //         setAuthToken(null);
-    // }, [])
+    // const [user, setUser] = useState(localStorage.getItem("authtoken") ? jwtDecode("authtoken") : null);
+    const [user, setUser] = useState(() => {
+        // Check localStorage for existing token and decode if exists
+        const token = localStorage.getItem("authtoken");
+        return token ? jwtDecode(JSON.parse(token).access) : null;
+    });
+    
 
-    const [loading, setloading] = useState(true)
+    // const [loading, setloading] = useState(true)
 
     const navigation = useNavigate()
 
@@ -79,9 +63,10 @@ export const AuthProvider = ({ children }) => {
             const JsonData = await response.json()
             console.log("hhhhhhhh")
             setAuthToken(JsonData) //JsonData have access token an the refresh token
-            setUser(jwtDecode(JsonData.access)) // decode access token
-            localStorage.setItem("AuthToken", JSON.stringify(JsonData))
+            setUser(JsonData.access) // decode access token
+            localStorage.getItem("authtoken", JSON.stringify(JsonData))
 
+            navigation("/profil") // Routing the USERS after he loggedin "Success"
             navigation("/dashboard") // Routing the USERS after he loggedin "Success"
             Swal.fire({
                 position: "top-end",
@@ -113,7 +98,7 @@ export const AuthProvider = ({ children }) => {
     let tokenUrlregister = "http://localhost:8001/api/register/"
     const response = await fetch(tokenUrlregister ,{
         method: 'POST',
-        body: JSON.stringify({fullname, username, email, password, confirm_password}), // JSON.stringify: Coverting javascript value to JSON string
+        body: JSON.stringify({fullname, username, email, password, confirm_password}), // JSON.stringify: Coverting javascrit value to JSON string
         headers: {
             'Content-Type': 'application/json',
         },
@@ -150,40 +135,259 @@ export const AuthProvider = ({ children }) => {
         })
     }
     }
-
+    // const [error, setError] = useState('');
     //Logout Routing
     // To Logout the user we should just delete the tokens
-    const logoutUsers = () => {
-        setAuthToken(null)
-        setUser(null)
-        localStorage.removeItem("AuthToken")
-        navigation("/login")
-        Swal.fire({
-            position: "top-end",
-            title: "you have been successfully Logged out",
-            icon: "success",
-            showConfirmButton: true,
-            timerProgressBar: true,
-            timer: 3000
-        })
+    const logoutUsers = async () => {
+        // setAuthToken(null)
+        // setUser(null)
+        // localStorage.removeItem("authtoken")
+        try {
+            // Get tokens from localStorage
+            const authData = localStorage.getItem('authtoken');
+            if (!authData) {
+                throw new Error('No auth token found');
+            }
+    
+            const tokens = JSON.parse(authData);
+            const logouturl = "http://localhost:8001/api/logout/";
+    
+            const response = await fetch(logouturl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    // Add Authorization header with access token
+                    'Authorization': `Bearer ${tokens.access}`
+                },
+                body: JSON.stringify({
+                    refresh: tokens.refresh  // Send refresh token in body
+                })
+            });
+    
+            // Clear tokens regardless of response
+            setAuthToken(null);
+            setUser(null);
+            localStorage.removeItem("authtoken");
+    
+            if (response.ok) {
+                Swal.fire({
+                    position: "top-end",
+                    title: "Successfully logged out",
+                    icon: "success",
+                    showConfirmButton: true,
+                    timerProgressBar: true,
+                    timer: 3000
+                });
+            }
+    
+            // Always navigate to login
+            navigation("/login");
+    
+        } catch (error) {
+            console.error('Logout error:', error);
+            
+            // Clear tokens even if request fails
+            setAuthToken(null);
+            setUser(null);
+            localStorage.removeItem("authtoken");
+            
+            Swal.fire({
+                position: "top-end",
+                title: "Logged out (with errors)",
+                icon: "warning",
+                showConfirmButton: true,
+                timerProgressBar: true,
+                timer: 3000
+            });
+            
+            navigation("/login");
+        }
+    };
+
+
+
+    const GoogleLogin = () =>{
+    
+        const ClientId = GCLIENT_ID;
+        const CallBackURI = "http://localhost:8001/api/v2/auth/googlelogin/callback/";
+        window.location.replace(`https://accounts.google.com/o/oauth2/v2/auth?redirect_uri=${CallBackURI}&prompt=consent&response_type=code&client_id=${ClientId}&scope=openid%20email%20profile&access_type=offline`)
+        // GoogleloginUsers( code )
     }
 
+    const Intra42Login = () => {
+        const clientId = CLIENT_ID;
+        const callbackURI = "http://localhost:8001/api/42login/callback/";
+        window.location.replace(`https://api.intra.42.fr/oauth/authorize?client_id=${clientId}&redirect_uri=${callbackURI}&response_type=code`);
+    }
+
+
+    const navigate = useNavigate();
+    const location = useLocation();
+    const handleGoogleLoginCallback = useCallback(() => {
+        const searchParams = new URLSearchParams(location.search);
+        const token = searchParams.get('access_token');
+        console.log('Decoded token:', token);
+        const error = searchParams.get('error');
+
+        if (error) {
+            console.error('Google login error:', error);
+            Swal.fire({
+                position: "top-end",
+                icon: "error",
+                title: "Failed to log in with Google",
+                showConfirmButton: true,
+                timerProgressBar: true,
+                timer: 3000
+            });
+            navigate('/login');
+            return;
+        }
+
+        if (token) {
+            try {
+                // The token is already a string, so we can decode it directly
+                const decodedToken = jwtDecode(token);
+                
+                // Log the decoded token for debugging
+                console.log('Decoded token:', decodedToken);
+
+                setAuthToken({ access: token });
+                setUser(decodedToken);
+                localStorage.setItem("authtoken", JSON.stringify({ access: token }));
+
+                navigate("/dashboard");
+                Swal.fire({
+                    position: "top-end",
+                    title: "You have successfully logged in with Google",
+                    icon: "success",
+                    showConfirmButton: true,
+                    timerProgressBar: true,
+                    timer: 3000
+                });
+            } catch (error) {
+                console.error('Token decoding error:', error);
+                // Log the token for debugging
+                console.log('Problematic token:', token);
+                Swal.fire({
+                    position: "top-end",
+                    icon: "error",
+                    title: "Failed to process login information",
+                    showConfirmButton: true,
+                    timerProgressBar: true,
+                    timer: 3000
+                });
+                navigate('/login');
+            }
+        } else {
+            console.error('No token received');
+            Swal.fire({
+                position: "top-end",
+                icon: "error",
+                title: "No authentication token received",
+                showConfirmButton: true,
+                timerProgressBar: true,
+                timer: 3000
+            });
+            navigate('/login');
+        }
+    }, [location.search, navigate, setAuthToken, setUser]);
+
+    const handle42LoginCallback = useCallback(() => {
+        const searchParams = new URLSearchParams(location.search);
+        const token = searchParams.get('access_token');
+        console.log('Decoded token:', token);
+        const error = searchParams.get('error');
+
+        if (error) {
+            console.error('Google login error:', error);
+            Swal.fire({
+                position: "top-end",
+                icon: "error",
+                title: "Failed to log in with Google",
+                showConfirmButton: true,
+                timerProgressBar: true,
+                timer: 3000
+            });
+            navigate('/login');
+            return;
+        }
+
+        if (token) {
+            try {
+                // The token is already a string, so we can decode it directly
+                const decodedToken = jwtDecode(token);
+                
+                // Log the decoded token for debugging
+                console.log('Decoded token:', decodedToken);
+
+                setAuthToken({ access: token });
+                setUser(decodedToken);
+                localStorage.setItem("authtoken", JSON.stringify({ access: token }));
+
+                navigate("/dashboard"); // Should to redirect it to Setting New Password for this user if he want to login using 42 api 
+                //or using his email and password to login to the same account
+                Swal.fire({
+                    position: "top-end",
+                    title: "You have successfully logged in with Google",
+                    icon: "success",
+                    showConfirmButton: true,
+                    timerProgressBar: true,
+                    timer: 3000
+                });
+            } catch (error) {
+                console.error('Token decoding error:', error);
+                // Log the token for debugging
+                console.log('Problematic token:', token);
+                Swal.fire({
+                    position: "top-end",
+                    icon: "error",
+                    title: "Failed to process login information",
+                    showConfirmButton: true,
+                    timerProgressBar: true,
+                    timer: 3000
+                });
+                navigate('/login');
+            }
+        } else {
+            console.error('No token received');
+            Swal.fire({
+                position: "top-end",
+                icon: "error",
+                title: "No authentication token received",
+                showConfirmButton: true,
+                timerProgressBar: true,
+                timer: 3000
+            });
+            navigate('/login');
+        }
+    }, [location.search, navigate, setAuthToken, setUser]);
+
+
+    useEffect(() => {
+        if (location.pathname === '/google-callback') {
+            handleGoogleLoginCallback(); // I have here the same fuction Login with google and 42 intra we should to change it and make it in one
+        }
+        else if (location.pathname === '/42intra-callback'){
+            handle42LoginCallback();
+        }
+    }, [location.pathname, handleGoogleLoginCallback, handle42LoginCallback]);
+
     const contextData = {
-        AuthToken, setAuthToken, user, setUser, loginUsers, registerUsers, logoutUsers 
+        authtoken, setAuthToken, user, setUser, loginUsers, registerUsers, logoutUsers, GoogleLogin, Intra42Login
     }
 
     useEffect(() => {
-        if (AuthToken)
-        {
-            setUser(jwtDecode(AuthToken.access))
+        if (authtoken) {
+            localStorage.setItem("authtoken", JSON.stringify(authtoken));
+        } else {
+            localStorage.removeItem("authtoken");
         }
-        setloading(false)
-    }, [AuthToken, loading])
+    }, [authtoken]);
 
     // Returning My context Provider
     return ( 
         <AuthContext.Provider value={contextData}>
-            {loading ? null : children}
+            {children}
         </AuthContext.Provider>
     )
 }

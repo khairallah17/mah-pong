@@ -1,17 +1,18 @@
-import { useContext } from "react"
-import AuthContext from "../context_login_Register/AuthContext"
-import { Navigate } from "react-router-dom"
+import { useContext } from "react";
+import { Navigate, Outlet } from "react-router-dom";
+import AuthContext from "../context_login_Register/AuthContext";
+
+const ProtectRouter = () => {
+    const { user, authtoken } = useContext(AuthContext);
 
 
-const ProtectRouter = ({children}) => {
-    let {user} = useContext(AuthContext) //This Conponents check if the user "يحقق" all rules to authenticate
-
-    if (!user){
-        console.log("You Should To be Authenticate First")
-        return <Navigate to="/login" replace/>
+    console.log(authtoken);
+    if (!authtoken) {
+        // console.log("You Should To be Authenticated First");
+        return <Navigate to="/login" replace />;
     }
-    return children
-
-}
+    console.log("authtoken");
+    return <Outlet />;
+};
 
 export default ProtectRouter
