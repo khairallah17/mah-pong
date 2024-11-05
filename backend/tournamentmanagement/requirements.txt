@@ -4,3 +4,6 @@ sqlparse==0.5.0
 typing-extensions==4.12.1
 djangorestframework==3.14
 django-cors-headers==4.0.0
+channels
+channels-redis
+psycopg2-binary
