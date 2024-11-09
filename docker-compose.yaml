@@ -34,7 +34,6 @@ services:
     env_file:
       - .env
 
-
   frontend:
     build: 
       context: "./frontend"
@@ -42,20 +41,6 @@ services:
     env_file:
       - .env
     network_mode: "host"
-
-  tournaments:
-    container_name: tournaments
-    build:
-      context: "./backend/tournamentmanagement"
-      dockerfile: Dockerfile
-    ports:
-      - 8002:8000
-    env_file:
-      - .env
-    networks:
-      - tournament-network
-    depends_on:
-      - tournament_db
 
   db:
     image: postgres:15-alpine
@@ -70,41 +55,6 @@ services:
       - db_data:/var/lib/postgresql/data
     networks:
       - game-network
-  
-  tournament_db:
-    image: postgres:15-alpine
-    container_name: tournament_db
-    expose:
-      - 5432
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: mydatabase
-    volumes:
-      - tournament_db_data:/var/lib/postgresql/data
-    networks:
-      - tournament-network
-
-  # notifications:
-  #   container_name: notifications
-  #   build:
-  #     context: "./backend/Notifications"
-  #     dockerfile: Dockerfile
-  #   ports:
-  #     - 8001:8000
-  #   depends_on:
-  #     - db
-
-
-  # leaderboard:
-  #   container_name: leaderboard
-  #   build:
-  #     context: "./backend/leaderBoard"
-  #     dockerfile: Dockerfile
-  #   ports:
-  #     - 8003:8000
-  #   depends_on:
-  #     - db
 
 
 volumes:
@@ -113,6 +63,4 @@ volumes:
 
 networks:
   game-network:
-    driver: bridge
-  tournament-network:
     driver: bridge
