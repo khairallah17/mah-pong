@@ -35,12 +35,21 @@ services:
       - .env
 
   frontend:
+    container_name: frontend
     build: 
       context: "./frontend"
       dockerfile: Dockerfile
+    environment:
+      - HOST=0.0.0.0
+    ports:
+      - "5173:5173"
     env_file:
       - .env
-    network_mode: "host"
+    networks:
+      - game-network
+    depends_on:
+      - game
+      - usermanagement
 
   db:
     image: postgres:15-alpine
