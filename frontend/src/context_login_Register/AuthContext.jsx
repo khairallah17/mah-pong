@@ -207,15 +207,14 @@ export const AuthProvider = ({ children }) => {
 
 
     const GoogleLogin = () =>{
-    
-        const ClientId = GCLIENT_ID;
+        const ClientId = import.meta.env.VITE_GCLIENT_ID;
         const CallBackURI = "http://localhost:8001/api/v2/auth/googlelogin/callback/";
         window.location.replace(`https://accounts.google.com/o/oauth2/v2/auth?redirect_uri=${CallBackURI}&prompt=consent&response_type=code&client_id=${ClientId}&scope=openid%20email%20profile&access_type=offline`)
         // GoogleloginUsers( code )
     }
 
     const Intra42Login = () => {
-        const clientId = CLIENT_ID;
+        const clientId = import.meta.env.VITE_CLIENT_ID;
         const callbackURI = "http://localhost:8001/api/42login/callback/";
         window.location.replace(`https://api.intra.42.fr/oauth/authorize?client_id=${clientId}&redirect_uri=${callbackURI}&response_type=code`);
     }

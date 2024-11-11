@@ -31,26 +31,33 @@ services:
       dockerfile: Dockerfile
     ports:
       - 8001:8000
+    environment:
+      - ENV_FILE=.env
+    volumes:
+      - ./.env:/app/.env
     env_file:
       - .env
 
   frontend:
-    container_name: frontend
-    build: 
-      context: "./frontend"
-      dockerfile: Dockerfile
-    environment:
-      - HOST=0.0.0.0
-    ports:
-      - "5173:5173"
-    env_file:
-      - .env
-    networks:
-      - game-network
-    depends_on:
-      - game
-      - usermanagement
-
+      container_name: frontend
+      build: 
+        context: "./frontend"
+        dockerfile: Dockerfile
+        args:
+          - VITE_GCLIENT_ID=${VITE_GCLIENT_ID}
+          - VITE_CLIENT_ID=${VITE_CLIENT_ID}
+      ports:
+        - "5173:5173"
+      environment:
+        - VITE_GCLIENT_ID=${VITE_GCLIENT_ID}
+        - VITE_CLIENT_ID=${VITE_CLIENT_ID}
+      volumes:
+        - ./frontend:/frontend
+        - /frontend/node_modules
+        - ./.env:/frontend/.env
+      networks:
+        - game-network
+  
   db:
     image: postgres:15-alpine
     container_name: db

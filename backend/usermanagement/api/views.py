@@ -15,6 +15,7 @@ from django.contrib.auth import authenticate, get_user_model
 from allauth.socialaccount.providers.google.views import GoogleOAuth2Adapter
 from allauth.socialaccount.providers.oauth2.client import OAuth2Client
 from dj_rest_auth.registration.views import SocialLoginView
+import os
 from django.conf import settings
 import uuid
 from allauth.socialaccount.adapter import DefaultSocialAccountAdapter
@@ -27,10 +28,11 @@ from django.utils.encoding import force_bytes, force_str
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from .token_reset_passwordd import account_activation_token
 from django.core.mail import send_mail, EmailMessage
-from dotenv import load_dotenv
 
-# Load environment variables from .env file
-load_dotenv()
+CLIENT_ID = os.environ.get('CLIENT_ID')
+CLIENT_SECRET = os.environ.get('CLIENT_SECRET')
+GCLIENT_ID = os.environ.get('GCLIENT_ID')
+GCLIENT_SECRET = os.environ.get('GCLIENT_SECRET')
 
 # Create your views here.
 class Get_MyTokenObtainPairView(TokenObtainPairView):
@@ -191,7 +193,7 @@ class GoogleLoginCallback(APIView):
             "code"          : code,
             "client_id"     : GCLIENT_ID, # check .env file
             "client_secret" : GCLIENT_SECRET, # check .env file
-            "redirect_uri"  : "http://localhost:8000/api/v2/auth/googlelogin/callback/",
+            "redirect_uri"  : "http://localhost:8001/api/v2/auth/googlelogin/callback/",
             "grant_type"    : "authorization_code"
         }
         token_response = requests.post(token_url, data = token_data)
@@ -244,7 +246,7 @@ class Login42Auth(APIView):
             'code'          : code,
             "client_id"     : CLIENT_ID,
             "client_secret" : CLIENT_SECRET,
-            "redirect_uri"  : "http://localhost:8000/api/42login/callback/",
+            "redirect_uri"  : "http://localhost:8001/api/42login/callback/",
             "grant_type"    : "authorization_code"
         }
         # Sendding Now Request to 42 API to getting return the Access_Token
