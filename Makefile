@@ -45,7 +45,7 @@ startfront:
 push:
 	git add .
 	git commit -m "auto-commit"
-	git push origin Meagoumi
+	git push
 
 p: push
 
