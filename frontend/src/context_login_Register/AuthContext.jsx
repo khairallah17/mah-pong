@@ -151,7 +151,7 @@ export const AuthProvider = ({ children }) => {
     
             const tokens = JSON.parse(authData);
             const logouturl = "http://localhost:8001/api/logout/";
-    
+            console.log("here are the problem");
             const response = await fetch(logouturl, {
                 method: 'POST',
                 headers: {
@@ -169,6 +169,7 @@ export const AuthProvider = ({ children }) => {
             setUser(null);
             localStorage.removeItem("authtoken");
     
+            navigation("/login");
             if (response.ok) {
                 Swal.fire({
                     position: "top-end",
@@ -180,8 +181,6 @@ export const AuthProvider = ({ children }) => {
                 });
             }
     
-            // Always navigate to login
-            navigation("/login");
     
         } catch (error) {
             console.error('Logout error:', error);

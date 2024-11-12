@@ -25,10 +25,10 @@ class Profile(models.Model):
     nblose = models.IntegerField(default=0)
     nbwin = models.IntegerField(default=0)
     score = models.IntegerField(default=0)
-    # img = models.ImageField(
-    #     upload_to='path'
-    #     default='....png'
-    # )
+    img = models.ImageField(
+        upload_to='./api/Profil_Media',
+        default='pic1.jpeg'
+    )
     # fullname = models.CharField(max_length=100)
     # bio, Wallet, Level, XP
 

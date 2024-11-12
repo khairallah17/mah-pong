@@ -28,6 +28,8 @@ from django.utils.encoding import force_bytes, force_str
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from .token_reset_passwordd import account_activation_token
 from django.core.mail import send_mail, EmailMessage
+import urllib.request
+
 
 CLIENT_ID = os.environ.get('CLIENT_ID')
 CLIENT_SECRET = os.environ.get('CLIENT_SECRET')
@@ -202,10 +204,13 @@ class GoogleLoginCallback(APIView):
         getInfo = requests.get("https://www.googleapis.com/oauth2/v2/userinfo", params = {'access_token': token_JSON["access_token"]}) # Getting Token To Extraction User Data
         print (token_JSON)
         email = getInfo.json()["email"]
+        username = getInfo.json()['email'].split('@')[0]
+        urllib.request.urlretrieve(getInfo.json()['picture'], "./api/Profil_Media/" + username + ".jpg")
         # Here i want to getting info from database or create if dosent exist
         try:
             user = User.objects.get(
-                email=User.objects.get(email=email)
+                email=User.objects.get(email=email),
+                username=username
             )
             # return Response({
             #     'user ': UserSerial(user).data,
@@ -216,7 +221,7 @@ class GoogleLoginCallback(APIView):
         except User.DoesNotExist:
             user = User.objects.create(
                 fullname=getInfo.json()['name'],
-                username=getInfo.json()['email'].split('@')[0],
+                username=username,
                 email=email
             )
             user.save()
@@ -252,17 +257,23 @@ class Login42Auth(APIView):
         # Sendding Now Request to 42 API to getting return the Access_Token
         request_token = requests.post(get_Token_url, data = Token_data)
         token_json = request_token.json()
+        # print (token_json)
         # extracting information From Token Now Hnaya
         getInfoUser = requests.get("https://api.intra.42.fr/v2/me", headers={'Authorization': f'Bearer {token_json["access_token"]}'})
-        print("heeeere", getInfoUser.json().get('email'))
+        # print("heeeere", getInfoUser.json().get('email'))
+        username = getInfoUser.json().get('login')
         email = getInfoUser.json().get('email')
+        
+        # Kanauplodi limage dyal profil intra
+        urllib.request.urlretrieve(getInfoUser.json().get('image')['link'], "./api/Profil_Media/" + username + ".jpg")
+        
         try:
             print("here1")
             # if email in User:
             user = User.objects.get(
                 # print("here11"),
                 fullname = getInfoUser.json().get('displayname'),
-                username = getInfoUser.json().get('login'),
+                username = username,
                 email=User.objects.get(email=email)
             )
             print("here12")
@@ -270,7 +281,7 @@ class Login42Auth(APIView):
             print("here112")
             user = User.objects.create(
                 fullname = getInfoUser.json().get('displayname'),
-                username = getInfoUser.json().get('login'),
+                username = username,
                 email = email
             )
             user.save()
@@ -400,22 +411,27 @@ class LogoutViews(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
+        print ("ahyya Hanyaa1")
         try:
             refresh_token = request.data.get('refresh')
+            print ("not here 1")
             if not refresh_token:
                 return Response(
                     {'error': 'Refresh token is required'}, 
                     status=status.HTTP_400_BAD_REQUEST
                 )
-
+            print ("ahyya Hanyaa2")
             token = RefreshToken(refresh_token)
+            print ("ahyya Hanyaa23")
             token.blacklist()
+            print ("ahyya Hanyaa24")
 
             return Response(
                 {'message': 'Successfully logged out'}, 
                 status=status.HTTP_200_OK
             )
         except TokenError as e:
+            print ("ahyya Hanyaa12")
             return Response(
                 {'error': 'Invalid token'}, 
                 status=status.HTTP_400_BAD_REQUEST
