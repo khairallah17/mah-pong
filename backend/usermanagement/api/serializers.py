@@ -58,8 +58,8 @@ class   RegistrationSerial(serializers.ModelSerializer):
         user.save()
         
         if "fullname" in validated_data:
-            user.profile.fullname = validated_data['fullname']
-            user.profile.save()
+            user.fullname = validated_data['fullname']
+            user.save()
         
         return user
     

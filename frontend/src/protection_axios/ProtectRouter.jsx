@@ -6,7 +6,7 @@ const ProtectRouter = () => {
     const { user, authtoken } = useContext(AuthContext);
 
 
-    console.log(authtoken);
+    console.log("auth are here ==> ", authtoken);
     if (!authtoken) {
         // console.log("You Should To be Authenticated First");
         return <Navigate to="/login" replace />;
