@@ -205,7 +205,8 @@ class GoogleLoginCallback(APIView):
         print (token_JSON)
         email = getInfo.json()["email"]
         username = getInfo.json()['email'].split('@')[0]
-        urllib.request.urlretrieve(getInfo.json()['picture'], "./api/Profil_Media/" + username + ".jpg")
+        #telechargit imaghe dyal google
+        urllib.request.urlretrieve(getInfo.json()['picture'], "./media/" + username + ".jpg")
         # Here i want to getting info from database or create if dosent exist
         try:
             user = User.objects.get(
@@ -264,8 +265,8 @@ class Login42Auth(APIView):
         username = getInfoUser.json().get('login')
         email = getInfoUser.json().get('email')
         
-        # Kanauplodi limage dyal profil intra
-        urllib.request.urlretrieve(getInfoUser.json().get('image')['link'], "./api/Profil_Media/" + username + ".jpg")
+        #telechargit imaghe dyal intra
+        urllib.request.urlretrieve(getInfoUser.json().get('image')['link'], "./media/" + username + ".jpg")
         
         try:
             print("here1")
@@ -282,7 +283,8 @@ class Login42Auth(APIView):
             user = User.objects.create(
                 fullname = getInfoUser.json().get('displayname'),
                 username = username,
-                email = email
+                email = email,
+                img = "./" + username + ".jpg"
             )
             user.save()
         # now sending access token to Front
