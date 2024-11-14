@@ -4,19 +4,25 @@ export const ResetPassword = () => {
 
     const GettingNewPassword = (event) => {
         event.preventDefault();
-        const Currentpwd = "";
         const NewPwd = "";
         const confirmpwd = "";
-        HandleResetePassword(NewPwd);
+        if (NewPwd == confirmpwd)
+            HandleResetePassword(NewPwd);
+        else
+            //Display Notification that the password are not correct
+            HandleNotification();
     }
 
 
   return (
     <div>
-      <form action="">
+      <form onSubmit={"#"}>
           <input type="passwrord" placeholder='New Password'/>
           <input type="passwrord" placeholder='Confirm Password'/>
+          <button>Submit</button>
       </form>
     </div>
   )
 }
+
+export default ResetPassword

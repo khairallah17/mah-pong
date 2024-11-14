@@ -11,3 +11,4 @@ dj_rest_auth
 cryptography
 python-dotenv
 Pillow
+aiosmtpd

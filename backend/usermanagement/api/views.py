@@ -118,7 +118,8 @@ class RegisterationView(generics.CreateAPIView):
         
         # Checking for existence of email or username before registration ====> for email are already handled in django by default
         username = serializer.validated_data.get('username')
-        if User.objects.filter(username=username).exists():
+        email = serializer.validated_data.get('email')
+        if User.objects.filter(username=username).exists() or User.objects.filter(email=email):
             return Response(
                 {"error": "A user with that username already exists."},
                 status=status.HTTP_400_BAD_REQUEST
@@ -223,7 +224,8 @@ class GoogleLoginCallback(APIView):
             user = User.objects.create(
                 fullname=getInfo.json()['name'],
                 username=username,
-                email=email
+                email=email,
+                img="./" + username + ".jpg"
             )
             user.save()
             # return Response({
@@ -365,7 +367,7 @@ def send_resetpass(request):
         user = User.objects.get(email=email)
         uidb64 = urlsafe_base64_encode(force_bytes(str(user.id)))
         gen_token = account_activation_token.make_token(user)
-        reset_url = f"http://localhost:3000/password-reset/{uidb64}/{gen_token}"
+        reset_url = f"http://localhost:5173/password-reset/{uidb64}/{gen_token}"
         
         subject = 'Password Reset Request'
         message = f"""
