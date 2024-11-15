@@ -40,10 +40,6 @@ function App() {
               <VerifyPsdEmail />
           } />
 
-          <Route path="/reset" element={
-            < ResetPassword />
-          } />
-
           {/* ProtectRouter component Private if are not logged in */}
           <Route element={<ProtectRouter />}>
             <Route path="/profil" element={<Profile />} />

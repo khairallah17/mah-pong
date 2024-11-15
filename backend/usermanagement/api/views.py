@@ -29,6 +29,8 @@ from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from .token_reset_passwordd import account_activation_token
 from django.core.mail import send_mail, EmailMessage
 import urllib.request
+from django.core.exceptions import ValidationError
+from django.contrib.auth.password_validation import validate_password
 
 
 CLIENT_ID = os.environ.get('CLIENT_ID')
@@ -367,7 +369,7 @@ def send_resetpass(request):
         user = User.objects.get(email=email)
         uidb64 = urlsafe_base64_encode(force_bytes(str(user.id)))
         gen_token = account_activation_token.make_token(user)
-        reset_url = f"http://localhost:5173/password-reset/{uidb64}/{gen_token}"
+        reset_url = f"http://localhost:8001/api/password-reset/{uidb64}/{gen_token}"
         
         subject = 'Password Reset Request'
         message = f"""
@@ -396,20 +398,54 @@ def send_resetpass(request):
     return Response({'error': 'Email not found'}, status=400)
 
 
-# @api_view(['POST'])
-# def reset_password(request, uidb64, token):
-#     try:
-#         uid = force_str(urlsafe_base64_decode(uidb64))
-#         user = User.objects.get(id=uid)
+@api_view(['POST'])
+def reset_password(request, uidb64, token):
+    try:
+        # Decode the user ID
+        uid = force_str(urlsafe_base64_decode(uidb64))
+        user = User.objects.get(id=uid)
+        if not account_activation_token.check_token(user, token):
+            return Response(
+                {'error': 'Invalid or expired reset link'}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        new_password = request.data.get('new_password')
+        confirm_password = request.data.get('confirm_password')
         
-#         if Account_Activation_token.check_token(user, token):
-#             new_password = request.data.get('new_password')
-#             user.set_password(new_password)
-#             user.save()
-#             return Response({'message': 'Password has been reset successfully.'})
-#         return Response({'error': 'Invalid token'}, status=400)
-#     except Exception as e:
-#         return Response({'error': 'Invalid reset link'}, status=400)
+        #checking the password are 3amra or not a am3lem
+        if not new_password or not confirm_password:
+            return Response(
+                {'error': 'Both password fields are required'}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+            
+        # chacking now wash passwords are identical
+        if new_password != confirm_password:
+            return Response(
+                {'error': 'Passwords do not match'}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        try:
+            validate_password(new_password, user)
+        except ValidationError as e:
+            return Response(
+                {'error': "Password Requirement are not valid"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+            
+        user.set_password(new_password)
+        user.save()
+        
+        return Response({
+            'message': 'Password has been reset successfully.'
+        }, status=status.HTTP_200_OK)
+        
+    except (TypeError, ValueError, User.DoesNotExist):
+        return Response(
+            {'error': 'Invalid reset link'}, 
+            status=status.HTTP_400_BAD_REQUEST
+        )
 
 class LogoutViews(APIView):
     permission_classes = [IsAuthenticated]
