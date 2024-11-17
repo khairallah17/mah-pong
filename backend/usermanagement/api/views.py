@@ -36,6 +36,11 @@ CLIENT_SECRET = os.environ.get('CLIENT_SECRET')
 GCLIENT_ID = os.environ.get('GCLIENT_ID')
 GCLIENT_SECRET = os.environ.get('GCLIENT_SECRET')
 
+print (CLIENT_ID)
+print (CLIENT_SECRET)
+print (GCLIENT_ID)
+print (GCLIENT_SECRET)
+
 # Create your views here.
 class Get_MyTokenObtainPairView(TokenObtainPairView):
     serializer_class = Get_Token_serial

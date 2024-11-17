@@ -20,7 +20,7 @@ function Pvp2d() {
     const ballRef = useRef(null);
     const tableRef = useRef(null);
     const isPausedRef = useRef(true);
-    let token = localStorage.getItem('AuthToken');
+    let token = localStorage.getItem('authtoken');
 
     useEffect(() => {
         if (winnerRef.current) {
@@ -30,7 +30,7 @@ function Pvp2d() {
 
     useEffect(() => {
         if (token && !wsRef.current) {
-            const accessToken = JSON.parse(localStorage.getItem('AuthToken')).access;
+            const accessToken = JSON.parse(localStorage.getItem('authtoken')).access;
             wsRef.current = new WebSocket('ws://localhost:8000/ws/matchmaking/?token=' + accessToken);
             wsRef.current.onopen = () => {
                 console.log('WebSocket connection established');
@@ -40,11 +40,11 @@ function Pvp2d() {
                 if (message.type === 'token_expired') {
                     const newToken = await refreshToken();
                     if (newToken) {
-                        localStorage.setItem('AuthToken', JSON.stringify(newToken));
+                        localStorage.setItem('authtoken', JSON.stringify(newToken));
                         wsRef.current = new WebSocket('ws://localhost:8000/ws/matchmaking/?token=' + newToken.access);
                         console.log('WebSocket connection established with new token');
                     } else {
-                        localStorage.removeItem('AuthToken');
+                        localStorage.removeItem('authtoken');
                         window.location.href = '/login';
                     }
                 }
@@ -72,7 +72,7 @@ function Pvp2d() {
     const refreshToken = async () => {
         let refreshtokenUrl = "http://localhost:8001/api/token/refresh/"
         try {
-            const response = await fetch(refreshtokenUrl , {
+            const response = await fetch(refreshtokenUrl, {
                 method: 'POST',
                 credentials: 'include'
             });
@@ -97,7 +97,7 @@ function Pvp2d() {
             camera.lookAt(scene.position);
             cameraRef.current = camera;
 
-            const renderer = new THREE.WebGLRenderer( { antialias: true, alpha: true } );
+            const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
             renderer.setPixelRatio(window.devicePixelRatio);
             renderer.setSize(window.innerWidth, window.innerHeight);
             renderer.shadowMap.enabled = true;
@@ -153,11 +153,11 @@ function Pvp2d() {
                     ball.position.x -= 0.05 * (isPlayer1 ? 1 : -1);
                 }
 
-                if (goal1.intersectsSphere(ballSphere) ) {
+                if (goal1.intersectsSphere(ballSphere)) {
                     isPausedRef.current = true;
                     setScores(prevScores => {
                         const newScores = { score1: prevScores.score1, score2: prevScores.score2 + 1 };
-                        if (newScores.score2 >= 10){
+                        if (newScores.score2 >= 10) {
                             winnerRef.current = 'Player 2'
                             wsRef.current.send(JSON.stringify({
                                 type: 'game_event',
@@ -174,7 +174,7 @@ function Pvp2d() {
                     isPausedRef.current = true;
                     setScores(prevScores => {
                         const newScores = { score1: prevScores.score1 + 1, score2: prevScores.score2 };
-                        if (newScores.score1 >= 10){ 
+                        if (newScores.score1 >= 10) {
                             winnerRef.current = 'Player 1'
                             wsRef.current.send(JSON.stringify({
                                 type: 'game_event',
@@ -270,7 +270,7 @@ function Pvp2d() {
     const createTableAddons = () => {
         const stripeColor = 0x000000; // Same color as paddles
         const stripeThickness = 0.05;
-    
+
         const stripes = [
             new THREE.Mesh(new THREE.BoxGeometry(5, 0.02, stripeThickness), new THREE.MeshStandardMaterial({ color: stripeColor })),  // Top edge
             new THREE.Mesh(new THREE.BoxGeometry(5, 0.02, stripeThickness), new THREE.MeshStandardMaterial({ color: stripeColor })),  // Bottom edge
@@ -278,13 +278,13 @@ function Pvp2d() {
             new THREE.Mesh(new THREE.BoxGeometry(stripeThickness, 0.02, 3), new THREE.MeshStandardMaterial({ color: stripeColor })),  // Left edge
             new THREE.Mesh(new THREE.BoxGeometry(stripeThickness, 0.02, 3), new THREE.MeshStandardMaterial({ color: stripeColor })),  // Center stripe
         ];
-    
+
         stripes[0].position.set(0, 0.06, 1.5);    // Top edge
         stripes[1].position.set(0, 0.06, -1.5);   // Bottom edge
         stripes[2].position.set(2.5, 0.06, 0);    // Right edge
         stripes[3].position.set(-2.5, 0.06, 0);   // Left edge
         stripes[4].position.set(0, 0.06, 0);     // Center stripe
-    
+
         const legGeometry = new THREE.CylinderGeometry(0.1, 0.1, 1, 32);
         const legMaterial = new THREE.MeshStandardMaterial({ color: 0x8B4513 });
         const legs = [
@@ -293,7 +293,7 @@ function Pvp2d() {
             new THREE.Mesh(legGeometry, legMaterial),
             new THREE.Mesh(legGeometry, legMaterial),
         ];
-    
+
         legs[0].position.set(2.4, -0.55, 1.4);  // Front-right
         legs[1].position.set(-2.4, -0.55, 1.4); // Front-left
         legs[2].position.set(2.4, -0.55, -1.4); // Back-right
@@ -343,9 +343,11 @@ function Pvp2d() {
                     <button onClick={() => window.location.reload()}>Restart Game</button>
                 </div>
             )}
-            <div id="game-container"></div>
-            <div id="score1">Player 1: {score1}</div>
-            <div id="score2">Player 2: {score2}</div>
+            {isMatched && <div id="game-container">
+                <div id="score1">Player 1: {score1}</div>
+                <div id="score2">Player 2: {score2}</div>
+            </div>}
+            
         </>
     );
 }

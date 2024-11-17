@@ -18,7 +18,7 @@ function Pve3d() {
     const INITIAL_VELOCITY = new THREE.Vector3(0.005, 0.01, 0.025);
     const TABLE_DIMENSIONS = { width: 1.45, length: 2.6 };
     const isPlayer1Ref = useRef(isPlayer1);
-    let token = localStorage.getItem('AuthToken');
+    let token = localStorage.getItem('authtoken');
 
     useEffect(() => {
         isPlayer1Ref.current = isPlayer1;
@@ -27,7 +27,7 @@ function Pve3d() {
 
     useEffect(() => {
         if (token && !wsRef.current) {
-            const accessToken = JSON.parse(localStorage.getItem('AuthToken')).access;
+            const accessToken = JSON.parse(localStorage.getItem('authtoken')).access;
             wsRef.current = new WebSocket('ws://localhost:8000/ws/matchmaking/?token=' + accessToken);
             wsRef.current.onopen = () => {
                 console.log('WebSocket connection established');
@@ -37,11 +37,11 @@ function Pve3d() {
                 if (message.type === 'token_expired') {
                     const newToken = await refreshToken();
                     if (newToken) {
-                        localStorage.setItem('AuthToken', JSON.stringify(newToken));
+                        localStorage.setItem('authtoken', JSON.stringify(newToken));
                         wsRef.current = new WebSocket('ws://localhost:8000/ws/matchmaking/?token=' + newToken.access);
                         console.log('WebSocket connection established with new token');
                     } else {
-                        localStorage.removeItem('AuthToken');
+                        localStorage.removeItem('authtoken');
                         window.location.href = '/login';
                     }
                 }

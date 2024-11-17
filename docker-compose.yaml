@@ -31,10 +31,6 @@ services:
       dockerfile: Dockerfile
     ports:
       - 8001:8000
-    environment:
-      - ENV_FILE=.env
-    volumes:
-      - ./.env:/app/.env
     env_file:
       - .env
 
@@ -43,20 +39,12 @@ services:
       build: 
         context: "./frontend"
         dockerfile: Dockerfile
-        args:
-          - VITE_GCLIENT_ID=${VITE_GCLIENT_ID}
-          - VITE_CLIENT_ID=${VITE_CLIENT_ID}
       ports:
         - "5173:5173"
-      environment:
-        - VITE_GCLIENT_ID=${VITE_GCLIENT_ID}
-        - VITE_CLIENT_ID=${VITE_CLIENT_ID}
-      volumes:
-        - ./frontend:/frontend
-        - /frontend/node_modules
-        - ./.env:/frontend/.env
-      networks:
-        - game-network
+      # networks:
+      #   - game-network
+      env_file:
+        - .env
   
   db:
     image: postgres:15-alpine
@@ -75,7 +63,6 @@ services:
 
 volumes:
   db_data:
-  tournament_db_data:
 
 networks:
   game-network:
