@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { useEffect, useRef, useState } from 'react';
+import bgi from '../assets/spaaacu.jpg';
 
 function Pvp2d() {
     const wsRef = useRef(null);
@@ -118,8 +119,12 @@ function Pvp2d() {
             paddle2Ref.current = paddle2;
             ballRef.current = ball;
             tableRef.current = table;
+            // const backgroundImage = new THREE.TextureLoader().load(bgi);
+            // backgroundImage.encoding = THREE.sRGBEncoding;
+            // scene.background = backgroundImage;
 
-            scene.add(table, tableaddons, paddle1, paddle2, ball);
+            const alight = new THREE.AmbientLight(0xffffff, 0.5);
+            scene.add(table, tableaddons, paddle1, paddle2, ball, alight);
             scene.add(createLight());
 
             document.addEventListener('keydown', onDocumentKeyDown);
@@ -143,12 +148,17 @@ function Pvp2d() {
                 const goal2 = new THREE.Box3(new THREE.Vector3(2.5, -1, -1.5), new THREE.Vector3(3, 1, 1.5));
 
                 if (paddle1Box.intersectsSphere(ballSphere)) {
+                    const paddle1Center = new THREE.Vector3();
+                    paddle1Box.getCenter(paddle1Center);
+                    const ballPaddleZDiff = ballSphere.center.z - paddle1Center.z;
+                    ballDirection.z = ballPaddleZDiff * 1.5;
                     ballDirection.x *= -1;
                     ball.position.x += 0.05 * (isPlayer1 ? 1 : -1);
                 } else if (paddle2Box.intersectsSphere(ballSphere)) {
                     const paddle2Center = new THREE.Vector3();
                     paddle2Box.getCenter(paddle2Center);
                     const ballPaddleZDiff = ballSphere.center.z - paddle2Center.z;
+                    ballDirection.z = ballPaddleZDiff * 1.5;
                     ballDirection.x *= -1;
                     ball.position.x -= 0.05 * (isPlayer1 ? 1 : -1);
                 }
@@ -261,7 +271,7 @@ function Pvp2d() {
 
     const createTable = () => {
         const geometry = new THREE.BoxGeometry(5, 0.1, 3);
-        const material = new THREE.MeshStandardMaterial({ color: 0x8B4513 });
+        const material = new THREE.MeshStandardMaterial({ color: 0x228B22 });
         const table = new THREE.Mesh(geometry, material);
         table.receiveShadow = true;
         return table;
