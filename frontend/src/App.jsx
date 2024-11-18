@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import ProtectRouter from "./protection_axios/ProtectRouter"
 import ProtectLogin from "./protection_axios/ProtectLogin.jsx"
 import { AuthProvider } from "./context_login_Register/AuthContext.jsx"
-import { Profile, Register, Login, Dashboard } from "./pages"
+import { Profile, Register, Login, Dashboard, VerifyPsdEmail, ResetPassword } from "./pages"
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { Navigate } from "react-router-dom";
 import HomePage from './HomePage';
@@ -35,6 +35,13 @@ function App() {
             // <ProtectLogin>
               <Register />
             // </ProtectLogin>
+          } />
+          <Route path="/password-reset" element={
+              <VerifyPsdEmail />
+          } />
+
+          <Route path="/password-reset/confirm" element={
+              <ResetPassword />
           } />
 
           {/* ProtectRouter component Private if are not logged in */}
