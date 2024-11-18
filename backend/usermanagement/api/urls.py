@@ -13,5 +13,5 @@ urlpatterns = [
     path('v2/auth/googlelogin/', views.GoogleLoginView, name='google_login'),
     path('v2/auth/googlelogin/callback/', views.GoogleLoginCallback.as_view(), name='gcall_back_login'),
     path('42login/callback/', views.Login42Auth.as_view(), name='42call_back_login'),
-    path('password-reset/', views.send_resetpass, name='password-reset'),
+    path('password-reset/', views.Send_Reset_Password.as_view(), name='password-reset'),
 ]
