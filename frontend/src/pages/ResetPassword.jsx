@@ -17,56 +17,61 @@ export const ResetPassword = () => {
   const uidb64 = params.get('uidb64');
   console.log("Token Found are", token)
   console.log("which user have that ID are ", uidb64)
+  console.log("new Pass ==> ", new_password);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
 
     // kantsheki hna ila kano les password li dekhlo identique
-    // if (new_password !== confirm_password) {
-    //   Swal.fire({
-    //     position: "middle",
-    //     icon: "error",
-    //     title: "Passwords do not match",
-    //     showConfirmButton: true,
-    //     timerProgressBar: true,
-    //     timer: 6000
-    //   })
-    //   return ;
-    // }
+    if (new_password !== confirm_password) {
+      Swal.fire({
+        position: "middle",
+        icon: "error",
+        title: "Passwords do not match",
+        showConfirmButton: true,
+        timerProgressBar: true,
+        timer: 6000
+      })
+      return ;
+    }
     
-  //   try {
-  //     const response = await fetch(`http://localhost:8001/api/password-reset/${uidb64}/${token}/`, {
-  //       method: 'POST',
-  //       headers: {
-  //         'Content-Type': 'application/json',
-  //       },
-  //       body: JSON.stringify({new_password, confirm_password})
-  //     });
+    try {
+      const response = await fetch(`http://localhost:8001/api/password-reset/${uidb64}/${token}/`, {
+        credentials: 'include',
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({new_password, confirm_password})
+      });
       
-  //     const data = await response.json();
       
-  //     if (!response.ok) {
-  //       throw new Error(data.error || 'Failed to reset password');
-  //     }
+      const data = await response.json();
 
-  //     Swal.fire({
-  //       position: "middle",
-  //       icon: "success",
-  //       title: "Password reset successful! You can now login with your new password.",
-  //       showConfirmButton: true,
-  //       timerProgressBar: true,
-  //       timer: 6000
-  //     })
-  //   } catch (err) {
-  //     Swal.fire({
-  //       position: "middle",
-  //       icon: "error",
-  //       title: `${err.message}`,
-  //       showConfirmButton: true,
-  //       timerProgressBar: true,
-  //       timer: 6000
-  //     })
-  //   }
+      console.log("data re ====> ", data);
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to reset password');
+      }
+      console.log(response.status);
+      Swal.fire({
+        position: "middle",
+        icon: "success",
+        title: "Password reset successful! You can now login with your new password.",
+        showConfirmButton: true,
+        timerProgressBar: true,
+        timer: 6000
+      })
+    } catch (err) {
+      Swal.fire({
+        position: "middle",
+        icon: "error",
+        // title: `${err.message}`,
+        title: "ohooooooo jaosdjaosdjaosdjasd asdansdkasd",
+        showConfirmButton: true,
+        timerProgressBar: true,
+        timer: 6000
+      })
+    }
   };
 
   // const togglePasswordVisibility = (field) => {
@@ -88,7 +93,7 @@ export const ResetPassword = () => {
           </p>
         </div>
 
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+        <form className="mt-8 space-y-6" > 
           <div className="space-y-4">
             <div>
               <label htmlFor="new_password" className="block text-sm font-medium text-gray-700">
@@ -132,7 +137,7 @@ export const ResetPassword = () => {
                 <button
                   type="button"
                   className="absolute inset-y-0 right-0 flex items-center pr-3"
-                  // onClick={() => togglePasswordVisibility('confirm')}
+                  onClick={handleSubmit}
                 >
                   <span className="text-gray-500">
                     {showPassword.confirm ? '🔓' : '🔒'}

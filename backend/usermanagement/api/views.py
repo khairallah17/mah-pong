@@ -307,41 +307,42 @@ class Login42Auth(APIView):
 
 
 
-class   Send_Reset_Password(View):
-    def post(self, request): #sending email 
-        email = request.data.get('email')
-        print(email)
-        if User.objects.filter(email=email).exists():
-            user = User.objects.get(email=email)
-            uidb64 = urlsafe_base64_encode(force_bytes(str(user.id)))
-            gen_token = account_activation_token.make_token(user)
-            reset_url = f"http://localhost:8001/api/password-reset/{uidb64}/{gen_token}"
-            
-            subject = 'Password Reset Request'
-            message = f"""
-            Hello,
+# class   Send_Reset_Password(View):
+@api_view(['POST'])
+def send_resetpass(request): #sending email 
+    email = request.data.get('email')
+    print(email)
+    if User.objects.filter(email=email).exists():
+        user = User.objects.get(email=email)
+        uidb64 = urlsafe_base64_encode(force_bytes(str(user.id)))
+        gen_token = account_activation_token.make_token(user)
+        reset_url = f"http://localhost:8001/api/password-reset/{uidb64}/{gen_token}/"
+        
+        subject = 'Password Reset Request'
+        message = f"""
+        Hello,
 
-            You have requested to reset your password. Please click the link below:
+        You have requested to reset your password. Please click the link below:
 
-            {reset_url}
+        {reset_url}
 
-            If you did not request this reset, please ignore this email.
+        If you did not request this reset, please ignore this email.
 
-            Thanks,
-            Your App Team
-            """
-            print (reset_url)
-            send_mail(
-                subject,
-                message,
-                settings.EMAIL_HOST_USER,
-                [email],
-                fail_silently=False,
-            )
-            print (" hhhhhhhhhhh ")
-            # email_message.send(fail_silently=False)
-            return Response({'message': 'Password reset email has been sent.'})
-        return Response({'error': 'Email not found'}, status=400)
+        Thanks,
+        Your App Team
+        """
+        print (reset_url)
+        send_mail(
+            subject,
+            message,
+            settings.EMAIL_HOST_USER,
+            [email],
+            fail_silently=False,
+        )
+        print (" hhhhhhhhhhh ")
+        # email_message.send(fail_silently=False)
+        return Response({'message': 'Password reset email has been sent.'}, status=200)
+    return Response({'error': 'Email not found'}, status=400)
 
 
 class   Confirm_reset_Password(View):
@@ -357,7 +358,7 @@ class   Confirm_reset_Password(View):
                 ) # if the token are not valid kan redirectih l error front page
             # o ila kan Token valide so khassni nsift bach ibdel password
             return HttpResponseRedirect(
-                    f"http://localhost:5173/password-reset/new?uidb64={uidb64}&token={token}" # hady katsma Query Method kay3ni kansifto lfront o kaninjikti fih <uidb64> o <token>
+                    f"http://localhost:5173/password-reset/confirm?uidb64={uidb64}&token={token}" # hady katsma Query Method kay3ni kansifto lfront o kaninjikti fih <uidb64> o <token>
             )
         except(TypeError, ValueError, User.DoesNotExist):
             return HttpResponseRedirect(
@@ -499,35 +500,35 @@ class   Confirm_reset_Password(View):
 #             status=status.HTTP_400_BAD_REQUEST
 #         )
 
-# class LogoutViews(APIView):
-#     permission_classes = [IsAuthenticated]
+class LogoutViews(APIView):
+    permission_classes = [IsAuthenticated]
 
-#     def post(self, request):
-#         print ("ahyya Hanyaa1")
-#         try:
-#             refresh_token = request.data.get('refresh')
-#             print ("not here 1")
-#             if not refresh_token:
-#                 return Response(
-#                     {'error': 'Refresh token is required'}, 
-#                     status=status.HTTP_400_BAD_REQUEST
-#                 )
-#             print ("ahyya Hanyaa2")
-#             token = RefreshToken(refresh_token)
-#             print ("ahyya Hanyaa23")
-#             token.blacklist()
-#             print ("ahyya Hanyaa24")
+    def post(self, request):
+        print ("ahyya Hanyaa1")
+        try:
+            refresh_token = request.data.get('refresh')
+            print ("not here 1")
+            if not refresh_token:
+                return Response(
+                    {'error': 'Refresh token is required'}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            print ("ahyya Hanyaa2")
+            token = RefreshToken(refresh_token)
+            print ("ahyya Hanyaa23")
+            token.blacklist()
+            print ("ahyya Hanyaa24")
 
-#             return Response(
-#                 {'message': 'Successfully logged out'}, 
-#                 status=status.HTTP_200_OK
-#             )
-#         except TokenError as e:
-#             print ("ahyya Hanyaa12")
-#             return Response(
-#                 {'error': 'Invalid token'}, 
-#                 status=status.HTTP_400_BAD_REQUEST
-#             )
+            return Response(
+                {'message': 'Successfully logged out'}, 
+                status=status.HTTP_200_OK
+            )
+        except TokenError as e:
+            print ("ahyya Hanyaa12")
+            return Response(
+                {'error': 'Invalid token'}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
 def viewallrouting(request):
     data = [

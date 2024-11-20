@@ -7,8 +7,8 @@ import {React, useState} from 'react'
 export const VerifyPsdEmail = () => {
 
     const [email, setEmail] = useState("")
-    const [message, setMessage] = useState("")
-    const [error, setError] = useState("")
+    // const [message, setMessage] = useState("")
+    // const [error, setError] = useState("")
     const [loading, setLoading] = useState(false)
     
 
@@ -28,14 +28,16 @@ export const VerifyPsdEmail = () => {
             const data = await response.json();
             
             if (response.ok) {
-                setMessage(data.message);
-                setEmail("");
+                // setMessage(data.message);
+                // setEmail("");
+                console.log("OK.OK.OK.OK.OK");
             } else {
-                setError(data.error || 'Failed to send reset email');
+                console.log("KO.KO.KO.KO.KO");
+                // setError(data.error || 'Failed to send reset email');
             }
         } catch (error) {
-            console.error('Error:', error);
-            setError('Network error occurred');
+            console.error('Error:');
+            // setError('Network error occurred');
         } finally {
             setLoading(false);
         }
