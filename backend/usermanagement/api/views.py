@@ -47,6 +47,8 @@ print (CLIENT_SECRET)
 print (GCLIENT_ID)
 print (GCLIENT_SECRET)
 
+
+
 # Create your views here.
 class Get_MyTokenObtainPairView(TokenObtainPairView):
     serializer_class = Get_Token_serial
