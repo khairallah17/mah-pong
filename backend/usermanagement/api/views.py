@@ -32,6 +32,10 @@ import urllib.request
 from django.core.exceptions import ValidationError
 from django.contrib.auth.password_validation import validate_password
 
+from django.utils.decorators import method_decorator
+from django.http import JsonResponse
+import json
+
 
 CLIENT_ID = os.environ.get('CLIENT_ID')
 CLIENT_SECRET = os.environ.get('CLIENT_SECRET')
@@ -42,6 +46,8 @@ print (CLIENT_ID)
 print (CLIENT_SECRET)
 print (GCLIENT_ID)
 print (GCLIENT_SECRET)
+
+
 
 # Create your views here.
 class Get_MyTokenObtainPairView(TokenObtainPairView):
@@ -307,43 +313,44 @@ class Login42Auth(APIView):
 
 
 
-class   Send_Reset_Password(View):
-    def post(self, request): #sending email 
-        email = request.data.get('email')
-        print(email)
-        if User.objects.filter(email=email).exists():
-            user = User.objects.get(email=email)
-            uidb64 = urlsafe_base64_encode(force_bytes(str(user.id)))
-            gen_token = account_activation_token.make_token(user)
-            reset_url = f"http://localhost:8001/api/password-reset/{uidb64}/{gen_token}"
-            
-            subject = 'Password Reset Request'
-            message = f"""
-            Hello,
+# class   Send_Reset_Password(View):
+@api_view(['POST'])
+def send_resetpass(request): #sending email 
+    email = request.data.get('email')
+    print(email)
+    if User.objects.filter(email=email).exists():
+        user = User.objects.get(email=email)
+        uidb64 = urlsafe_base64_encode(force_bytes(str(user.id)))
+        gen_token = account_activation_token.make_token(user)
+        reset_url = f"http://localhost:8001/api/password-reset/{uidb64}/{gen_token}/"
+        
+        subject = 'Password Reset Request'
+        message = f"""
+        Hello,
 
-            You have requested to reset your password. Please click the link below:
+        You have requested to reset your password. Please click the link below:
 
-            {reset_url}
+        {reset_url}
 
-            If you did not request this reset, please ignore this email.
+        If you did not request this reset, please ignore this email.
 
-            Thanks,
-            Your App Team
-            """
-            print (reset_url)
-            send_mail(
-                subject,
-                message,
-                settings.EMAIL_HOST_USER,
-                [email],
-                fail_silently=False,
-            )
-            print (" hhhhhhhhhhh ")
-            # email_message.send(fail_silently=False)
-            return Response({'message': 'Password reset email has been sent.'})
-        return Response({'error': 'Email not found'}, status=400)
+        Thanks,
+        Your App Team
+        """
+        print (reset_url)
+        send_mail(
+            subject,
+            message,
+            settings.EMAIL_HOST_USER,
+            [email],
+            fail_silently=False,
+        )
+        print (" hhhhhhhhhhh ")
+        # email_message.send(fail_silently=False)
+        return Response({'message': 'Password reset email has been sent.'}, status=200)
+    return Response({'error': 'Email not found'}, status=400)
 
-
+@method_decorator(csrf_exempt, name='dispatch')
 class   Confirm_reset_Password(View):
     def get(self, request, uidb64, token):
         try:
@@ -357,61 +364,62 @@ class   Confirm_reset_Password(View):
                 ) # if the token are not valid kan redirectih l error front page
             # o ila kan Token valide so khassni nsift bach ibdel password
             return HttpResponseRedirect(
-                    f"http://localhost:5173/password-reset/new?uidb64={uidb64}&token={token}" # hady katsma Query Method kay3ni kansifto lfront o kaninjikti fih <uidb64> o <token>
+                    f"http://localhost:5173/password-reset/confirm?uidb64={uidb64}&token={token}" # hady katsma Query Method kay3ni kansifto lfront o kaninjikti fih <uidb64> o <token>
             )
         except(TypeError, ValueError, User.DoesNotExist):
             return HttpResponseRedirect(
                 f"http://localhost:5173/password-reset/error" # hnaya aya error jani awla ila makansh user kanredirectih lpage error
             )
-    
+
     def post(self, request, uidb64, token):
         try:
-            # Decode the user ID
-            uid = force_str(urlsafe_base64_decode(uidb64))
-            user = User.objects.get(id=uid)
-            if not account_activation_token.check_token(user, token):
-                return Response(
-                    {'error': 'Invalid or expired reset link'}, 
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-            new_password = request.data.get('new_password')
-            confirm_password = request.data.get('confirm_password')
-            
-            #checking the password are 3amra or not a am3lem
-            if not new_password or not confirm_password:
-                return Response(
-                    {'error': 'Both password fields are required'}, 
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-                
-            # chacking now wash passwords are identical
-            if new_password != confirm_password:
-                return Response(
-                    {'error': 'Passwords do not match'}, 
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-            
+            # Add debug logging
+            print(f"Received uidb64: {uidb64}")
+            print(f"Received token: {token}")
+            print(f"Request body: {request.body}")
+
+            # Parse the request body properly
             try:
-                validate_password(new_password, user)
-            except ValidationError as e:
-                return Response(
-                    {'error': "Password Requirement are not valid"},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-                
+                data = json.loads(request.body)
+                new_password = data.get('new_password')
+                confirm_password = data.get('confirm_password')
+            except json.JSONDecodeError:
+                return JsonResponse({'error': 'Invalid JSON data'}, status=400)
+
+            # Decode the user ID
+            try:
+                uid = force_str(urlsafe_base64_decode(uidb64))
+                user = User.objects.get(id=uid)
+            except (TypeError, ValueError, User.DoesNotExist):
+                return JsonResponse({'error': 'Invalid reset link'}, status=400)
+
+            # Verify token
+            if not account_activation_token.check_token(user, token):
+                return JsonResponse({'error': 'Invalid or expired token'}, status=400)
+
+            # Validate passwords
+            if not new_password or not confirm_password:
+                return JsonResponse({'error': 'Both passwords are required'}, status=400)
+
+            if new_password != confirm_password:
+                return JsonResponse({'error': 'Passwords do not match'}, status=400)
+
+            # Set new password
             user.set_password(new_password)
             user.save()
-            
-            return Response({
-                'message': 'Password has been reset successfully.'
-            }, status=status.HTTP_200_OK)
-            
-        except (TypeError, ValueError, User.DoesNotExist):
-            return Response(
-                {'error': 'Invalid reset link'}, 
-                status=status.HTTP_400_BAD_REQUEST
-            )
-            
+
+            return JsonResponse({'message': 'Password reset successful'}, status=200)
+
+        except Exception as e:
+            print(f"Error: {str(e)}")
+            return JsonResponse({'error': 'An error occurred'}, status=500)
+
+    def options(self, request, *args, **kwargs):
+        response = JsonResponse({}, status=200)
+        response["Access-Control-Allow-Origin"] = "*"
+        response["Access-Control-Allow-Methods"] = "POST, OPTIONS"
+        response["Access-Control-Allow-Headers"] = "Content-Type, X-Requested-With"
+        return response
 
 # @api_view(['POST']) # this specifies that only POST method is allowed
 
@@ -499,35 +507,35 @@ class   Confirm_reset_Password(View):
 #             status=status.HTTP_400_BAD_REQUEST
 #         )
 
-# class LogoutViews(APIView):
-#     permission_classes = [IsAuthenticated]
+class LogoutViews(APIView):
+    permission_classes = [IsAuthenticated]
 
-#     def post(self, request):
-#         print ("ahyya Hanyaa1")
-#         try:
-#             refresh_token = request.data.get('refresh')
-#             print ("not here 1")
-#             if not refresh_token:
-#                 return Response(
-#                     {'error': 'Refresh token is required'}, 
-#                     status=status.HTTP_400_BAD_REQUEST
-#                 )
-#             print ("ahyya Hanyaa2")
-#             token = RefreshToken(refresh_token)
-#             print ("ahyya Hanyaa23")
-#             token.blacklist()
-#             print ("ahyya Hanyaa24")
+    def post(self, request):
+        print ("ahyya Hanyaa1")
+        try:
+            refresh_token = request.data.get('refresh')
+            print ("not here 1")
+            if not refresh_token:
+                return Response(
+                    {'error': 'Refresh token is required'}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            print ("ahyya Hanyaa2")
+            token = RefreshToken(refresh_token)
+            print ("ahyya Hanyaa23")
+            token.blacklist()
+            print ("ahyya Hanyaa24")
 
-#             return Response(
-#                 {'message': 'Successfully logged out'}, 
-#                 status=status.HTTP_200_OK
-#             )
-#         except TokenError as e:
-#             print ("ahyya Hanyaa12")
-#             return Response(
-#                 {'error': 'Invalid token'}, 
-#                 status=status.HTTP_400_BAD_REQUEST
-#             )
+            return Response(
+                {'message': 'Successfully logged out'}, 
+                status=status.HTTP_200_OK
+            )
+        except TokenError as e:
+            print ("ahyya Hanyaa12")
+            return Response(
+                {'error': 'Invalid token'}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
 def viewallrouting(request):
     data = [
