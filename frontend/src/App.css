@@ -3,7 +3,6 @@
   width: 100%;
   padding: 0;
   text-align: center;
-  overflow: auto;
 }
 
 .logo {
@@ -38,23 +37,12 @@
   padding: 2em;
 }
 
-.read-the-docs {
-  color: #888;
-}
-
 .homepage {
   height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-direction: column;
-  /* background-image: url('./assets/bg.png');
-  background-size: cover;
-  background-position: center; */
-
-  /* background: linear-gradient(to right, #07072C 0%, 24.13793057203293%, #12115C 48.27586114406586%, 74.13793057203293%, #090A38 100%); */
-
-  background: rgb(18,17,92);
   background: radial-gradient(circle, rgba(18,17,92,1) 17%, rgba(9,10,56,1) 68%);
 }
 
@@ -85,8 +73,7 @@
   justify-content: space-evenly;
   align-items: center;
   /* gap: 24px; */
-  /* margin-top: 50vh; */
-  top: 1315px;
+  margin-top: 20vh;
   width: 75%;
   height: 80vh;
   position: relative;
@@ -172,8 +159,7 @@ h2 {
   display: flex;
   justify-content: center;
   align-items: center;
-  margin-top: 15vh;
-  top: 778px;
+  margin-top: 20vh;
 }
 
 .headline img {
@@ -183,7 +169,15 @@ h2 {
 }
 
 .scene {
-  margin-top: 15vh;
+  background-color: transparent;
+  height: 4000px;
+}
+
+.scene img {
+  position: sticky;
+  top: 0;
+  width: 100vw;
+  height: 100vh;
 }
 
 #score1 {

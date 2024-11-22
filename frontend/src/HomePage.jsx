@@ -11,7 +11,7 @@ import hdl from './assets/headline.png';
 import agm from './assets/agm.jpg';
 import zou from './assets/Zou.jpg';
 import hmz from './assets/hasalam.jpg';
-import { EffectCoverflow, Navigation, Pagination } from 'swiper/modules';
+import { Navigation, Pagination } from 'swiper/modules';
 
 
 const HomePage = ({ onUsernameSubmit }) => {
@@ -23,6 +23,49 @@ const HomePage = ({ onUsernameSubmit }) => {
   const contactUsRef = useRef(null);
   const aboutRef = useRef(null);
   const mount = useRef(null);
+  const totalFrames = 180; // Total number of frames in the animation
+  const [currentFrame, setCurrentFrame] = useState(1);
+  const frameRequestRef = useRef(null); // Ref to store the animation frame request ID
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (!frameRequestRef.current) {
+        frameRequestRef.current = requestAnimationFrame(updateAnimationFrame);
+      }
+    };
+
+    const updateAnimationFrame = () => {
+      if (!mount.current) return;
+
+      const scene = mount.current;
+      const sceneTop = scene.offsetTop;
+      const sceneHeight = scene.offsetHeight;
+      const scrollY = window.scrollY;
+      const viewportHeight = window.innerHeight;
+
+      const scrollProgress = Math.min(
+        Math.max((scrollY - sceneTop) / (sceneHeight - viewportHeight), 0),
+        1
+      );
+
+      const frame = Math.round(scrollProgress * (totalFrames - 1)) + 1;
+      if (frame !== currentFrame) {
+        setCurrentFrame(frame);
+      }
+
+      frameRequestRef.current = null;
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      if (frameRequestRef.current) {
+        cancelAnimationFrame(frameRequestRef.current);
+      }
+    };
+  }, []);
+
+  const getFrameSource = (frame) => `/landingAnimation/${frame}.png`;
   
   const calculateSlidesPerView = () => {
     const width = window.innerWidth;
@@ -50,42 +93,6 @@ const HomePage = ({ onUsernameSubmit }) => {
     setIsSubmitted(true);
   };
 
-  // useEffect(() => {
-  //   const scene = new THREE.Scene();
-  //   const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-  //   const renderer = new THREE.WebGLRenderer();
-  
-  //   const loader = new GLTFLoader();
-  //   loader.load('../../models/scene.glb', function (gltf: any) {
-  //     scene.add(gltf.scene);
-  //     addLights(scene);
-  //   }, undefined, function (error: any) {
-  //     console.error(error);
-  //   });
-  
-  //   camera.position.set(0.75, 1.25, 1.88);
-  //   camera.rotation.x = -0.5;
-  //   renderer.setSize(window.innerWidth, window.innerHeight);
-  
-  //   const animate = function () {
-  //     requestAnimationFrame(animate);
-  //     renderer.render(scene, camera);
-  //   };
-
-  // function addLights(scene: THREE.Scene): void {
-  //     const light = new THREE.AmbientLight(0xffffff, 3);
-  //     light.position.set(0, 10, 0);
-  //     light.castShadow = true;
-  //     scene.add(light);
-  // }
-  //   animate();
-
-  //   mount.current!.appendChild(renderer.domElement);
-  //   return () => {
-  //     mount.current!.removeChild(renderer.domElement);
-  //   }
-  // }, []);
-
   return (
     <div className="homepage">
       <header>
@@ -97,8 +104,9 @@ const HomePage = ({ onUsernameSubmit }) => {
           <button onClick={() => navigate('/dashboard')}>Play now</button>
         </nav>
       </header>
-      {/* <div className='scene' ref={mount}></div> */}
-      {/* <img src='https://shorturl.at/qo5Up' alt="table" style={{marginTop: "15vh"}}></img> */}
+      <div className='scene' ref={mount}>
+        <img src={getFrameSource(currentFrame)} alt={`Frame ${currentFrame}`}/>
+      </div>
       <div className='headline' ref={headlineRef}>
         <div style={{paddingRight: "20%"}}>
           <h1>“Title - Headline”</h1>
@@ -162,27 +170,7 @@ const HomePage = ({ onUsernameSubmit }) => {
         <div className='fadeout'></div>
       </Swiper>
       </div>
-      <div className='space'>
-      </div>
-      {!isSubmitted ? (
-        <div className="username-input">
-          <input
-            type="text"
-            placeholder="Enter your username"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-          />
-          <button onClick={handleSubmit}>Submit</button>
-        </div>
-      ) : (
-        <div className="navigation-buttons">
-          
-          <button onClick={() => navigate('/pve2d')}>PVE 2D</button>
-          <button onClick={() => navigate('/pvp2d')}>PVP 2D</button>
-          <button onClick={() => navigate('/pve3d')}>PVE 3D</button>
-          <button onClick={() => navigate('/pvp3d')}>PVP 3D</button>
-        </div>
-      )}
+
       <div className='space'>
       </div>
     </div>
