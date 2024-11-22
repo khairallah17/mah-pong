@@ -1,0 +1,26 @@
+button {
+    transition: transform 0.2s ease;
+}
+
+button:hover {
+    transform: scale(1.1);
+}
+
+.custom-scrollbar {
+    scrollbar-width: thin; /* Firefox */
+    scrollbar-color: #BD3944 transparent; /* Firefox */
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+    width: 8px; /* Width of the scrollbar */
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background-color: #4A4A4A; /* Color of the scrollbar thumb */
+    border-radius: 10px; /* Rounded corners */
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent; /* Color of the scrollbar track */
+}
+
