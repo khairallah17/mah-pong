@@ -13,6 +13,7 @@ import Pvp3d from './pvp/Pvp3d';
 import Profile from './pages/Profile.jsx'
 import SecurityProfile from './pages/SecurityProfile'
 import SearchPage from './pages/SearchPage'
+import Tournament from './pages/Tournament'
 
 function App() {
   const [username, setUsername] = useState('');
@@ -58,6 +59,7 @@ function App() {
             <Route path="/Profile" element={<Profile />} />
             <Route path="/SecurityProfile" element={<SecurityProfile />} />
             <Route path="/Search" element={<SearchPage />} />
+            <Route path='/tournament' element={<Tournament/>}/>
             
             
           </Route>

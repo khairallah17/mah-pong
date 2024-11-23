@@ -22,6 +22,7 @@ export const Dashboard = () => {
         <button onClick={() => navigate('/pvp2d')}>PVP 2D</button>
         <button onClick={() => navigate('/pve3d')}>PVE 3D</button>
         <button onClick={() => navigate('/pvp3d')}>PVP 3D</button>
+        <button onClick={() => navigate('/tournament')}>Tournament</button>
       </div>
       <form onSubmit={handleLogout}>
         <div className='btn-register'>
