@@ -23,9 +23,9 @@ const HomePage = ({ onUsernameSubmit }) => {
   const contactUsRef = useRef(null);
   const aboutRef = useRef(null);
   const mount = useRef(null);
-  const totalFrames = 180; // Total number of frames in the animation
+  const totalFrames = 180;
   const [currentFrame, setCurrentFrame] = useState(1);
-  const frameRequestRef = useRef(null); // Ref to store the animation frame request ID
+  const frameRequestRef = useRef(null); 
 
   useEffect(() => {
     const handleScroll = () => {
