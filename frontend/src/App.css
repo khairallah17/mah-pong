@@ -97,11 +97,10 @@
 .fadeout {
   border-radius: 20px;
   z-index: 2;
-  background-image: linear-gradient(90deg, #0E0E4E 0%, rgba(14, 14, 78, 0) 100%);
-  height: 100%;
+  background: linear-gradient(to right, transparent, #0E0E4E 100%);
+  height: 30vh;
   width: 20%;
   position: absolute;
-  rotate: 180deg;
   right: 0;
   top: 0;
   transform: translateX(-5px) ;
@@ -113,8 +112,8 @@
   border-radius: 20px;
   z-index: 2;
   /* background-image: linear-gradient(90deg, #13125E 0%, rgba(18, 17, 93, 0) 100%); */
-  background-image: linear-gradient(90deg, #0E0E4E 0%, rgba(14, 14, 78, 0) 100%);
-  height: 100%;
+  background: linear-gradient(to left, transparent, rgba(18, 17, 93, 0.8));
+  height: 30vh;
   width: 20%;
   position: absolute;
   left: 0;
@@ -145,17 +144,6 @@ h2 {
   color: white;
 }
 
-.username-input {
-  margin-top: 30vh;
-}
-
-.navigation-buttons {
-  display: flex;
-  justify-content: space-between;
-  width: 50%;
-  margin-top: 30vh;
-}
-
 .space {
   height: 2035px;
 }
@@ -182,8 +170,9 @@ h2 {
 .scene img {
   position: sticky;
   top: 0;
-  width: 100vw;
-  height: 100vh;
+  /* width: 100%;
+  height: 100vh; */
+  
 }
 
 #score1 {
