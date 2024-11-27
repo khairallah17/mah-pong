@@ -35,9 +35,9 @@ const HomePage = () => {
 
   useEffect(() => {
     const handleResize = () => {
-      const slideWidth = 250;
-      const containerWidth = window.innerWidth;
-      const newSlides = Math.floor(containerWidth / slideWidth);
+      const slideWidth = 230;
+      const containerWidth = window.innerWidth * 0.75;
+      const newSlides = Math.max(2, Math.round(containerWidth / slideWidth));
       console.log(slides, containerWidth / slideWidth);
 
       setSlides(newSlides);

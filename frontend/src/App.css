@@ -88,7 +88,7 @@
   background: linear-gradient(180deg, #12115D 28.5%, #2624C3 100%);
   border-radius: 20px;
   padding: 15px;
-  margin-top: 2vh;
+  margin-top: 2.3vh;
   padding-top: 13vh;
   height: 90%;
   position: relative;
@@ -97,10 +97,11 @@
 .fadeout {
   border-radius: 20px;
   z-index: 2;
-  background: linear-gradient(to right, transparent, #0E0E4E 100%);
-  height: 30vh;
+  background-image: linear-gradient(90deg, #0E0E4E 0%, rgba(14, 14, 78, 0) 100%);
+  height: 110%;
   width: 20%;
   position: absolute;
+  rotate: 180deg;
   right: 0;
   top: 0;
   transform: translateX(-5px) ;
@@ -112,8 +113,8 @@
   border-radius: 20px;
   z-index: 2;
   /* background-image: linear-gradient(90deg, #13125E 0%, rgba(18, 17, 93, 0) 100%); */
-  background: linear-gradient(to left, transparent, rgba(18, 17, 93, 0.8));
-  height: 30vh;
+  background-image: linear-gradient(90deg, #0E0E4E 0%, rgba(14, 14, 78, 0) 100%);
+  height: 110%;
   width: 20%;
   position: absolute;
   left: 0;
@@ -170,9 +171,8 @@ h2 {
 .scene img {
   position: sticky;
   top: 0;
-  width: 100%;
+  width: 100vw;
   height: 100vh;
-  
 }
 
 #score1 {
