@@ -171,8 +171,9 @@ h2 {
 .scene img {
   position: sticky;
   top: 0;
-  width: 100vw;
-  height: 100vh;
+  height: 90vh;
+  /* add footer sticking to scene here in the 10vh remaining*/
+  object-fit: cover;
 }
 
 #score1 {

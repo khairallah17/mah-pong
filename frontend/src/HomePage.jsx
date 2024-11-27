@@ -107,14 +107,25 @@ const HomePage = () => {
     <div className="homepage">
       {/* Navbar */}
       <header>
-        <nav className="navbar">
-          <img className="logo" src="Logo" alt="Logo" />
-          {NAV_LINKS.map(({ label, refKey }) => (
-            <button key={label} onClick={() => scrollToSection({ aboutRef, teamRef, contactUsRef }[refKey])}>
-              {label}
+        <nav className="fixed top-0 left-0 flex items-center justify-between w-full h-16 bg-gradient-to-r from-[#0908304A] to-[#1A195B4A] backdrop-blur-md z-50">
+          <img className="h-12 mx-8" src="Logo" alt="Logo" />
+          <div className="flex gap-4 mx-8">
+            {NAV_LINKS.map(({ label, refKey }) => (
+              <button
+                key={label}
+                className="px-4 py-2 text-white bg-transparent hover:underline"
+                onClick={() => scrollToSection({ aboutRef, teamRef, contactUsRef }[refKey])}
+              >
+                {label}
+              </button>
+            ))}
+            <button
+              onClick={() => navigate('/dashboard')}
+              className="px-4 py-2 text-white bg-blue-500 rounded-md"
+            >
+              Play now
             </button>
-          ))}
-          <button onClick={() => navigate('/dashboard')}>Play now</button>
+          </div>
         </nav>
       </header>
 
