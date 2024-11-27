@@ -1,6 +1,4 @@
 import React, { useEffect, useRef, useState } from 'react';
-import * as THREE from 'three';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { useNavigate } from 'react-router-dom';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import 'swiper/css';
@@ -14,9 +12,7 @@ import hmz from './assets/hasalam.jpg';
 import { Navigation, Pagination } from 'swiper/modules';
 
 
-const HomePage = ({ onUsernameSubmit }) => {
-  const [username, setUsername] = useState('');
-  const [isSubmitted, setIsSubmitted] = useState(false);
+const HomePage = () => {
   const navigate = useNavigate();
   const headlineRef = useRef(null);
   const teamRef = useRef(null);
@@ -25,6 +21,7 @@ const HomePage = ({ onUsernameSubmit }) => {
   const mount = useRef(null);
   const totalFrames = 180;
   const [currentFrame, setCurrentFrame] = useState(1);
+  const [slidesPerView, setSlidesPerView] = useState(3);
   const frameRequestRef = useRef(null); 
 
   useEffect(() => {
@@ -66,19 +63,19 @@ const HomePage = ({ onUsernameSubmit }) => {
   }, []);
 
   const getFrameSource = (frame) => `/landingAnimation/${frame}.png`;
+
+  useEffect(() => {
+    const handleResize = () => {
+      setSlidesPerView(Math.round(window.innerWidth * 0.75 / 250));
+      console.log(slidesPerView);
+    };
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, [slidesPerView]);
   
-  const calculateSlidesPerView = () => {
-    const width = window.innerWidth;
-  
-    if (width <= 500)
-      return 1;
-    else if (width <= 750)
-      return 2;
-    else if (width <= 900)
-      return 3;
-    else 
-      return 4;
-  };
 
   const scrollToRef = (ref) => {
     console.log(document.body.scrollHeight);
@@ -87,11 +84,6 @@ const HomePage = ({ onUsernameSubmit }) => {
       behavior: 'smooth'
     });
   }
-  
-  const handleSubmit = () => {
-    onUsernameSubmit(username);
-    setIsSubmitted(true);
-  };
 
   return (
     <div className="homepage">
@@ -117,15 +109,16 @@ const HomePage = ({ onUsernameSubmit }) => {
       </div>
       <div className='team-container' ref={teamRef}>
       <h1 style={{position: 'absolute', top: "3vh", margin: "0"}}>Meet the team</h1>
-      <Swiper spaceBetween={15}
-      slidesPerView={calculateSlidesPerView()}
+      <Swiper key= {slidesPerView}
+      spaceBetween={15}
+      slidesPerView={slidesPerView}
       pagination={{
         clickable: true,
       }}
       navigation={true}
       modules={[Pagination, Navigation]}
       loop={true}
-      style={{height: "40vh", width: "100%"}}>
+      style={{height: "300px", width: "100%"}}>
       <div className='fadein'></div>
         <SwiperSlide style={{paddingTop: "6vh"}}>
         <div className="team-member" >
@@ -169,9 +162,6 @@ const HomePage = ({ onUsernameSubmit }) => {
         </SwiperSlide>
         <div className='fadeout'></div>
       </Swiper>
-      </div>
-
-      <div className='space'>
       </div>
     </div>
   );
