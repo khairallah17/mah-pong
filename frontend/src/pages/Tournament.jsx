@@ -1,4 +1,4 @@
-import {React, useState } from 'react'
+import { React, useState } from 'react'
 import { Trophy } from 'lucide-react'
 
 export default function Tournament() {
@@ -21,13 +21,13 @@ export default function Tournament() {
       const currentMatch = newMatches.find(m => m.id === matchId)
       if (currentMatch) {
         currentMatch.winner = participant
-        
+
         // Find and update next match
-        const nextRoundMatch = newMatches.find(m => 
-          m.round === currentMatch.round + 1 && 
-          Math.ceil(currentMatch.position/2) === m.position
+        const nextRoundMatch = newMatches.find(m =>
+          m.round === currentMatch.round + 1 &&
+          Math.ceil(currentMatch.position / 2) === m.position
         )
-        
+
         if (nextRoundMatch) {
           if (currentMatch.position % 2 === 1) {
             nextRoundMatch.participant1 = participant
@@ -52,59 +52,68 @@ export default function Tournament() {
         </div>
 
         {/* Tournament Bracket */}
-        <div className="flex justify-between items-center">
+        <div className="flex justify-between items-center text-black" >
           <div className="flex-1">
-            <div className="grid grid-cols-3 gap-8">
+          <div className="grid grid-cols-2 gap-24">
+            {/* <div className="grid grid-cols-3 gap-8"> */}
               {/* Round 1 */}
-              <div className="space-y-8">
+              {/* <div className="space-y-8">
                 {matches.filter(m => m.round === 1).map((match) => (
                   <div key={match.id} className="relative">
                     <div className="flex flex-col gap-4">
                       <button
                         onClick={() => match.participant1 && handleWinnerSelection(match.id, match.participant1)}
-                        className={`h-12 bg-white rounded-md relative overflow-hidden transition-all duration-300 ${
-                          match.winner?.id === match.participant1?.id ? 'ring-2 ring-yellow-400' : ''
-                        }`}
+                        className={`bg-transparent relative flex items-center overflow-visible transition-all duration-300 ${match.winner?.id === match.participant1?.id ? 'ring-2 ring-yellow-400' : ''
+                          }`}
                       >
-                        <div className="absolute left-0 top-0 bottom-0 w-8 bg-violet-400"></div>
+                        <div class="absolute left-[2%] z-[1] w-[60px] h-[90px] bg-[#9a77ff] rounded-tr-[15px] rounded-bl-[15px]"></div>
+
+                        <div class="relative bg-white w-[300px] h-[100px] flex items-center clip-card">
                         <span className="pl-12">{match.participant1?.name || 'TBD'}</span>
+                        </div>
                       </button>
                       <button
                         onClick={() => match.participant2 && handleWinnerSelection(match.id, match.participant2)}
-                        className={`h-12 bg-white rounded-md relative overflow-hidden transition-all duration-300 ${
-                          match.winner?.id === match.participant2?.id ? 'ring-2 ring-yellow-400' : ''
-                        }`}
+                        className={`bg-transparent relative flex items-center overflow-visible transition-all duration-300 ${match.winner?.id === match.participant2?.id ? 'ring-2 ring-yellow-400' : ''
+                          }`}
                       >
-                        <div className="absolute left-0 top-0 bottom-0 w-8 bg-violet-400"></div>
+                        <div class="absolute left-[2%] z-[1] w-[60px] h-[90px] bg-[#9a77ff] rounded-tr-[15px] rounded-bl-[15px]"></div>
+
+                        <div class="relative bg-white w-[300px] h-[100px] flex items-center clip-card">
                         <span className="pl-12">{match.participant2?.name || 'TBD'}</span>
+                        </div>
                       </button>
                     </div>
                   </div>
                 ))}
-              </div>
+              </div> */}
 
               {/* Round 2 */}
               <div className="space-y-16 mt-16">
                 {matches.filter(m => m.round === 2).map((match) => (
                   <div key={match.id} className="relative">
                     <div className="flex flex-col gap-4">
-                      <button
+                    <button
                         onClick={() => match.participant1 && handleWinnerSelection(match.id, match.participant1)}
-                        className={`h-12 bg-white rounded-md relative overflow-hidden transition-all duration-300 ${
-                          match.winner?.id === match.participant1?.id ? 'ring-2 ring-yellow-400' : ''
-                        }`}
+                        className={`bg-transparent relative flex items-center overflow-visible transition-all duration-300 ${match.winner?.id === match.participant1?.id ? 'ring-2 ring-yellow-400' : ''
+                          }`}
                       >
-                        <div className="absolute left-0 top-0 bottom-0 w-8 bg-violet-400"></div>
-                        <span className="pl-12">{match.participant1?.name || 'TBD'}</span>
+                        <div class="absolute left-[7%] z-[1] w-[17%] h-[75%] bg-[#9a77ff] rounded-tr-[15px] rounded-bl-[15px]"></div>
+
+                        <div class="relative bg-white w-[100%] h-[100px] flex items-center clip-card">
+                        <span className="absolute left-[20%] pl-12">{match.participant1?.name || 'TBD'}</span>
+                        </div>
                       </button>
                       <button
                         onClick={() => match.participant2 && handleWinnerSelection(match.id, match.participant2)}
-                        className={`h-12 bg-white rounded-md relative overflow-hidden transition-all duration-300 ${
-                          match.winner?.id === match.participant2?.id ? 'ring-2 ring-yellow-400' : ''
-                        }`}
+                        className={`bg-transparent relative flex items-center overflow-visible transition-all duration-300 ${match.winner?.id === match.participant2?.id ? 'ring-2 ring-yellow-400' : ''
+                          }`}
                       >
-                        <div className="absolute left-0 top-0 bottom-0 w-8 bg-violet-400"></div>
-                        <span className="pl-12">{match.participant2?.name || 'TBD'}</span>
+                        <div class="absolute left-[7%] z-[1] w-[17%] h-[75%] bg-[#9a77ff] rounded-tr-[15px] rounded-bl-[15px]"></div>
+
+                        <div class="relative bg-white w-[100%] h-[100px] flex items-center clip-card">
+                        <span className="absolute left-[20%] pl-12">{match.participant2?.name || 'TBD'}</span>
+                        </div>
                       </button>
                     </div>
                   </div>
@@ -112,27 +121,31 @@ export default function Tournament() {
               </div>
 
               {/* Final Round */}
-              <div className="mt-32">
+              <div className="mt-52">
                 {matches.filter(m => m.round === 3).map((match) => (
                   <div key={match.id} className="relative">
                     <div className="flex flex-col gap-4">
-                      <button
+                    <button
                         onClick={() => match.participant1 && handleWinnerSelection(match.id, match.participant1)}
-                        className={`h-12 bg-white rounded-md relative overflow-hidden transition-all duration-300 ${
-                          match.winner?.id === match.participant1?.id ? 'ring-2 ring-yellow-400' : ''
-                        }`}
+                        className={`bg-transparent relative flex items-center overflow-visible transition-all duration-300 ${match.winner?.id === match.participant1?.id ? 'ring-2 ring-yellow-400' : ''
+                          }`}
                       >
-                        <div className="absolute left-0 top-0 bottom-0 w-8 bg-violet-400"></div>
-                        <span className="pl-12">{match.participant1?.name || 'TBD'}</span>
+                        <div class="absolute left-[7%] z-[1] w-[17%] h-[75%] bg-[#9a77ff] rounded-tr-[15px] rounded-bl-[15px]"></div>
+
+                        <div class="relative bg-white w-[100%] h-[100px] flex items-center clip-card">
+                        <span className="absolute left-[20%] pl-12">{match.participant1?.name || 'TBD'}</span>
+                        </div>
                       </button>
                       <button
                         onClick={() => match.participant2 && handleWinnerSelection(match.id, match.participant2)}
-                        className={`h-12 bg-white rounded-md relative overflow-hidden transition-all duration-300 ${
-                          match.winner?.id === match.participant2?.id ? 'ring-2 ring-yellow-400' : ''
-                        }`}
+                        className={`bg-transparent relative flex items-center overflow-visible transition-all duration-300 ${match.winner?.id === match.participant2?.id ? 'ring-2 ring-yellow-400' : ''
+                          }`}
                       >
-                        <div className="absolute left-0 top-0 bottom-0 w-8 bg-violet-400"></div>
-                        <span className="pl-12">{match.participant2?.name || 'TBD'}</span>
+                        <div class="absolute left-[7%] z-[1] w-[17%] h-[75%] bg-[#9a77ff] rounded-tr-[15px] rounded-bl-[15px]"></div>
+
+                        <div class="relative bg-white w-[100%] h-[100px] flex items-center clip-card">
+                        <span className="absolute left-[20%] pl-12">{match.participant2?.name || 'TBD'}</span>
+                        </div>
                       </button>
                     </div>
                   </div>
@@ -142,12 +155,12 @@ export default function Tournament() {
           </div>
 
           {/* Champion Section */}
-          <div className="w-64 flex flex-col items-center">
+          <div className="w-[30%] flex flex-col items-center">
             <div className="mb-4">
               <Trophy className="w-24 h-24 text-yellow-400" />
               <div className="text-yellow-400 text-2xl font-bold text-center mt-2">CHAMPION</div>
             </div>
-            <div className="w-full h-12 bg-white rounded-md relative overflow-hidden">
+            <div className="w-[80%] h-12 bg-white rounded-md relative overflow-hidden">
               <div className="absolute left-0 top-0 bottom-0 w-8 bg-violet-400"></div>
               <span className="pl-12">
                 {matches[6].winner?.name || 'TBD'}
