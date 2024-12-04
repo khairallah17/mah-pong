@@ -35,9 +35,10 @@ const HomePage = () => {
 
   useEffect(() => {
     const handleResize = () => {
-      const slideWidth = 230;
+      const slideWidth = 250;
       const containerWidth = window.innerWidth * 0.75;
-      const newSlides = Math.max(2, Math.round(containerWidth / slideWidth));
+      let newSlides = Math.max(2, Math.round(containerWidth / slideWidth));
+      newSlides = Math.min(newSlides, TEAM_MEMBERS.length - 1);
       console.log(slides, containerWidth / slideWidth);
 
       setSlides(newSlides);
@@ -153,7 +154,6 @@ const HomePage = () => {
           pagination={{ clickable: true }}
           navigation
           modules={[Pagination, Navigation]}
-          loop
           style={{ height: '40vh', width: '100%' }}
         >
           <div className="fadein"></div>
