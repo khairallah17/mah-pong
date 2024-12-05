@@ -70,12 +70,12 @@
 
 .team-container {
   display: flex;
+  flex-direction: column;
   justify-content: space-evenly;
   align-items: center;
-  /* gap: 24px; */
-  margin-top: 20vh;
+  margin-top: 10vh;
   width: 75%;
-  height: 80vh;
+  height: 70vh;
   position: relative;
 }
 
@@ -84,11 +84,13 @@
 }
 
 .team-member {
-  margin-inline: 2%;
+  margin-inline: 4%;
   background: linear-gradient(180deg, #12115D 28.5%, #2624C3 100%);
   border-radius: 20px;
   padding: 15px;
-  padding-top: 25px;
+  margin-top: 2.3vh;
+  padding-top: 13vh;
+  height: 90%;
   position: relative;
 }
 
@@ -96,13 +98,15 @@
   border-radius: 20px;
   z-index: 2;
   background-image: linear-gradient(90deg, #0E0E4E 0%, rgba(14, 14, 78, 0) 100%);
-  height: 100%;
+  height: 110%;
   width: 20%;
   position: absolute;
   rotate: 180deg;
   right: 0;
   top: 0;
   transform: translateX(-5px) ;
+  pointer-events: none;
+  user-select: none;
 }
 
 .fadein {
@@ -110,21 +114,23 @@
   z-index: 2;
   /* background-image: linear-gradient(90deg, #13125E 0%, rgba(18, 17, 93, 0) 100%); */
   background-image: linear-gradient(90deg, #0E0E4E 0%, rgba(14, 14, 78, 0) 100%);
-  height: 100%;
+  height: 110%;
   width: 20%;
   position: absolute;
   left: 0;
   top: 0;
+  pointer-events: none;
+  user-select: none;
 }
 
 .team-member img {
-  width: 100px;
-  height: 100px;
-  border-radius: 50px;
+  width: 110px;
+  height: 110px;
+  border-radius: 60px;
   background-color: black;
   position: absolute;
-  top: -50px;
-  transform: translateX(-50%);
+  top: -20%;
+  left: 27%;
 }
 
 p {
@@ -137,17 +143,6 @@ h1 {
 
 h2 {
   color: white;
-}
-
-.username-input {
-  margin-top: 30vh;
-}
-
-.navigation-buttons {
-  display: flex;
-  justify-content: space-between;
-  width: 50%;
-  margin-top: 30vh;
 }
 
 .space {
@@ -170,14 +165,15 @@ h2 {
 
 .scene {
   background-color: transparent;
-  height: 8000px;
+  height: 5000px;
 }
 
 .scene img {
   position: sticky;
   top: 0;
-  width: 100vw;
-  height: 100vh;
+  height: 90vh;
+  /* add footer sticking to scene here in the 10vh remaining*/
+  object-fit: cover;
 }
 
 #score1 {
@@ -194,4 +190,8 @@ h2 {
   right: 10px;
   font-size: 24px;
   color: white;
+}
+
+.clip-card {
+  clip-path: polygon(13% 0, 100% 0, 100% 71%, 63% 73%, 55% 100%, 0 100%, 0 45%);
 }
