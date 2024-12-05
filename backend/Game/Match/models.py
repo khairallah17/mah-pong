@@ -42,4 +42,4 @@ class TournamentMatch(models.Model):
         unique_together = ('tournament', 'round', 'position')
 
     def __str__(self):
-        return f'{self.username1} vs {self.username2}'
+        return f'{self.player1} vs {self.player2}'
