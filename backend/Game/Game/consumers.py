@@ -78,7 +78,7 @@ class TournamentConsumer(AsyncWebsocketConsumer):
     @database_sync_to_async
     def get_or_create_tournament(self):
         """Retrieve or create a new tournament."""
-        tournament = Tournament.objects.filter(status='active').first()
+        tournament = Tournament.objects.first()
         if not tournament:
             tournament = Tournament.objects.create()
         return tournament
@@ -94,8 +94,11 @@ class TournamentConsumer(AsyncWebsocketConsumer):
                     tournament.save()
 
                     # Start tournament if enough players
-                    if len(tournament.players) == 4:
-                        self.create_tournament_matches(tournament)
+                    logger.warning(f"Players in tournament: {len(tournament.players)} id: {tournament_id}")
+                    # if len(tournament.players) == 4:
+                    self.create_tournament_matches(tournament)
+                else:
+                    logger.warning(f"Player {username} already in tournament.")
         except Tournament.DoesNotExist:
             logger.error(f"Tournament with ID {tournament_id} does not exist.")
         except Exception as e:
@@ -118,7 +121,7 @@ class TournamentConsumer(AsyncWebsocketConsumer):
 
     @database_sync_to_async
     def create_tournament_matches(self, tournament):
-        """Create initial tournament matches."""
+        logger.warning("Creating tournament matches")
         players = tournament.players
         for i in range(0, len(players), 2):
             TournamentMatch.objects.create(
@@ -130,6 +133,7 @@ class TournamentConsumer(AsyncWebsocketConsumer):
             )
         tournament.status = 'active'
         tournament.save()
+        logger.warning("Tournament matches created")
 
     # @database_sync_to_async
     # def handle_player_ready(self, data):
@@ -182,17 +186,19 @@ class TournamentConsumer(AsyncWebsocketConsumer):
     async def send_tournament_state(self):
         """Send tournament state to all players."""
         tournament_state = await self.get_tournament_state()
+        logger.warning(f"Sending tournament state: {tournament_state}")
         await self.channel_layer.group_send(
             self.tournament_group_name,
             {"type": "tournament_update", "matches": tournament_state['matches']}
-        )
+        ) 
 
     @database_sync_to_async
     def get_tournament_state(self):
         """Fetch the current tournament state."""
         try:
-            tournament = Tournament.objects.filter(status='active').first()
+            tournament = Tournament.objects.first()
             if not tournament:
+                logger.warning("No active tournament found.")
                 return {"matches": []}
 
             matches = TournamentMatch.objects.filter(tournament=tournament)
