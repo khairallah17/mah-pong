@@ -2,14 +2,14 @@ from django.shortcuts import redirect
 from django.shortcuts import render
 from django.http import HttpResponse, HttpResponseRedirect
 from .models import User
-from .serializers import Get_Token_serial, RegistrationSerial, UserSerial, LogoutSerial
+from .serializers import Get_Token_serial, RegistrationSerial, UserSerial, LogoutSerial, Enable2FASerializer, Verify2FASerializer
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
 from rest_framework import generics
 from rest_framework.permissions import AllowAny, IsAuthenticated
-from rest_framework import status
+from rest_framework import status, views
 from django.contrib.auth import authenticate, get_user_model
 # For Google Login/registring api
 from allauth.socialaccount.providers.google.views import GoogleOAuth2Adapter
@@ -35,6 +35,14 @@ from django.contrib.auth.password_validation import validate_password
 from django.utils.decorators import method_decorator
 from django.http import JsonResponse
 import json
+
+from django_otp.plugins.otp_totp.models import TOTPDevice
+import pyotp
+import qrcode
+import qrcode.image.svg
+from io import BytesIO
+import base64
+from rest_framework_simplejwt.authentication import JWTAuthentication
 
 
 CLIENT_ID = os.environ.get('CLIENT_ID')
@@ -506,6 +514,94 @@ class   Confirm_reset_Password(View):
 #             {'error': 'Invalid reset link'}, 
 #             status=status.HTTP_400_BAD_REQUEST
 #         )
+
+class Enable2FAView(views.APIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]  # Add JWT authentication
+    
+    def get(self, request):
+        try:
+            print("agoumi")
+            # Generate new TOTP device if doesn't exist
+            device, created = TOTPDevice.objects.get_or_create(
+                user=request.user,
+                defaults={'name': f'2FA Device for {request.user.email}'}
+            )
+            
+            print("agoumi10")
+            if created:
+                device.save()
+            
+            print("agoumi1")
+            # Generate QR code
+            totp = pyotp.TOTP(device.bin_key)
+            provisioning_uri = totp.provisioning_uri(
+                request.user.email,
+                issuer_name="YourAppName"
+            )
+            
+            # Create QR code image
+            qr = qrcode.QRCode(
+                version=1,
+                error_correction=qrcode.constants.ERROR_CORRECT_L,
+                box_size=10,
+                border=4,
+            )
+            qr.add_data(provisioning_uri)
+            qr.make(fit=True)
+            
+            # Convert QR code to base64
+            img_buffer = BytesIO()
+            qr.make_image().save(img_buffer, format='PNG')
+            qr_code_base64 = base64.b64encode(img_buffer.getvalue()).decode()
+            
+            return Response({
+                'qr_code': qr_code_base64,
+                'secret': device.bin_key  # Changed from 'secret_key' to 'secret'
+            })
+        except Exception as e:
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+    
+    def post(self, request):
+        serializer = Enable2FASerializer(
+            data=request.data,
+            context={'request': request}
+        )
+        
+        if serializer.is_valid():
+            request.user.is_two_factor_enabled = True
+            request.user.save()
+            return Response({'message': '2FA enabled successfully'})
+            
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class Verify2FAView(views.APIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]  # Add JWT authentication
+    
+    def post(self, request):
+        serializer = Verify2FASerializer(data=request.data)
+        
+        if serializer.is_valid():
+            otp = serializer.validated_data['otp']
+            try:
+                device = TOTPDevice.objects.get(user=request.user)
+                if device.verify_token(otp):
+                    return Response({'message': 'OTP verified successfully'})
+                return Response(
+                    {'error': 'Invalid OTP'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            except TOTPDevice.DoesNotExist:
+                return Response(
+                    {'error': '2FA device not found'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class LogoutViews(APIView):
     permission_classes = [IsAuthenticated]

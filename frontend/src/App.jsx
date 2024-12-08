@@ -5,6 +5,7 @@ import { AuthProvider } from "./context_login_Register/AuthContext.jsx"
 import { Register, Login, Dashboard, VerifyPsdEmail, ResetPassword } from "./pages"
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { Navigate } from "react-router-dom";
+import TwoFactorSetup from './pages/OTP_2fa/TwoFactorSetup.jsx'
 import HomePage from './HomePage';
 import Pve3d from './pve/Pve3d';
 import Pvp2d from './pvp/Pvp2d';
@@ -42,6 +43,9 @@ function App() {
           } />
           <Route path="/password-reset" element={
               <VerifyPsdEmail />
+          } />
+          <Route path="/TwoFactorSetup" element={
+              <TwoFactorSetup />
           } />
 
           <Route path="/password-reset/confirm" element={

@@ -6,6 +6,10 @@ from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 import uuid
 from rest_framework_simplejwt.tokens import RefreshToken, TokenError
+# from rest_framework import serializers
+from django_otp.plugins.otp_totp.models import TOTPDevice
+from django_otp.util import random_hex
+import pyotp
 
 class   UserSerial(serializers.ModelSerializer):
     id = serializers.UUIDField(read_only=True)
@@ -62,7 +66,25 @@ class   RegistrationSerial(serializers.ModelSerializer):
             user.save()
         
         return user
-    
+
+class Enable2FASerializer(serializers.Serializer):
+    otp = serializers.CharField(required=True)  # Changed from 'token' to 'otp'
+
+    def validate(self, attrs):
+        user = self.context['request'].user
+        otp = attrs.get('otp')
+        
+        try:
+            device = TOTPDevice.objects.get(user=user)
+            if not device.verify_token(otp):
+                raise serializers.ValidationError("Invalid OTP")
+        except TOTPDevice.DoesNotExist:
+            raise serializers.ValidationError("2FA device not found")
+        
+        return attrs
+
+class Verify2FASerializer(serializers.Serializer):
+    otp = serializers.CharField(required=True)  # Changed from 'token' to 'otp'
     
 class LogoutSerial(serializers.Serializer):
     refresh = serializers.CharField()

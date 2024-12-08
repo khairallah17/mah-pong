@@ -14,6 +14,11 @@ class User(AbstractUser):
         upload_to='./',
         default='./pic1.jpeg'
     )
+    is_two_factor_enabled = models.BooleanField(default=False)
+    two_factor_secret = models.CharField(max_length=32, blank=True, null=True)
+    
+    def __str__(self):
+        return self.email
     # avatars ineed to randomly set avatars to users
     
     # I want username as the login field
