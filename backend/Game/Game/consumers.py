@@ -45,7 +45,9 @@ class TournamentConsumer(AsyncWebsocketConsumer):
             # Add player to the group and tournament
             await self.channel_layer.group_add(self.tournament_group_name, self.channel_name)
             await self.add_player_to_tournament(tournament.id, self.username)
-
+            # if len(tournament.players) == 4:
+            matches = await self.get_or_create_tournament_matches(tournament, self.username)
+            logger.warning(f"Matches: {matches}")
             # Send the initial tournament state
             await self.send_tournament_state()
 
@@ -89,14 +91,11 @@ class TournamentConsumer(AsyncWebsocketConsumer):
         try:
             with transaction.atomic():
                 tournament = Tournament.objects.select_for_update().get(id=tournament_id)
+                
                 if username not in tournament.players:
                     tournament.players.append(username)
                     tournament.save()
-
-                    # Start tournament if enough players
-                    logger.warning(f"Players in tournament: {len(tournament.players)} id: {tournament_id}")
-                    # if len(tournament.players) == 4:
-                    self.create_tournament_matches(tournament)
+                    logger.warning(f"Players in tournament: {tournament.players} id: {tournament_id}")
                 else:
                     logger.warning(f"Player {username} already in tournament.")
         except Tournament.DoesNotExist:
@@ -120,20 +119,40 @@ class TournamentConsumer(AsyncWebsocketConsumer):
             logger.error(f"Error removing player: {e}")
 
     @database_sync_to_async
-    def create_tournament_matches(self, tournament):
+    def get_or_create_tournament_matches(self, tournament, username):
         logger.warning("Creating tournament matches")
-        players = tournament.players
-        for i in range(0, len(players), 2):
-            TournamentMatch.objects.create(
-                tournament=tournament,
-                round=1,
-                position=i // 2,
-                player1=players[i],
-                player2=players[i + 1] if i + 1 < len(players) else None
-            )
-        tournament.status = 'active'
-        tournament.save()
-        logger.warning("Tournament matches created")
+        matches = list(TournamentMatch.objects.filter(tournament=tournament))
+        if (len(matches) > 0):
+            if not any(username in [match.player1, match.player2] for match in matches):
+                for match in matches:
+                    if not match.player1:
+                        match.player1 = username
+                        match.save()
+                        return matches
+                    elif not match.player2:
+                        match.player2 = username
+                        match.save()
+                        return matches
+                logger.warning(f"matches : {matches}")
+        else:
+            # Create matches if they don't exist
+            for round in range(1, 3):  # 2 rounds: initial and final
+                for position in range(1, (2 ** (2 - round)) + 1):  # 2 matches in the first round, 1 match in the final
+                    match, _ = TournamentMatch.objects.get_or_create(
+                        tournament=tournament,
+                        round=round,
+                        position=position
+                    )
+                    matches.append(match)
+                    logger.warning(f"Match created: {match}")
+            
+            matches[0].player1 = username
+            matches[0].save()
+            if len(tournament.players) == 4:
+                tournament.status = 'active'
+            tournament.save()
+
+        return matches
 
     # @database_sync_to_async
     # def handle_player_ready(self, data):
