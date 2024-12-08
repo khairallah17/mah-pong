@@ -122,21 +122,22 @@ class TournamentConsumer(AsyncWebsocketConsumer):
     def get_or_create_tournament_matches(self, tournament, username):
         logger.warning("Creating tournament matches")
         matches = list(TournamentMatch.objects.filter(tournament=tournament))
-        if not any(username in [match.player1, match.player2] for match in matches):
-            for match in matches:
-                if not match.player1:
-                    match.player1 = username
-                    match.save()
-                    break
-                elif not match.player2:
-                    match.player2 = username
-                    match.save()
-                    break
-            logger.warning(f"matches : {matches}")
+        if (len(matches) > 0):
+            if not any(username in [match.player1, match.player2] for match in matches):
+                for match in matches:
+                    if not match.player1:
+                        match.player1 = username
+                        match.save()
+                        return matches
+                    elif not match.player2:
+                        match.player2 = username
+                        match.save()
+                        return matches
+                logger.warning(f"matches : {matches}")
         else:
             # Create matches if they don't exist
             for round in range(1, 3):  # 2 rounds: initial and final
-                for position in range(2 ** (2 - round)):  # 2 matches in the first round, 1 match in the final
+                for position in range(1, (2 ** (2 - round)) + 1):  # 2 matches in the first round, 1 match in the final
                     match, _ = TournamentMatch.objects.get_or_create(
                         tournament=tournament,
                         round=round,
@@ -145,7 +146,6 @@ class TournamentConsumer(AsyncWebsocketConsumer):
                     matches.append(match)
                     logger.warning(f"Match created: {match}")
             
-            # Add the username to the first match as the first player
             matches[0].player1 = username
             matches[0].save()
             if len(tournament.players) == 4:
