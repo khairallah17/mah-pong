@@ -11,6 +11,7 @@ function Pve3d() {
     const paddle1Ref = useRef(null);
     const ballRef = useRef(null);
     const paddlePositionDiffRef = useRef(null);
+    const velocityRef = useRef(null);
     const wsRef = useRef(null);
     const [isMatched, setIsMatched] = useState(false);
     const [isPlayer1, setIsPlayer1] = useState(true);
@@ -51,7 +52,7 @@ function Pve3d() {
                         setIsPlayer1(false);
                 } else if (message.type === 'game_event') {
                     if (message.event === 'restart')
-                        restartGame(ballRef.current, INITIAL_VELOCITY, paddlePositionDiffRef.current, new THREE.Vector3(0, 1, 0));
+                        restartGame(new THREE.Vector3(0, 1, 0));
                     else
                         updateScene(message.event, message.position);
                 } else if (message.type === 'game_state') {
@@ -136,6 +137,7 @@ function Pve3d() {
             let paddlePositionDiff = new THREE.Vector3(0, 0, 0);
             let firstIntersectionPosition = null;
             let lastIntersectionPosition = null;
+            velocityRef.current = velocity;
             paddlePositionDiffRef.current = paddlePositionDiff;
             let initBallPos;
 
@@ -554,11 +556,11 @@ function Pve3d() {
         }
     }, [isMatched, isPlayer1]);
 
-    function restartGame(ball, velocity, paddlePositionDiff, initBallPos) {
-        velocity.copy(INITIAL_VELOCITY);
-        paddlePositionDiff.set(0, 0, 0);
-        ball.position.copy(initBallPos);
-
+    function restartGame(initBallPos) {
+        console.log('restart');
+        velocityRef.current?.copy(INITIAL_VELOCITY);
+        paddlePositionDiffRef.current?.set(0, 0, 0);
+        ballRef.current?.position.copy(initBallPos);
     }
 
     return (

@@ -113,7 +113,7 @@ export default function Tournament() {
                       >
                         <div className="absolute left-[2%] z-[1] w-[60px] h-[90%] bg-[#9a77ff] rounded-tr-[15px] rounded-bl-[15px]"></div>
                         <div className="relative bg-white w-[100%] h-[100px] flex items-center clip-card">
-                          <span className="absolute left-[20%] pl-12">{match.username1?.name || 'TBD'}</span>
+                          <span className="absolute left-[20%] pl-12">{match.username1 || 'TBD'}</span>
                         </div>
                         <div className="absolute left-[100%] top-[50%] w-[13%] h-[2px] bg-white"></div>
                         <div className='absolute left-[113%] top-[50%] w-[2px] h-[120%] bg-white'></div>
@@ -125,7 +125,7 @@ export default function Tournament() {
                       >
                         <div className="absolute left-[2%] z-[1] w-[60px] h-[90%] bg-[#9a77ff] rounded-tr-[15px] rounded-bl-[15px]"></div>
                         <div className="relative bg-white w-[100%] h-[100px] flex items-center clip-card">
-                          <span className="absolute left-[20%] pl-12">{match.username2?.name || 'TBD'}</span>
+                          <span className="absolute left-[20%] pl-12">{match.username2 || 'TBD'}</span>
                         </div>
                         <div className="absolute left-[100%] top-[50%] w-[13%] h-[2px] bg-white"></div>
                       </button>
@@ -146,7 +146,7 @@ export default function Tournament() {
                       >
                         <div className="absolute left-[2%] z-[1] w-[60px] h-[90%] bg-[#9a77ff] rounded-tr-[15px] rounded-bl-[15px]"></div>
                         <div className="relative bg-white w-[100%] h-[100px] flex items-center clip-card">
-                          <span className="absolute left-[20%] pl-12">{match.username1?.name || 'TBD'}</span>
+                          <span className="absolute left-[20%] pl-12">{match.username1 || 'TBD'}</span>
                         </div>
                         <div className="absolute left-[100%] top-[50%] w-[13%] h-[2px] bg-white"></div>
                         <div className='absolute left-[113%] top-[50%] w-[2px] h-[120%] bg-white'></div>
@@ -158,7 +158,7 @@ export default function Tournament() {
                       >
                         <div className="absolute left-[2%] z-[1] w-[60px] h-[90%] bg-[#9a77ff] rounded-tr-[15px] rounded-bl-[15px]"></div>
                         <div className="relative bg-white w-[100%] h-[100px] flex items-center clip-card">
-                          <span className="absolute left-[20%] pl-12">{match.username2?.name || 'TBD'}</span>
+                          <span className="absolute left-[20%] pl-12">{match.username2 || 'TBD'}</span>
                         </div>
                         <div className="absolute left-[100%] top-[50%] w-[13%] h-[2px] bg-white"></div>
                       </button>

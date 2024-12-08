@@ -240,7 +240,7 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
                 raise jwt.InvalidTokenError("Username not found in token")
             
             user_channels[self.username] = self.channel_name
-            await self.save_username_to_session(self.username)
+            # await self.save_username_to_session(self.username)
             
             if self.username not in matchmaking_pool:
                 matchmaking_pool.append(self.username)
