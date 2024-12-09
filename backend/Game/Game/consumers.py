@@ -35,9 +35,9 @@ class TournamentConsumer(AsyncWebsocketConsumer):
             if not self.username:
                 raise jwt.InvalidTokenError("Username not found in token.")
 
-            # Accept connection
+            tournament_code = self.scope['query_string'].decode().split('=')[2] if len(self.scope['query_string'].decode().split('=')) > 2 else None
+            logger.warning(f"Username: {self.username}, Tournament code: {tournament_code}")
             await self.accept()
-
             # Join or create a tournament
             tournament = await self.get_or_create_tournament()
             self.tournament_group_name = f"tournament_{tournament.id}"
@@ -72,15 +72,15 @@ class TournamentConsumer(AsyncWebsocketConsumer):
 
             if message_type == 'match_result':
                 await self.handle_match_result(data)
-            # elif message_type == 'player_ready':
-            #     await self.handle_player_ready(data)
+            elif message_type == 'player_ready':
+                await self.handle_player_ready(data)
         except Exception as e:
             logger.error(f"Error in receive: {e}")
 
     @database_sync_to_async
     def get_or_create_tournament(self):
         """Retrieve or create a new tournament."""
-        tournament = Tournament.objects.first()
+        tournament = Tournament.objects.filter(status='waiting').first()
         if not tournament:
             tournament = Tournament.objects.create()
         return tournament
@@ -154,25 +154,33 @@ class TournamentConsumer(AsyncWebsocketConsumer):
 
         return matches
 
-    # @database_sync_to_async
-    # def handle_player_ready(self, data):
-        # """Handle player ready event."""
-        # try:
-        #     match_id = data.get('match_id')
-        #     player_id = data.get('player_id')
+    @database_sync_to_async
+    def handle_player_ready_sync(self, data):
+        """Handle player ready event."""
+        try:
+            tournament = Tournament.objects.filter
+            round = data.get('round')
+            position = data.get('position')
+            match = TournamentMatch.objects.get(tournament=tournament, round=round, position=position)
+            player_id = data.get('player_id')
 
-        #     match = TournamentMatch.objects.get(id=match_id)
-        #     if player_id == 1:
-        #         match.player1_ready = True
-        #     else:
-        #         match.player2_ready = True
+            if player_id == 1:
+                match.player1_ready = True
+            else:
+                match.player2_ready = True
 
-        #     match.save()
+            match.save()
 
-        #     if match.player1_ready and match.player2_ready:
-        #         await self.send_tournament_state()
-        # except Exception as e:
-        #     logger.error(f"Error handling player ready: {e}")
+            return match.player1_ready and match.player2_ready
+        except Exception as e:
+            logger.error(f"Error handling player ready: {e}")
+            return False
+
+    async def handle_player_ready(self, data):
+        """Handle player ready event."""
+        both_ready = await self.handle_player_ready_sync(data)
+        if both_ready:
+            await self.match_start(data)
 
     @database_sync_to_async
     def handle_match_result(self, data):
@@ -210,6 +218,12 @@ class TournamentConsumer(AsyncWebsocketConsumer):
             self.tournament_group_name,
             {"type": "tournament_update", "matches": tournament_state['matches']}
         ) 
+    
+    async def match_start(self):
+        await self.channel_layer.group_send(
+            self.tournament_group_name,
+            {"type": "match_start"}
+        )
 
     @database_sync_to_async
     def get_tournament_state(self):
@@ -245,6 +259,9 @@ class TournamentConsumer(AsyncWebsocketConsumer):
     async def send_error_message(self, error_type, code):
         """Send error message to the player."""
         await self.send(text_data=json.dumps({"type": "error", "message": error_type}))
+
+    async def match_start(self):
+        await self.send(text_data=json.dumps({"type": "match_start"}))
 
 
 class MatchmakingConsumer(AsyncWebsocketConsumer):

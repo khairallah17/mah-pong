@@ -1,8 +1,10 @@
 import { React, useState, useRef, useEffect } from 'react'
 import { Trophy } from 'lucide-react'
+import { useNavigate, useLocation } from 'react-router-dom'
 
 export default function Tournament() {
   const wsRef = useRef(null);
+  const navigate = useNavigate();
   // class Match(models.Model):
   //   player1 = models.CharField(max_length=100)
   //   player2 = models.CharField(max_length=100)
@@ -17,11 +19,14 @@ export default function Tournament() {
   const [isReady, setIsReady] = useState(false);
   const [playerId, setPlayerId] = useState(null);
   const token = localStorage.getItem('authtoken');
+  const location = useLocation();
+  const queryParams = new URLSearchParams(location.search);
+  const tournamentCode = queryParams.get('code');
 
   useEffect(() => {
     if (token && !wsRef.current) {
       const accessToken = JSON.parse(token).access;
-      wsRef.current = new WebSocket('ws://localhost:8000/ws/tournament/?token=' + accessToken);
+      wsRef.current = new WebSocket(`ws://localhost:8000/ws/tournament/?token=${accessToken}&code=${tournamentCode}`);
 
       wsRef.current.onopen = () => {
         console.log('WebSocket connection established');
@@ -42,6 +47,9 @@ export default function Tournament() {
         } else if (message.type === 'tournament_update') {
           setMatches(message.matches);
           console.log('Tournament updated:', message.matches);
+        } else if (message.type === 'match_start') {
+          console.log('Match started:');
+          navigate('/pvp2d');
         }
       };
 
