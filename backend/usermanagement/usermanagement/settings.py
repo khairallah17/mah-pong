@@ -57,13 +57,12 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'corsheaders',
     'rest_framework_simplejwt',
-    'api', # Its My Own APP NAmed API
+    'api',
     'allauth',
     'allauth.account',
     'allauth.socialaccount',
     'allauth.socialaccount.providers.google',
     'dj_rest_auth',
-    
 ]
 
 SITE_ID = 1

@@ -8,6 +8,7 @@ from channels.db import database_sync_to_async
 from Match.models import Match
 from Match.models import Tournament, TournamentMatch
 from django.db import transaction
+from urllib.parse import parse_qs
 
 
 logger = logging.getLogger(__name__)
@@ -27,15 +28,17 @@ class TournamentConsumer(AsyncWebsocketConsumer):
         self.username = None
 
     async def connect(self):
+        query_string = self.scope['query_string'].decode()
+        query_params = parse_qs(query_string)
+        token = query_params.get('token', [None])[0]
+        tournament_code = query_params.get('code', [None])[0]
         try:
-            token = self.scope['query_string'].decode().split('=')[1]
             payload = jwt.decode(token, settings.SECRET_KEY, algorithms=['HS256'])
             self.username = payload.get('username')
 
             if not self.username:
                 raise jwt.InvalidTokenError("Username not found in token.")
 
-            tournament_code = self.scope['query_string'].decode().split('=')[2] if len(self.scope['query_string'].decode().split('=')) > 2 else None
             logger.warning(f"Username: {self.username}, Tournament code: {tournament_code}")
             await self.accept()
             # Join or create a tournament
