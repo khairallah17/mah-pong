@@ -28,8 +28,14 @@ class Tournament(models.Model):
     ]
     created_at = models.DateTimeField(auto_now_add=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="waiting")
+    code = models.CharField(max_length=6, unique=True)
     # max_players = models.IntegerField(default=4)
     players = ArrayField(models.CharField(max_length=100), default=list, blank=True)
+
+    def save(self, *args, **kwargs):
+        if not self.code:
+            self.code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
+        super(Tournament, self).save(*args, **kwargs)
 
     def __str__(self):
         return f'Tournament {self.id}'
