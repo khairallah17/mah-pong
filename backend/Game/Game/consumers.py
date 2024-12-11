@@ -42,7 +42,7 @@ class TournamentConsumer(AsyncWebsocketConsumer):
             logger.warning(f"Username: {self.username}, Tournament code: {tournament_code}")
             await self.accept()
             # Join or create a tournament
-            tournament = await self.get_or_create_tournament()
+            tournament = await self.get_or_create_tournament(tournament_code)
             self.tournament_group_name = f"tournament_{tournament.id}"
 
             # Add player to the group and tournament
@@ -81,11 +81,14 @@ class TournamentConsumer(AsyncWebsocketConsumer):
             logger.error(f"Error in receive: {e}")
 
     @database_sync_to_async
-    def get_or_create_tournament(self):
+    def get_or_create_tournament(self, code):
         """Retrieve or create a new tournament."""
-        tournament = Tournament.objects.filter(status='waiting').first()
-        if not tournament:
+        if not code:
             tournament = Tournament.objects.create()
+            return tournament
+        tournament = Tournament.objects.get(code=code)
+        if not tournament or tournament.status != 'waiting':
+            raise Exception("Tournament not found or not in waiting state.")
         return tournament
 
     @database_sync_to_async
@@ -151,9 +154,6 @@ class TournamentConsumer(AsyncWebsocketConsumer):
             
             matches[0].player1 = username
             matches[0].save()
-            if len(tournament.players) == 4:
-                tournament.status = 'active'
-            tournament.save()
 
         return matches
 
