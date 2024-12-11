@@ -21,7 +21,7 @@ export default function Tournament() {
   const token = localStorage.getItem('authtoken');
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
-  const tournamentCode = queryParams.get('code');
+  const [tournamentCode, setTournamentCode] = useState(queryParams.get('code'));
 
   useEffect(() => {
     if (token && !wsRef.current) {
@@ -50,6 +50,8 @@ export default function Tournament() {
         } else if (message.type === 'match_start') {
           console.log('Match started:');
           navigate('/pvp2d');
+        } else if (message.type === 'tournament_code') {
+          setTournamentCode(message.code);
         }
       };
 
@@ -198,8 +200,12 @@ export default function Tournament() {
           className={`px-4 py-2 bg-green-500 text-white rounded-md ${isReady ? 'opacity-50 cursor-not-allowed' : ''}`}
           disabled={isReady}
         >
-          {isReady ? 'Ready' : 'Click to Ready'}
+          {isReady ? 'Ready' : 'Ready'}
         </button>
+        {/* tournament code */}
+        <div className="text-white mt-4">
+          Tournament Code: {tournamentCode}
+        </div>
       </div>
     </div>
   )

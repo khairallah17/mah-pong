@@ -42,7 +42,7 @@ class TournamentConsumer(AsyncWebsocketConsumer):
             logger.warning(f"Username: {self.username}, Tournament code: {tournament_code}")
             await self.accept()
             # Join or create a tournament
-            tournament = await self.get_or_create_tournament(tournament_code)
+            tournament = await self.get_or_create_tournament_send(tournament_code)
             self.tournament_group_name = f"tournament_{tournament.id}"
 
             # Add player to the group and tournament
@@ -83,12 +83,20 @@ class TournamentConsumer(AsyncWebsocketConsumer):
     @database_sync_to_async
     def get_or_create_tournament(self, code):
         """Retrieve or create a new tournament."""
-        if not code:
+        if code is None or code == 'null':
             tournament = Tournament.objects.create()
             return tournament
         tournament = Tournament.objects.get(code=code)
         if not tournament or tournament.status != 'waiting':
             raise Exception("Tournament not found or not in waiting state.")
+        return tournament
+
+    async def get_or_create_tournament_send(self, code):
+        tournament = await self.get_or_create_tournament(code)
+        await self.send(text_data=json.dumps({
+            'type': 'tournament_code',
+            'code': tournament.code
+        }))
         return tournament
 
     @database_sync_to_async
