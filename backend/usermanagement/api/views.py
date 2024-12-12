@@ -2,7 +2,7 @@ from django.shortcuts import redirect
 from django.shortcuts import render
 from django.http import HttpResponse, HttpResponseRedirect
 from .models import User
-from .serializers import Get_Token_serial, RegistrationSerial, UserSerial, LogoutSerial
+from .serializers import Get_Token_serial, RegistrationSerial, UserSerial, LogoutSerial, UserSearchSerializer
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenObtainPairView
@@ -36,6 +36,9 @@ from django.utils.decorators import method_decorator
 from django.http import JsonResponse
 import json
 
+from django.db.models import Q
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+
 
 CLIENT_ID = os.environ.get('CLIENT_ID')
 CLIENT_SECRET = os.environ.get('CLIENT_SECRET')
@@ -47,7 +50,16 @@ print (CLIENT_SECRET)
 print (GCLIENT_ID)
 print (GCLIENT_SECRET)
 
+class UserSearchView(APIView):
+    permission_classes = [IsAuthenticated]
 
+    def get(self, request):
+        # Your search logic here
+        term = request.query_params.get('term', '')
+        page = int(request.query_params.get('page', 1))
+        limit = int(request.query_params.get('limit', 10))
+        # Example response
+        return Response({"users": [], "totalPages": 0, "total": 0})
 
 # Create your views here.
 class Get_MyTokenObtainPairView(TokenObtainPairView):

@@ -7,6 +7,14 @@ from rest_framework.validators import UniqueValidator
 import uuid
 from rest_framework_simplejwt.tokens import RefreshToken, TokenError
 
+
+class UserSearchSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'fullname' ,'username', 'email']  # Add any additional fields you want to expose
+
+
+
 class   UserSerial(serializers.ModelSerializer):
     id = serializers.UUIDField(read_only=True)
     
