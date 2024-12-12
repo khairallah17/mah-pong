@@ -3,15 +3,9 @@ from .models import User
 from django.contrib.auth.password_validation import validate_password
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework import serializers
-from rest_framework.validators import UniqueValidator
 import uuid
 from rest_framework_simplejwt.tokens import RefreshToken, TokenError
 
-
-class UserSearchSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = ['id', 'fullname' ,'username', 'email']  # Add any additional fields you want to expose
 
 
 

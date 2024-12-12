@@ -5,9 +5,8 @@ from . import views
 # from . import adapter
 
 urlpatterns = [
-    #zouhair urls
-    path('search-users/', views.UserSearchView.as_view(), name='user-search'),
     
+    path('allusers/', views.get_allusers.as_view(), name="all-users"),
     path('token/', views.Get_MyTokenObtainPairView.as_view(), name="signin"),
     path('token/refresh/', TokenRefreshView.as_view(), name="refresh-token"),
     path('register/', views.RegisterationView.as_view(), name="signup"),
