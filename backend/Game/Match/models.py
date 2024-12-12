@@ -17,7 +17,7 @@ class Match(models.Model):
             self.username2 = self.username2[:10]
         if self.winner:
             self.winner = self.winner[:10]
-        super(TournamentMatch, self).save(*args, **kwargs)
+        super(Match, self).save(*args, **kwargs)
 
     def __str__(self):
         return f'{self.username1} vs {self.username2}'

@@ -45,8 +45,9 @@ class TournamentConsumer(AsyncWebsocketConsumer):
             self.tournament_group_name = f"tournament_{tournament.id}"
 
             # Add player to the group and tournament
-            await self.channel_layer.group_add(self.tournament_group_name, self.channel_name)
-            await self.add_player_to_tournament(tournament.id, self.username)
+            if (self.username not in tournament.players):
+                await self.channel_layer.group_add(self.tournament_group_name, self.channel_name)
+                await self.add_player_to_tournament(tournament.id, self.username)
             # if len(tournament.players) == 4:
             matches = await self.get_or_create_tournament_matches(tournament, self.username)
             logger.warning(f"Matches: {matches}")
@@ -329,7 +330,8 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
                     'type': 'game_event',
                     'event': event,
                     'player_id': player_id,
-                    'position': data.get('position')
+                    'position': data.get('position'),
+                    'score': data.get('score')
                 }
             )
 
@@ -402,11 +404,14 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
     async def game_event(self, event):
         game_event = event['event']
         player_id = event['player_id']
+        score = event.get('score')
+        logger.warning(f"Game event: {game_event}, score: {score}")
         await self.send(text_data=json.dumps({
             'type': 'game_event',
             'event': game_event,
             'player_id': player_id,
-            'position': event.get('position')
+            'position': event.get('position'),
+            'score': score
         }))
 
 # Complex logic for matchmaking
