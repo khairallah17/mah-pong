@@ -1,12 +1,86 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import googleImage from '../images/google.svg';
 import intraImage from '../images/intraImage.webp';
+import axios from 'axios';
 
 export default function Profile() {
-  const [firstName, setFirstName] = useState("ZOUHAIR");
-  const [lastName, setLastName] = useState("LAAROUSSI");
-  const [username, setUsername] = useState("@ zlaarous");
-  const [email, setEmail] = useState("zlaarous@1337.com");
+  const [fullName, setFullName] = useState("");
+  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
+
+  // Fetch user profile
+  const fetchProfile = async () => {
+    try {
+      let token = localStorage.getItem('authtoken');
+      if (!token) {
+        console.error('No authentication token found');
+        return;
+      }
+      
+      const parsed = JSON.parse(token);
+      const accessToken = parsed.access;
+
+      const response = await axios.get('http://localhost:8001/api/edit-profile/', {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`
+        }
+      });
+      
+      // Use fullname directly from the backend
+      setFullName(response.data.fullname || "");
+      setUsername(response.data.username || "");
+      setEmail(response.data.email || "");
+    } catch (error) {
+      console.error('Failed to fetch profile', error);
+    }
+  };
+
+  // Fetch profile when component mounts
+  useEffect(() => {
+    fetchProfile();
+  }, []);
+
+  // Update profile
+  const handleSubmit = async () => {
+    try {
+      let token = localStorage.getItem('authtoken');
+      if (!token) {
+        console.error('No authentication token found');
+        return;
+      }
+      
+      const parsed = JSON.parse(token);
+      const accessToken = parsed.access;
+
+      const response = await axios.put('http://localhost:8001/api/edit-profile/', {
+        fullname: fullName,
+        username: username,
+        email: email
+      }, {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`
+        }
+      });
+      
+      // Optional: Add success feedback
+      alert('Profile updated successfully!');
+    } catch (error) {
+      console.error('Failed to update profile', error);
+      
+      // Optional: Add error feedback
+      alert('Failed to update profile. Please try again.');
+    }
+  };
+
+  // Safety check for initials
+  const getInitials = () => {
+    const initials = fullName
+      .split(' ')
+      .map(name => name[0])
+      .join('')
+      .toUpperCase();
+    return initials.slice(0, 2);
+  };
 
   return (
     <div className="w-full max-w-4xl mx-auto p-8 space-y-8">
@@ -14,7 +88,7 @@ export default function Profile() {
       <div className="flex flex-col md:flex-row justify-between items-center gap-8">
         <div className="flex flex-col md:flex-row items-center gap-4">
           <div className="w-20 h-20 bg-purple-500 rounded-full flex items-center justify-center text-white text-2xl font-inter">
-            {firstName[0]}{lastName[0]}
+            {getInitials()}
           </div>
           <div className="space-y-2 text-center md:text-left">
             <h3 className="font-inter text-white text-xl">Profile Picture</h3>
@@ -47,21 +121,12 @@ export default function Profile() {
 
       <div className="space-y-6 pt-8 border-t border-white/80">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label className="block text-sm text-white/90 mb-2">First name</label>
+          <div className="md:col-span-2">
+            <label className="block text-sm text-white/90 mb-2">Full Name</label>
             <input
               type="text"
-              value={firstName}
-              onChange={(e) => setFirstName(e.target.value)}
-              className="w-full px-4 py-2 bg-black/80 border border-white/10 text-gray-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-white/5 transition-all mb-4"
-            />
-          </div>
-          <div>
-            <label className="block text-sm text-white/90 mb-2">Last name</label>
-            <input
-              type="text"
-              value={lastName}
-              onChange={(e) => setLastName(e.target.value)}
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
               className="w-full px-4 py-2 bg-black/80 border border-white/10 text-gray-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-white/5 transition-all mb-4"
             />
           </div>
@@ -85,7 +150,10 @@ export default function Profile() {
           </div>
         </div>
 
-        <button className="w-40 px-2 py-2 bg-white text-black rounded-lg hover:bg-white/80 transition-colors text-sm font-Inter">
+        <button 
+          onClick={handleSubmit}
+          className="w-40 px-2 py-2 bg-white text-black rounded-lg hover:bg-white/80 transition-colors text-sm font-Inter"
+        >
           Submit
         </button>
 

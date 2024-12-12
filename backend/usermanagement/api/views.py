@@ -558,4 +558,29 @@ class get_allusers(APIView):
         serializer = UserSerial(users, many=True)
         return Response(serializer.data)
     
+class UserEditProfileView(APIView):
+    """
+    API View to handle user profile retrieval and updates
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        """
+        Retrieve current user's profile information
+        """
+        serializer = UserSerial(request.user)
+        return Response(serializer.data)
+
+    def put(self, request):
+        """
+        Update user profile information
+        """
+        serializer = UserSerial(request.user, data=request.data, partial=True)
+        
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
 

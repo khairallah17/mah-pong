@@ -6,7 +6,10 @@ from . import views
 
 urlpatterns = [
     
+    #zouhair urls
     path('allusers/', views.get_allusers.as_view(), name="all-users"),
+    path('edit-profile/', views.UserEditProfileView.as_view(), name='user-edit-profile'),
+    
     path('token/', views.Get_MyTokenObtainPairView.as_view(), name="signin"),
     path('token/refresh/', TokenRefreshView.as_view(), name="refresh-token"),
     path('register/', views.RegisterationView.as_view(), name="signup"),
