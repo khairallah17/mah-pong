@@ -1,5 +1,5 @@
 from rest_framework_simplejwt.tokens import Token
-from .models import User
+from .models import User, Friendship, FriendRequest
 from django.contrib.auth.password_validation import validate_password
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework import serializers
@@ -16,7 +16,7 @@ class   UserSerial(serializers.ModelSerializer):
     
     class   Meta:
         model = User
-        fields = ['id', 'fullname' ,'username', 'email']
+        fields = ['id', 'username', 'email', 'fullname', 'img', 'is_online']
 
 class   Get_Token_serial(TokenObtainPairSerializer):
     @classmethod
@@ -67,24 +67,25 @@ class   RegistrationSerial(serializers.ModelSerializer):
         
         return user
 
-class Enable2FASerializer(serializers.Serializer):
-    otp = serializers.CharField(required=True)  # Changed from 'token' to 'otp'
+class FriendshipSerializer(serializers.ModelSerializer):
+    friend = serializers.SerializerMethodField()
 
-    def validate(self, attrs):
-        user = self.context['request'].user
-        otp = attrs.get('otp')
-        
-        try:
-            device = TOTPDevice.objects.get(user=user)
-            if not device.verify_token(otp):
-                raise serializers.ValidationError("Invalid OTP")
-        except TOTPDevice.DoesNotExist:
-            raise serializers.ValidationError("2FA device not found")
-        
-        return attrs
+    class Meta:
+        model = Friendship
+        fields = ('id', 'friend', 'created_at')
 
-class Verify2FASerializer(serializers.Serializer):
-    otp = serializers.CharField(required=True)  # Changed from 'token' to 'otp'
+    def get_friend(self, obj):
+        request_user = self.context['request'].user
+        friend = obj.user2 if obj.user1 == request_user else obj.user1
+        return UserSerial(friend).data
+
+class FriendRequestSerializer(serializers.ModelSerializer):
+    from_user = UserSerial(read_only=True)
+    to_user = UserSerial(read_only=True)
+
+    class Meta:
+        model = FriendRequest
+        fields = ('id', 'from_user', 'to_user', 'status', 'created_at')
     
 class LogoutSerial(serializers.Serializer):
     refresh = serializers.CharField()
