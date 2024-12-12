@@ -1,9 +1,8 @@
 from channels.routing import ProtocolTypeRouter, URLRouter # type: ignore
 from django.urls import path
-from . import consumers  # replace with the actual location of your consumers
+from . import consumers
 
 websocket_urlpatterns = [
-    # route websocket connections to your game consumer
 	path('ws/matchmaking/', consumers.MatchmakingConsumer.as_asgi()),
     path('ws/tournament/', consumers.TournamentConsumer.as_asgi()),
 ]
