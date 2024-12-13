@@ -1,15 +1,19 @@
 from django.shortcuts import redirect
 from django.shortcuts import render
+from django.db import models
+from django.db.models import Q
 from django.http import HttpResponse, HttpResponseRedirect
-from .models import User
-from .serializers import Get_Token_serial, RegistrationSerial, UserSerial, LogoutSerial, Enable2FASerializer, Verify2FASerializer
+from .models import User, Friendship, FriendRequest
+from .serializers import Get_Token_serial, RegistrationSerial, UserSerial, LogoutSerial, FriendshipSerializer, FriendRequestSerializer
 from rest_framework.decorators import api_view, permission_classes
+from django.shortcuts import get_object_or_404
 from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
 from rest_framework import generics
 from rest_framework.permissions import AllowAny, IsAuthenticated
-from rest_framework import status, views
+from rest_framework import status, views, viewsets
+from rest_framework.decorators import action
 from django.contrib.auth import authenticate, get_user_model
 # For Google Login/registring api
 from allauth.socialaccount.providers.google.views import GoogleOAuth2Adapter
@@ -429,179 +433,84 @@ class   Confirm_reset_Password(View):
         response["Access-Control-Allow-Headers"] = "Content-Type, X-Requested-With"
         return response
 
-# @api_view(['POST']) # this specifies that only POST method is allowed
 
-# def send_resetpass(request):
-#     email = request.data.get('email')
-#     print(email)
-#     if User.objects.filter(email=email).exists():
-#         user = User.objects.get(email=email)
-#         uidb64 = urlsafe_base64_encode(force_bytes(str(user.id)))
-#         gen_token = account_activation_token.make_token(user)
-#         reset_url = f"http://localhost:8001/api/password-reset/{uidb64}/{gen_token}"
-        
-#         subject = 'Password Reset Request'
-#         message = f"""
-#         Hello,
-
-#         You have requested to reset your password. Please click the link below:
-
-#         {reset_url}
-
-#         If you did not request this reset, please ignore this email.
-
-#         Thanks,
-#         Your App Team
-#         """
-#         print (reset_url)
-#         send_mail(
-#             subject,
-#             message,
-#             settings.EMAIL_HOST_USER,
-#             [email],
-#             fail_silently=False,
-#         )
-#         print (" hhhhhhhhhhh ")
-#         # email_message.send(fail_silently=False)
-#         return Response({'message': 'Password reset email has been sent.'})
-#     return Response({'error': 'Email not found'}, status=400)
-
-
-# @api_view(['POST'])
-# def reset_password(request, uidb64, token):
-#     try:
-#         # Decode the user ID
-#         uid = force_str(urlsafe_base64_decode(uidb64))
-#         user = User.objects.get(id=uid)
-#         if not account_activation_token.check_token(user, token):
-#             return Response(
-#                 {'error': 'Invalid or expired reset link'}, 
-#                 status=status.HTTP_400_BAD_REQUEST
-#             )
-#         new_password = request.data.get('new_password')
-#         confirm_password = request.data.get('confirm_password')
-#         #checking the password are 3amra or not a am3lem
-#         if not new_password or not confirm_password:
-#             return Response(
-#                {'error': 'Both password fields are required'}, 
-#                 status=status.HTTP_400_BAD_REQUEST
-#             )
-            
-#         # chacking now wash passwords are identical
-#         if new_password != confirm_password:
-#             return Response(
-#                 {'error': 'Passwords do not match'}, 
-#                 status=status.HTTP_400_BAD_REQUEST
-#             )
-        
-#         try:
-#             validate_password(new_password, user)
-#         except ValidationError as e:
-#             return Response(
-#                 {'error': "Password Requirement are not valid"},
-#                 status=status.HTTP_400_BAD_REQUEST
-#             )
-            
-#         user.set_password(new_password)
-#         user.save()
-        
-#         return Response({
-#             'message': 'Password has been reset successfully.'
-#         }, status=status.HTTP_200_OK)
-        
-#     except (TypeError, ValueError, User.DoesNotExist):
-#         return Response(
-#             {'error': 'Invalid reset link'}, 
-#             status=status.HTTP_400_BAD_REQUEST
-#         )
-
-class Enable2FAView(views.APIView):
+# friend list request
+class FriendListView(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
-    authentication_classes = [JWTAuthentication]  # Add JWT authentication
-    
-    def get(self, request):
-        try:
-            print("agoumi")
-            # Generate new TOTP device if doesn't exist
-            device, created = TOTPDevice.objects.get_or_create(
-                user=request.user,
-                defaults={'name': f'2FA Device for {request.user.email}'}
-            )
-            
-            print("agoumi10")
-            if created:
-                device.save()
-            
-            print("agoumi1")
-            # Generate QR code
-            totp = pyotp.TOTP(device.bin_key)
-            provisioning_uri = totp.provisioning_uri(
-                request.user.email,
-                issuer_name="YourAppName"
-            )
-            
-            # Create QR code image
-            qr = qrcode.QRCode(
-                version=1,
-                error_correction=qrcode.constants.ERROR_CORRECT_L,
-                box_size=10,
-                border=4,
-            )
-            qr.add_data(provisioning_uri)
-            qr.make(fit=True)
-            
-            # Convert QR code to base64
-            img_buffer = BytesIO()
-            qr.make_image().save(img_buffer, format='PNG')
-            qr_code_base64 = base64.b64encode(img_buffer.getvalue()).decode()
-            
-            return Response({
-                'qr_code': qr_code_base64,
-                'secret': device.bin_key  # Changed from 'secret_key' to 'secret'
-            })
-        except Exception as e:
+    serializer_class = FriendshipSerializer
+
+    def get_queryset(self):
+        return Friendship.objects.get_friends_for_user(self.request.user)
+
+class FriendRequestListView(generics.ListAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = FriendRequestSerializer
+
+    def get_queryset(self):
+        return FriendRequest.objects.pending_for_user(self.request.user)
+
+class SendFriendRequestView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, user_id):
+        to_user = get_object_or_404(User, id=user_id)
+        
+        if request.user.id == user_id:
             return Response(
-                {'error': str(e)},
+                {"error": "You cannot send a friend request to yourself"},
                 status=status.HTTP_400_BAD_REQUEST
             )
-    
-    def post(self, request):
-        serializer = Enable2FASerializer(
-            data=request.data,
-            context={'request': request}
-        )
-        
-        if serializer.is_valid():
-            request.user.is_two_factor_enabled = True
-            request.user.save()
-            return Response({'message': '2FA enabled successfully'})
-            
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-class Verify2FAView(views.APIView):
+        try:
+            friend_request = FriendRequest.objects.create_request(
+                from_user=request.user,
+                to_user=to_user
+            )
+            serializer = FriendRequestSerializer(friend_request)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        except ValueError as e:
+            return Response(
+                {"error": str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+class AcceptFriendRequestView(APIView):
     permission_classes = [IsAuthenticated]
-    authentication_classes = [JWTAuthentication]  # Add JWT authentication
-    
-    def post(self, request):
-        serializer = Verify2FASerializer(data=request.data)
-        
-        if serializer.is_valid():
-            otp = serializer.validated_data['otp']
-            try:
-                device = TOTPDevice.objects.get(user=request.user)
-                if device.verify_token(otp):
-                    return Response({'message': 'OTP verified successfully'})
-                return Response(
-                    {'error': 'Invalid OTP'},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-            except TOTPDevice.DoesNotExist:
-                return Response(
-                    {'error': '2FA device not found'},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-            
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def post(self, request, request_id):
+        friend_request = get_object_or_404(
+            FriendRequest,
+            id=request_id,
+            to_user=request.user,
+            status='pending'
+        )
+        friend_request.accept()
+        return Response({"status": "friend request accepted"})
+
+class RejectFriendRequestView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, request_id):
+        friend_request = get_object_or_404(
+            FriendRequest,
+            id=request_id,
+            to_user=request.user,
+            status='pending'
+        )
+        friend_request.reject()
+        return Response({"status": "friend request rejected"})
+
+class RemoveFriendView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, user_id):
+        friendship = get_object_or_404(
+            Friendship,
+            models.Q(user1=request.user, user2=user_id) |
+            models.Q(user1=user_id, user2=request.user)
+        )
+        friendship.delete()
+        return Response({"status": "friend removed"})
 
 class LogoutViews(APIView):
     permission_classes = [IsAuthenticated]
@@ -635,6 +544,7 @@ class LogoutViews(APIView):
 
 def viewallrouting(request):
     data = [
+        'api/'
         'api/token/refresh',
         'api/register',
         'api/token',

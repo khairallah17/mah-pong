@@ -1,4 +1,6 @@
 from django.db import models
+import random
+import string
 from django.contrib.postgres.fields import ArrayField
 
 class Match(models.Model):

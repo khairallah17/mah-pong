@@ -10,7 +10,6 @@ from Match.models import Tournament, TournamentMatch
 from django.db import transaction
 from urllib.parse import parse_qs
 
-
 logger = logging.getLogger(__name__)
 matchmaking_pool = []
 user_channels = {}
@@ -32,6 +31,7 @@ class TournamentConsumer(AsyncWebsocketConsumer):
         query_params = parse_qs(query_string)
         token = query_params.get('token', [None])[0]
         tournament_code = query_params.get('code', [None])[0]
+        await self.accept()
         try:
             payload = jwt.decode(token, settings.SECRET_KEY, algorithms=['HS256'])
             self.username = payload.get('username')
@@ -40,9 +40,8 @@ class TournamentConsumer(AsyncWebsocketConsumer):
                 raise jwt.InvalidTokenError("Username not found in token.")
 
             logger.warning(f"Username: {self.username}, Tournament code: {tournament_code}")
-            await self.accept()
             # Join or create a tournament
-            tournament = await self.get_or_create_tournament(tournament_code)
+            tournament = await self.get_or_create_tournament_send(tournament_code)
             self.tournament_group_name = f"tournament_{tournament.id}"
 
             # Add player to the group and tournament
@@ -53,14 +52,10 @@ class TournamentConsumer(AsyncWebsocketConsumer):
             logger.warning(f"Matches: {matches}")
             # Send the initial tournament state
             await self.send_tournament_state()
-
-        except (jwt.ExpiredSignatureError, jwt.InvalidTokenError) as e:
-            logger.error(f"Token validation failed: {e}")
-            await self.send_error_message("Authentication failed", 4001)
-            await self.close(code=4001)
-        except Exception as e:
-            logger.error(f"Unexpected error in connect: {e}")
-            await self.close()
+        except jwt.ExpiredSignatureError:
+            await self.send_error_message('token_expired', 4001)
+        except jwt.InvalidTokenError as e:
+            await self.send_error_message('invalid_token', 4002, str(e))
 
     async def disconnect(self, close_code):
         if self.tournament_group_name:
@@ -83,12 +78,20 @@ class TournamentConsumer(AsyncWebsocketConsumer):
     @database_sync_to_async
     def get_or_create_tournament(self, code):
         """Retrieve or create a new tournament."""
-        if not code:
+        if code is None or code == 'null':
             tournament = Tournament.objects.create()
             return tournament
         tournament = Tournament.objects.get(code=code)
         if not tournament or tournament.status != 'waiting':
             raise Exception("Tournament not found or not in waiting state.")
+        return tournament
+
+    async def get_or_create_tournament_send(self, code):
+        tournament = await self.get_or_create_tournament(code)
+        await self.send(text_data=json.dumps({
+            'type': 'tournament_code',
+            'code': tournament.code
+        }))
         return tournament
 
     @database_sync_to_async
@@ -259,9 +262,13 @@ class TournamentConsumer(AsyncWebsocketConsumer):
         """Send tournament update to a player."""
         await self.send(text_data=json.dumps({"type": "tournament_update", "matches": event["matches"]}))
 
-    async def send_error_message(self, error_type, code):
-        """Send error message to the player."""
-        await self.send(text_data=json.dumps({"type": "error", "message": error_type}))
+    async def send_error_message(self, error_type, code, message=None):
+        logger.warning(f"{error_type}: {message}")
+        await self.send(text_data=json.dumps({
+            'type': error_type,
+            'message': message
+        })) 
+        await self.close(code=code)
 
     async def match_start(self):
         await self.send(text_data=json.dumps({"type": "match_start"}))

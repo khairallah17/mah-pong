@@ -21,7 +21,7 @@ export default function Tournament() {
   const token = localStorage.getItem('authtoken');
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
-  const tournamentCode = queryParams.get('code');
+  const [tournamentCode, setTournamentCode] = useState(queryParams.get('code'));
 
   useEffect(() => {
     if (token && !wsRef.current) {
@@ -50,6 +50,8 @@ export default function Tournament() {
         } else if (message.type === 'match_start') {
           console.log('Match started:');
           navigate('/pvp2d');
+        } else if (message.type === 'tournament_code') {
+          setTournamentCode(message.code);
         }
       };
 
@@ -68,6 +70,25 @@ export default function Tournament() {
   const handleReady = () => {
     setIsReady(true);
     wsRef.current.send(JSON.stringify({ type: 'player_ready', player_id: playerId }));
+  };
+
+  const refreshToken = async () => {
+    let refreshtokenUrl = "http://localhost:8001/api/token/refresh/"
+    try {
+      const response = await fetch(refreshtokenUrl, {
+        method: 'POST',
+        credentials: 'include'
+      });
+      if (response.ok) {
+        const data = await response.json();
+        return data;
+      } else {
+        return null;
+      }
+    } catch (error) {
+      console.error('Failed to refresh token:', error);
+      return null;
+    }
   };
 
   const handleWinnerSelection = (matchId, player) => {
@@ -116,7 +137,7 @@ export default function Tournament() {
                     <div className="flex flex-col gap-4">
                       <button
                         onClick={() => match.player1 && handleWinnerSelection(match.id, match.player1)}
-                        className={`p-0 bg-transparent relative flex items-center overflow-visible transition-all duration-300 ${match.winner === match.player1? 'ring-2 ring-yellow-400' : ''
+                        className={`p-0 bg-transparent relative flex items-center overflow-visible transition-all duration-300 ${match.winner === match.player1 ? 'ring-2 ring-yellow-400' : ''
                           }`}
                       >
                         <div className="absolute left-[2%] z-[1] w-[60px] h-[90%] bg-[#9a77ff] rounded-tr-[15px] rounded-bl-[15px]"></div>
@@ -128,7 +149,7 @@ export default function Tournament() {
                       </button>
                       <button
                         onClick={() => match.player2 && handleWinnerSelection(match.id, match.player2)}
-                        className={`p-0 bg-transparent relative flex items-center overflow-visible transition-all duration-300 ${match.winner === match.player2? 'ring-2 ring-yellow-400' : ''
+                        className={`p-0 bg-transparent relative flex items-center overflow-visible transition-all duration-300 ${match.winner === match.player2 ? 'ring-2 ring-yellow-400' : ''
                           }`}
                       >
                         <div className="absolute left-[2%] z-[1] w-[60px] h-[90%] bg-[#9a77ff] rounded-tr-[15px] rounded-bl-[15px]"></div>
@@ -198,8 +219,12 @@ export default function Tournament() {
           className={`px-4 py-2 bg-green-500 text-white rounded-md ${isReady ? 'opacity-50 cursor-not-allowed' : ''}`}
           disabled={isReady}
         >
-          {isReady ? 'Ready' : 'Click to Ready'}
+          {isReady ? 'Ready' : 'Ready'}
         </button>
+        {/* tournament code */}
+        <div className="text-white mt-4">
+          Tournament Code: {tournamentCode}
+        </div>
       </div>
     </div>
   )
