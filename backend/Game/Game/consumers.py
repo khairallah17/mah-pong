@@ -5,18 +5,9 @@ import logging
 import jwt
 from django.conf import settings
 from channels.db import database_sync_to_async
-from Match.models import Match
-from Match.models import Tournament, TournamentMatch
+from Match.models import Match, Tournament, TournamentMatch
 from django.db import transaction
 from urllib.parse import parse_qs
-
-logger = logging.getLogger(__name__)
-matchmaking_pool = []
-user_channels = {}
-matched_users = {}
-game_states = {}
-TABLE_LIMIT = 1.5
-PADDLE_WIDTH = 1
 
 logger = logging.getLogger(__name__)
 
@@ -27,32 +18,21 @@ class TournamentConsumer(AsyncWebsocketConsumer):
         self.username = None
 
     async def connect(self):
-        query_string = self.scope['query_string'].decode()
-        query_params = parse_qs(query_string)
+        query_params = self._parse_query_params()
         token = query_params.get('token', [None])[0]
         tournament_code = query_params.get('code', [None])[0]
+
         await self.accept()
         try:
-            payload = jwt.decode(token, settings.SECRET_KEY, algorithms=['HS256'])
-            self.username = payload.get('username')
+            self.username = self._decode_token(token)
+            self.tournament = await self._initialize_tournament(tournament_code)
+            self.tournament_group_name = f"tournament_{self.tournament.id}"
 
-            if not self.username:
-                raise jwt.InvalidTokenError("Username not found in token.")
+            await self.channel_layer.group_add(self.tournament_group_name, self.channel_name)
+            await self.add_player_to_tournament(self.tournament.id, self.username)
+            await self.get_or_create_tournament_matches(self.tournament, self.username)
+            await self.send_tournament_state(self.tournament)
 
-            logger.warning(f"Username: {self.username}, Tournament code: {tournament_code}")
-            # Join or create a tournament
-            tournament = await self.get_or_create_tournament_send(tournament_code)
-            self.tournament_group_name = f"tournament_{tournament.id}"
-
-            # Add player to the group and tournament
-            if (self.username not in tournament.players):
-                await self.channel_layer.group_add(self.tournament_group_name, self.channel_name)
-                await self.add_player_to_tournament(tournament.id, self.username)
-            # if len(tournament.players) == 4:
-            matches = await self.get_or_create_tournament_matches(tournament, self.username)
-            logger.warning(f"Matches: {matches}")
-            # Send the initial tournament state
-            await self.send_tournament_state()
         except jwt.ExpiredSignatureError:
             await self.send_error_message('token_expired', 4001)
         except jwt.InvalidTokenError as e:
@@ -63,6 +43,8 @@ class TournamentConsumer(AsyncWebsocketConsumer):
             await self.channel_layer.group_discard(self.tournament_group_name, self.channel_name)
         if self.username:
             await self.remove_player_from_tournament(self.username)
+        if self.tournament and len(self.tournament.players) == 0:
+            await self.delete_tournament(self.tournament)
 
     async def receive(self, text_data):
         try:
@@ -76,171 +58,141 @@ class TournamentConsumer(AsyncWebsocketConsumer):
         except Exception as e:
             logger.error(f"Error in receive: {e}")
 
+    # Tournament Management
+
+    @database_sync_to_async
+    def delete_tournament(self, tournament):
+        try:
+            tournament.delete()
+        except Exception as e:
+            logger.error(f"Error deleting tournament: {e}")
+
     @database_sync_to_async
     def get_or_create_tournament(self, code):
-        """Retrieve or create a new tournament."""
-        if code is None or code == 'null':
-            tournament = Tournament.objects.create()
-            return tournament
+        if not code or code == 'null':
+            return Tournament.objects.create()
         tournament = Tournament.objects.get(code=code)
         if not tournament or tournament.status != 'waiting':
             raise Exception("Tournament not found or not in waiting state.")
         return tournament
 
-    async def get_or_create_tournament_send(self, code):
+    async def _initialize_tournament(self, code):
         tournament = await self.get_or_create_tournament(code)
-        await self.send(text_data=json.dumps({
-            'type': 'tournament_code',
-            'code': tournament.code
-        }))
+        await self.send(text_data=json.dumps({'type': 'tournament_code', 'code': tournament.code}))
         return tournament
 
     @database_sync_to_async
     def add_player_to_tournament(self, tournament_id, username):
-        """Add a player to the tournament."""
         try:
             with transaction.atomic():
                 tournament = Tournament.objects.select_for_update().get(id=tournament_id)
-                
                 if username not in tournament.players:
                     tournament.players.append(username)
                     tournament.save()
-                    logger.warning(f"Players in tournament: {tournament.players} id: {tournament_id}")
-                else:
-                    logger.warning(f"Player {username} already in tournament.")
-        except Tournament.DoesNotExist:
-            logger.error(f"Tournament with ID {tournament_id} does not exist.")
         except Exception as e:
             logger.error(f"Error adding player to tournament: {e}")
 
     @database_sync_to_async
     def remove_player_from_tournament(self, username):
-        """Remove player from the tournament."""
         try:
             with transaction.atomic():
-                # Find the tournament where the player is in the 'players' array
                 tournament = Tournament.objects.select_for_update().filter(players__contains=[username], status='waiting').first()
-
                 if tournament:
-                    # Safely remove the player from the list
                     tournament.players = [player for player in tournament.players if player != username]
                     tournament.save()
         except Exception as e:
             logger.error(f"Error removing player: {e}")
 
+    # Match Handling
+
     @database_sync_to_async
     def get_or_create_tournament_matches(self, tournament, username):
-        logger.warning("Creating tournament matches")
         matches = list(TournamentMatch.objects.filter(tournament=tournament))
-        if (len(matches) > 0):
-            if not any(username in [match.player1, match.player2] for match in matches):
-                for match in matches:
-                    if not match.player1:
-                        match.player1 = username
-                        match.save()
-                        return matches
-                    elif not match.player2:
-                        match.player2 = username
-                        match.save()
-                        return matches
-                logger.warning(f"matches : {matches}")
-        else:
-            # Create matches if they don't exist
-            for round in range(1, 3):  # 2 rounds: initial and final
-                for position in range(1, (2 ** (2 - round)) + 1):  # 2 matches in the first round, 1 match in the final
-                    match, _ = TournamentMatch.objects.get_or_create(
-                        tournament=tournament,
-                        round=round,
-                        position=position
-                    )
-                    matches.append(match)
-                    logger.warning(f"Match created: {match}")
-            
-            matches[0].player1 = username
-            matches[0].save()
 
+        if matches and not any(username in [match.player1, match.player2] for match in matches):
+            for match in matches:
+                if not match.player1:
+                    match.player1 = username
+                    match.save()
+                    return matches
+                elif not match.player2:
+                    match.player2 = username
+                    match.save()
+                    return matches
+
+        if not matches:
+            matches = self._create_tournament_matches(tournament, username)
+
+        return matches
+
+    def _create_tournament_matches(self, tournament, username):
+        matches = []
+        for round in range(1, 3):
+            for position in range(1, (2 ** (2 - round)) + 1):
+                match, _ = TournamentMatch.objects.get_or_create(tournament=tournament, round=round, position=position)
+                matches.append(match)
+
+        matches[0].player1 = username
+        matches[0].save()
         return matches
 
     @database_sync_to_async
     def handle_player_ready_sync(self, data):
-        """Handle player ready event."""
         try:
-            tournament = Tournament.objects.filter
             round = data.get('round')
             position = data.get('position')
-            match = TournamentMatch.objects.get(tournament=tournament, round=round, position=position)
-            player_id = data.get('player_id')
+            match = TournamentMatch.objects.get(tournament=self.tournament, round=round, position=position)
 
+            player_id = data.get('player_id')
             if player_id == 1:
                 match.player1_ready = True
             else:
                 match.player2_ready = True
 
             match.save()
-
             return match.player1_ready and match.player2_ready
         except Exception as e:
             logger.error(f"Error handling player ready: {e}")
             return False
 
     async def handle_player_ready(self, data):
-        """Handle player ready event."""
         both_ready = await self.handle_player_ready_sync(data)
         if both_ready:
-            await self.match_start(data)
+            await self.match_start()
 
     @database_sync_to_async
     def handle_match_result(self, data):
-        """Handle match results."""
         try:
             match_id = data.get('match_id')
             winner = data.get('winner')
-
             match = TournamentMatch.objects.get(id=match_id)
+
             match.winner = winner
             match.save()
 
             next_round = match.round + 1
             next_position = match.position // 2
 
-            next_match, _ = TournamentMatch.objects.get_or_create(
-                tournament=match.tournament,
-                round=next_round,
-                position=next_position
-            )
+            next_match, _ = TournamentMatch.objects.get_or_create(tournament=match.tournament, round=next_round, position=next_position)
 
             if match.position % 2 == 0:
                 next_match.player1 = winner
             else:
                 next_match.player2 = winner
+
             next_match.save()
         except Exception as e:
             logger.error(f"Error handling match result: {e}")
 
-    async def send_tournament_state(self):
-        """Send tournament state to all players."""
-        tournament_state = await self.get_tournament_state()
-        logger.warning(f"Sending tournament state: {tournament_state}")
-        await self.channel_layer.group_send(
-            self.tournament_group_name,
-            {"type": "tournament_update", "matches": tournament_state['matches']}
-        ) 
-    
-    async def match_start(self):
-        await self.channel_layer.group_send(
-            self.tournament_group_name,
-            {"type": "match_start"}
-        )
+    # Tournament State Management
+
+    async def send_tournament_state(self, tournament):
+        state = await self.get_tournament_state(tournament)
+        await self.channel_layer.group_send(self.tournament_group_name, {"type": "tournament_update", "matches": state['matches']})
 
     @database_sync_to_async
-    def get_tournament_state(self):
-        """Fetch the current tournament state."""
+    def get_tournament_state(self, tournament):
         try:
-            tournament = Tournament.objects.first()
-            if not tournament:
-                logger.warning("No active tournament found.")
-                return {"matches": []}
-
             matches = TournamentMatch.objects.filter(tournament=tournament)
             return {
                 "matches": [
@@ -251,8 +203,7 @@ class TournamentConsumer(AsyncWebsocketConsumer):
                         "player1": match.player1,
                         "player2": match.player2,
                         "winner": match.winner
-                    }
-                    for match in matches
+                    } for match in matches
                 ]
             }
         except Exception as e:
@@ -260,19 +211,29 @@ class TournamentConsumer(AsyncWebsocketConsumer):
             return {"matches": []}
 
     async def tournament_update(self, event):
-        """Send tournament update to a player."""
         await self.send(text_data=json.dumps({"type": "tournament_update", "matches": event["matches"]}))
+
+    # Utility Functions
 
     async def send_error_message(self, error_type, code, message=None):
         logger.warning(f"{error_type}: {message}")
-        await self.send(text_data=json.dumps({
-            'type': error_type,
-            'message': message
-        })) 
+        await self.send(text_data=json.dumps({'type': error_type, 'message': message}))
         await self.close(code=code)
 
     async def match_start(self):
         await self.send(text_data=json.dumps({"type": "match_start"}))
+
+    def _parse_query_params(self):
+        query_string = self.scope['query_string'].decode()
+        return parse_qs(query_string)
+
+    def _decode_token(self, token):
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=['HS256'])
+        username = payload.get('username')
+        if not username:
+            raise jwt.InvalidTokenError("Username not found in token.")
+        return username
+
 
 
 class MatchmakingConsumer(AsyncWebsocketConsumer):

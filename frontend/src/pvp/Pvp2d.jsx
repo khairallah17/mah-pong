@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { useEffect, useRef, useState } from 'react';
+import GameSettingsButton from './Customize2d';
 import bgi from '../assets/spaaacu.jpg';
 
 function Pvp2d() {
@@ -391,6 +392,7 @@ function Pvp2d() {
 
     return (
         <>
+            <GameSettingsButton />
             {!isMatched && <h1>Looking for an opponent...</h1>}
             {winnerRef.current && (
                 <div className="popup">
