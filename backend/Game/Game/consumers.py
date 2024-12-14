@@ -10,12 +10,21 @@ from django.db import transaction
 from urllib.parse import parse_qs
 
 logger = logging.getLogger(__name__)
+matchmaking_pool = []
+user_channels = {}
+matched_users = {}
+game_states = {}
+TABLE_LIMIT = 1.5
+PADDLE_WIDTH = 1
+reconnected = False//
 
 class TournamentConsumer(AsyncWebsocketConsumer):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.tournament_group_name = None
         self.username = None
+        self.tournament = None
+        self.current_match = None
 
     async def connect(self):
         query_params = self._parse_query_params()
@@ -25,7 +34,9 @@ class TournamentConsumer(AsyncWebsocketConsumer):
         await self.accept()
         try:
             self.username = self._decode_token(token)
-            self.tournament = await self._initialize_tournament(tournament_code)
+            self.tournament = await self.is_user_in_tournament(self.username)
+            if not reconnected:
+                self.tournament = await self._initialize_tournament(tournament_code)
             self.tournament_group_name = f"tournament_{self.tournament.id}"
 
             await self.channel_layer.group_add(self.tournament_group_name, self.channel_name)
@@ -42,10 +53,18 @@ class TournamentConsumer(AsyncWebsocketConsumer):
         if self.tournament_group_name:
             await self.channel_layer.group_discard(self.tournament_group_name, self.channel_name)
         if self.username:
-            await self.remove_player_from_tournament(self.username)
-        if self.tournament and len(self.tournament.players) == 0:
-            await self.delete_tournament(self.tournament)
+            await self.schedule_remove_player()
 
+    async def schedule_remove_player(self):
+        reconnected = False
+        await asyncio.sleep(5)
+        if not reconnected:
+            await self.remove_player_from_tournament(self.username)
+            if self.tournament and not self.tournament.players:
+                await self.delete_tournament(self.tournament)
+            if self.current_match:
+                await self.remove_player_from_match(self.current_match, self.username)
+        
     async def receive(self, text_data):
         try:
             data = json.loads(text_data)
@@ -68,6 +87,18 @@ class TournamentConsumer(AsyncWebsocketConsumer):
             logger.error(f"Error deleting tournament: {e}")
 
     @database_sync_to_async
+    def remove_player_from_match(self, match_id, username):
+        try:
+            match = TournamentMatch.objects.get(id=match_id)
+            if match.player1 == username:
+                match.player1 = None
+            elif match.player2 == username:
+                match.player2 = None
+            match.save()
+        except Exception as e:
+            logger.error(f"Error removing player from match: {e}")
+
+    @database_sync_to_async
     def get_or_create_tournament(self, code):
         if not code or code == 'null':
             return Tournament.objects.create()
@@ -80,6 +111,19 @@ class TournamentConsumer(AsyncWebsocketConsumer):
         tournament = await self.get_or_create_tournament(code)
         await self.send(text_data=json.dumps({'type': 'tournament_code', 'code': tournament.code}))
         return tournament
+
+    @database_sync_to_async
+    def is_user_in_tournament(self, username):
+        try:
+            tournament = Tournament.objects.filter(players__contains=[username], status='waiting').first()
+            if tournament:
+                reconnected = True
+            else:
+                reconnected = False
+            return tournament
+        except Exception as e:
+            logger.error(f"Error checking if user is in tournament: {e}")
+            return None
 
     @database_sync_to_async
     def add_player_to_tournament(self, tournament_id, username):
@@ -102,6 +146,7 @@ class TournamentConsumer(AsyncWebsocketConsumer):
                     tournament.save()
         except Exception as e:
             logger.error(f"Error removing player: {e}")
+        
 
     # Match Handling
 
@@ -113,10 +158,12 @@ class TournamentConsumer(AsyncWebsocketConsumer):
             for match in matches:
                 if not match.player1:
                     match.player1 = username
+                    self.current_match = match.id
                     match.save()
                     return matches
                 elif not match.player2:
                     match.player2 = username
+                    self.current_match = match.id
                     match.save()
                     return matches
 
@@ -133,6 +180,7 @@ class TournamentConsumer(AsyncWebsocketConsumer):
                 matches.append(match)
 
         matches[0].player1 = username
+        self.current_match = matches[0].id
         matches[0].save()
         return matches
 
@@ -179,7 +227,6 @@ class TournamentConsumer(AsyncWebsocketConsumer):
                 next_match.player1 = winner
             else:
                 next_match.player2 = winner
-
             next_match.save()
         except Exception as e:
             logger.error(f"Error handling match result: {e}")
