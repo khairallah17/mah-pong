@@ -2,11 +2,16 @@ import React, { useState, useEffect } from 'react';
 import googleImage from '../images/google.svg';
 import intraImage from '../images/intraImage.webp';
 import axios from 'axios';
+import Swal from 'sweetalert2';
 
 export default function Profile() {
-  const [fullName, setFullName] = useState("");
-  const [username, setUsername] = useState("");
-  const [email, setEmail] = useState("");
+  const [profileData, setProfileData] = useState({
+    fullname: "",
+    username: "",
+    email: "",
+    avatar: "",
+    profile_image: null, // Add this to store the profile image
+  });
 
   // Fetch user profile
   const fetchProfile = async () => {
@@ -14,6 +19,12 @@ export default function Profile() {
       let token = localStorage.getItem('authtoken');
       if (!token) {
         console.error('No authentication token found');
+        Swal.fire({
+          icon: 'error',
+          title: 'No authentication token found. Please try again.',
+          showConfirmButton: false,
+          timer: 1500
+        });
         return;
       }
       
@@ -26,12 +37,112 @@ export default function Profile() {
         }
       });
       
-      // Use fullname directly from the backend
-      setFullName(response.data.fullname || "");
-      setUsername(response.data.username || "");
-      setEmail(response.data.email || "");
+      // Set all profile data
+      setProfileData({
+        fullname: response.data.fullname || "",
+        username: response.data.username || "",
+        email: response.data.email || "",
+        avatar: response.data.avatar || "",
+        profile_image: response.data.profile_image, // Add this line to get profile image
+      });
+      console.log("---------->", response.data);
     } catch (error) {
       console.error('Failed to fetch profile', error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Failed to fetch profile. Please try again.',
+        showConfirmButton: false,
+        timer: 1500
+      });
+    }
+  };
+
+  // Handle image upload
+  const handleImageUpload = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('profile_image', file);
+
+    try {
+      let token = localStorage.getItem('authtoken');
+      if (!token) {
+        console.error('No authentication token found');
+        return;
+      }
+      
+      const parsed = JSON.parse(token);
+      const accessToken = parsed.access;
+
+      const response = await axios.put('http://localhost:8001/api/edit-profile/', formData, {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      
+      // Update profile data with new image
+      setProfileData(prev => ({
+        ...prev,
+        profile_image: response.data.profile_image
+      }));
+
+      Swal.fire({
+        icon: 'success',
+        title: 'Profile image updated successfully!',
+        showConfirmButton: false,
+        timer: 1500
+      });
+    } catch (error) {
+      console.error('Failed to upload profile image', error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Failed to upload profile image. Please try again.',
+        showConfirmButton: false,
+        timer: 1500
+      });
+    }
+  };
+
+  // Handle image deletion
+  const handleImageDelete = async () => {
+    try {
+      let token = localStorage.getItem('authtoken');
+      if (!token) {
+        console.error('No authentication token found');
+        return;
+      }
+      
+      const parsed = JSON.parse(token);
+      const accessToken = parsed.access;
+
+      await axios.delete('http://localhost:8001/api/delete-profile-image/', {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`
+        }
+      });
+      
+      // Clear profile image
+      setProfileData(prev => ({
+        ...prev,
+        profile_image: null
+      }));
+
+      Swal.fire({
+        icon: 'success',
+        title: 'Profile image deleted successfully!',
+        showConfirmButton: false,
+        timer: 1500
+      });
+    } catch (error) {
+      console.error('Failed to delete profile image', error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Failed to delete profile image. Please try again.',
+        showConfirmButton: false,
+        timer: 1500
+      });
     }
   };
 
@@ -53,28 +164,33 @@ export default function Profile() {
       const accessToken = parsed.access;
 
       const response = await axios.put('http://localhost:8001/api/edit-profile/', {
-        fullname: fullName,
-        username: username,
-        email: email
+        fullname: profileData.fullname
       }, {
         headers: {
           'Authorization': `Bearer ${accessToken}`
         }
       });
       
-      // Optional: Add success feedback
-      alert('Profile updated successfully!');
+      Swal.fire({
+        icon: 'success',
+        title: 'Profile updated successfully!',
+        showConfirmButton: false,
+        timer: 1500
+      });
     } catch (error) {
       console.error('Failed to update profile', error);
-      
-      // Optional: Add error feedback
-      alert('Failed to update profile. Please try again.');
+      Swal.fire({
+        icon: 'error',
+        title: 'Failed to update profile. Please try again.',
+        showConfirmButton: false,
+        timer: 1500
+      });
     }
   };
 
   // Safety check for initials
   const getInitials = () => {
-    const initials = fullName
+    const initials = profileData.fullname
       .split(' ')
       .map(name => name[0])
       .join('')
@@ -87,27 +203,45 @@ export default function Profile() {
       <h2 className="text-2xl font-inter text-white mb-6">Account</h2>
       <div className="flex flex-col md:flex-row justify-between items-center gap-8">
         <div className="flex flex-col md:flex-row items-center gap-4">
+          {/* Profile Picture Section */}
           <div className="w-20 h-20 bg-purple-500 rounded-full flex items-center justify-center text-white text-2xl font-inter">
-            {getInitials()}
+            {profileData.profile_image ? (
+              <img 
+                src={profileData.profile_image} 
+                alt="Profile" 
+                className="w-full h-full rounded-full object-cover"
+              />
+            ) : (
+              getInitials()
+            )}
           </div>
           <div className="space-y-2 text-center md:text-left">
             <h3 className="font-inter text-white text-xl">Profile Picture</h3>
             <p className="text-sm text-white/70">PNG, JPEG under 15MB</p>
             <div className="flex flex-wrap justify-center md:justify-start gap-3">
               <label className="px-6 py-2 bg-white text-black rounded-md hover:bg-white/90 transition-colors cursor-pointer">
-                <input type="file" className="hidden" accept="image/*" />
+                <input 
+                  type="file" 
+                  className="hidden" 
+                  accept="image/*" 
+                  onChange={handleImageUpload}
+                />
                 Upload an image
               </label>
-              <button className="px-6 py-2 bg-[#BD3944] text-white rounded-md hover:bg-red-600 transition-colors">
+              <button 
+                onClick={handleImageDelete}
+                className="px-6 py-2 bg-[#BD3944] text-white rounded-md hover:bg-red-600 transition-colors"
+              >
                 Delete
               </button>
             </div>
           </div>
         </div>
         <div className="flex flex-col md:flex-row items-center gap-4">
+          {/* Avatar Section */}
           <img
-            src="https://github.com/shadcn.png"
-            alt="Wolf Avatar"
+            src={profileData.avatar || "https://github.com/shadcn.png"}
+            alt="Profile Avatar"
             className="w-20 h-20 rounded-full border-2 border-white/80"
           />
           <div className="space-y-2 text-center md:text-left">
@@ -119,33 +253,34 @@ export default function Profile() {
         </div>
       </div>
 
+      {/* Rest of the component remains the same */}
       <div className="space-y-6 pt-8 border-t border-white/80">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="md:col-span-2">
             <label className="block text-sm text-white/90 mb-2">Full Name</label>
             <input
               type="text"
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
-              className="w-full px-4 py-2 bg-black/80 border border-white/10 text-gray-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-white/5 transition-all mb-4"
+              value={profileData.fullname}
+              onChange={(e) => setProfileData(prev => ({...prev, fullname: e.target.value}))}
+              className="w-full px-4 py-2 bg-black/80 border border-white/10 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-white/5 transition-all mb-4"
             />
           </div>
           <div>
             <label className="block text-sm text-white/90 mb-2">Username</label>
             <input
               type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              className="w-full px-4 py-2 bg-black/80 border border-white/10 text-gray-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-white/5 transition-all mb-4"
+              value={profileData.username}
+              readOnly
+              className="w-full px-4 py-2 bg-black/80 border border-white/10 text-gray-500 rounded-lg cursor-not-allowed opacity-50"
             />
           </div>
           <div>
             <label className="block text-sm text-white/90 mb-2">Email</label>
             <input
               type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-2 bg-black/80 border border-white/10 text-gray-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-white/5 transition-all mb-4"
+              value={profileData.email}
+              readOnly
+              className="w-full px-4 py-2 bg-black/80 border border-white/10 text-gray-500 rounded-lg cursor-not-allowed opacity-50"
             />
           </div>
         </div>
