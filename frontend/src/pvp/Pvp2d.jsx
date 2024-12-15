@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { useEffect, useRef, useState } from 'react';
+import GameSettingsButton from './Customize2d';
 import bgi from '../assets/spaaacu.jpg';
 
 function Pvp2d() {
@@ -55,9 +56,13 @@ function Pvp2d() {
                     console.log("match found with player_id: ", message.player_id, "isPlayer1: ", isPlayer1);
                 } else if (message.type === 'game_event') {
                     updateScene(message.event);
-                } else if (message.type === 'game_state') {
-                    setGameState(message.game_state);
+                } 
+                if (message.event === 'score_update') {
+                    setScores(message.score);
                 }
+                // else if (message.type === 'game_state') {
+                //     setGameState(message.game_state);
+                // }
             };
             wsRef.current.onclose = () => console.log('WebSocket connection closed');
             wsRef.current.onerror = (e) => console.error('WebSocket error:', e);
@@ -131,6 +136,37 @@ function Pvp2d() {
             document.addEventListener('keyup', onDocumentKeyUp);
             window.addEventListener('resize', onWindowResize);
 
+            const handleVisibilityChange = () => {
+                if (document.visibilityState === 'visible') {
+                    document.removeEventListener('keydown', onDocumentKeyDown);
+                    document.removeEventListener('keyup', onDocumentKeyUp);
+    
+                    // Show popup alert or loading animation
+                    const popup = document.createElement('div');
+                    popup.id = 'reconnecting-popup';
+                    popup.style.position = 'fixed';
+                    popup.style.top = '50%';
+                    popup.style.left = '50%';
+                    popup.style.transform = 'translate(-50%, -50%)';
+                    popup.style.padding = '20px';
+                    popup.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
+                    popup.style.color = 'white';
+                    popup.style.fontSize = '20px';
+                    popup.style.zIndex = '1000';
+                    popup.innerText = 'Reconnecting...';
+                    document.body.appendChild(popup);
+    
+                    setTimeout(() => {
+                        document.addEventListener('keydown', onDocumentKeyDown);
+                        document.addEventListener('keyup', onDocumentKeyUp);
+    
+                        // Hide popup alert or loading animation
+                        document.body.removeChild(popup);
+                    }, 1000);
+                }
+            };
+
+            document.addEventListener('visibilitychange', handleVisibilityChange);
             const animate = function () {
                 if (isPausedRef.current) {
                     controls.update();
@@ -167,6 +203,11 @@ function Pvp2d() {
                     isPausedRef.current = true;
                     setScores(prevScores => {
                         const newScores = { score1: prevScores.score1, score2: prevScores.score2 + 1 };
+                        wsRef.current.send(JSON.stringify({
+                            type: 'game_event',
+                            event: 'score_update',
+                            score: newScores,
+                        }));
                         if (newScores.score2 >= 10) {
                             winnerRef.current = 'Player 2'
                             wsRef.current.send(JSON.stringify({
@@ -193,6 +234,11 @@ function Pvp2d() {
                                 score: newScores,
                             }));
                         }
+                        wsRef.current.send(JSON.stringify({
+                            type: 'game_event',
+                            event: 'score_update',
+                            score: newScores,
+                        }));
                         return newScores;
                     });
                     restartGame(ball);
@@ -257,7 +303,7 @@ function Pvp2d() {
     };
 
     const updateScene = (event) => {
-        if (isPausedRef.current) {
+        if (isPausedRef.current && document.visibilityState === 'visible' && event !== 'game_over' && event !== 'score_update') {
             isPausedRef.current = false;
         }
         if (paddle1Ref.current && paddle2Ref.current) {
@@ -346,6 +392,7 @@ function Pvp2d() {
 
     return (
         <>
+            <GameSettingsButton />
             {!isMatched && <h1>Looking for an opponent...</h1>}
             {winnerRef.current && (
                 <div className="popup">

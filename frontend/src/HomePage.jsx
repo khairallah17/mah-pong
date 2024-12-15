@@ -1,190 +1,177 @@
 import React, { useEffect, useRef, useState } from 'react';
-import * as THREE from 'three';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { useNavigate } from 'react-router-dom';
 import { Swiper, SwiperSlide } from 'swiper/react';
+import { Navigation, Pagination } from 'swiper/modules';
 import 'swiper/css';
 import './App.css';
+
 import aub from './assets/aub.jpeg';
-import khr from "./assets/khr.jpg";
+import khr from './assets/khr.jpg';
 import hdl from './assets/headline.png';
 import agm from './assets/agm.jpg';
 import zou from './assets/Zou.jpg';
 import hmz from './assets/hasalam.jpg';
-import { EffectCoverflow, Navigation, Pagination } from 'swiper/modules';
 
+const totalFrames = 180;
 
-const HomePage = ({ onUsernameSubmit }) => {
-  const [username, setUsername] = useState('');
-  const [isSubmitted, setIsSubmitted] = useState(false);
+const NAV_LINKS = [
+  { label: 'About', refKey: 'aboutRef' },
+  { label: 'Team', refKey: 'teamRef' },
+  { label: 'Contact Us', refKey: 'contactUsRef' },
+];
+
+const TEAM_MEMBERS = [
+  { name: 'Ayoub Lemsafi', position: 'Position @ School', image: aub, description: 'Worked on feature X' },
+  { name: 'Mohammed Khairallah', position: 'Position @ School', image: khr, description: 'Focused on Y' },
+  { name: 'Hamza', position: 'Position @ School', image: hmz, description: 'Specialized in Z' },
+  { name: 'Zouhair', position: 'Position @ School', image: zou, description: 'Handled task A' },
+  { name: 'Elmehdi Agoumi', position: 'Position @ School', image: agm, description: 'Oversaw task B' },
+];
+
+const HomePage = () => {
+  const [currentFrame, setCurrentFrame] = useState(1);
+  const [slides, setSlides] = useState(3);
+  const frameRequestRef = useRef(null);
+
+  useEffect(() => {
+    const handleResize = () => {
+      const slideWidth = 250;
+      const containerWidth = window.innerWidth * 0.75;
+      let newSlides = Math.max(2, Math.round(containerWidth / slideWidth));
+      newSlides = Math.min(newSlides, TEAM_MEMBERS.length - 1);
+      console.log(slides, containerWidth / slideWidth);
+
+      setSlides(newSlides);
+    };
+
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [slides]);
   const navigate = useNavigate();
+
+  // Refs for scrolling
   const headlineRef = useRef(null);
   const teamRef = useRef(null);
   const contactUsRef = useRef(null);
   const aboutRef = useRef(null);
-  const mount = useRef(null);
-  
-  const calculateSlidesPerView = () => {
-    const width = window.innerWidth;
-  
-    if (width <= 500)
-      return 1;
-    else if (width <= 750)
-      return 2;
-    else if (width <= 900)
-      return 3;
-    else 
-      return 4;
+  const mountRef = useRef(null);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (!frameRequestRef.current) {
+        frameRequestRef.current = requestAnimationFrame(updateAnimationFrame);
+      }
+    };
+
+    const updateAnimationFrame = () => {
+      const scene = mountRef.current;
+      if (!scene) return;
+
+      const { offsetTop, offsetHeight } = scene;
+      const scrollY = window.scrollY;
+      const viewportHeight = window.innerHeight;
+
+      const progress = Math.min(
+        Math.max((scrollY - offsetTop) / (offsetHeight - viewportHeight), 0),
+        1
+      );
+
+      const frame = Math.round(progress * (totalFrames - 1)) + 1;
+      if (frame !== currentFrame) {
+        setCurrentFrame(frame);
+      }
+      frameRequestRef.current = null;
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      if (frameRequestRef.current) {
+        cancelAnimationFrame(frameRequestRef.current);
+      }
+    };
+  }, [currentFrame]);
+
+  const scrollToSection = (ref) => {
+    if (ref?.current) {
+      window.scrollTo({
+        top: ref.current.offsetTop - window.innerHeight / 2,
+        behavior: 'smooth',
+      });
+    }
   };
 
-  const scrollToRef = (ref) => {
-    console.log(document.body.scrollHeight);
-    window.scrollTo({
-      top: ref.current.offsetTop - window.innerHeight / 2,
-      behavior: 'smooth'
-    });
-  }
-  
-  const handleSubmit = () => {
-    onUsernameSubmit(username);
-    setIsSubmitted(true);
-  };
-
-  // useEffect(() => {
-  //   const scene = new THREE.Scene();
-  //   const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-  //   const renderer = new THREE.WebGLRenderer();
-  
-  //   const loader = new GLTFLoader();
-  //   loader.load('../../models/scene.glb', function (gltf: any) {
-  //     scene.add(gltf.scene);
-  //     addLights(scene);
-  //   }, undefined, function (error: any) {
-  //     console.error(error);
-  //   });
-  
-  //   camera.position.set(0.75, 1.25, 1.88);
-  //   camera.rotation.x = -0.5;
-  //   renderer.setSize(window.innerWidth, window.innerHeight);
-  
-  //   const animate = function () {
-  //     requestAnimationFrame(animate);
-  //     renderer.render(scene, camera);
-  //   };
-
-  // function addLights(scene: THREE.Scene): void {
-  //     const light = new THREE.AmbientLight(0xffffff, 3);
-  //     light.position.set(0, 10, 0);
-  //     light.castShadow = true;
-  //     scene.add(light);
-  // }
-  //   animate();
-
-  //   mount.current!.appendChild(renderer.domElement);
-  //   return () => {
-  //     mount.current!.removeChild(renderer.domElement);
-  //   }
-  // }, []);
+  const getFrameSource = (frame) => `/landingAnimation/${frame}.png`;
 
   return (
     <div className="homepage">
+      {/* Navbar */}
       <header>
-        <nav className='navbar'>
-          <img className='logo' src='Logo' alt='Logo'/>
-          <button onClick={() => {scrollToRef(aboutRef)}}>About</button>
-          <button onClick={() => {scrollToRef(teamRef)}}>Team</button>
-          <button onClick={() => {scrollToRef(contactUsRef)}}>Contact Us</button>
-          <button onClick={() => navigate('/dashboard')}>Play now</button>
+        <nav className="fixed top-0 left-0 flex items-center justify-between w-full h-16 bg-gradient-to-r from-[#0908304A] to-[#1A195B4A] backdrop-blur-md z-50">
+          <img className="h-12 mx-8" src="Logo" alt="Logo" />
+          <div className="flex gap-4 mx-8">
+            {NAV_LINKS.map(({ label, refKey }) => (
+              <button
+                key={label}
+                className="px-4 py-2 text-white bg-transparent hover:underline"
+                onClick={() => scrollToSection({ aboutRef, teamRef, contactUsRef }[refKey])}
+              >
+                {label}
+              </button>
+            ))}
+            <button
+              onClick={() => navigate('/dashboard')}
+              className="px-4 py-2 text-white bg-blue-500 rounded-md"
+            >
+              Play now
+            </button>
+          </div>
         </nav>
       </header>
-      {/* <div className='scene' ref={mount}></div> */}
-      {/* <img src='https://shorturl.at/qo5Up' alt="table" style={{marginTop: "15vh"}}></img> */}
-      <div className='headline' ref={headlineRef}>
-        <div style={{paddingRight: "20%"}}>
+
+      {/* Scene */}
+      <div className="scene" ref={mountRef}>
+        <img src={getFrameSource(currentFrame)} alt={`Frame ${currentFrame}`} />
+      </div>
+
+      {/* Headline */}
+      <div className="headline" ref={headlineRef}>
+        <div className="headline-content" >
           <h1>“Title - Headline”</h1>
-          <p>“This section is about the game, what is it, what is the goal, and how to play it.”</p>
-          <button onClick={() => navigate('/dashboard')}>Play now</button>
+          <p style={{margin: "20px"}}>This section is about the game, what it is, what the goal is, and how to play it.</p>
+          <button style={{margin: "10px"}} onClick={() => navigate('/dashboard')}>Play now</button>
         </div>
-        <img src={hdl} alt='Game'/>
+        <img src={hdl} alt="Game" />
       </div>
-      <div className='team-container' ref={teamRef}>
-      <h1 style={{position: 'absolute', top: "3vh", margin: "0"}}>Meet the team</h1>
-      <Swiper spaceBetween={15}
-      slidesPerView={calculateSlidesPerView()}
-      pagination={{
-        clickable: true,
-      }}
-      navigation={true}
-      modules={[Pagination, Navigation]}
-      loop={true}
-      style={{height: "40vh", width: "100%"}}>
-      <div className='fadein'></div>
-        <SwiperSlide style={{paddingTop: "6vh"}}>
-        <div className="team-member" >
-          <img src={aub} alt='pfp' style={{zIndex: "100"}} />
-          <h2>Name</h2>
-          <p>position @ School</p>
-          <p>“This section is about the team member, what he knows, and the part on which he worked on.”</p>
-        </div>
-        </SwiperSlide>
-        <SwiperSlide style={{paddingTop: "6vh"}}>
-        <div className="team-member">
-          <img src={khr} alt='pfp'/>
-          <h2>Name</h2>
-          <p>position @ School</p>
-          <p>“This section is about the team member, what he knows, and the part on which he worked on.”</p>
-        </div>
-        </SwiperSlide>
-        <SwiperSlide style={{paddingTop: "6vh"}}>
-        <div className="team-member">
-          <img src={hmz} alt='pfp'/>
-          <h2>Name</h2>
-          <p>position @ School</p>
-          <p>“This section is about the team member, what he knows, and the part on which he worked on.”</p>
-        </div>
-        </SwiperSlide>
-        <SwiperSlide style={{paddingTop: "6vh"}}>
-        <div className="team-member">
-          <img src={zou} alt='pfp'/>
-          <h2>Name</h2>
-          <p>position @ School</p>
-          <p>“This section is about the team member, what he knows, and the part on which he worked on.”</p>
-        </div>
-        </SwiperSlide>
-        <SwiperSlide style={{paddingTop: "6vh"}}>
-        <div className="team-member">
-          <img src={agm} alt='pfp'/>
-          <h2>Name</h2>
-          <p>position @ School</p>
-          <p>“This section is about the team member, what he knows, and the part on which he worked on.”</p>
-        </div>
-        </SwiperSlide>
-        <div className='fadeout'></div>
-      </Swiper>
+
+      {/* Team Section */}
+      <div className="team-container" ref={teamRef}>
+        <h1 className="team-title">Meet the Team</h1>
+        <Swiper
+          spaceBetween={15}
+          slidesPerView={slides}
+          pagination={{ clickable: true }}
+          navigation
+          modules={[Pagination, Navigation]}
+          style={{ height: '40vh', width: '100%' }}
+        >
+          <div className="fadein"></div>
+          {TEAM_MEMBERS.map(({ name, position, image, description }, index) => (
+            <SwiperSlide key={index} style={{ paddingTop: '6vh' }}>
+              <div className="team-member">
+                <img src={image} alt={`${name}`} />
+                <h2>{name}</h2>
+                <p>{position}</p>
+                <p>{description}</p>
+              </div>
+            </SwiperSlide>
+          ))}
+          <div className="fadeout"></div>
+        </Swiper>
       </div>
-      <div className='space'>
-      </div>
-      {!isSubmitted ? (
-        <div className="username-input">
-          <input
-            type="text"
-            placeholder="Enter your username"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-          />
-          <button onClick={handleSubmit}>Submit</button>
-        </div>
-      ) : (
-        <div className="navigation-buttons">
-          
-          <button onClick={() => navigate('/pve2d')}>PVE 2D</button>
-          <button onClick={() => navigate('/pvp2d')}>PVP 2D</button>
-          <button onClick={() => navigate('/pve3d')}>PVE 3D</button>
-          <button onClick={() => navigate('/pvp3d')}>PVP 3D</button>
-        </div>
-      )}
-      <div className='space'>
-      </div>
+
+      <div className="space"></div>
     </div>
   );
 };

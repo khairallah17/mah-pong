@@ -1,10 +1,14 @@
 from rest_framework_simplejwt.tokens import Token
-from .models import User
+from .models import User, Friendship, FriendRequest
 from django.contrib.auth.password_validation import validate_password
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework import serializers
 import uuid
 from rest_framework_simplejwt.tokens import RefreshToken, TokenError
+# from rest_framework import serializers
+from django_otp.plugins.otp_totp.models import TOTPDevice
+from django_otp.util import random_hex
+import pyotp
 
 
 
@@ -14,7 +18,7 @@ class   UserSerial(serializers.ModelSerializer):
     
     class   Meta:
         model = User
-        fields = ['id', 'fullname' ,'username', 'email']
+        fields = ['id', 'username', 'email', 'fullname', 'img', 'is_online']
 
 class   Get_Token_serial(TokenObtainPairSerializer):
     @classmethod
@@ -64,7 +68,26 @@ class   RegistrationSerial(serializers.ModelSerializer):
             user.save()
         
         return user
-    
+
+class FriendshipSerializer(serializers.ModelSerializer):
+    friend = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Friendship
+        fields = ('id', 'friend', 'created_at')
+
+    def get_friend(self, obj):
+        request_user = self.context['request'].user
+        friend = obj.user2 if obj.user1 == request_user else obj.user1
+        return UserSerial(friend).data
+
+class FriendRequestSerializer(serializers.ModelSerializer):
+    from_user = UserSerial(read_only=True)
+    to_user = UserSerial(read_only=True)
+
+    class Meta:
+        model = FriendRequest
+        fields = ('id', 'from_user', 'to_user', 'status', 'created_at')
     
 class LogoutSerial(serializers.Serializer):
     refresh = serializers.CharField()

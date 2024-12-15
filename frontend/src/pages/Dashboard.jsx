@@ -25,6 +25,7 @@ export const Dashboard = () => {
         <button onClick={() => navigate('/profile')}>Profile</button>
         <button onClick={() => navigate('/search')}>Search</button>
         <button onClick={() => navigate('/security')}>Security</button>
+        <button onClick={() => navigate('/tournamentHome')}>Tournament</button>
       </div>
       <form onSubmit={handleLogout}>
         <div className='btn-register'>

@@ -2,9 +2,10 @@ import React, { useState } from 'react';
 import ProtectRouter from "./protection_axios/ProtectRouter"
 import ProtectLogin from "./protection_axios/ProtectLogin.jsx"
 import { AuthProvider } from "./context_login_Register/AuthContext.jsx"
-import { Profile, Register, Login, Dashboard, VerifyPsdEmail, ResetPassword } from "./pages"
+import { Register, Login, Dashboard, VerifyPsdEmail, ResetPassword } from "./pages"
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { Navigate } from "react-router-dom";
+import TwoFactorSetup from './pages/OTP_2fa/TwoFactorSetup.jsx'
 import HomePage from './HomePage';
 import SecurityPage from './pages/SecurityProfile.jsx';
 import SearchPage from './pages/SearchPage.jsx';
@@ -12,6 +13,11 @@ import Pve3d from './pve/Pve3d';
 import Pvp2d from './pvp/Pvp2d';
 import Pve2d from './pve/Pve2d';
 import Pvp3d from './pvp/Pvp3d';
+import Profile from './pages/Profile.jsx'
+import SecurityProfile from './pages/SecurityProfile'
+import SearchPage from './pages/SearchPage'
+import Tournament from './pages/tournament/Tournament'
+import TournamentHome from './pages/tournament/tournamentHome';
 
 function App() {
   const [username, setUsername] = useState('');
@@ -41,6 +47,9 @@ function App() {
           <Route path="/password-reset" element={
               <VerifyPsdEmail />
           } />
+          <Route path="/TwoFactorSetup" element={
+              <TwoFactorSetup />
+          } />
 
           <Route path="/password-reset/confirm" element={
               <ResetPassword />
@@ -56,6 +65,13 @@ function App() {
             <Route path="/pvp3d" element={<Pvp3d />} />
             <Route path="/pvp2d" element={<Pvp2d />} />
             <Route path="/pve2d" element={<Pve2d />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/securityProfile" element={<SecurityProfile />} />
+            <Route path="/search" element={<SearchPage />} />
+            <Route path='/tournament' element={<Tournament/>}/>
+            <Route path='/tournamentHome' element={<TournamentHome/>}/>
+            
+            
           </Route>
 
           {/* Catch all other routes */}

@@ -20,4 +20,10 @@ urlpatterns = [
     path('42login/callback/', views.Login42Auth.as_view(), name='42call_back_login'),
     path('password-reset/', views.send_resetpass, name='password-reset-request'),
     path('password-reset/<str:uidb64>/<str:token>/', views.Confirm_reset_Password.as_view(), name='password-reset-confirm'),
+    path('friends/', views.FriendListView.as_view(), name='friend-list'),
+    path('friends/requests/', views.FriendRequestListView.as_view(), name='friend-requests'),
+    path('friends/request/send/<uuid:user_id>/', views.SendFriendRequestView.as_view(), name='send-friend-request'),
+    path('friends/request/<int:request_id>/accept/', views.AcceptFriendRequestView.as_view(), name='accept-friend-request'),
+    path('friends/request/<int:request_id>/reject/', views.RejectFriendRequestView.as_view(), name='reject-friend-request'),
+    path('friends/<uuid:user_id>/remove/', views.RemoveFriendView.as_view(), name='remove-friend'),
 ]
