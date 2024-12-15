@@ -37,18 +37,20 @@ class TournamentConsumer(AsyncWebsocketConsumer):
             is_reconnected = cache.get(f"user_reconnect_{self.username}", False)
             if not is_reconnected:
                 self.tournament = await self._initialize_tournament(tournament_code)
+                await self.add_player_to_tournament(self.tournament.id, self.username)
+                await self.get_or_create_tournament_matches(self.tournament, self.username)
                 logger.warning(f"tournament: {self.tournament} not reconnected")
             else:
                 self.tournament = await self.is_user_in_tournament(self.username)
                 logger.warning(f"tournament: {self.tournament} reconnected")
-            self.tournament_group_name = f"tournament_{self.tournament.id}"
 
-            await self.channel_layer.group_add(self.tournament_group_name, self.channel_name)
-            await self.add_player_to_tournament(self.tournament.id, self.username)
-            await self.get_or_create_tournament_matches(self.tournament, self.username)
-            await self.send_tournament_state(self.tournament)
-
-            cache.set(f"user_reconnect_{self.username}", False, timeout=None)
+            if self.tournament:
+                self.tournament_group_name = f"tournament_{self.tournament.id}"
+                await self.channel_layer.group_add(self.tournament_group_name, self.channel_name)
+                await self.send_tournament_state(self.tournament)
+                cache.set(f"user_reconnect_{self.username}", False, timeout=None)
+            else:
+                logger.error("Failed to initialize tournament")
 
         except jwt.ExpiredSignatureError:
             await self.send_error_message('token_expired', 4001)
@@ -157,6 +159,7 @@ class TournamentConsumer(AsyncWebsocketConsumer):
     @database_sync_to_async
     def get_or_create_tournament_matches(self, tournament, username):
         matches = list(TournamentMatch.objects.filter(tournament=tournament))
+        logger.warning(f"matches: {matches}")
 
         if matches and not any(username in [match.player1, match.player2] for match in matches):
             for match in matches:
@@ -170,7 +173,6 @@ class TournamentConsumer(AsyncWebsocketConsumer):
                     self.current_match = match.id
                     match.save()
                     return matches
-
         if not matches:
             matches = self._create_tournament_matches(tournament, username)
 
