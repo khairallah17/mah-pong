@@ -1,5 +1,4 @@
 #!/bin/bash
-sleep 3
 
 python manage.py makemigrations
 

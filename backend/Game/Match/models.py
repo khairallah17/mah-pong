@@ -37,6 +37,8 @@ class Tournament(models.Model):
     def save(self, *args, **kwargs):
         if not self.code:
             self.code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
+        if self.players is None:
+            self.players = []
         super(Tournament, self).save(*args, **kwargs)
 
     def __str__(self):

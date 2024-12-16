@@ -1,5 +1,5 @@
 from rest_framework_simplejwt.tokens import Token
-from .models import User, Friendship, FriendRequest
+from .models import User, TwoFactorAuthAttempt
 from django.contrib.auth.password_validation import validate_password
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework import serializers
@@ -16,7 +16,9 @@ class   UserSerial(serializers.ModelSerializer):
     
     class   Meta:
         model = User
-        fields = ['id', 'username', 'email', 'fullname', 'img', 'is_online']
+        fields = ['id', 'username', 'email', 'fullname', 'nblose', 'nbwin', 
+                 'score', 'img', 'two_factor_enabled', 'last_login_2fa']
+        read_only_fields = ['two_factor_enabled', 'last_login_2fa']
 
 class   Get_Token_serial(TokenObtainPairSerializer):
     @classmethod
@@ -66,26 +68,6 @@ class   RegistrationSerial(serializers.ModelSerializer):
             user.save()
         
         return user
-
-class FriendshipSerializer(serializers.ModelSerializer):
-    friend = serializers.SerializerMethodField()
-
-    class Meta:
-        model = Friendship
-        fields = ('id', 'friend', 'created_at')
-
-    def get_friend(self, obj):
-        request_user = self.context['request'].user
-        friend = obj.user2 if obj.user1 == request_user else obj.user1
-        return UserSerial(friend).data
-
-class FriendRequestSerializer(serializers.ModelSerializer):
-    from_user = UserSerial(read_only=True)
-    to_user = UserSerial(read_only=True)
-
-    class Meta:
-        model = FriendRequest
-        fields = ('id', 'from_user', 'to_user', 'status', 'created_at')
     
 class LogoutSerial(serializers.Serializer):
     refresh = serializers.CharField()
@@ -99,3 +81,8 @@ class LogoutSerial(serializers.Serializer):
             RefreshToken(self.token).blacklist()
         except TokenError:
             raise serializers.ValidationError('Invalid or expired token')
+
+class TwoFactorAuthAttemptSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TwoFactorAuthAttempt
+        fields = ['timestamp', 'successful', 'ip_address', 'user_agent']
