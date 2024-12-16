@@ -8,6 +8,7 @@ from channels.db import database_sync_to_async
 from Match.models import Match, Tournament, TournamentMatch
 from django.db import transaction
 from urllib.parse import parse_qs
+from django.core.cache import cache
 
 logger = logging.getLogger(__name__)
 matchmaking_pool = []
@@ -16,7 +17,6 @@ matched_users = {}
 game_states = {}
 TABLE_LIMIT = 1.5
 PADDLE_WIDTH = 1
-reconnected = False//
 
 class TournamentConsumer(AsyncWebsocketConsumer):
     def __init__(self, *args, **kwargs):
@@ -34,15 +34,23 @@ class TournamentConsumer(AsyncWebsocketConsumer):
         await self.accept()
         try:
             self.username = self._decode_token(token)
-            self.tournament = await self.is_user_in_tournament(self.username)
-            if not reconnected:
+            is_reconnected = cache.get(f"user_reconnect_{self.username}", False)
+            if not is_reconnected:
                 self.tournament = await self._initialize_tournament(tournament_code)
-            self.tournament_group_name = f"tournament_{self.tournament.id}"
+                await self.add_player_to_tournament(self.tournament.id, self.username)
+                await self.get_or_create_tournament_matches(self.tournament, self.username)
+                logger.warning(f"tournament: {self.tournament} not reconnected")
+            else:
+                self.tournament = await self.is_user_in_tournament(self.username)
+                logger.warning(f"tournament: {self.tournament} reconnected")
 
-            await self.channel_layer.group_add(self.tournament_group_name, self.channel_name)
-            await self.add_player_to_tournament(self.tournament.id, self.username)
-            await self.get_or_create_tournament_matches(self.tournament, self.username)
-            await self.send_tournament_state(self.tournament)
+            if self.tournament:
+                self.tournament_group_name = f"tournament_{self.tournament.id}"
+                await self.channel_layer.group_add(self.tournament_group_name, self.channel_name)
+                await self.send_tournament_state(self.tournament)
+                cache.set(f"user_reconnect_{self.username}", False, timeout=None)
+            else:
+                logger.error("Failed to initialize tournament")
 
         except jwt.ExpiredSignatureError:
             await self.send_error_message('token_expired', 4001)
@@ -53,14 +61,16 @@ class TournamentConsumer(AsyncWebsocketConsumer):
         if self.tournament_group_name:
             await self.channel_layer.group_discard(self.tournament_group_name, self.channel_name)
         if self.username:
+            cache.set(f"user_reconnect_{self.username}", True, timeout=5)
             await self.schedule_remove_player()
 
     async def schedule_remove_player(self):
-        reconnected = False
         await asyncio.sleep(5)
-        if not reconnected:
+        is_reconnected = cache.get(f"user_reconnect_{self.username}", False)
+        if not is_reconnected:
             await self.remove_player_from_tournament(self.username)
             if self.tournament and not self.tournament.players:
+                logger.warning(f"tournament removed players {self.tournament.players}")
                 await self.delete_tournament(self.tournament)
             if self.current_match:
                 await self.remove_player_from_match(self.current_match, self.username)
@@ -116,10 +126,6 @@ class TournamentConsumer(AsyncWebsocketConsumer):
     def is_user_in_tournament(self, username):
         try:
             tournament = Tournament.objects.filter(players__contains=[username], status='waiting').first()
-            if tournament:
-                reconnected = True
-            else:
-                reconnected = False
             return tournament
         except Exception as e:
             logger.error(f"Error checking if user is in tournament: {e}")
@@ -153,6 +159,7 @@ class TournamentConsumer(AsyncWebsocketConsumer):
     @database_sync_to_async
     def get_or_create_tournament_matches(self, tournament, username):
         matches = list(TournamentMatch.objects.filter(tournament=tournament))
+        logger.warning(f"matches: {matches}")
 
         if matches and not any(username in [match.player1, match.player2] for match in matches):
             for match in matches:
@@ -166,7 +173,6 @@ class TournamentConsumer(AsyncWebsocketConsumer):
                     self.current_match = match.id
                     match.save()
                     return matches
-
         if not matches:
             matches = self._create_tournament_matches(tournament, username)
 
@@ -187,9 +193,9 @@ class TournamentConsumer(AsyncWebsocketConsumer):
     @database_sync_to_async
     def handle_player_ready_sync(self, data):
         try:
-            round = data.get('round')
-            position = data.get('position')
-            match = TournamentMatch.objects.get(tournament=self.tournament, round=round, position=position)
+            # round = data.get('round')
+            # position = data.get('position')
+            match = TournamentMatch.objects.get(id=self.current_match)
 
             player_id = data.get('player_id')
             if player_id == 1:
