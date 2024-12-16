@@ -60,10 +60,10 @@ export default function Tournament() {
     }
 
     return () => {
-      // if (wsRef.current) {
-      //   wsRef.current.close();
-      //   wsRef.current = null;
-      // }
+      if (wsRef.current) {
+        wsRef.current.close();
+        wsRef.current = null;
+      }
     };
   }, [token]);
 

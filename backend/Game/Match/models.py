@@ -2,6 +2,8 @@ from django.db import models
 import random
 import string
 from django.contrib.postgres.fields import ArrayField
+from django.db.models.signals import pre_save
+from django.dispatch import receiver
 
 class Match(models.Model):
     username1 = models.CharField(max_length=100)
@@ -37,8 +39,6 @@ class Tournament(models.Model):
     def save(self, *args, **kwargs):
         if not self.code:
             self.code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
-        if self.players is None:
-            self.players = []
         super(Tournament, self).save(*args, **kwargs)
 
     def __str__(self):
@@ -66,3 +66,12 @@ class TournamentMatch(models.Model):
         if self.winner:
             self.winner = self.winner[:10]
         super(TournamentMatch, self).save(*args, **kwargs)
+
+@receiver(pre_save, sender=Tournament)
+def remove_players_from_matches(sender, instance, **kwargs):
+    if instance.pk:
+        previous = Tournament.objects.get(pk=instance.pk)
+        removed_players = set(previous.players) - set(instance.players)
+        if removed_players:
+            TournamentMatch.objects.filter(tournament=instance, player1__in=removed_players).update(player1=None)
+            TournamentMatch.objects.filter(tournament=instance, player2__in=removed_players).update(player2=None)
