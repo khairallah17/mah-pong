@@ -3,8 +3,8 @@ from django.shortcuts import render
 from django.db import models
 from django.db.models import Q
 from django.http import HttpResponse, HttpResponseRedirect
-from .models import User, Friendship, FriendRequest
-from .serializers import Get_Token_serial, RegistrationSerial, UserSerial, LogoutSerial, FriendshipSerializer, FriendRequestSerializer
+from .models import User, TwoFactorAuthAttempt
+from .serializers import Get_Token_serial, RegistrationSerial, UserSerial, LogoutSerial
 from rest_framework.decorators import api_view, permission_classes
 from django.shortcuts import get_object_or_404
 from rest_framework.response import Response
@@ -47,6 +47,8 @@ import qrcode.image.svg
 from io import BytesIO
 import base64
 from rest_framework_simplejwt.authentication import JWTAuthentication
+from datetime import datetime
+import time
 
 
 CLIENT_ID = os.environ.get('CLIENT_ID')
@@ -78,7 +80,27 @@ class Get_MyTokenObtainPairView(TokenObtainPairView):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        # here if the user are authenticate sper() call the parent class post method to generate new token
+        # Check if 2FA is enabled for the user
+        try:
+            device = TOTPDevice.objects.get(user=user, confirmed=True)
+            # If 2FA is enabled, require verification code
+            verification_code = request.data.get('verification_code')
+            if not verification_code:
+                return Response({
+                    'requires_2fa': True,
+                    'message': '2FA verification required'
+                }, status=status.HTTP_200_OK)
+
+            totp = pyotp.TOTP(device.key)
+            if not totp.verify(verification_code):
+                return Response({
+                    'error': 'Invalid 2FA verification code'
+                }, status=status.HTTP_400_BAD_REQUEST)
+        except TOTPDevice.DoesNotExist:
+            # 2FA not enabled, proceed with normal login
+            pass
+
+        # Generate tokens only if 2FA verification passed or not required
         response = super().post(request)
         token = response.data.get('access')
         refresh_token = response.data.get('refresh')
@@ -97,7 +119,6 @@ class Get_MyTokenObtainPairView(TokenObtainPairView):
             secure=False,  # Set to True if using HTTPS
             samesite='Lax'
         )
-        # here we set the token to the http only cookies to be used in the frontend for more security
         return response
     
     def get(self, request):
@@ -259,10 +280,30 @@ class GoogleLoginCallback(APIView):
             # Get_Token_serial()
         #create Token for This user using JWT "we use RefreshToken because it automaticly create both refresh_token and access_token"
         #we didn't use AccessToken because it automaticly create just access_token"
-        acces_token = Get_Token_serial.get_token(user)
-        # acces_token = token['access_token']
-        # print (acces_token)
-        return redirect(f"http://localhost:5173/google-callback?access_token={acces_token}")
+        # acces_token = Get_Token_serial.get_token(user)
+        refresh = RefreshToken.for_user(user)
+        access_token = str(refresh.access_token)
+        refresh_token = str(refresh)
+        
+        response = redirect(f"http://localhost:5173/google-callback?access_token={access_token}")
+        # Set cookies for ggoole API
+        response.set_cookie(
+            key='access_token',
+            value=access_token,
+            httponly=True,
+            secure=False,  # Set to True if using HTTPS
+            samesite='Lax'
+        )
+        response.set_cookie(
+            key='refresh_token',
+            value=refresh_token,
+            httponly=True,
+            secure=False,  # Set to True if using HTTPS
+            samesite='Lax'
+        )
+
+        return response
+        # return redirect(f"http://localhost:5173/google-callback?access_token={acces_token}")
 
 
 class Login42Auth(APIView):
@@ -313,13 +354,36 @@ class Login42Auth(APIView):
             )
             user.save()
         # now sending access token to Front
-        send_token = Get_Token_serial.get_token(user)
+                # Generate tokens
+        refresh = RefreshToken.for_user(user)
+        access_token = str(refresh.access_token)
+        refresh_token = str(refresh)
         # print ("sdsdsd")
         # return Response({
         #     'user' : UserSerial(user).data,
         #     'access_token' : token_json.get('access_token')
         # })
-        return redirect(f"http://localhost:5173/42intra-callback?access_token={send_token}")
+
+        """Create response with redirect"""
+        response = redirect(f"http://localhost:5173/42intra-callback?access_token={access_token}")
+
+        # Set cookies
+        response.set_cookie(
+            key='access_token',
+            value=access_token,
+            httponly=True,
+            secure=False,  # Set to True if using HTTPS
+            samesite='Lax'
+        )
+        response.set_cookie(
+            key='refresh_token',
+            value=refresh_token,
+            httponly=True,
+            secure=False,  # Set to True if using HTTPS
+            samesite='Lax'
+        )
+
+        return response
 
 
 
@@ -431,85 +495,6 @@ class   Confirm_reset_Password(View):
         response["Access-Control-Allow-Headers"] = "Content-Type, X-Requested-With"
         return response
 
-
-# friend list request
-class FriendListView(generics.ListAPIView):
-    permission_classes = [IsAuthenticated]
-    serializer_class = FriendshipSerializer
-
-    def get_queryset(self):
-        return Friendship.objects.get_friends_for_user(self.request.user)
-
-class FriendRequestListView(generics.ListAPIView):
-    permission_classes = [IsAuthenticated]
-    serializer_class = FriendRequestSerializer
-
-    def get_queryset(self):
-        return FriendRequest.objects.pending_for_user(self.request.user)
-
-class SendFriendRequestView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def post(self, request, user_id):
-        to_user = get_object_or_404(User, id=user_id)
-        
-        if request.user.id == user_id:
-            return Response(
-                {"error": "You cannot send a friend request to yourself"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        try:
-            friend_request = FriendRequest.objects.create_request(
-                from_user=request.user,
-                to_user=to_user
-            )
-            serializer = FriendRequestSerializer(friend_request)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        except ValueError as e:
-            return Response(
-                {"error": str(e)},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-class AcceptFriendRequestView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def post(self, request, request_id):
-        friend_request = get_object_or_404(
-            FriendRequest,
-            id=request_id,
-            to_user=request.user,
-            status='pending'
-        )
-        friend_request.accept()
-        return Response({"status": "friend request accepted"})
-
-class RejectFriendRequestView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def post(self, request, request_id):
-        friend_request = get_object_or_404(
-            FriendRequest,
-            id=request_id,
-            to_user=request.user,
-            status='pending'
-        )
-        friend_request.reject()
-        return Response({"status": "friend request rejected"})
-
-class RemoveFriendView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def post(self, request, user_id):
-        friendship = get_object_or_404(
-            Friendship,
-            models.Q(user1=request.user, user2=user_id) |
-            models.Q(user1=user_id, user2=request.user)
-        )
-        friendship.delete()
-        return Response({"status": "friend removed"})
-
 class LogoutViews(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -590,3 +575,191 @@ class UserEditProfileView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
 
+class TwoFactorAuthenticationView(APIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
+
+    def get(self, request):
+        """Generate QR code for Google Authenticator"""
+        if not request.user.is_authenticated:
+            return Response({
+                'error': 'Authentication required'
+            }, status=status.HTTP_401_UNAUTHORIZED)
+
+        user = request.user
+        print(f"Authenticated user: {user.email}")
+        
+        # Get or create TOTP device for user
+        device, created = TOTPDevice.objects.get_or_create(
+            user=user,
+            defaults={'confirmed': False}
+        )
+
+        if created or not device.confirmed:
+            # Generate new secret key
+            secret_key = pyotp.random_base32()
+            device.key = secret_key
+            device.save()
+
+            # Generate provisioning URI for QR code
+            totp = pyotp.TOTP(secret_key)
+            provisioning_uri = totp.provisioning_uri(
+                name=user.email,
+                issuer_name="YourAppName"
+            )
+
+            # Generate QR code
+            qr = qrcode.QRCode(
+                version=1,
+                error_correction=qrcode.constants.ERROR_CORRECT_L,
+                box_size=10,
+                border=4,
+            )
+            qr.add_data(provisioning_uri)
+            qr.make(fit=True)
+
+            # Create QR code image
+            img_qr = qr.make_image(fill_color="black", back_color="white")
+            
+            # Save QR code image
+            img_path = f'qr_codes/qr_{user.username}.png'
+            full_path = os.path.join(settings.MEDIA_ROOT, img_path)
+            
+            # Ensure directory exists
+            os.makedirs(os.path.dirname(full_path), exist_ok=True)
+            
+            # Save the image
+            img_qr.save(full_path)
+
+            # Convert to base64 for response
+            buffer = BytesIO()
+            img_qr.save(buffer, format="PNG")
+            qr_code_base64 = base64.b64encode(buffer.getvalue()).decode()
+
+            # Generate URL for the QR code image
+            qr_image_url = f"{settings.MEDIA_URL}{img_path}"
+
+            return Response({
+                'qr_code': qr_code_base64,
+                'qr_image_url': qr_image_url,
+                'secret_key': secret_key,
+                'is_enabled': device.confirmed
+            })
+        
+        # If 2FA is already set up 
+        if device.confirmed:
+            # Generate URL for existing QR code and sending Qrcode as image in backend
+            qr_image_url = f"{settings.MEDIA_URL}qr_codes/qr_{user.username}.png"
+            return Response({
+                'is_enabled': device.confirmed,
+                'message': '2FA is already set up',
+                'qr_image_url': qr_image_url
+            })
+        
+        return Response({
+            'is_enabled': device.confirmed,
+            'message': '2FA is already set up',
+            'qr_image_url': None
+        })
+
+class Verify2FAView(APIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
+
+    def post(self, request):
+        user = request.user
+        otp = request.data.get('otp')
+
+        if not otp:
+            return Response({
+                'error': 'OTP is required'
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            device = TOTPDevice.objects.get(user=user)
+            totp = pyotp.TOTP(device.key)
+
+            if totp.verify(otp):
+                device.confirmed = True
+                device.save()
+                
+                # Log successful hnaya kanverfyi ila kan otp enabled o user 3ad tloga
+                TwoFactorAuthAttempt.objects.create(
+                    user=user,
+                    successful=True,
+                    ip_address=request.META.get('REMOTE_ADDR'),
+                    user_agent=request.META.get('HTTP_USER_AGENT')
+                )
+
+                return Response({
+                    'message': '2FA successfully enabled'
+                })
+            else:
+                # Log failed hnaya ila kan OTP disebled sf mkay7tajsh ba9i ivirifyi 2FA
+                TwoFactorAuthAttempt.objects.create(
+                    user=user,
+                    successful=False,
+                    ip_address=request.META.get('REMOTE_ADDR'),
+                    user_agent=request.META.get('HTTP_USER_AGENT')
+                )
+                
+                return Response({
+                    'error': 'Invalid OTP'
+                }, status=status.HTTP_400_BAD_REQUEST)
+
+        except TOTPDevice.DoesNotExist:
+            return Response({
+                'error': '2FA not set up'
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+
+# class bash T7yed 2FA
+class Disable2FAView(APIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
+
+    def post(self, request):
+        try:
+            device = TOTPDevice.objects.get(user=request.user)
+            device.confirmed = False
+            device.save()
+            
+            # Clean up QR code image if it exists
+            qr_image_path = os.path.join(settings.MEDIA_ROOT, f'qr_codes/qr_{request.user.username}.png')
+            if os.path.exists(qr_image_path):
+                os.remove(qr_image_path)
+
+            # Log the disabling of 2FA
+            TwoFactorAuthAttempt.objects.create(
+                user=request.user,
+                successful=True,
+                ip_address=request.META.get('REMOTE_ADDR'),
+                user_agent=request.META.get('HTTP_USER_AGENT'),
+            )
+
+            return Response({
+                'message': '2FA successfully disabled'
+            })
+        except TOTPDevice.DoesNotExist:
+            return Response({
+                'error': '2FA was not enabled'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({
+                'error': str(e)
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+class Check2FAStatusView(APIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
+
+    def get(self, request):
+        try:
+            device = TOTPDevice.objects.get(user=request.user, confirmed=True)
+            return Response({
+                'requires_2fa': True
+            })
+        except TOTPDevice.DoesNotExist:
+            return Response({
+                'requires_2fa': False
+            })
