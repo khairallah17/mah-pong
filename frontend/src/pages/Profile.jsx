@@ -10,10 +10,9 @@ export default function Profile() {
     username: "",
     email: "",
     avatar: "",
-    profile_image: null, // Add this to store the profile image
+    profile_image: null,
   });
 
-  // Fetch user profile
   const fetchProfile = async () => {
     try {
       let token = localStorage.getItem('authtoken');
@@ -37,13 +36,12 @@ export default function Profile() {
         }
       });
       
-      // Set all profile data
       setProfileData({
         fullname: response.data.fullname || "",
         username: response.data.username || "",
         email: response.data.email || "",
         avatar: response.data.avatar || "",
-        profile_image: response.data.profile_image, // Add this line to get profile image
+        profile_image: response.data.profile_image,
       });
       console.log("---------->", response.data);
     } catch (error) {
@@ -57,7 +55,6 @@ export default function Profile() {
     }
   };
 
-  // Handle image upload
   const handleImageUpload = async (event) => {
     const file = event.target.files[0];
     if (!file) return;
@@ -82,7 +79,6 @@ export default function Profile() {
         }
       });
       
-      // Update profile data with new image
       setProfileData(prev => ({
         ...prev,
         profile_image: response.data.profile_image
@@ -105,7 +101,6 @@ export default function Profile() {
     }
   };
 
-  // Handle image deletion
   const handleImageDelete = async () => {
     try {
       let token = localStorage.getItem('authtoken');
@@ -123,7 +118,6 @@ export default function Profile() {
         }
       });
       
-      // Clear profile image
       setProfileData(prev => ({
         ...prev,
         profile_image: null
@@ -146,12 +140,10 @@ export default function Profile() {
     }
   };
 
-  // Fetch profile when component mounts
   useEffect(() => {
     fetchProfile();
   }, []);
 
-  // Update profile
   const handleSubmit = async () => {
     try {
       let token = localStorage.getItem('authtoken');
@@ -188,7 +180,6 @@ export default function Profile() {
     }
   };
 
-  // Safety check for initials
   const getInitials = () => {
     const initials = profileData.fullname
       .split(' ')
@@ -203,7 +194,6 @@ export default function Profile() {
       <h2 className="text-2xl font-inter text-white mb-6">Account</h2>
       <div className="flex flex-col md:flex-row justify-between items-center gap-8">
         <div className="flex flex-col md:flex-row items-center gap-4">
-          {/* Profile Picture Section */}
           <div className="w-20 h-20 bg-purple-500 rounded-full flex items-center justify-center text-white text-2xl font-inter">
             {profileData.profile_image ? (
               <img 
@@ -238,7 +228,6 @@ export default function Profile() {
           </div>
         </div>
         <div className="flex flex-col md:flex-row items-center gap-4">
-          {/* Avatar Section */}
           <img
             src={profileData.avatar || "https://github.com/shadcn.png"}
             alt="Profile Avatar"
@@ -253,7 +242,6 @@ export default function Profile() {
         </div>
       </div>
 
-      {/* Rest of the component remains the same */}
       <div className="space-y-6 pt-8 border-t border-white/80">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="md:col-span-2">
@@ -314,3 +302,4 @@ export default function Profile() {
     </div>
   );
 }
+
