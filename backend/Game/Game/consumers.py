@@ -9,6 +9,7 @@ from Match.models import Match, Tournament, TournamentMatch
 from django.db import transaction
 from urllib.parse import parse_qs
 from django.core.cache import cache
+from django.db.models import Q
 
 logger = logging.getLogger(__name__)
 matchmaking_pool = []
@@ -78,8 +79,8 @@ class TournamentConsumer(AsyncWebsocketConsumer):
                 if self.tournament and (not self.tournament.players or self.tournament.players == []):
                     logger.warning(f"tournament removed players {self.tournament.players}")
                     await self.delete_tournament(self.tournament)
-                # if self.current_match:
-                #     await self.remove_player_from_match(self.current_match, self.username)
+                if self.current_match:
+                    await self.remove_player_from_match(self.current_match, self.username)
                 break
             await asyncio.sleep(1)
         
@@ -108,9 +109,15 @@ class TournamentConsumer(AsyncWebsocketConsumer):
     def remove_player_from_match(self, match_id, username):
         try:
             match = TournamentMatch.objects.get(id=match_id)
-            if match.player1 == username:
+            trunc_username = username[:10]
+            logger.warning(f"match.player1 {match.player1}")
+            logger.warning(f"match.player2 {match.player2}")
+            logger.warning(f"username {trunc_username}")
+            if match.player1 == trunc_username:
+                logger.warning(f"player deleted from match {match.player1}")
                 match.player1 = None
-            elif match.player2 == username:
+            elif match.player2 == trunc_username:
+                logger.warning(f"player deleted from match {match.player2}")
                 match.player2 = None
             match.save()
         except Exception as e:
@@ -133,8 +140,12 @@ class TournamentConsumer(AsyncWebsocketConsumer):
     @database_sync_to_async
     def is_user_in_tournament(self, username):
         try:
+            trunc_username = username[:10]
             tournament = Tournament.objects.filter(players__contains=[username], status='waiting').first()
-            return tournament
+            if tournament:
+                match = TournamentMatch.objects.filter(Q(tournament=tournament) & (Q(player1=trunc_username) | Q(player2=trunc_username))).first()
+                self.current_match = match.id
+                return tournament
         except Exception as e:
             logger.error(f"Error checking if user is in tournament: {e}")
             return None

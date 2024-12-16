@@ -67,11 +67,11 @@ class TournamentMatch(models.Model):
             self.winner = self.winner[:10]
         super(TournamentMatch, self).save(*args, **kwargs)
 
-@receiver(pre_save, sender=Tournament)
-def remove_players_from_matches(sender, instance, **kwargs):
-    if instance.pk:
-        previous = Tournament.objects.get(pk=instance.pk)
-        removed_players = set(previous.players) - set(instance.players)
-        if removed_players:
-            TournamentMatch.objects.filter(tournament=instance, player1__in=removed_players).update(player1=None)
-            TournamentMatch.objects.filter(tournament=instance, player2__in=removed_players).update(player2=None)
+# @receiver(pre_save, sender=Tournament)
+# def remove_players_from_matches(sender, instance, **kwargs):
+#     if instance.pk:
+#         previous = Tournament.objects.get(pk=instance.pk)
+#         removed_players = set(previous.players) - set(instance.players)
+#         if removed_players:
+#             TournamentMatch.objects.filter(tournament=instance, player1__in=removed_players).update(player1=None)
+#             TournamentMatch.objects.filter(tournament=instance, player2__in=removed_players).update(player2=None)
