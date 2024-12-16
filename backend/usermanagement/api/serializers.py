@@ -11,8 +11,6 @@ from django_otp.util import random_hex
 import pyotp
 
 
-
-
 class   UserSerial(serializers.ModelSerializer):
     id = serializers.UUIDField(read_only=True)
     

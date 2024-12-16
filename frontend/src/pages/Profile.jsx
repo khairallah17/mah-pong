@@ -183,7 +183,7 @@ export default function Profile() {
         icon: 'error',
         title: 'Failed to update profile. Please try again.',
         showConfirmButton: false,
-        timer: 1500
+        timer: 1500 
       });
     }
   };
@@ -199,7 +199,7 @@ export default function Profile() {
   };
 
   return (
-    <div className="w-full max-w-4xl mx-auto p-8 space-y-8">
+    <div className="w-full bg-gradient-to-r bg-gradient-to-r from-blue-800 to-indigo-900 rounded-lg max-w-6xl mx-auto p-8 space-y-8">
       <h2 className="text-2xl font-inter text-white mb-6">Account</h2>
       <div className="flex flex-col md:flex-row justify-between items-center gap-8">
         <div className="flex flex-col md:flex-row items-center gap-4">
