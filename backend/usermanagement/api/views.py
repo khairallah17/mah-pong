@@ -183,7 +183,7 @@ class RegisterationView(generics.CreateAPIView):
         return Response(
             {
                 "message": "User Registered Successfully",
-                "UserInfo": {"username": user.username, "email": user.email, "id": str(user.id)}
+                "UserInfo": {"id": str(user.id), "username": user.username, "email": user.email, "image": user.img, "avatar": user.avatar}
             }, status=status.HTTP_201_CREATED,
             headers=headers
         )
@@ -606,7 +606,7 @@ class TwoFactorAuthenticationView(APIView):
             totp = pyotp.TOTP(secret_key)
             provisioning_uri = totp.provisioning_uri(
                 name=user.email,
-                issuer_name="YourAppName"
+                issuer_name="Ft_transcendence DRARI LMLA7 Team"
             )
 
             # Generate QR code

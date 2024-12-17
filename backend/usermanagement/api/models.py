@@ -3,6 +3,9 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser
 # from django.db.models import Q
 from django.utils import timezone
+from django.conf import settings
+import os
+import random
 
 
 
@@ -19,9 +22,14 @@ class User(AbstractUser):
         default='./pic1.jpeg'
     )
     
+    def get_random_image():
+        list_avatars = os.listdir(path = './media/avatar')
+
+        return('/avatar/' + random.choice(list_avatars))
+
     avatar = models.ImageField(
-        upload_to='./avatar/',
-        default='./1.svg'
+        upload_to='./',
+        default=get_random_image
     )
     
     # Add these new fields for 2FA
