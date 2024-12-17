@@ -12,7 +12,7 @@ import agm from './assets/agm.jpg';
 import zou from './assets/Zou.jpg';
 import hmz from './assets/hasalam.jpg';
 
-const totalFrames = 180;
+const totalFrames = 130;
 
 const NAV_LINKS = [
   { label: 'About', refKey: 'aboutRef' },
