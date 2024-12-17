@@ -49,6 +49,7 @@ import base64
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from datetime import datetime
 import time
+from django.contrib.auth.hashers import check_password
 
 
 CLIENT_ID = os.environ.get('CLIENT_ID')
@@ -486,7 +487,7 @@ class   Confirm_reset_Password(View):
 
         except Exception as e:
             print(f"Error: {str(e)}")
-            return JsonResponse({'error': 'An error occurred'}, status=500)
+            return JsonResponse({'error': 'An error occurred'}, status=400)
 
     def options(self, request, *args, **kwargs):
         response = JsonResponse({}, status=200)
@@ -763,3 +764,46 @@ class Check2FAStatusView(APIView):
             return Response({
                 'requires_2fa': False
             })
+
+class ChangePasswordView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        try:
+            # Parse the request body properly
+            try:
+                old_password = request.data.get('old_password')
+                new_password = request.data.get('new_password')
+                confirm_password = request.data.get('confirm_password')
+            except (TypeError, ValueError):
+                return Response({'error': 'Invalid JSON data'})
+
+
+            # Decode the user ID
+            user = request.user
+            if not old_password:
+                return Response({'error': 'Old password is required'})
+            # user = User.objects.get(email=user.email)
+            try:
+                valid_password = check_password(old_password, user.password)
+                if not valid_password:
+                    return Response({'error': 'Invalid old password'},status=200)
+            except Exception as e:
+                return Response({'error': 'Error validating password'}, status=500)
+
+            # Validate passwords
+            if not new_password or not confirm_password:
+                return Response({'error': 'Both passwords are required'})
+
+            if new_password != confirm_password:
+                return Response({'error': 'Passwords do not match'})
+
+            # Set new password
+            user.set_password(new_password)
+            user.save()
+
+            return Response({'message': 'Password reset successful'})
+
+        except Exception as e:
+            print(f"Error: {str(e)}")
+            return Response({'error': 'An error occurred'})

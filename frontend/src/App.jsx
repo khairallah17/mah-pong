@@ -8,7 +8,7 @@ import { Navigate } from "react-router-dom";
 import TwoFactorAuth from './pages/OTP_2fa/TwoFactorAuth.jsx'
 import HomePage from './HomePage';
 import SecurityPage from './pages/SecurityProfile.jsx';
-import SearchPage from './pages/SearchPage.jsx';
+import FriendFinder from './pages/SearchPage.jsx';
 import Pve3d from './pve/Pve3d';
 import Pvp2d from './pvp/Pvp2d';
 import Pve2d from './pve/Pve2d';
@@ -48,7 +48,7 @@ function App() {
           <Route element={<ProtectRouter />}>
             <Route path="/profile" element={<Profile />} />
             <Route path="/security" element={<SecurityPage />} />
-            <Route path="/search" element={<SearchPage />} />
+            {/* <Route path="/search" element={<SearchPage />} /> */}
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/pve3d" element={<Pve3d />} />
             <Route path="/pvp3d" element={<Pvp3d />} />

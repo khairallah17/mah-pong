@@ -5,5 +5,5 @@ export { default as Dashboard} from "./Dashboard";
 export { default as ResetPassword } from "./ResetPassword"
 export { default as VerifyPsdEmail } from "./VerifyPsdEmail"
 export { default as Leaderboard } from "./leaderboard/Leaderboard"
-export { default as TwoFactorSetup } from "./OTP_2fa/TwoFactorSetup"
-export { default as TwoFactorVerification } from "./OTP_2fa/TwoFactorVerification"
+export { default as TwoFactorSetup } from "./OTP_2fa/TwoFactorAuth"
+// export { default as TwoFactorVerification } from "./OTP_2fa/TwoFactorVerification"

@@ -19,6 +19,11 @@ class User(AbstractUser):
         default='./pic1.jpeg'
     )
     
+    avatar = models.ImageField(
+        upload_to='./avatar/',
+        default='./1.svg'
+    )
+    
     # Add these new fields for 2FA
     two_factor_enabled = models.BooleanField(default=False)
     two_factor_secret = models.CharField(max_length=32, null=True, blank=True)

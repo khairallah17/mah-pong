@@ -11,8 +11,6 @@ from django_otp.util import random_hex
 import pyotp
 
 
-
-
 class   UserSerial(serializers.ModelSerializer):
     id = serializers.UUIDField(read_only=True)
     
@@ -20,7 +18,7 @@ class   UserSerial(serializers.ModelSerializer):
         model = User
         fields = ['id', 'username', 'email', 'fullname', 'nblose', 'nbwin', 
                  'score', 'img', 'two_factor_enabled', 'last_login_2fa']
-        read_only_fields = ['two_factor_enabled', 'last_login_2fa']
+        read_only_fields = ['two_factor_enabled', 'last_login_2fa', 'avatar']
 
 class   Get_Token_serial(TokenObtainPairSerializer):
     @classmethod
