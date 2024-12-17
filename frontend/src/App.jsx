@@ -17,6 +17,8 @@ import Tournament from './pages/tournament/Tournament'
 import TournamentHome from './pages/tournament/tournamentHome';
 
 function App() {
+  
+
   return (
     <Router>
       <AuthProvider>
