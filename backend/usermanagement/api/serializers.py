@@ -48,7 +48,7 @@ class   RegistrationSerial(serializers.ModelSerializer):
     def validate(self, attribute):
         if attribute['password'] != attribute['confirm_password']:
             raise serializers.ValidationError(
-                {'password' : "Password are not match Retry Please"}
+                {'password': "Password are not match Retry Please"}
             )
         return attribute
     
@@ -61,12 +61,19 @@ class   RegistrationSerial(serializers.ModelSerializer):
         ) #create validate user
         user.set_password(validated_data['password']) #it will be Hashed
         
-        user.save()
         
         if "fullname" in validated_data:
             user.fullname = validated_data['fullname']
-            user.save()
+            # user.save()
         
+        if "img" in validated_data:
+            user.img = validated_data['img']
+
+        if "avatar" in validated_data:
+            user.img = validated_data['avatar']
+
+        user.save()
+
         return user
     
 class LogoutSerial(serializers.Serializer):
