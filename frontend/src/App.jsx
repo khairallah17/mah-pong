@@ -20,14 +20,6 @@ import Tournament from './pages/tournament/Tournament'
 import TournamentHome from './pages/tournament/tournamentHome';
 
 function App() {
-  const [username, setUsername] = useState('');
-
-
-  const handleUsernameSubmit = (username) => {
-    sessionStorage.setItem('username', username);
-    setUsername(username);
-  };
-
   return (
     <Router>
       <AuthProvider>
