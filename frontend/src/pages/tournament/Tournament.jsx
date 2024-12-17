@@ -47,7 +47,7 @@ export default function Tournament() {
         } else if (message.type === 'tournament_update') {
           setMatches(message.matches);
           console.log('Tournament updated:', message.matches);
-        } else if (message.type === 'match_start') {
+        } else if (message.type === 'match_start') { 
           console.log('Match started:');
           //navigate('/pvp2d');
         } else if (message.type === 'tournament_code') {
@@ -114,6 +114,26 @@ export default function Tournament() {
       }
       return newMatches;
     });
+  };
+
+  const handleQuit = () => {
+    const sendQuitMessage = new Promise((resolve, reject) => {
+      wsRef.current.send(JSON.stringify({ type: 'quit_tournament' }), (error) => {
+        if (error) {
+          reject(error);
+        } else {
+          resolve();
+        }
+      });
+    });
+  
+    sendQuitMessage
+      .then(() => {
+        navigate('/TournamentHome');
+      })
+      .catch((error) => {
+        console.error('Failed to send quit message:', error);
+      });
   };
   return (
     <div className="min-h-screen bg-[#1a1464] p-8">
@@ -220,6 +240,11 @@ export default function Tournament() {
           disabled={isReady}
         >
           {isReady ? 'Ready' : 'Ready'}
+        </button>
+        <button
+          onClick={()=> handleQuit()}
+          className="px-4 py-2 bg-red-500 text-white rounded-md">
+          Quit
         </button>
         {/* tournament code */}
         <div className="text-white mt-4">

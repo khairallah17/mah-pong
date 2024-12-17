@@ -44,7 +44,7 @@ class TournamentConsumer(AsyncWebsocketConsumer):
             else:
                 self.tournament = await self.is_user_in_tournament(self.username)
                 logger.warning(f"tournament: {self.tournament} reconnected")
-                cache.set(f"user_reconnect_{self.username}", True, timeout=6)
+                # cache.set(f"user_reconnect_{self.username}", True, timeout=6)
 
             if self.tournament:
                 self.tournament_group_name = f"tournament_{self.tournament.id}"
@@ -63,11 +63,12 @@ class TournamentConsumer(AsyncWebsocketConsumer):
         logger.warning(f"disconnecting: {self.username}")
         if self.tournament_group_name:
             await self.channel_layer.group_discard(self.tournament_group_name, self.channel_name)
-        if self.username:
-            cache.set(f"user_reconnect_{self.username}", True, timeout=3)
-            await self.schedule_remove_player()
-        if self.tournament:
-            await self.send_tournament_state(self.tournament)
+        cache.set(f"user_reconnect_{self.username}", True)
+        # if self.username:
+        #     cache.set(f"user_reconnect_{self.username}", True, timeout=3)
+        #     await self.schedule_remove_player()
+        # if self.tournament:
+        #     await self.send_tournament_state(self.tournament)
 
 # 1- take away player removal when user disconnects 
 # 2- add player removal when user clicks quit button
@@ -98,6 +99,9 @@ class TournamentConsumer(AsyncWebsocketConsumer):
                 await self.handle_match_result(data)
             elif message_type == 'player_ready':
                 await self.handle_player_ready(data)
+            elif message_type == 'quit_tournament':
+                cache.set(f"user_reconnect_{self.username}", False)
+                await self.schedule_remove_player()
         except Exception as e:
             logger.error(f"Error in receive: {e}")
 
