@@ -49,7 +49,7 @@ export default function Tournament() {
           console.log('Tournament updated:', message.matches);
         } else if (message.type === 'match_start') {
           console.log('Match started:');
-          navigate('/pvp2d');
+          //navigate('/pvp2d');
         } else if (message.type === 'tournament_code') {
           setTournamentCode(message.code);
         }
@@ -69,7 +69,7 @@ export default function Tournament() {
 
   const handleReady = () => {
     setIsReady(true);
-    wsRef.current.send(JSON.stringify({ type: 'player_ready', player_id: playerId }));
+    wsRef.current.send(JSON.stringify({ type: 'player_ready'}));
   };
 
   const refreshToken = async () => {

@@ -34,7 +34,7 @@ class TournamentConsumer(AsyncWebsocketConsumer):
 
         await self.accept()
         try:
-            self.username = self._decode_token(token)
+            self.username = self._decode_token(token)[:10]
             is_reconnected = cache.get(f"user_reconnect_{self.username}", False)
             if not is_reconnected:
                 self.tournament = await self._initialize_tournament(tournament_code)
@@ -68,6 +68,11 @@ class TournamentConsumer(AsyncWebsocketConsumer):
             await self.schedule_remove_player()
         if self.tournament:
             await self.send_tournament_state(self.tournament)
+
+# 1- take away player removal when user disconnects 
+# 2- add player removal when user clicks quit button
+# 3- make sure no changes happen when user reconnects
+# 4- implement notifications when players ready
 
     async def schedule_remove_player(self):
         start_time = asyncio.get_event_loop().time()
@@ -214,14 +219,12 @@ class TournamentConsumer(AsyncWebsocketConsumer):
     @database_sync_to_async
     def handle_player_ready_sync(self, data):
         try:
-            # round = data.get('round')
-            # position = data.get('position')
             match = TournamentMatch.objects.get(id=self.current_match)
+            trunc_username = self.username[:10]
 
-            player_id = data.get('player_id')
-            if player_id == 1:
+            if match.player1 == trunc_username:
                 match.player1_ready = True
-            else:
+            elif match.player2 == trunc_username:
                 match.player2_ready = True
 
             match.save()
@@ -232,6 +235,7 @@ class TournamentConsumer(AsyncWebsocketConsumer):
 
     async def handle_player_ready(self, data):
         both_ready = await self.handle_player_ready_sync(data)
+        logger.warning(f"both_ready: {both_ready}")
         if both_ready:
             await self.match_start()
 
@@ -295,6 +299,7 @@ class TournamentConsumer(AsyncWebsocketConsumer):
         await self.close(code=code)
 
     async def match_start(self):
+        logger.warning("Match start")
         await self.send(text_data=json.dumps({"type": "match_start"}))
 
     def _parse_query_params(self):
