@@ -41,9 +41,8 @@ export default function Profile() {
         username: response.data.username || "",
         email: response.data.email || "",
         avatar: response.data.avatar || "",
-        profile_image: response.data.profile_image,
+        profile_image: response.data.img,
       });
-      console.log("---------->", response.data);
     } catch (error) {
       console.error('Failed to fetch profile', error);
       Swal.fire({
@@ -61,6 +60,7 @@ export default function Profile() {
 
     const formData = new FormData();
     formData.append('profile_image', file);
+    console.log('-------->', formData);
 
     try {
       let token = localStorage.getItem('authtoken');
@@ -109,14 +109,14 @@ export default function Profile() {
         return;
       }
       
-      const parsed = JSON.parse(token);
-      const accessToken = parsed.access;
+      // const parsed = JSON.parse(token);
+      // const accessToken = parsed.access;
 
-      await axios.delete('http://localhost:8001/api/delete-profile-image/', {
-        headers: {
-          'Authorization': `Bearer ${accessToken}`
-        }
-      });
+      // await axios.delete('http://localhost:8001/api/delete-profile-image/', {
+      //   headers: {
+      //     'Authorization': `Bearer ${accessToken}`
+      //   }
+      // });
       
       setProfileData(prev => ({
         ...prev,
@@ -189,6 +189,10 @@ export default function Profile() {
     return initials.slice(0, 2);
   };
 
+  // useEffect(() => {
+  //   console.log(profileData.profile_image);
+  // }, [profileData])
+
   return (
     <div className="w-full bg-gradient-to-r bg-gradient-to-r from-blue-800 to-indigo-900 rounded-lg max-w-6xl mx-auto p-8 space-y-8">
       <h2 className="text-2xl font-inter text-white mb-6">Account</h2>
@@ -197,7 +201,7 @@ export default function Profile() {
           <div className="w-20 h-20 bg-purple-500 rounded-full flex items-center justify-center text-white text-2xl font-inter">
             {profileData.profile_image ? (
               <img 
-                src={profileData.profile_image} 
+                src={`http://localhost:8001/` + profileData.profile_image} 
                 alt="Profile" 
                 className="w-full h-full rounded-full object-cover"
               />
@@ -213,7 +217,7 @@ export default function Profile() {
                 <input 
                   type="file" 
                   className="hidden" 
-                  accept="image/*" 
+                  accept="media/*" 
                   onChange={handleImageUpload}
                 />
                 Upload an image
