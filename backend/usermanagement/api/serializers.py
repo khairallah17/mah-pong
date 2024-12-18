@@ -17,8 +17,8 @@ class   UserSerial(serializers.ModelSerializer):
     class   Meta:
         model = User
         fields = ['id', 'username', 'email', 'fullname', 'nblose', 'nbwin', 
-                 'score', 'img', 'two_factor_enabled', 'last_login_2fa']
-        read_only_fields = ['two_factor_enabled', 'last_login_2fa', 'avatar']
+                 'score', 'img', 'avatar', 'two_factor_enabled', 'last_login_2fa']
+        read_only_fields = ['two_factor_enabled', 'last_login_2fa']
 
 class   Get_Token_serial(TokenObtainPairSerializer):
     @classmethod

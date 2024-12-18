@@ -9,7 +9,7 @@ export default function Profile() {
     fullname: "",
     username: "",
     email: "",
-    avatar: "",
+    avatar: null,
     profile_image: null,
   });
 
@@ -35,12 +35,12 @@ export default function Profile() {
           'Authorization': `Bearer ${accessToken}`
         }
       });
-      
+      console.log(response.data);
       setProfileData({
         fullname: response.data.fullname || "",
         username: response.data.username || "",
         email: response.data.email || "",
-        avatar: response.data.avatar || "",
+        avatar: response.data.avatar,
         profile_image: response.data.img,
       });
     } catch (error) {
@@ -59,8 +59,7 @@ export default function Profile() {
     if (!file) return;
 
     const formData = new FormData();
-    formData.append('profile_image', file);
-    console.log('-------->', formData);
+    formData.append('img', file);
 
     try {
       let token = localStorage.getItem('authtoken');
@@ -81,7 +80,53 @@ export default function Profile() {
       
       setProfileData(prev => ({
         ...prev,
-        profile_image: response.data.profile_image
+        profile_image: response.data.img
+      }));
+
+      Swal.fire({
+        icon: 'success',
+        title: 'Profile image updated successfully!',
+        showConfirmButton: false,
+        timer: 1500
+      });
+    } catch (error) {
+      console.error('Failed to upload profile image', error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Failed to upload profile image. Please try again.',
+        showConfirmButton: false,
+        timer: 1500
+      });
+    }
+  };
+
+  const handleAvatarUpload = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('avatar', file);
+
+    try {
+      let token = localStorage.getItem('authtoken');
+      if (!token) {
+        console.error('No authentication token found');
+        return;
+      }
+      
+      const parsed = JSON.parse(token);
+      const accessToken = parsed.access;
+
+      const response = await axios.put('http://localhost:8001/api/edit-profile/', formData, {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      
+      setProfileData(prev => ({
+        ...prev,
+        avatar: response.data.avatar
       }));
 
       Swal.fire({
@@ -198,7 +243,7 @@ export default function Profile() {
       <h2 className="text-2xl font-inter text-white mb-6">Account</h2>
       <div className="flex flex-col md:flex-row justify-between items-center gap-8">
         <div className="flex flex-col md:flex-row items-center gap-4">
-          <div className="w-20 h-20 bg-purple-500 rounded-full flex items-center justify-center text-white text-2xl font-inter">
+          <div className="w-24 h-24 bg-blue-800 rounded-full border-2 border-white/40 flex items-center justify-center text-white text-2xl font-inter">
             {profileData.profile_image ? (
               <img 
                 src={`http://localhost:8001/` + profileData.profile_image} 
@@ -233,15 +278,23 @@ export default function Profile() {
         </div>
         <div className="flex flex-col md:flex-row items-center gap-4">
           <img
-            src={profileData.avatar || "https://github.com/shadcn.png"}
+            src={`http://localhost:8001/` + profileData.avatar || "https://github.com/shadcn.png"}
             alt="Profile Avatar"
-            className="w-20 h-20 rounded-full border-2 border-white/80"
+            className="w-24 h-24 bg-blue-800 rounded-full border-2 border-white/90"
           />
           <div className="space-y-2 text-center md:text-left">
             <h3 className="font-inter text-white text-sm">Profile Avatar</h3>
-            <button className="px-2 py-2 bg-white text-black rounded-md hover:bg-white/50 transition-colors">
-              Change the avatar
-            </button>
+            <div className="flex flex-wrap justify-center md:justify-start gap-3">
+              <label className="px-6 py-2 bg-white text-black rounded-md hover:bg-white/90 transition-colors cursor-pointer">
+                <input 
+                  type="file" 
+                  className="hidden"
+                  accept="media/*" 
+                  onChange={handleAvatarUpload}
+                />
+                Upload an avatar
+              </label>
+            </div>
           </div>
         </div>
       </div>
