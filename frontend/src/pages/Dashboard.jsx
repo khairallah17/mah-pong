@@ -1,7 +1,7 @@
 import { React, useContext } from 'react'
 import { useNavigate } from 'react-router-dom'
 import AuthContext from "../context_login_Register/AuthContext"
-
+import NotificationDisplay from './NotificationsDisplay'
 
 export const Dashboard = () => {
   const navigate = useNavigate();
@@ -17,6 +17,7 @@ export const Dashboard = () => {
   return (
     <div style={{display:'flex', alignItems: 'center', justifyContent: 'center'}}>
       <h1>Dashboard</h1>
+      <NotificationDisplay />
       <div className="navigation-buttons">
         <button onClick={() => navigate('/pve2d')}>PVE 2D</button>
         <button onClick={() => navigate('/pvp2d')}>PVP 2D</button>

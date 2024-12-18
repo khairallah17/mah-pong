@@ -460,6 +460,31 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
             'score': score
         }))
 
+class NotificationsConsumer(AsyncWebSocketConsumer):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.username = None
+
+    async def connect(self):
+        query_params = self._parse_query_params()
+        token = query_params.get('token', [None])[0]
+        await self.accept()
+        try:
+            self.username = self._decode_token(token)[:10]
+            if not self.username:
+                raise jwt.InvalidTokenError("Username not found in token")
+            user_channels[self.username] = self.channel_name
+            await self.channel_layer.group_add(self.username, self.channel_name)
+        except jwt.ExpiredSignatureError:
+            await self.send_error_message('token_expired', 4001)
+        except jwt.InvalidTokenError as e:
+            await self.send_error_message('invalid_token', 4002, str(e))
+
+    async def disconnect(self, close_code):
+        if self.username:
+            user_channels.pop(self.username, None)
+            await self.channel_layer.group_discard(self.username, self.channel_name)
+
 # Complex logic for matchmaking
 
 # class MatchmakingConsumer(AsyncWebsocketConsumer):
