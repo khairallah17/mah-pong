@@ -17,6 +17,8 @@ export default function Tournament() {
     { id: 3, round: 2, position: 1 },
   ]);
   const [isReady, setIsReady] = useState(false);
+  const [loadingReady, setLoadingReady] = useState(false);
+  const [loadingQuit, setLoadingQuit] = useState(false);
   const [playerId, setPlayerId] = useState(null);
   const token = localStorage.getItem('authtoken');
   const location = useLocation();
@@ -68,8 +70,19 @@ export default function Tournament() {
   }, [token]);
 
   const handleReady = () => {
+    setLoadingReady(true);
     setIsReady(true);
-    wsRef.current.send(JSON.stringify({ type: 'player_ready'}));
+    wsRef.current.send(JSON.stringify({ type: 'player_ready' }));
+    setTimeout(() => setLoadingReady(false), 1000);
+  };
+
+  const handleQuit = () => {
+    setLoadingQuit(true);
+    wsRef.current.send(JSON.stringify({ type: 'quit_tournament' }));
+    setTimeout(() => {
+      setLoadingQuit(false);
+      navigate('/TournamentHome');
+    }, 1000);
   };
 
   const refreshToken = async () => {
@@ -115,6 +128,7 @@ export default function Tournament() {
       return newMatches;
     });
   };
+
   return (
     <div className="min-h-screen bg-[#1a1464] p-8">
       <div className="max-w-7xl mx-auto">
@@ -216,10 +230,17 @@ export default function Tournament() {
       <div className="fixed bottom-4 right-4">
         <button
           onClick={handleReady}
-          className={`px-4 py-2 bg-green-500 text-white rounded-md ${isReady ? 'opacity-50 cursor-not-allowed' : ''}`}
-          disabled={isReady}
+          className={`px-4 py-2 bg-green-500 text-white rounded-md flex items-center gap-2 ${isReady || loadingReady ? 'opacity-50 cursor-not-allowed' : ''}`}
+          disabled={isReady || loadingReady}
         >
-          {isReady ? 'Ready' : 'Ready'}
+          {loadingReady ? <Spinner /> : 'Ready'}
+        </button>
+        <button
+          onClick={handleQuit}
+          className="px-4 py-2 bg-red-500 text-white rounded-md flex items-center gap-2"
+          disabled={loadingQuit}
+        >
+          {loadingQuit ? <Spinner /> : 'Quit'}
         </button>
         {/* tournament code */}
         <div className="text-white mt-4">
@@ -229,3 +250,22 @@ export default function Tournament() {
     </div>
   )
 }
+
+const Spinner = () => (
+  <div className="loader border-t-white border-2 border-solid rounded-full w-4 h-4 animate-spin"></div>
+);
+
+const style = document.createElement('style');
+style.innerHTML = `
+  .loader {
+    border-top-color: transparent;
+  }
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+  .animate-spin {
+    animation: spin 0.8s linear infinite;
+  }
+`;
+document.head.appendChild(style);

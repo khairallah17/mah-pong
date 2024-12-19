@@ -41,10 +41,11 @@ class TournamentConsumer(AsyncWebsocketConsumer):
                 await self.add_player_to_tournament(self.tournament.id, self.username)
                 await self.get_or_create_tournament_matches(self.tournament, self.username)
                 logger.warning(f"tournament: {self.tournament} not reconnected")
+                cache.set(f"user_reconnect_{self.username}", True)
             else:
                 self.tournament = await self.is_user_in_tournament(self.username)
                 logger.warning(f"tournament: {self.tournament} reconnected")
-                cache.set(f"user_reconnect_{self.username}", True, timeout=6)
+                # cache.set(f"user_reconnect_{self.username}", True, timeout=6)
 
             if self.tournament:
                 self.tournament_group_name = f"tournament_{self.tournament.id}"
@@ -63,15 +64,16 @@ class TournamentConsumer(AsyncWebsocketConsumer):
         logger.warning(f"disconnecting: {self.username}")
         if self.tournament_group_name:
             await self.channel_layer.group_discard(self.tournament_group_name, self.channel_name)
-        if self.username:
-            cache.set(f"user_reconnect_{self.username}", True, timeout=3)
-            await self.schedule_remove_player()
-        if self.tournament:
-            await self.send_tournament_state(self.tournament)
+        
+        # if self.username:
+        #     cache.set(f"user_reconnect_{self.username}", True, timeout=3)
+        #     await self.schedule_remove_player()
+        # if self.tournament:
+        #     await self.send_tournament_state(self.tournament)
 
-# 1- take away player removal when user disconnects 
-# 2- add player removal when user clicks quit button
-# 3- make sure no changes happen when user reconnects
+# 1- take away player removal when user disconnects /done
+# 2- add player removal when user clicks quit button /done
+# 3- make sure no changes happen when user reconnects /done
 # 4- implement notifications when players ready
 
     async def schedule_remove_player(self):
@@ -81,11 +83,11 @@ class TournamentConsumer(AsyncWebsocketConsumer):
             logger.warning(f"abt to remove player: {self.username}, is_reconnected: {is_reconnected} and tournament: {self.tournament} and players: {self.tournament.players}")
             if not is_reconnected:
                 await self.remove_player_from_tournament(self.username)
+                if self.current_match:
+                    await self.remove_player_from_match(self.current_match, self.username)
                 if self.tournament and (not self.tournament.players or self.tournament.players == []):
                     logger.warning(f"tournament removed players {self.tournament.players}")
                     await self.delete_tournament(self.tournament)
-                if self.current_match:
-                    await self.remove_player_from_match(self.current_match, self.username)
                 break
             await asyncio.sleep(1)
         
@@ -98,6 +100,10 @@ class TournamentConsumer(AsyncWebsocketConsumer):
                 await self.handle_match_result(data)
             elif message_type == 'player_ready':
                 await self.handle_player_ready(data)
+            elif message_type == 'quit_tournament':
+                cache.set(f"user_reconnect_{self.username}", False)
+                await self.schedule_remove_player()
+                self.send(text_data=json.dumps({'type': 'quit_tournament_response', 'status': 'success'}))
         except Exception as e:
             logger.error(f"Error in receive: {e}")
 
@@ -453,6 +459,31 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
             'position': event.get('position'),
             'score': score
         }))
+
+class NotificationsConsumer(AsyncWebSocketConsumer):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.username = None
+
+    async def connect(self):
+        query_params = self._parse_query_params()
+        token = query_params.get('token', [None])[0]
+        await self.accept()
+        try:
+            self.username = self._decode_token(token)[:10]
+            if not self.username:
+                raise jwt.InvalidTokenError("Username not found in token")
+            user_channels[self.username] = self.channel_name
+            await self.channel_layer.group_add(self.username, self.channel_name)
+        except jwt.ExpiredSignatureError:
+            await self.send_error_message('token_expired', 4001)
+        except jwt.InvalidTokenError as e:
+            await self.send_error_message('invalid_token', 4002, str(e))
+
+    async def disconnect(self, close_code):
+        if self.username:
+            user_channels.pop(self.username, None)
+            await self.channel_layer.group_discard(self.username, self.channel_name)
 
 # Complex logic for matchmaking
 

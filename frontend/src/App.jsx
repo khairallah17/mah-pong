@@ -18,11 +18,15 @@ import SecurityProfile from './pages/SecurityProfile'
 // import SearchPage from './pages/SearchPage'
 import Tournament from './pages/tournament/Tournament'
 import TournamentHome from './pages/tournament/tournamentHome';
+import { WebSocketProvider } from './WebSocketProvider/WebSocketProvider.jsx';
 
 function App() {
+  
+
   return (
     <Router>
       <AuthProvider>
+        <WebSocketProvider>
         <Routes>
           <Route path="/" element={<HomePage />} />
           {/* ProtectLogin componnent Private if are already logged in */}
@@ -70,6 +74,7 @@ function App() {
             {/* <Route path="*" element={<Navigate to="/" replace />} /> */}
             {/* we should to replace / to /404-error page (Error 404 Page )*/}
         </Routes>
+        </WebSocketProvider>
       </AuthProvider>
     </Router>
   );
