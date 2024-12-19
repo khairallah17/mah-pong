@@ -1,5 +1,4 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { FaSearch } from 'react-icons/fa';
 import FriendCard from './FriendCard';
 import leftArrowImg from '../images/left.png'; // Make sure the path is correct
 import rightArrowImg from '../images/right.png'; // Make sure the path is correct
@@ -34,7 +33,7 @@ const friendsData = [
     // ... Add more friends as needed
 ];
 
-const FriendFinder: React.FC = () => {
+const FriendFinder = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [isFocused, setIsFocused] = useState(false);
     const cardContainerRef = useRef<HTMLDivElement | null>(null);
@@ -65,7 +64,7 @@ const FriendFinder: React.FC = () => {
     const totalPages = Math.ceil(friendsData.length / friendsToShow);
 
     // Handle search change and reset to first page
-    const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const handleSearchChange = (event) => {
         setSearchTerm(event.target.value);
         setCurrentPage(1); // Reset to first page when search term changes
     };

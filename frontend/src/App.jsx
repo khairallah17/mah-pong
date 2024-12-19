@@ -21,6 +21,7 @@ function App() {
   
 
   return (
+    // <div className='sidebar'>
     <Router>
       <AuthProvider>
         <WebSocketProvider>
@@ -69,6 +70,7 @@ function App() {
         </WebSocketProvider>
       </AuthProvider>
     </Router>
+    // </div>
   );
 }
 

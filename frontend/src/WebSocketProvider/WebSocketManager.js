@@ -39,7 +39,7 @@ class WebSocketManager {
 
     sendMessage(message) {
         if (this.websocket && this.websocket.readyState === WebSocket.OPEN) {
-            this.websocket.send(message);
+            this.websocket.send(JSON.stringify({"message": message}));
         } else {
             console.warn("WebSocket is not open");
         }

@@ -5,23 +5,28 @@ export const WebSocketContext = createContext();
 
 export const WebSocketProvider = ({ children }) => {
   const [notifications, setNotifications] = useState([]);
-  const accessToken = JSON.parse(localStorage.getItem('authtoken')).access;
-  const webSocketUrl = 'ws://localhost:8000/ws/matchmaking/?token=' + accessToken;
+  const accessToken = JSON.parse(localStorage.getItem('authtoken'))?.access;
+  const webSocketUrl = 'ws://localhost:8000/ws/notifications/?token=' + accessToken;
+  const [wsManager, setWsManager] = useState(null);
   
   useEffect(() => {
-    const wsManager = new WebSocketManager(webSocketUrl);
+    let wsManagerInstance = new WebSocketManager(webSocketUrl);
+    setWsManager(wsManagerInstance);
 
-    wsManager.connect((message) => {
+    wsManagerInstance.connect((message) => {
       setNotifications((prev) => [...prev, JSON.parse(message)]);
     });
 
-    wsManager.onmessage = async (event) => {
+    wsManagerInstance.onmessage = async (event) => {
         const message = JSON.parse(event.data);
         if (message.type === 'token_expired') {
             const newToken = await refreshToken();
             if (newToken) {
                 localStorage.setItem('authtoken', JSON.stringify(newToken));
-                wsManager = new WebSocket('ws://localhost:8000/ws/matchmaking/?token=' + newToken.access);
+                wsManagerInstance = new WebSocket('ws://localhost:8000/ws/notifications/?token=' + newToken?.access);
+                wsManagerInstance.connect((message) => {
+                  setNotifications((prev) => [...prev, JSON.parse(message)]);
+                });
                 console.log('WebSocket connection established with new token');
             } else {
                 localStorage.removeItem('authtoken');
@@ -30,12 +35,12 @@ export const WebSocketProvider = ({ children }) => {
         }
     }
     return () => {
-      wsManager.close();
+      wsManagerInstance.close();
     };
   }, []);
 
   return (
-    <WebSocketContext.Provider value={{ notifications }}>
+    <WebSocketContext.Provider value={{ notifications, wsManager }}>
       {children}
     </WebSocketContext.Provider>
   );

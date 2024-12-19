@@ -460,7 +460,7 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
             'score': score
         }))
 
-class NotificationsConsumer(AsyncWebSocketConsumer):
+class NotificationsConsumer(AsyncWebsocketConsumer):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.username = None
@@ -479,11 +479,37 @@ class NotificationsConsumer(AsyncWebSocketConsumer):
             await self.send_error_message('token_expired', 4001)
         except jwt.InvalidTokenError as e:
             await self.send_error_message('invalid_token', 4002, str(e))
+        
+    async def receive(self, text_data):
+        data = json.loads(text_data)
+        message = data.get("message", "")
+
+        # Broadcast the message back to all connected clients
+        await self.send(text_data=json.dumps({
+            "type": "notification",
+            "message": message,
+        }))
 
     async def disconnect(self, close_code):
         if self.username:
             user_channels.pop(self.username, None)
             await self.channel_layer.group_discard(self.username, self.channel_name)
+    
+    def _parse_query_params(self):
+        query_string = self.scope['query_string'].decode()
+        return parse_qs(query_string)
+    
+    def _decode_token(self, token):
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=['HS256'])
+        username = payload.get('username')
+        if not username:
+            raise jwt.InvalidTokenError("Username not found in token.")
+        return username
+    
+    async def send_error_message(self, error_type, code, message=None):
+        logger.warning(f"{error_type}: {message}")
+        await self.send(text_data=json.dumps({'type': error_type, 'message': message}))
+        await self.close(code=code)
 
 # Complex logic for matchmaking
 
