@@ -154,14 +154,14 @@ export default function Profile() {
         return;
       }
       
-      // const parsed = JSON.parse(token);
-      // const accessToken = parsed.access;
+      const parsed = JSON.parse(token);
+      const accessToken = parsed.access;
 
-      // await axios.delete('http://localhost:8001/api/delete-profile-image/', {
-      //   headers: {
-      //     'Authorization': `Bearer ${accessToken}`
-      //   }
-      // });
+      await axios.delete('http://localhost:8001/api/edit-profile/', {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`
+        }
+      });
       
       setProfileData(prev => ({
         ...prev,
