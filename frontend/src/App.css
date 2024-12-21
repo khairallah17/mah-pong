@@ -83,7 +83,7 @@
   width: 250px !important;
 }
 
-.sidebar {
+/* .sidebar {
   position: fixed;
   top: 0;
   left: 0;
@@ -91,7 +91,7 @@
   width: 20%;
   background: linear-gradient(90deg, #0E0E4E 0%, rgba(14, 14, 78, 0) 100%);
   z-index: 1;
-}
+} */
 
 .team-member {
   margin-inline: 4%;

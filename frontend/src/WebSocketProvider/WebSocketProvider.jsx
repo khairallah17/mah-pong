@@ -20,10 +20,13 @@ export const WebSocketProvider = ({ children }) => {
     wsManagerInstance.onmessage = async (event) => {
         const message = JSON.parse(event.data);
         if (message.type === 'token_expired') {
+          console.log('Token expired, refreshing...');
             const newToken = await refreshToken();
             if (newToken) {
                 localStorage.setItem('authtoken', JSON.stringify(newToken));
+                wsManagerInstance.close();
                 wsManagerInstance = new WebSocket('ws://localhost:8000/ws/notifications/?token=' + newToken?.access);
+                setWsManager(wsManagerInstance);
                 wsManagerInstance.connect((message) => {
                   setNotifications((prev) => [...prev, JSON.parse(message)]);
                 });

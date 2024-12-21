@@ -1,21 +1,25 @@
-import { React, useState, useRef, useEffect } from 'react'
+import { React, useState, useRef, useEffect, useContext } from 'react'
 import { Trophy } from 'lucide-react'
 import { useNavigate, useLocation } from 'react-router-dom'
+import { WebSocketContext } from '../../WebSocketProvider/WebSocketProvider'
+
+// class Match(models.Model):
+//   player1 = models.CharField(max_length=100)
+//   player2 = models.CharField(max_length=100)
+//   score = models.JSONField(default=dict)
+//   winner = models.CharField(max_length=100, null=True, blank=True)
+//   datetime = models.DateTimeField(auto_now_add=True)
 
 export default function Tournament() {
   const wsRef = useRef(null);
   const navigate = useNavigate();
-  // class Match(models.Model):
-  //   player1 = models.CharField(max_length=100)
-  //   player2 = models.CharField(max_length=100)
-  //   score = models.JSONField(default=dict)
-  //   winner = models.CharField(max_length=100, null=True, blank=True)
-  //   datetime = models.DateTimeField(auto_now_add=True)
+  const { wsManager } = useContext(WebSocketContext);
   const [matches, setMatches] = useState([
     { id: 1, round: 1, position: 1, player1: 'Player 1', player2: 'Player 2' },
     { id: 2, round: 1, position: 2, player1: 'Player 3', player2: 'Player 4' },
     { id: 3, round: 2, position: 1 },
   ]);
+
   const [isReady, setIsReady] = useState(false);
   const [loadingReady, setLoadingReady] = useState(false);
   const [loadingQuit, setLoadingQuit] = useState(false);
@@ -54,6 +58,9 @@ export default function Tournament() {
           //navigate('/pvp2d');
         } else if (message.type === 'tournament_code') {
           setTournamentCode(message.code);
+        } else if (message.type === 'players_ready') {
+          console.log('Players ready:', message.players);
+          wsManager.sendMessage('players_ready', message.players);
         }
       };
 

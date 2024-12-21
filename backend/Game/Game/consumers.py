@@ -39,6 +39,9 @@ class TournamentConsumer(AsyncWebsocketConsumer):
             if not is_reconnected:
                 self.tournament = await self._initialize_tournament(tournament_code)
                 await self.add_player_to_tournament(self.tournament.id, self.username)
+                if (self.tournament.status == 'active'):
+                    await self.send(text_data=json.dumps({"type": "players_ready", "players": self.tournament.players}))
+                    logger.warning(f"sending: {self.tournament.players}")
                 await self.get_or_create_tournament_matches(self.tournament, self.username)
                 logger.warning(f"tournament: {self.tournament} not reconnected")
                 cache.set(f"user_reconnect_{self.username}", True)
@@ -103,7 +106,6 @@ class TournamentConsumer(AsyncWebsocketConsumer):
             elif message_type == 'quit_tournament':
                 cache.set(f"user_reconnect_{self.username}", False)
                 await self.schedule_remove_player()
-                self.send(text_data=json.dumps({'type': 'quit_tournament_response', 'status': 'success'}))
         except Exception as e:
             logger.error(f"Error in receive: {e}")
 
@@ -168,8 +170,11 @@ class TournamentConsumer(AsyncWebsocketConsumer):
                 tournament = Tournament.objects.select_for_update().get(id=tournament_id)
                 if username not in tournament.players:
                     tournament.players.append(username)
+                    if (len(tournament.players) == 4):
+                        tournament.status = 'active'
                     self.tournament = tournament
                     tournament.save()
+
         except Exception as e:
             logger.error(f"Error adding player to tournament: {e}")
 
@@ -460,20 +465,23 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
             'score': score
         }))
 
+notif_user_channels = {}
+
 class NotificationsConsumer(AsyncWebsocketConsumer):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.username = None
 
     async def connect(self):
+        await self.accept()
         query_params = self._parse_query_params()
         token = query_params.get('token', [None])[0]
-        await self.accept()
         try:
             self.username = self._decode_token(token)[:10]
             if not self.username:
                 raise jwt.InvalidTokenError("Username not found in token")
-            user_channels[self.username] = self.channel_name
+            notif_user_channels[self.username] = self.channel_name
+            logger.warning(f"User connected: {self.username}")
             await self.channel_layer.group_add(self.username, self.channel_name)
         except jwt.ExpiredSignatureError:
             await self.send_error_message('token_expired', 4001)
@@ -482,17 +490,36 @@ class NotificationsConsumer(AsyncWebsocketConsumer):
         
     async def receive(self, text_data):
         data = json.loads(text_data)
+        logger.warning(f"Data received: {data}")
         message = data.get("message", "")
+        logger.warning(f"Message received: {message}")
+        logger.warning(f"notif_user_channels: {notif_user_channels}")
 
+        if (message == "players_ready"):
+            players = data.get("players", [])
+            logger.warning(f"players ready: {players}")
+            for player in players:
+                if player in notif_user_channels:
+                    await self.channel_layer.send(notif_user_channels[player], {
+                        "type": "notification",
+                        "message": "All players are ready!"
+                    })
         # Broadcast the message back to all connected clients
         await self.send(text_data=json.dumps({
             "type": "notification",
             "message": message,
         }))
 
-    async def disconnect(self, close_code):
+    async def notification(self, event):
+        message = event['message']
+        await self.send(text_data=json.dumps({
+            'type': 'notification',
+            'message': message
+        }))
+
+    async def disconnect(self, code):
         if self.username:
-            user_channels.pop(self.username, None)
+            notif_user_channels.pop(self.username, None)
             await self.channel_layer.group_discard(self.username, self.channel_name)
     
     def _parse_query_params(self):

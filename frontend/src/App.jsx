@@ -16,57 +16,61 @@ import SearchPage from './pages/SearchPage'
 import Tournament from './pages/tournament/Tournament'
 import TournamentHome from './pages/tournament/tournamentHome';
 import { WebSocketProvider } from './WebSocketProvider/WebSocketProvider.jsx';
+import NotificationDisplay from './pages/NotificationsDisplay.jsx';
 
 function App() {
-  
+
 
   return (
     // <div className='sidebar'>
     <Router>
       <AuthProvider>
         <WebSocketProvider>
-        <Routes>
-          <Route path="/" element={<HomePage />} />
-          {/* ProtectLogin componnent Private if are already logged in */}
-          <Route path="/login" element={
-            // <ProtectLogin>
+          <div className="navbar">
+            <NotificationDisplay />
+          </div>
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            {/* ProtectLogin componnent Private if are already logged in */}
+            <Route path="/login" element={
+              // <ProtectLogin>
               <Login />
-            // </ProtectLogin>
-          } />
-          <Route path="/register" element={
-            // <ProtectLogin>
+              // </ProtectLogin>
+            } />
+            <Route path="/register" element={
+              // <ProtectLogin>
               <Register />
-            // </ProtectLogin>
-          } />
-          <Route path="/password-reset" element={
+              // </ProtectLogin>
+            } />
+            <Route path="/password-reset" element={
               <VerifyPsdEmail />
-          } />
+            } />
 
-          <Route path="/password-reset/confirm" element={
+            <Route path="/password-reset/confirm" element={
               <ResetPassword />
-          } />
+            } />
 
-          {/* ProtectRouter component Private if are not logged in */}
-          <Route element={<ProtectRouter />}>
-            <Route path="/profil" element={<Profile />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/pve3d" element={<Pve3d />} />
-            <Route path="/pvp3d" element={<Pvp3d />} />
-            <Route path="/pvp2d" element={<Pvp2d />} />
-            <Route path="/pve2d" element={<Pve2d />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/securityProfile" element={<SecurityProfile />} />
-            <Route path="/search" element={<SearchPage />} />
-            <Route path='/tournament' element={<Tournament/>}/>
-            <Route path='/tournamentHome' element={<TournamentHome/>}/>
-            
-            
-          </Route>
+            {/* ProtectRouter component Private if are not logged in */}
+            <Route element={<ProtectRouter />}>
+              <Route path="/profil" element={<Profile />} />
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/pve3d" element={<Pve3d />} />
+              <Route path="/pvp3d" element={<Pvp3d />} />
+              <Route path="/pvp2d" element={<Pvp2d />} />
+              <Route path="/pve2d" element={<Pve2d />} />
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/securityProfile" element={<SecurityProfile />} />
+              <Route path="/search" element={<SearchPage />} />
+              <Route path='/tournament' element={<Tournament />} />
+              <Route path='/tournamentHome' element={<TournamentHome />} />
 
-          {/* Catch all other routes */}
+
+            </Route>
+
+            {/* Catch all other routes */}
             {/* <Route path="*" element={<Navigate to="/" replace />} /> */}
             {/* we should to replace / to /404-error page (Error 404 Page )*/}
-        </Routes>
+          </Routes>
         </WebSocketProvider>
       </AuthProvider>
     </Router>
