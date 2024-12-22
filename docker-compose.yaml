@@ -34,15 +34,18 @@ services:
     env_file:
       - .env
 
-  # frontend:
-  #     container_name: frontend
-  #     build: 
-  #       context: "./frontend"
-  #       dockerfile: Dockerfile
-  #     ports:
-  #       - "5173:5173"
-  #     env_file:
-  #       - .env
+  frontend:
+      container_name: frontend
+      build: 
+        context: "./frontend"
+        dockerfile: Dockerfile
+      ports:
+        - "5173:5173"
+      env_file:
+        - .env
+      volumes:
+        - front_vm:/app
+        - /app/node_modules
   
   db:
     image: postgres:15-alpine
@@ -77,6 +80,12 @@ services:
 
 volumes:
   db_data:
+  front_vm:
+    driver: local
+    driver_opts:
+      device: ${PWD}/frontend
+      type: none
+      o: bind
 
 networks:
   game-network:

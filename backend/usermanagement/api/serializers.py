@@ -1,18 +1,24 @@
 from rest_framework_simplejwt.tokens import Token
-from .models import User
+from .models import User, TwoFactorAuthAttempt
 from django.contrib.auth.password_validation import validate_password
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework import serializers
-from rest_framework.validators import UniqueValidator
 import uuid
 from rest_framework_simplejwt.tokens import RefreshToken, TokenError
+# from rest_framework import serializers
+from django_otp.plugins.otp_totp.models import TOTPDevice
+from django_otp.util import random_hex
+import pyotp
+
 
 class   UserSerial(serializers.ModelSerializer):
     id = serializers.UUIDField(read_only=True)
     
     class   Meta:
         model = User
-        fields = ['id', 'fullname' ,'username', 'email']
+        fields = ['id', 'username', 'email', 'fullname', 'nblose', 'nbwin', 
+                 'score', 'img', 'avatar', 'two_factor_enabled', 'last_login_2fa']
+        read_only_fields = ['two_factor_enabled', 'last_login_2fa']
 
 class   Get_Token_serial(TokenObtainPairSerializer):
     @classmethod
@@ -63,7 +69,6 @@ class   RegistrationSerial(serializers.ModelSerializer):
         
         return user
     
-    
 class LogoutSerial(serializers.Serializer):
     refresh = serializers.CharField()
     
@@ -76,3 +81,8 @@ class LogoutSerial(serializers.Serializer):
             RefreshToken(self.token).blacklist()
         except TokenError:
             raise serializers.ValidationError('Invalid or expired token')
+
+class TwoFactorAuthAttemptSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TwoFactorAuthAttempt
+        fields = ['timestamp', 'successful', 'ip_address', 'user_agent']

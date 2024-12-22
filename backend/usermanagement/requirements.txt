@@ -12,3 +12,6 @@ cryptography
 python-dotenv
 Pillow
 aiosmtpd
+django-otp
+qrcode
+pyotp

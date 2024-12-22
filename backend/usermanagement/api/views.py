@@ -1,15 +1,19 @@
 from django.shortcuts import redirect
 from django.shortcuts import render
+from django.db import models
+from django.db.models import Q
 from django.http import HttpResponse, HttpResponseRedirect
-from .models import User
+from .models import User, TwoFactorAuthAttempt
 from .serializers import Get_Token_serial, RegistrationSerial, UserSerial, LogoutSerial
 from rest_framework.decorators import api_view, permission_classes
+from django.shortcuts import get_object_or_404
 from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
 from rest_framework import generics
 from rest_framework.permissions import AllowAny, IsAuthenticated
-from rest_framework import status
+from rest_framework import status, views, viewsets
+from rest_framework.decorators import action
 from django.contrib.auth import authenticate, get_user_model
 # For Google Login/registring api
 from allauth.socialaccount.providers.google.views import GoogleOAuth2Adapter
@@ -36,6 +40,17 @@ from django.utils.decorators import method_decorator
 from django.http import JsonResponse
 import json
 
+from django_otp.plugins.otp_totp.models import TOTPDevice
+import pyotp
+import qrcode
+import qrcode.image.svg
+from io import BytesIO
+import base64
+from rest_framework_simplejwt.authentication import JWTAuthentication
+from datetime import datetime
+import time
+from django.contrib.auth.hashers import check_password
+
 
 CLIENT_ID = os.environ.get('CLIENT_ID')
 CLIENT_SECRET = os.environ.get('CLIENT_SECRET')
@@ -46,8 +61,6 @@ print (CLIENT_ID)
 print (CLIENT_SECRET)
 print (GCLIENT_ID)
 print (GCLIENT_SECRET)
-
-
 
 # Create your views here.
 class Get_MyTokenObtainPairView(TokenObtainPairView):
@@ -68,7 +81,27 @@ class Get_MyTokenObtainPairView(TokenObtainPairView):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        # here if the user are authenticate sper() call the parent class post method to generate new token
+        # Check if 2FA is enabled for the user
+        try:
+            device = TOTPDevice.objects.get(user=user, confirmed=True)
+            # If 2FA is enabled, require verification code
+            verification_code = request.data.get('verification_code')
+            if not verification_code:
+                return Response({
+                    'requires_2fa': True,
+                    'message': '2FA verification required'
+                }, status=status.HTTP_200_OK)
+
+            totp = pyotp.TOTP(device.key)
+            if not totp.verify(verification_code):
+                return Response({
+                    'error': 'Invalid 2FA verification code'
+                }, status=status.HTTP_400_BAD_REQUEST)
+        except TOTPDevice.DoesNotExist:
+            # 2FA not enabled, proceed with normal login
+            pass
+
+        # Generate tokens only if 2FA verification passed or not required
         response = super().post(request)
         token = response.data.get('access')
         refresh_token = response.data.get('refresh')
@@ -87,7 +120,6 @@ class Get_MyTokenObtainPairView(TokenObtainPairView):
             secure=False,  # Set to True if using HTTPS
             samesite='Lax'
         )
-        # here we set the token to the http only cookies to be used in the frontend for more security
         return response
     
     def get(self, request):
@@ -151,7 +183,7 @@ class RegisterationView(generics.CreateAPIView):
         return Response(
             {
                 "message": "User Registered Successfully",
-                "UserInfo": {"username": user.username, "email": user.email, "id": str(user.id)}
+                "UserInfo": {"id": str(user.id), "username": user.username, "email": user.email, "image": user.img, "avatar": user.avatar}
             }, status=status.HTTP_201_CREATED,
             headers=headers
         )
@@ -249,10 +281,30 @@ class GoogleLoginCallback(APIView):
             # Get_Token_serial()
         #create Token for This user using JWT "we use RefreshToken because it automaticly create both refresh_token and access_token"
         #we didn't use AccessToken because it automaticly create just access_token"
-        acces_token = Get_Token_serial.get_token(user)
-        # acces_token = token['access_token']
-        # print (acces_token)
-        return redirect(f"http://localhost:5173/google-callback?access_token={acces_token}")
+        # acces_token = Get_Token_serial.get_token(user)
+        refresh = RefreshToken.for_user(user)
+        access_token = str(refresh.access_token)
+        refresh_token = str(refresh)
+        
+        response = redirect(f"http://localhost:5173/google-callback?access_token={access_token}")
+        # Set cookies for ggoole API
+        response.set_cookie(
+            key='access_token',
+            value=access_token,
+            httponly=True,
+            secure=False,  # Set to True if using HTTPS
+            samesite='Lax'
+        )
+        response.set_cookie(
+            key='refresh_token',
+            value=refresh_token,
+            httponly=True,
+            secure=False,  # Set to True if using HTTPS
+            samesite='Lax'
+        )
+
+        return response
+        # return redirect(f"http://localhost:5173/google-callback?access_token={acces_token}")
 
 
 class Login42Auth(APIView):
@@ -303,13 +355,36 @@ class Login42Auth(APIView):
             )
             user.save()
         # now sending access token to Front
-        send_token = Get_Token_serial.get_token(user)
+                # Generate tokens
+        refresh = RefreshToken.for_user(user)
+        access_token = str(refresh.access_token)
+        refresh_token = str(refresh)
         # print ("sdsdsd")
         # return Response({
         #     'user' : UserSerial(user).data,
         #     'access_token' : token_json.get('access_token')
         # })
-        return redirect(f"http://localhost:5173/42intra-callback?access_token={send_token}")
+
+        """Create response with redirect"""
+        response = redirect(f"http://localhost:5173/42intra-callback?access_token={access_token}")
+
+        # Set cookies
+        response.set_cookie(
+            key='access_token',
+            value=access_token,
+            httponly=True,
+            secure=False,  # Set to True if using HTTPS
+            samesite='Lax'
+        )
+        response.set_cookie(
+            key='refresh_token',
+            value=refresh_token,
+            httponly=True,
+            secure=False,  # Set to True if using HTTPS
+            samesite='Lax'
+        )
+
+        return response
 
 
 
@@ -412,7 +487,7 @@ class   Confirm_reset_Password(View):
 
         except Exception as e:
             print(f"Error: {str(e)}")
-            return JsonResponse({'error': 'An error occurred'}, status=500)
+            return JsonResponse({'error': 'An error occurred'}, status=400)
 
     def options(self, request, *args, **kwargs):
         response = JsonResponse({}, status=200)
@@ -420,92 +495,6 @@ class   Confirm_reset_Password(View):
         response["Access-Control-Allow-Methods"] = "POST, OPTIONS"
         response["Access-Control-Allow-Headers"] = "Content-Type, X-Requested-With"
         return response
-
-# @api_view(['POST']) # this specifies that only POST method is allowed
-
-# def send_resetpass(request):
-#     email = request.data.get('email')
-#     print(email)
-#     if User.objects.filter(email=email).exists():
-#         user = User.objects.get(email=email)
-#         uidb64 = urlsafe_base64_encode(force_bytes(str(user.id)))
-#         gen_token = account_activation_token.make_token(user)
-#         reset_url = f"http://localhost:8001/api/password-reset/{uidb64}/{gen_token}"
-        
-#         subject = 'Password Reset Request'
-#         message = f"""
-#         Hello,
-
-#         You have requested to reset your password. Please click the link below:
-
-#         {reset_url}
-
-#         If you did not request this reset, please ignore this email.
-
-#         Thanks,
-#         Your App Team
-#         """
-#         print (reset_url)
-#         send_mail(
-#             subject,
-#             message,
-#             settings.EMAIL_HOST_USER,
-#             [email],
-#             fail_silently=False,
-#         )
-#         print (" hhhhhhhhhhh ")
-#         # email_message.send(fail_silently=False)
-#         return Response({'message': 'Password reset email has been sent.'})
-#     return Response({'error': 'Email not found'}, status=400)
-
-
-# @api_view(['POST'])
-# def reset_password(request, uidb64, token):
-#     try:
-#         # Decode the user ID
-#         uid = force_str(urlsafe_base64_decode(uidb64))
-#         user = User.objects.get(id=uid)
-#         if not account_activation_token.check_token(user, token):
-#             return Response(
-#                 {'error': 'Invalid or expired reset link'}, 
-#                 status=status.HTTP_400_BAD_REQUEST
-#             )
-#         new_password = request.data.get('new_password')
-#         confirm_password = request.data.get('confirm_password')
-#         #checking the password are 3amra or not a am3lem
-#         if not new_password or not confirm_password:
-#             return Response(
-#                {'error': 'Both password fields are required'}, 
-#                 status=status.HTTP_400_BAD_REQUEST
-#             )
-            
-#         # chacking now wash passwords are identical
-#         if new_password != confirm_password:
-#             return Response(
-#                 {'error': 'Passwords do not match'}, 
-#                 status=status.HTTP_400_BAD_REQUEST
-#             )
-        
-#         try:
-#             validate_password(new_password, user)
-#         except ValidationError as e:
-#             return Response(
-#                 {'error': "Password Requirement are not valid"},
-#                 status=status.HTTP_400_BAD_REQUEST
-#             )
-            
-#         user.set_password(new_password)
-#         user.save()
-        
-#         return Response({
-#             'message': 'Password has been reset successfully.'
-#         }, status=status.HTTP_200_OK)
-        
-#     except (TypeError, ValueError, User.DoesNotExist):
-#         return Response(
-#             {'error': 'Invalid reset link'}, 
-#             status=status.HTTP_400_BAD_REQUEST
-#         )
 
 class LogoutViews(APIView):
     permission_classes = [IsAuthenticated]
@@ -539,6 +528,7 @@ class LogoutViews(APIView):
 
 def viewallrouting(request):
     data = [
+        'api/'
         'api/token/refresh',
         'api/register',
         'api/token',
@@ -547,8 +537,308 @@ def viewallrouting(request):
         # 'api/googlelogin/callback/'
         # 'admin/token/refresh',
         # 'admin/register/',
-        # 'admin/token/'
+        # 'admin/token/'APIView
     ]
     return Response(data)
 
+class get_allusers(APIView):
+    permission_classes = [IsAuthenticated]
+    def get(self, request):
+        
+        users = User.objects.all()
+        print (users)
+        serializer = UserSerial(users, many=True)
+        return Response(serializer.data)
+    
+class UserEditProfileView(APIView):
+    """
+    API View to handle user profile retrieval and updates
+    """
+    permission_classes = [IsAuthenticated]
 
+    def get(self, request):
+        """
+        Retrieve current user's profile information
+        """
+        serializer = UserSerial(request.user)
+        return Response(serializer.data)
+
+    def put(self, request):
+        """
+        Update user profile information
+        """
+        serializer = UserSerial(request.user, data=request.data, partial=True)
+        
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    def delete(self, request):
+        """
+        Delete user's profile image
+        """
+        user = request.user
+        
+        # Check if user has a profile image
+        if not user.img:
+            return Response(
+                {"detail": "No profile image to delete"}, 
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        # Get the file path
+        image_path = user.img.path
+
+        try:
+            # Delete the file from storage
+            if os.path.exists(image_path):
+                os.remove(image_path)
+            
+            # Clear the img field
+            user.profile_image = None
+            user.save()
+            
+            return Response(
+                {"detail": "Profile image deleted successfully"},
+                status=status.HTTP_200_OK
+            )
+            
+        except Exception as e:
+            return Response(
+                {"detail": f"Error deleting profile image: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR #replace this with another error like bad requeste
+            )
+    
+
+class TwoFactorAuthenticationView(APIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
+
+    def get(self, request):
+        """Generate QR code for Google Authenticator"""
+        if not request.user.is_authenticated:
+            return Response({
+                'error': 'Authentication required'
+            }, status=status.HTTP_401_UNAUTHORIZED)
+
+        user = request.user
+        print(f"Authenticated user: {user.email}")
+        
+        # Get or create TOTP device for user
+        device, created = TOTPDevice.objects.get_or_create(
+            user=user,
+            defaults={'confirmed': False}
+        )
+
+        if created or not device.confirmed:
+            # Generate new secret key
+            secret_key = pyotp.random_base32()
+            device.key = secret_key
+            device.save()
+
+            # Generate provisioning URI for QR code
+            totp = pyotp.TOTP(secret_key)
+            provisioning_uri = totp.provisioning_uri(
+                name=user.email,
+                issuer_name="Ft_transcendence DRARI LMLA7 Team"
+            )
+
+            # Generate QR code
+            qr = qrcode.QRCode(
+                version=1,
+                error_correction=qrcode.constants.ERROR_CORRECT_L,
+                box_size=10,
+                border=4,
+            )
+            qr.add_data(provisioning_uri)
+            qr.make(fit=True)
+
+            # Create QR code image
+            img_qr = qr.make_image(fill_color="black", back_color="white")
+            
+            # Save QR code image
+            img_path = f'qr_codes/qr_{user.username}.png'
+            full_path = os.path.join(settings.MEDIA_ROOT, img_path)
+            
+            # Ensure directory exists
+            os.makedirs(os.path.dirname(full_path), exist_ok=True)
+            
+            # Save the image
+            img_qr.save(full_path)
+
+            # Convert to base64 for response
+            buffer = BytesIO()
+            img_qr.save(buffer, format="PNG")
+            qr_code_base64 = base64.b64encode(buffer.getvalue()).decode()
+
+            # Generate URL for the QR code image
+            qr_image_url = f"{settings.MEDIA_URL}{img_path}"
+
+            return Response({
+                'qr_code': qr_code_base64,
+                'qr_image_url': qr_image_url,
+                'secret_key': secret_key,
+                'is_enabled': device.confirmed
+            })
+        
+        # If 2FA is already set up 
+        if device.confirmed:
+            # Generate URL for existing QR code and sending Qrcode as image in backend
+            qr_image_url = f"{settings.MEDIA_URL}qr_codes/qr_{user.username}.png"
+            return Response({
+                'is_enabled': device.confirmed,
+                'message': '2FA is already set up',
+                'qr_image_url': qr_image_url
+            })
+        
+        return Response({
+            'is_enabled': device.confirmed,
+            'message': '2FA is already set up',
+            'qr_image_url': None
+        })
+
+class Verify2FAView(APIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
+
+    def post(self, request):
+        user = request.user
+        otp = request.data.get('otp')
+
+        if not otp:
+            return Response({
+                'error': 'OTP is required'
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            device = TOTPDevice.objects.get(user=user)
+            totp = pyotp.TOTP(device.key)
+
+            if totp.verify(otp):
+                device.confirmed = True
+                device.save()
+                
+                # Log successful hnaya kanverfyi ila kan otp enabled o user 3ad tloga
+                TwoFactorAuthAttempt.objects.create(
+                    user=user,
+                    successful=True,
+                    ip_address=request.META.get('REMOTE_ADDR'),
+                    user_agent=request.META.get('HTTP_USER_AGENT')
+                )
+
+                return Response({
+                    'message': '2FA successfully enabled'
+                })
+            else:
+                # Log failed hnaya ila kan OTP disebled sf mkay7tajsh ba9i ivirifyi 2FA
+                TwoFactorAuthAttempt.objects.create(
+                    user=user,
+                    successful=False,
+                    ip_address=request.META.get('REMOTE_ADDR'),
+                    user_agent=request.META.get('HTTP_USER_AGENT')
+                )
+                
+                return Response({
+                    'error': 'Invalid OTP'
+                }, status=status.HTTP_400_BAD_REQUEST)
+
+        except TOTPDevice.DoesNotExist:
+            return Response({
+                'error': '2FA not set up'
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+
+# class bash T7yed 2FA
+class Disable2FAView(APIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
+
+    def post(self, request):
+        try:
+            device = TOTPDevice.objects.get(user=request.user)
+            device.confirmed = False
+            device.save()
+            
+            # Clean up QR code image if it exists
+            qr_image_path = os.path.join(settings.MEDIA_ROOT, f'qr_codes/qr_{request.user.username}.png')
+            if os.path.exists(qr_image_path):
+                os.remove(qr_image_path)
+
+            # Log the disabling of 2FA
+            TwoFactorAuthAttempt.objects.create(
+                user=request.user,
+                successful=True,
+                ip_address=request.META.get('REMOTE_ADDR'),
+                user_agent=request.META.get('HTTP_USER_AGENT'),
+            )
+
+            return Response({
+                'message': '2FA successfully disabled'
+            })
+        except TOTPDevice.DoesNotExist:
+            return Response({
+                'error': '2FA was not enabled'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({
+                'error': str(e)
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+class Check2FAStatusView(APIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
+
+    def get(self, request):
+        try:
+            device = TOTPDevice.objects.get(user=request.user, confirmed=True)
+            return Response({
+                'requires_2fa': True
+            })
+        except TOTPDevice.DoesNotExist:
+            return Response({
+                'requires_2fa': False
+            })
+
+class ChangePasswordView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        try:
+            # Parse the request body properly
+            try:
+                old_password = request.data.get('old_password')
+                new_password = request.data.get('new_password')
+                confirm_password = request.data.get('confirm_password')
+            except (TypeError, ValueError):
+                return Response({'error': 'Invalid JSON data'})
+
+
+            # Decode the user ID
+            user = request.user
+            if not old_password:
+                return Response({'error': 'Old password is required'})
+            # user = User.objects.get(email=user.email)
+            try:
+                valid_password = check_password(old_password, user.password)
+                if not valid_password:
+                    return Response({'error': 'Invalid old password'},status=200)
+            except Exception as e:
+                return Response({'error': 'Error validating password'}, status=500)
+
+            # Validate passwords
+            if not new_password or not confirm_password:
+                return Response({'error': 'Both passwords are required'})
+
+            if new_password != confirm_password:
+                return Response({'error': 'Passwords do not match'})
+
+            # Set new password
+            user.set_password(new_password)
+            user.save()
+
+            return Response({'message': 'Password reset successful'})
+
+        except Exception as e:
+            print(f"Error: {str(e)}")
+            return Response({'error': 'An error occurred'})

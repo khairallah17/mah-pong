@@ -16,7 +16,6 @@ import os
 # from dotenv import load_dotenv
 
 
-
 # Load environment variables from .env file
 # load_dotenv()
 
@@ -24,10 +23,8 @@ import os
 SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
 
 
-
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-
 
 
 MEDIA_URL = '/media/'
@@ -57,12 +54,15 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'corsheaders',
     'rest_framework_simplejwt',
-    'api',
+    'api',  # Its My Own APP NAmed API
     'allauth',
     'allauth.account',
     'allauth.socialaccount',
     'allauth.socialaccount.providers.google',
     'dj_rest_auth',
+    "django_otp",
+    "django_otp.plugins.otp_totp",
+
 ]
 
 SITE_ID = 1
@@ -86,6 +86,7 @@ MIDDLEWARE = [
 #     # 'http://127.0.0.1:8000'
 #     'http://localhost:8000'
 # ]
+CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOWED_ORIGINS = [
     'http://localhost:5173',
     'http://127.0.0.1:5173',  # Include this if you also access your frontend via 127.0.0.1
@@ -99,6 +100,7 @@ CORS_ALLOW_CREDENTIALS = True
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'rest_framework.authentication.TokenAuthentication',
     )
 }
 
@@ -126,8 +128,8 @@ WSGI_APPLICATION = 'usermanagement.wsgi.application'
 
 
 AUTHENTICATION_BACKENDS = [
-    'django.contrib.auth.backends.ModelBackend', # default auth backend
-    'allauth.account.auth_backends.AuthenticationBackend', #for Google Auth backend
+    'django.contrib.auth.backends.ModelBackend',  # default auth backend
+    'allauth.account.auth_backends.AuthenticationBackend',  # for Google Auth backend
 ]
 
 # Database
@@ -140,7 +142,6 @@ DATABASES = {
     }
 }
 
-# CORS_ALLOW_ALL_ORIGINS = True 
 CORS_ALLOW_METHODS = [
     'DELETE',
     'GET',
@@ -250,5 +251,5 @@ EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_POST = 587
 EMAIL_USE_TLS = True
 EMAIL_USE_SSL = False  # Don't use both SSL and TLS
-EMAIL_HOST_USER ='agoumi82@gmail.com' # Create new email for the verification 
-EMAIL_HOST_PASSWORD ='eojjpvdixvviggbf' # putting password of this email
+EMAIL_HOST_USER = 'agoumi82@gmail.com'  # Create new email for the verification
+EMAIL_HOST_PASSWORD = 'eojjpvdixvviggbf'  # putting password of this email
