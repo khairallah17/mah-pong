@@ -2,11 +2,19 @@ import { React, useContext } from 'react'
 import { useNavigate } from 'react-router-dom'
 import AuthContext from "../context_login_Register/AuthContext"
 import NotificationDisplay from './NotificationsDisplay'
+import { WebSocketContext } from "../WebSocketProvider/WebSocketProvider";
 
 export const Dashboard = () => {
   const navigate = useNavigate();
 
-  const {logoutUsers} = useContext(AuthContext);
+  const { logoutUsers } = useContext(AuthContext);
+  const { wsManager } = useContext(WebSocketContext);
+
+  const sendMessage = () => {
+    if (wsManager) {
+      wsManager.sendMessage("Hello from Dashboard");
+    }
+  };
 
   const handleLogout = (e) => {
     e.preventDefault();
@@ -15,9 +23,12 @@ export const Dashboard = () => {
   }
 
   return (
-    <div style={{display:'flex', alignItems: 'center', justifyContent: 'center'}}>
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div className="navbar">
+        <NotificationDisplay />
+      </div>
       <h1>Dashboard</h1>
-      <NotificationDisplay />
+
       <div className="navigation-buttons">
         <button onClick={() => navigate('/pve2d')}>PVE 2D</button>
         <button onClick={() => navigate('/pvp2d')}>PVP 2D</button>
@@ -30,9 +41,10 @@ export const Dashboard = () => {
       </div>
       <form onSubmit={handleLogout}>
         <div className='btn-register'>
-            <button  type='submit'>SIGN UP</button>
+          <button type='submit'>SIGN UP</button>
         </div>
       </form>
+      <button onClick={sendMessage}>Send Message</button>
     </div>
   )
 }

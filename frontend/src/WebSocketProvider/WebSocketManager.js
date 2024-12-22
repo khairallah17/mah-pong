@@ -20,9 +20,7 @@ class WebSocketManager {
             };
 
             this.websocket.onmessage = (event) => {
-                if (onMessage) {
-                    onMessage(event.data);
-                }
+                onMessage(event.data);
             };
 
             this.websocket.onclose = () => {
@@ -37,9 +35,10 @@ class WebSocketManager {
         }
     }
 
-    sendMessage(message) {
+    sendMessage(message, players) {
         if (this.websocket && this.websocket.readyState === WebSocket.OPEN) {
-            this.websocket.send(message);
+            const payload = players ? { message, players } : { message };
+            this.websocket.send(JSON.stringify(payload));
         } else {
             console.warn("WebSocket is not open");
         }

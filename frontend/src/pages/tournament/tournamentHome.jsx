@@ -12,7 +12,8 @@ const TournamentHome = () => {
             try {
                 const response = await fetch("http://localhost:8000/api/tournaments");
                 const data = await response.json();
-                setTournaments(data);
+                const waitingTournaments = data.filter(tournament => tournament.status === 'waiting');
+                setTournaments(waitingTournaments);
                 setIsLoading(false);
             } catch (error) {
                 console.error(error);
@@ -22,7 +23,7 @@ const TournamentHome = () => {
 
         fetchTournaments();
 
-        const interval = setInterval(fetchTournaments, 1000);
+        const interval = setInterval(fetchTournaments, 5000);
 
         return () => clearInterval(interval);
     }, []);
