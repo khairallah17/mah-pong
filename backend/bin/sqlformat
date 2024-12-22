@@ -1,4 +1,4 @@
-#!/goinfre/alemsafi/mah-pong/backend/bin/python
+#!/home/saltysushi/work/mah-pong/backend/bin/python3
 # -*- coding: utf-8 -*-
 import re
 import sys
