@@ -574,6 +574,41 @@ class UserEditProfileView(APIView):
             return Response(serializer.data)
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    def delete(self, request):
+        """
+        Delete user's profile image
+        """
+        user = request.user
+        
+        # Check if user has a profile image
+        if not user.img:
+            return Response(
+                {"detail": "No profile image to delete"}, 
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        # Get the file path
+        image_path = user.img.path
+
+        try:
+            # Delete the file from storage
+            if os.path.exists(image_path):
+                os.remove(image_path)
+            
+            # Clear the img field
+            user.profile_image = None
+            user.save()
+            
+            return Response(
+                {"detail": "Profile image deleted successfully"},
+                status=status.HTTP_200_OK
+            )
+            
+        except Exception as e:
+            return Response(
+                {"detail": f"Error deleting profile image: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR #replace this with another error like bad requeste
+            )
     
 
 class TwoFactorAuthenticationView(APIView):
