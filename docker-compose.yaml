@@ -57,6 +57,22 @@ services:
       - db_data:/var/lib/postgresql/data
     networks:
       - game-network
+    
+  notifications:
+    container_name: notifications
+    build:
+      context: "./backend/notifications"
+      dockerfile: Dockerfile
+    ports:
+      - 8002:8000
+    depends_on:
+      - redis
+      - db
+    env_file:
+      - .env
+    networks:
+      - notification-network
+      - game-network
 
 
 volumes:
@@ -64,4 +80,6 @@ volumes:
 
 networks:
   game-network:
+    driver: bridge
+  notification-network:
     driver: bridge
