@@ -183,7 +183,7 @@ class RegisterationView(generics.CreateAPIView):
         return Response(
             {
                 "message": "User Registered Successfully",
-                "UserInfo": {"id": str(user.id), "username": user.username, "email": user.email, "image": user.img, "avatar": user.avatar}
+                "UserInfo": {"username": user.username, "email": user.email, "id": str(user.id)}
             }, status=status.HTTP_201_CREATED,
             headers=headers
         )
