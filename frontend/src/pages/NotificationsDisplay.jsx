@@ -1,12 +1,33 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useState, useEffect} from "react";
 import { WebSocketContext } from "../WebSocketProvider/WebSocketProvider";
 
 const NotificationDisplay = () => {
-  const { notifications } = useContext(WebSocketContext);
+  let { notifications, wsManager } = useContext(WebSocketContext);
+  //fetch notifications here from http://localhost:8002/api/notifications
+  const [notificationsS, setNotificationsS] = useState([]);
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      try {
+        const response = await fetch("http://localhost:8002/api/notifications");
+        const data = await response.json();
+        const newNotifications = data.filter((notification) => !notification.read);
+        console.log("newNotifications", newNotifications);
+        console.log("data", data);
+        setNotificationsS(newNotifications);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    fetchNotifications();
+  }, []);
+
+  notifications = notificationsS;
   const [isOpen, setIsOpen] = useState(false);
 
   const toggleNotifications = () => {
     setIsOpen(!isOpen);
+    wsManager.sendMessage("Notifications viewed");
   };
 
   return (
