@@ -1,5 +1,5 @@
 import React, { useContext } from "react";
-import { WebSocketContext } from "../WebSocketProvider/";
+import { WebSocketContext } from "../WebSocketProvider/WebSocketProvider";
 
 const NotificationDisplay = () => {
   const { notifications } = useContext(WebSocketContext);

@@ -1,7 +1,7 @@
 import { React, useContext } from 'react'
 import { useNavigate } from 'react-router-dom'
 import AuthContext from "../context_login_Register/AuthContext"
-import NotificationDisplay from './NotificationsDisplay'
+import NotificationDisplay from './NotificationDisplay'
 import { WebSocketContext } from "../WebSocketProvider/WebSocketProvider";
 
 export const Dashboard = () => {

@@ -1,23 +1,25 @@
 import React from 'react';
 
 const MatchHistory = ({ UserPlay }) => {
-  const matches = [
-    { id: 1, date: '23:32, Wed, Dec 6', player1: 'ven', player2: 'mohammed', score: '2', result: 'LOST', time: '13:37s' },
-    { id: 2, date: '23:32, Wed, Dec 6', player1: 'ven', player2: 'mohammed', score: '10', result: 'WON', time: '13:37s' },
-    { id: 3, date: '23:32, Wed, Dec 6', player1: 'ven', player2: 'mohammed', score: '2', result: 'LOST', time: '13:37s' },
-    { id: 4, date: '23:32, Wed, Dec 6', player1: 'ven', player2: 'mohammed', score: '5', result: 'WON', time: '13:37s' },
-    { id: 5, date: '23:32, Wed, Dec 6', player1: 'ven', player2: 'mohammed', score: '5', result: 'LOST', time: '13:37s' },
-    { id: 6, date: '23:32, Wed, Dec 6', player1: 'ven', player2: 'mohammed', score: '5', result: 'WON', time: '13:37s' },
-    { id: 7, date: '23:32, Wed, Dec 6', player1: 'ven', player2: 'mohammed', score: '7', result: 'WON', time: '13:37s' },
-    { id: 8, date: '23:32, Wed, Dec 6', player1: 'ven', player2: 'mohammed', score: '5', result: 'WON', time: '13:37s' },
-    { id: 9, date: '23:32, Wed, Dec 6', player1: 'ven', player2: 'mohammed', score: '5', result: 'LOST', time: '13:37s' },
-    { id: 10, date: '23:32, Wed, Dec 6', player1: 'ven', player2: 'mohammed', score: '5', result: 'LOST', time: '13:37s' },
-    { id: 11, date: '23:32, Wed, Dec 6', player1: 'ven', player2: 'mohammed', score: '5', result: 'WON', time: '13:37s' },
-    { id: 12, date: '23:32, Wed, Dec 6', player1: 'ven', player2: 'mohammed', score: '7', result: 'WON', time: '13:37s' },
-  ];
-  // const fetchdata = async () => {
-  //   url = UserPlay
-  // }
+  // const matches = [
+  //   { id: 1, date: '23:32, Wed, Dec 6', player1: 'ven', player2: 'mohammed', score: '2', result: 'LOST', time: '13:37s' },
+  //   { id: 2, date: '23:32, Wed, Dec 6', player1: 'ven', player2: 'mohammed', score: '10', result: 'WON', time: '13:37s' },
+  //   { id: 3, date: '23:32, Wed, Dec 6', player1: 'ven', player2: 'mohammed', score: '2', result: 'LOST', time: '13:37s' },
+  //   { id: 4, date: '23:32, Wed, Dec 6', player1: 'ven', player2: 'mohammed', score: '5', result: 'WON', time: '13:37s' },
+  //   { id: 5, date: '23:32, Wed, Dec 6', player1: 'ven', player2: 'mohammed', score: '5', result: 'LOST', time: '13:37s' },
+  //   { id: 6, date: '23:32, Wed, Dec 6', player1: 'ven', player2: 'mohammed', score: '5', result: 'WON', time: '13:37s' },
+  //   { id: 7, date: '23:32, Wed, Dec 6', player1: 'ven', player2: 'mohammed', score: '7', result: 'WON', time: '13:37s' },
+  //   { id: 8, date: '23:32, Wed, Dec 6', player1: 'ven', player2: 'mohammed', score: '5', result: 'WON', time: '13:37s' },
+  //   { id: 9, date: '23:32, Wed, Dec 6', player1: 'ven', player2: 'mohammed', score: '5', result: 'LOST', time: '13:37s' },
+  //   { id: 10, date: '23:32, Wed, Dec 6', player1: 'ven', player2: 'mohammed', score: '5', result: 'LOST', time: '13:37s' },
+  //   { id: 11, date: '23:32, Wed, Dec 6', player1: 'ven', player2: 'mohammed', score: '5', result: 'WON', time: '13:37s' },
+  //   { id: 12, date: '23:32, Wed, Dec 6', player1: 'ven', player2: 'mohammed', score: '7', result: 'WON', time: '13:37s' },
+  // ];
+  const fetchdata = async () => {
+    url = UserPlay
+    ? `http://localhost:8001/api/match-history/${UserPlay}/`
+    : 'http://localhost:8001/api/user/stats/';
+  }
 
   const summary = {
     wins: 4,

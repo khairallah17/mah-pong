@@ -34,18 +34,18 @@ services:
     env_file:
       - .env
 
-  # frontend:
-  #     container_name: frontend
-  #     build: 
-  #       context: "./frontend"
-  #       dockerfile: Dockerfile
-  #     ports:
-  #       - "5173:5173"
-  #     env_file:
-  #       - .env
-  #     volumes:
-  #       - front_vm:/app
-  #       - /app/node_modules
+  frontend:
+      container_name: frontend
+      build: 
+        context: "./frontend"
+        dockerfile: Dockerfile
+      ports:
+        - "5173:5173"
+      env_file:
+        - .env
+      volumes:
+        - front_vm:/app
+        - /app/node_modules
   
   db:
     image: postgres:15-alpine

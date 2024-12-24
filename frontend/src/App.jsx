@@ -19,7 +19,7 @@ import SearchPage from './pages/SearchPage'
 import Tournament from './pages/tournament/Tournament'
 import TournamentHome from './pages/tournament/tournamentHome';
 import { WebSocketProvider } from './WebSocketProvider/WebSocketProvider.jsx';
-import NotificationDisplay from './pages/NotificationsDisplay.jsx';
+import NotificationDisplay from './pages/NotificationDisplay.jsx';
 import MatchHistory from './pages/UserProfil/Components/MatchHistory.jsx';
 
 function App() {
