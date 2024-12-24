@@ -6,7 +6,7 @@ import rightArrowImg from "../images/right.png";
 import searchicon from "../images/searchIcon.png";
 import "../styles/SearchPage.css";
 
-const FriendFinder = () => {
+const SearchPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [isFocused, setIsFocused] = useState(false);
   const cardContainerRef = useRef(null);
@@ -184,4 +184,4 @@ const FriendFinder = () => {
   );
 };
 
-export default FriendFinder;
+export default SearchPage;

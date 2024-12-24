@@ -53,7 +53,8 @@ class notificationsConsumer(AsyncWebsocketConsumer):
                         "type": "notification",
                         "message": "All players are ready!"
                     })
-        # Broadcast the message back to all connected clients
+        elif (message == "notifications viewed"):
+            await self.mark_notifications_as_read()
         await self.send(text_data=json.dumps({
             "type": "notification",
             "message": message,
@@ -62,8 +63,14 @@ class notificationsConsumer(AsyncWebsocketConsumer):
     @database_sync_to_async
     def create_notification(self, data):
         message = data.get("message", "")
-        user = data.get("user", "")
+        user = self.username
         Notification.objects.create(message=message, user=user)
+        return True
+    
+    @database_sync_to_async
+    def mark_notifications_as_read(self):
+        Notification.objects.update(read=True)
+        logger.warning(f"Notifications marked as read for user: {self.username}")
         return True
 
     async def notification(self, event):
