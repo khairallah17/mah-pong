@@ -1,12 +1,10 @@
-from django.shortcuts import redirect
-from django.shortcuts import render
+from django.shortcuts import redirect, get_object_or_404
 from django.db import models
 from django.db.models import Q
 from django.http import HttpResponse, HttpResponseRedirect
 from .models import User, TwoFactorAuthAttempt
 from .serializers import Get_Token_serial, RegistrationSerial, UserSerial, LogoutSerial
 from rest_framework.decorators import api_view, permission_classes
-from django.shortcuts import get_object_or_404
 from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
@@ -183,7 +181,7 @@ class RegisterationView(generics.CreateAPIView):
         return Response(
             {
                 "message": "User Registered Successfully",
-                "UserInfo": {"id": str(user.id), "username": user.username, "email": user.email, "image": user.img, "avatar": user.avatar}
+                "UserInfo": {"username": user.username, "email": user.email, "id": str(user.id)}
             }, status=status.HTTP_201_CREATED,
             headers=headers
         )

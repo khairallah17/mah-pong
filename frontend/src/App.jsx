@@ -20,6 +20,7 @@ import Tournament from './pages/tournament/Tournament'
 import TournamentHome from './pages/tournament/tournamentHome';
 import { WebSocketProvider } from './WebSocketProvider/WebSocketProvider.jsx';
 import NotificationDisplay from './pages/NotificationsDisplay.jsx';
+import MatchHistory from './pages/UserProfil/Components/MatchHistory.jsx';
 
 function App() {
 
@@ -45,6 +46,11 @@ function App() {
               <Register />
               // </ProtectLogin>
             } />
+            <Route path="/match-history" element={
+              // <ProtectLogin>
+              <MatchHistory />
+              // </ProtectLogin>
+            } />
             <Route path="/password-reset" element={
               <VerifyPsdEmail />
             } />
@@ -53,9 +59,9 @@ function App() {
             <ResetPassword />
           } />
 
+
           {/* ProtectRouter component Private if are not logged in */}
           <Route element={<ProtectRouter />}>
-            <Route path="/profile" element={<Profile />} />
             <Route path="/security" element={<SecurityPage />} />
             <Route path="/search" element={<SearchPage />} />
             <Route path="/dashboard" element={<Dashboard />} />
