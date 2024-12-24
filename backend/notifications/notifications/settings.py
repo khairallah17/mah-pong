@@ -88,7 +88,7 @@ DATABASES = {
         'NAME': 'mydatabase',
         'USER': 'postgres',
         'PASSWORD': 'password',
-        'HOST': 'db',
+        'HOST': 'notif_db',
         'PORT': '5432',
     }
 }

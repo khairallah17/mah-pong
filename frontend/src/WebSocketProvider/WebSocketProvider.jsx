@@ -8,35 +8,54 @@ export const WebSocketProvider = ({ children }) => {
   const accessToken = JSON.parse(localStorage.getItem('authtoken'))?.access;
   const webSocketUrl = 'ws://localhost:8002/ws/notifications/?token=' + accessToken;
   const [wsManager, setWsManager] = useState(null);
-  
+
   useEffect(() => {
     let wsManagerInstance = new WebSocketManager(webSocketUrl);
     setWsManager(wsManagerInstance);
 
-    wsManagerInstance.connect((message) => {
-      setNotifications((prev) => [...prev, JSON.parse(message)]);
-    });
-
-    wsManagerInstance.onmessage = async (event) => {
-        const message = JSON.parse(event.data);
-        if (message.type === 'token_expired') {
-          console.log('Token expired, refreshing...');
-            const newToken = await refreshToken();
-            if (newToken) {
-                localStorage.setItem('authtoken', JSON.stringify(newToken));
-                wsManagerInstance.close();
-                wsManagerInstance = new WebSocket('ws://localhost:8002/ws/notifications/?token=' + newToken?.access);
-                setWsManager(wsManagerInstance);
-                wsManagerInstance.connect((message) => {
-                  setNotifications((prev) => [...prev, JSON.parse(message)]);
-                });
-                console.log('WebSocket connection established with new token');
-            } else {
-                localStorage.removeItem('authtoken');
-                window.location.href = '/login';
-            }
+    const handleMessage = async (data) => {
+      const message = JSON.parse(data);
+      if (message.type === 'token_expired') {
+        console.log('Token expired, refreshing...');
+        const newToken = await refreshToken();
+        if (newToken) {
+          localStorage.setItem('authtoken', JSON.stringify(newToken));
+          wsManagerInstance.close();
+          wsManagerInstance.setUrl('ws://localhost:8002/ws/notifications/?token=' + newToken?.access);
+          wsManagerInstance.connect(handleMessage);
+          console.log('WebSocket connection established with new token');
+        } else {
+          localStorage.removeItem('authtoken');
+          window.location.href = '/login';
         }
-    }
+      } else if (message.type === 'other') {
+        // Handle other message types
+      } else {
+        setNotifications((prev) => [...prev, message]);
+      }
+    };
+
+    wsManagerInstance.connect(handleMessage);
+
+    const refreshToken = async () => {
+      let refreshtokenUrl = "http://localhost:8001/api/token/refresh/"
+      try {
+        const response = await fetch(refreshtokenUrl, {
+          method: 'POST',
+          credentials: 'include'
+        });
+        if (response.ok) {
+          const data = await response.json();
+          return data;
+        } else {
+          return null;
+        }
+      } catch (error) {
+        console.error('Failed to refresh token:', error);
+        return null;
+      }
+    };
+
     return () => {
       wsManagerInstance.close();
     };

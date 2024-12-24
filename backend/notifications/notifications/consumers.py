@@ -30,7 +30,7 @@ class notificationsConsumer(AsyncWebsocketConsumer):
             logger.warning(f"User connected: {self.username}")
             await self.channel_layer.group_add(self.username, self.channel_name)
         except jwt.ExpiredSignatureError:
-            # await self.send_error_message('token_expired', 4001)
+            await self.send_error_message('token_expired', 4001)
             logger.warning("Token expired")
         except jwt.InvalidTokenError as e:
             # await self.send_error_message('invalid_token', 4002, str(e))
@@ -39,10 +39,8 @@ class notificationsConsumer(AsyncWebsocketConsumer):
     async def receive(self, text_data):
         data = json.loads(text_data)
         logger.warning(f"Data received: {data}")
-        await self.create_notification(data)
         message = data.get("message", "")
         logger.warning(f"Message received: {message}")
-        logger.warning(f"notif_user_channels: {notif_user_channels}")
 
         if (message == "players_ready"):
             players = data.get("players", [])
@@ -53,16 +51,20 @@ class notificationsConsumer(AsyncWebsocketConsumer):
                         "type": "notification",
                         "message": "All players are ready!"
                     })
-        elif (message == "notifications viewed"):
+        elif (message == "Notifications viewed"):
             await self.mark_notifications_as_read()
-        await self.send(text_data=json.dumps({
+        else:
+            await self.broadcast_message(message)
+    
+    async def broadcast_message(self, message):
+        logger.warning(f"Broadcasting message: {message}")
+        await self.channel_layer.send(notif_user_channels[self.username], {
             "type": "notification",
-            "message": message,
-        }))
+            "message": message
+        })
 
     @database_sync_to_async
-    def create_notification(self, data):
-        message = data.get("message", "")
+    def create_notification(self, message):
         user = self.username
         Notification.objects.create(message=message, user=user)
         return True
@@ -75,6 +77,7 @@ class notificationsConsumer(AsyncWebsocketConsumer):
 
     async def notification(self, event):
         message = event['message']
+        await self.create_notification(message)
         await self.send(text_data=json.dumps({
             'type': 'notification',
             'message': message
