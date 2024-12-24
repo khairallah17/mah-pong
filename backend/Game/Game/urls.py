@@ -16,9 +16,10 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-from Match.views import TournamentList
+from Match.views import TournamentList, PlayerMatchHistory
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/tournaments', TournamentList.as_view(), name='tournament-list'),
+    path('api/match-history/<str:username>/', PlayerMatchHistory.as_view(), name='player-match-history'),
 ]

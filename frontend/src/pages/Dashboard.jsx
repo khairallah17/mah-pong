@@ -1,4 +1,4 @@
-import { React, useContext } from 'react'
+import { React, useContext, useEffect, useState} from 'react'
 import { useNavigate } from 'react-router-dom'
 import AuthContext from "../context_login_Register/AuthContext"
 import NotificationDisplay from './NotificationDisplay'
@@ -10,6 +10,7 @@ export const Dashboard = () => {
   const { logoutUsers } = useContext(AuthContext);
   const { wsManager } = useContext(WebSocketContext);
 
+  // can fetch match history from `http://localhost:8000/api/match-history/{username}`
   const sendMessage = () => {
     if (wsManager) {
       wsManager.sendMessage("Hello from Dashboard");
