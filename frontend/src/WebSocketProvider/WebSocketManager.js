@@ -8,10 +8,12 @@ class WebSocketManager {
 
         this.url = url;
         this.websocket = null;
+        this.onMessageCallback = null;
         WebSocketManager.instance = this;
     }
 
     connect(onMessage) {
+        this.onMessageCallback = onMessage;
         if (!this.websocket || this.websocket.readyState === WebSocket.CLOSED) {
             this.websocket = new WebSocket(this.url);
 
@@ -20,12 +22,14 @@ class WebSocketManager {
             };
 
             this.websocket.onmessage = (event) => {
-                onMessage(event.data);
+                if (this.onMessageCallback) {
+                    this.onMessageCallback(event.data);
+                }
             };
 
             this.websocket.onclose = () => {
                 console.log("WebSocket closed, reconnecting...");
-                setTimeout(() => this.connect(onMessage), 5000); // Reconnect after 5 seconds
+                setTimeout(() => this.connect(this.onMessageCallback), 5000);
             };
 
             this.websocket.onerror = (error) => {
@@ -33,6 +37,10 @@ class WebSocketManager {
                 this.websocket.close();
             };
         }
+    }
+
+    setUrl(url) {
+        this.url = url;
     }
 
     sendMessage(message, players) {

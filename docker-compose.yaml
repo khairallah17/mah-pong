@@ -96,12 +96,12 @@ services:
 volumes:
   game_db_data:
   notif_db_data:
-  front_vm:
-    driver: local
-    driver_opts:
-      device: ${PWD}/frontend
-      type: none
-      o: bind
+  # front_vm:
+  #   driver: local
+  #   driver_opts:
+  #     device: ${PWD}/frontend
+  #     type: none
+  #     o: bind
 
 networks:
   game-network:

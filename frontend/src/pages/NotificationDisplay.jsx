@@ -4,16 +4,19 @@ import { WebSocketContext } from "../WebSocketProvider/WebSocketProvider";
 const NotificationDisplay = () => {
   const { notifications: wsNotifications, wsManager } = useContext(WebSocketContext);
   const [notifications, setNotifications] = useState([]);
+  // old notifications that are not read should still be considered new
+  // old notifications that are read should be considered old
+  // new notifications that are read should be considered old
   useEffect(() => {
     const fetchNotifications = async () => {
       try {
         const response = await fetch("http://localhost:8002/api/notifications");
         const data = await response.json();
-        const newNotifications = data.filter((notification) => !notification.read);
-        console.log("newNotifications", newNotifications);
+        const oldNotifications = data.filter((notification) => notification.read);
+        console.log("oldNotifications", oldNotifications);
         console.log("data", data);
-        const combinedNotifications = [...wsNotifications, ...newNotifications];
-        setNotifications(newNotifications);
+        const combinedNotifications = [...oldNotifications, ...wsNotifications];
+        setNotifications(combinedNotifications);
       } catch (error) {
         console.error(error);
       }
@@ -25,8 +28,9 @@ const NotificationDisplay = () => {
   const [isOpen, setIsOpen] = useState(false);
 
   const toggleNotifications = () => {
+    if (!isOpen)
+      wsManager.sendMessage("Notifications viewed");
     setIsOpen(!isOpen);
-    wsManager.sendMessage("Notifications viewed");
   };
 
   return (
@@ -52,7 +56,7 @@ const NotificationDisplay = () => {
         </svg>
         {notifications.length > 0 && (
           <span className="absolute top-4 right-4 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-red-100 transform translate-x-1/2 -translate-y-1/2 bg-red-600 rounded-full">
-            {notifications.length}
+            {wsNotifications.length}
           </span>
         )}
       </button>
