@@ -10,7 +10,7 @@ services:
       - "8000:8000"
     depends_on:
       - redis
-      - db
+      - game_db
     env_file:
       - .env
     networks:
@@ -21,6 +21,7 @@ services:
     container_name: redis
     networks:
       - game-network
+      - notification-network
     expose:
       - 6379
 
@@ -47,19 +48,6 @@ services:
   #       - front_vm:/app
   #       - /app/node_modules
   
-  db:
-    image: postgres:15-alpine
-    container_name: db
-    expose:
-      - 5432
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: mydatabase
-    volumes:
-      - db_data:/var/lib/postgresql/data
-    networks:
-      - game-network
     
   notifications:
     container_name: notifications
@@ -69,17 +57,45 @@ services:
     ports:
       - 8002:8000
     depends_on:
+      - notif_db
       - redis
-      - db
     env_file:
       - .env
     networks:
       - notification-network
+
+  game_db:
+    image: postgres:15-alpine
+    container_name: game_db
+    expose:
+      - 5432
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: mydatabase
+    volumes:
+      - game_db_data:/var/lib/postgresql/data
+    networks:
       - game-network
+
+  notif_db:
+    image: postgres:15-alpine
+    container_name: notif_db
+    expose:
+      - 5432
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: mydatabase
+    volumes:
+      - notif_db_data:/var/lib/postgresql/data
+    networks:
+      - notification-network
 
 
 volumes:
-  db_data:
+  game_db_data:
+  notif_db_data:
   front_vm:
     driver: local
     driver_opts:

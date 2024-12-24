@@ -4,7 +4,7 @@ import ProtectLogin from "./protection_axios/ProtectLogin.jsx"
 import { AuthProvider } from "./context_login_Register/AuthContext.jsx"
 import { Register, Login, Dashboard, VerifyPsdEmail, ResetPassword} from "./pages"
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
-import { Navigate } from "react-router-dom";
+// import { useNavigate } from "react-router-dom";
 import TwoFactorAuth from './pages/OTP_2fa/TwoFactorAuth.jsx'
 import HomePage from './HomePage';
 import SecurityPage from './pages/SecurityProfile.jsx';
@@ -19,7 +19,7 @@ import SearchPage from './pages/SearchPage'
 import Tournament from './pages/tournament/Tournament'
 import TournamentHome from './pages/tournament/tournamentHome';
 import { WebSocketProvider } from './WebSocketProvider/WebSocketProvider.jsx';
-import NotificationDisplay from './pages/NotificationsDisplay.jsx';
+import NotificationDisplay from './pages/NotificationDisplay.jsx';
 import MatchHistory from './pages/UserProfil/Components/MatchHistory.jsx';
 
 function App() {
