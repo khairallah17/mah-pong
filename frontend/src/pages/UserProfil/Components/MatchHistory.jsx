@@ -1,45 +1,48 @@
 import React, { useContext, useState, useEffect } from 'react';
 import AuthContext from "../../../context_login_Register/AuthContext"
+import matchimoji from "../../../images/Frame.svg"
+import Swal from 'sweetalert2'
+
 
 const MatchHistory = ({ UserPlay }) => {
 
   const [userMatch, setUserMatch] =  useState([]);
   const { authtoken } = useContext(AuthContext);
 
-    useEffect(() => {
-        const fetchdata = async () => {
+  useEffect(() => {
+      const fetchdata = async () => {
 
-          const url = UserPlay
-          ? `http://localhost:8001/api/match-history/${UserPlay}/`
-          : 'http://localhost:8001api/match-history/';
+        const url = UserPlay
+        ? `http://localhost:8001/api/match-history/${UserPlay}/`
+        : 'http://localhost:8001api/match-history/';
 
-          try {
-            const response = await fetch(url, {
-              headers: {
-                'Authorization': `Bearer ${authtoken?.access}`,
-              }
-            });
+        try {
+          const response = await fetch(url, {
+            headers: {
+              'Authorization': `Bearer ${authtoken?.access}`,
+            }
+          });
 
-          if (!response.ok) {
-            throw new Error('Failed to fetch user stats');
-          }
+        if (!response.ok) {
+          throw new Error('Failed to fetch user stats');
+        }
 
-          const data = await response.json();
-          setUserMatch(data);
-          console.log(data);
-          } catch (error) {
-            Swal.fire({
-              position: "top-end",
-              icon: "error",
-              title: "Error fetching match history",
-              showConfirmButton: true,
-              timerProgressBar: true,
-              timer: 3000
-            });
-          }
-        };
-        fetchdata();
-      }, [UserPlay, authtoken]);
+        const data = await response.json();
+        setUserMatch(data);
+        console.log(data);
+        } catch (error) {
+          // Swal.fire({
+          //   position: "top-end",
+          //   icon: "error",
+          //   title: "Error fetching match history",
+          //   showConfirmButton: true,
+          //   timerProgressBar: true,
+          //   timer: 3000
+          // });
+        }
+      };
+      fetchdata();
+    }, [UserPlay, authtoken]);
 
   const summary = {
     wins: 4,
@@ -51,6 +54,7 @@ const MatchHistory = ({ UserPlay }) => {
     <div className="bg-[#07073A] p-6 w-[640px] h-[710px] rounded-lg max-w-2xl mx-auto">
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center gap-2">
+          <img src={matchimoji} alt="" />
           <h2 className="text-white text-lg font-semibold">Match History</h2>
         </div>
         <div className="flex justify-center bg-[#393434] w-[152px] h-[50px] rounded-lg">
