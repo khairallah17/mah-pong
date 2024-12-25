@@ -6,7 +6,8 @@ from django.contrib.postgres.fields import ArrayField
 class Match(models.Model):
     username1 = models.CharField(max_length=100)
     username2 = models.CharField(max_length=100)
-    score = models.JSONField(default=dict)
+    scoreP1 = models.IntegerField(default=0)
+    scoreP2 = models.IntegerField(default=0)
     winner = models.CharField(max_length=100, null=True, blank=True)
     datetime = models.DateTimeField(auto_now_add=True)
 

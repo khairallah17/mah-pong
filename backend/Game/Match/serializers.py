@@ -26,7 +26,7 @@ class MatchSerializer(serializers.ModelSerializer):
         return obj.username1
 
     def get_score_player(self, obj):
-        return obj.score.get(self.context['player'], 0)
+        return obj.scoreP1.get(self.context['player'], 0)
 
     def get_result(self, obj):
         if obj.winner == self.context['player']:

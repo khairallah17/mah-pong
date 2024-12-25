@@ -51,8 +51,11 @@ function Pvp2d() {
                     }
                 }
                 if (message.type === 'match_found') {
+                    if (message.score && message.score.player1 && message.score.player2)
+                        setScores({ score1: message.score.player1, score2: message.score.player2 });
+                    if (message.player_id === '2')
+                        setIsPlayer1(false);
                     setIsMatched(true);
-                    if (message.player_id === '2') setIsPlayer1(false);
                     console.log("match found with player_id: ", message.player_id, "isPlayer1: ", isPlayer1);
                 } else if (message.type === 'game_event') {
                     updateScene(message.event);
@@ -68,6 +71,7 @@ function Pvp2d() {
             wsRef.current.onerror = (e) => console.error('WebSocket error:', e);
         }
         return () => {
+
             // if (wsRef.current) {
             //     wsRef.current.close();
             //     wsRef.current = null;
@@ -135,38 +139,8 @@ function Pvp2d() {
             document.addEventListener('keydown', onDocumentKeyDown);
             document.addEventListener('keyup', onDocumentKeyUp);
             window.addEventListener('resize', onWindowResize);
-
-            const handleVisibilityChange = () => {
-                if (document.visibilityState === 'visible') {
-                    document.removeEventListener('keydown', onDocumentKeyDown);
-                    document.removeEventListener('keyup', onDocumentKeyUp);
-    
-                    // Show popup alert or loading animation
-                    const popup = document.createElement('div');
-                    popup.id = 'reconnecting-popup';
-                    popup.style.position = 'fixed';
-                    popup.style.top = '50%';
-                    popup.style.left = '50%';
-                    popup.style.transform = 'translate(-50%, -50%)';
-                    popup.style.padding = '20px';
-                    popup.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
-                    popup.style.color = 'white';
-                    popup.style.fontSize = '20px';
-                    popup.style.zIndex = '1000';
-                    popup.innerText = 'Reconnecting...';
-                    document.body.appendChild(popup);
-    
-                    setTimeout(() => {
-                        document.addEventListener('keydown', onDocumentKeyDown);
-                        document.addEventListener('keyup', onDocumentKeyUp);
-    
-                        // Hide popup alert or loading animation
-                        document.body.removeChild(popup);
-                    }, 1000);
-                }
-            };
-
             document.addEventListener('visibilitychange', handleVisibilityChange);
+
             const animate = function () {
                 if (isPausedRef.current) {
                     controls.update();
@@ -206,7 +180,8 @@ function Pvp2d() {
                         wsRef.current.send(JSON.stringify({
                             type: 'game_event',
                             event: 'score_update',
-                            score: newScores,
+                            scoreP1: newScores.score1,
+                            scoreP2: newScores.score2,
                         }));
                         if (newScores.score2 >= 10) {
                             winnerRef.current = 'Player 2'
@@ -214,6 +189,8 @@ function Pvp2d() {
                                 type: 'game_event',
                                 event: 'game_over',
                                 winner: 'Player 2',
+                                scoreP1: newScores.score1,
+                                scoreP2: newScores.score2,
                             }));
                         }
                         return newScores;
@@ -231,13 +208,15 @@ function Pvp2d() {
                                 type: 'game_event',
                                 event: 'game_over',
                                 winner: 'Player 1',
-                                score: newScores,
+                                scoreP1: newScores.score1,
+                                scoreP2: newScores.score2,
                             }));
                         }
                         wsRef.current.send(JSON.stringify({
                             type: 'game_event',
                             event: 'score_update',
-                            score: newScores,
+                            scoreP1: newScores.score1,
+                            scoreP2: newScores.score2,
                         }));
                         return newScores;
                     });
@@ -251,6 +230,12 @@ function Pvp2d() {
             };
 
             animate();
+        }
+        return () => {
+            document.removeEventListener('keydown', onDocumentKeyDown);
+            document.removeEventListener('keyup', onDocumentKeyUp);
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
+            window.removeEventListener('resize', onWindowResize);
         }
     }, [isMatched, isPlayer1, gameState]);
 
@@ -274,6 +259,36 @@ function Pvp2d() {
             if (intervalIdRef.current) {
                 clearInterval(intervalIdRef.current);
             }
+        }
+    };
+
+    const handleVisibilityChange = () => {
+        if (document.visibilityState === 'visible') {
+            document.removeEventListener('keydown', onDocumentKeyDown);
+            document.removeEventListener('keyup', onDocumentKeyUp);
+
+            // Show popup alert or loading animation
+            const popup = document.createElement('div');
+            popup.id = 'reconnecting-popup';
+            popup.style.position = 'fixed';
+            popup.style.top = '50%';
+            popup.style.left = '50%';
+            popup.style.transform = 'translate(-50%, -50%)';
+            popup.style.padding = '20px';
+            popup.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
+            popup.style.color = 'white';
+            popup.style.fontSize = '20px';
+            popup.style.zIndex = '1000';
+            popup.innerText = 'Reconnecting...';
+            document.body.appendChild(popup);
+
+            setTimeout(() => {
+                document.addEventListener('keydown', onDocumentKeyDown);
+                document.addEventListener('keyup', onDocumentKeyUp);
+
+                // Hide popup alert or loading animation
+                document.body.removeChild(popup);
+            }, 1000);
         }
     };
 
