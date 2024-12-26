@@ -340,7 +340,7 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
             
             if self.username in disconnected_users:
                 user_data = disconnected_users.pop(self.username)
-                self.channel_name = user_data['channel_name']
+                #self.channel_name = user_data['channel_name']
                 user_data['task'].cancel()
                 
                 await self.send(text_data=json.dumps({
@@ -350,11 +350,9 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
                 }))
             user_channels[self.username] = self.channel_name
             
-            # await self.save_username_to_session(self.username)
-            
-            if self.username not in matchmaking_pool:
+            if self.username not in matchmaking_pool and self.username not in matched_users:
                 matchmaking_pool.append(self.username)
-                await self.channel_layer.group_add("matchmaking_pool", self.channel_name)
+                # await self.channel_layer.group_add("matchmaking_pool", self.channel_name)
             
             if len(matchmaking_pool) >= 2:
                 await self.match_users()
@@ -379,7 +377,7 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
                     'task': countdown_task,
                     'channel_name': self.channel_name,
                     'player_id': '1' if isPlayer1 else '2',
-                    'score': {'player1': scoreP1, 'player2': scoreP2} 
+                    'score': {'player1': scoreP1, 'player2': scoreP2} if isPlayer1 else {'player1': scoreP2, 'player2': scoreP1}
                 }
 
     @database_sync_to_async
@@ -393,7 +391,7 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
             return match.scoreP2, match.scoreP1, False
 
     async def start_reconnect_countdown(self, username):
-        await asyncio.sleep(15)  # 30 seconds countdown
+        await asyncio.sleep(15)
         if username in disconnected_users:
             opponent = matched_users[username]
             disconnected_users.pop(username)
@@ -504,11 +502,6 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
             'message': message
         })) 
         await self.close(code=code)
-
-    # @database_sync_to_async
-    # def save_username_to_session(self, username):
-    #     self.scope['session']['username'] = username
-    #     self.scope['session'].save()
 
     async def match_found(self, event):
         player_id = event['player_id']
