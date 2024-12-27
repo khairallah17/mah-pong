@@ -237,8 +237,8 @@ class GoogleLoginCallback(APIView):
         token_url  = "https://oauth2.googleapis.com/token"
         token_data = {
             "code"          : code,
-            "client_id"     : GCLIENT_ID, # check .env file
-            "client_secret" : GCLIENT_SECRET, # check .env file
+            "client_id"     : GCLIENT_ID,
+            "client_secret" : GCLIENT_SECRET,
             "redirect_uri"  : "http://localhost:8001/api/v2/auth/googlelogin/callback/",
             "grant_type"    : "authorization_code"
         }
@@ -280,7 +280,7 @@ class GoogleLoginCallback(APIView):
         #create Token for This user using JWT "we use RefreshToken because it automaticly create both refresh_token and access_token"
         #we didn't use AccessToken because it automaticly create just access_token"
         # acces_token = Get_Token_serial.get_token(user)
-        refresh = RefreshToken.for_user(user)
+        refresh = Get_Token_serial.get_token(user)
         access_token = str(refresh.access_token)
         refresh_token = str(refresh)
         
@@ -334,36 +334,25 @@ class Login42Auth(APIView):
         urllib.request.urlretrieve(getInfoUser.json().get('image')['link'], "./media/" + username + ".jpg")
         
         try:
-            print("here1")
-            # if email in User:
             user = User.objects.get(
-                # print("here11"),
-                fullname = getInfoUser.json().get('displayname'),
-                username = username,
-                email=User.objects.get(email=email)
+                email=User.objects.get(email=email),
+                username=username
             )
-            print("here12")
         except User.DoesNotExist:
-            print("here112")
             user = User.objects.create(
-                fullname = getInfoUser.json().get('displayname'),
-                username = username,
-                email = email,
-                img = "./" + username + ".jpg"
+                fullname=getInfoUser.json().get('displayname'),
+                username=username,
+                email=email,
+                img="./" + username + ".jpg"
             )
             user.save()
+
         # now sending access token to Front
                 # Generate tokens
-        refresh = RefreshToken.for_user(user)
+        refresh = Get_Token_serial.get_token(user)
         access_token = str(refresh.access_token)
         refresh_token = str(refresh)
-        # print ("sdsdsd")
-        # return Response({
-        #     'user' : UserSerial(user).data,
-        #     'access_token' : token_json.get('access_token')
-        # })
 
-        """Create response with redirect"""
         response = redirect(f"http://localhost:5173/42intra-callback?access_token={access_token}")
 
         # Set cookies

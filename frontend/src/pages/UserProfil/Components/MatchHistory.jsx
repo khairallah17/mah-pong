@@ -4,7 +4,7 @@ import matchimoji from "../../../images/Frame.svg"
 import Swal from 'sweetalert2'
 
 
-const MatchHistory = ({ UserPlay }) => {
+const MatchHistory = ({ Username }) => {
 
   const [userMatch, setUserMatch] =  useState([]);
   const { authtoken } = useContext(AuthContext);
@@ -12,8 +12,8 @@ const MatchHistory = ({ UserPlay }) => {
   useEffect(() => {
       const fetchdata = async () => {
 
-        const url = UserPlay
-        ? `http://localhost:8001/api/match-history/${UserPlay}/`
+        const url = Username
+        ? `http://localhost:8001/api/match-history/${Username}/`
         : 'http://localhost:8001api/match-history/';
 
         try {
@@ -42,7 +42,7 @@ const MatchHistory = ({ UserPlay }) => {
         }
       };
       fetchdata();
-    }, [UserPlay, authtoken]);
+    }, [userMatch, authtoken]);
 
   const summary = {
     wins: 4,
@@ -66,7 +66,7 @@ const MatchHistory = ({ UserPlay }) => {
       </div>
       <div className="flex justify-center items-center">
           {userMatch.length === 0 ? (
-            <p className="">No matches played yet</p>
+            <p className="">No matches played yet {console.log("hehererer", userMatch)}</p>
           ) : (
             userMatch.map((match) => (
               <div key={match.id} className="mt-2.5 relative">
