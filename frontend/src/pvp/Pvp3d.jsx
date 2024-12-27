@@ -19,6 +19,7 @@ function Pve3d() {
     const INITIAL_VELOCITY = new THREE.Vector3(0.005, 0.01, 0.025);
     const TABLE_DIMENSIONS = { width: 1.45, length: 2.6 };
     const isPlayer1Ref = useRef(isPlayer1);
+    const initBallPos = new THREE.Vector3(0, 1, 0);
     let token = localStorage.getItem('authtoken');
 
     useEffect(() => {
@@ -65,10 +66,10 @@ function Pve3d() {
         }
 
         return () => {
-            // if (wsRef.current) {
-            //     wsRef.current.close();
-            //     wsRef.current = null;
-            // }
+            if (wsRef.current) {
+                wsRef.current.close();
+                wsRef.current = null;
+            }
         };
     }, [token]);
 
@@ -139,16 +140,14 @@ function Pve3d() {
             let lastIntersectionPosition = null;
             velocityRef.current = velocity;
             paddlePositionDiffRef.current = paddlePositionDiff;
-            let initBallPos;
 
             // Load Scene and Start Animation
             loadScene(scene, (objects) => {
                 ({ paddle1, paddle2, ball, table, grid } = objects);
                 paddle2Ref.current = paddle2;
                 paddle1Ref.current = paddle1;
-                ball.position.set(0, 1, 0);
+                ball.position.copy(initBallPos);
                 ballRef.current = ball;
-                initBallPos = ball.position.clone();
                 if (!isPlayer1) {
                     paddle1.position.set(0, 1, -1);
                     paddle2.position.set(0, 1, 1);
@@ -225,6 +224,7 @@ function Pve3d() {
                 renderer,
                 scene
             ) {
+                // document.addEventListener('visibilitychange', handleVisibilityChange);
                 window.addEventListener('keydown', onRestartKey);
                 window.addEventListener('click', () => onToggleListening());
                 window.addEventListener('mousemove', (event) => onMouseMove(event, mouse, paddle1, camera, table));
@@ -244,6 +244,7 @@ function Pve3d() {
                         event: 'restart',
                     }));
                 }
+                restartGame();
             }
 
             function onToggleListening() {
@@ -377,18 +378,21 @@ function Pve3d() {
                         type: 'game_event',
                         event: 'restart',
                     }));
+                    restartGame();
                 } else if (ball.position.z < -1.5) {
                     // Player 2 scores
                     wsRef.current.send(JSON.stringify({
                         type: 'game_event',
                         event: 'restart',
                     }));
+                    restartGame();
                 }
                 else if (ball.position.y < 0.2) {
                     wsRef.current.send(JSON.stringify({
                         type: 'game_event',
                         event: 'restart',
                     }));
+                    restartGame();
                 }
 
                 if (ballBox.intersectsBox(paddle1Box)) {
@@ -551,12 +555,43 @@ function Pve3d() {
                 window.removeEventListener('keydown', onRestartKey);
                 window.removeEventListener('click', onToggleListening);
                 window.removeEventListener('mousemove', (event) => onMouseMove(event, mouse, paddle1, camera, table));
+                // document.removeEventListener('visibilitychange', handleVisibilityChange);
                 scene.clear();
             };
         }
     }, [isMatched, isPlayer1]);
 
-    function restartGame(initBallPos) {
+    // const handleVisibilityChange = () => {
+    //     if (document.visibilityState === 'visible') {
+    //         document.removeEventListener('keydown', onDocumentKeyDown);
+    //         document.removeEventListener('keyup', onDocumentKeyUp);
+
+    //         // Show popup alert or loading animation
+    //         const popup = document.createElement('div');
+    //         popup.id = 'reconnecting-popup';
+    //         popup.style.position = 'fixed';
+    //         popup.style.top = '50%';
+    //         popup.style.left = '50%';
+    //         popup.style.transform = 'translate(-50%, -50%)';
+    //         popup.style.padding = '20px';
+    //         popup.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
+    //         popup.style.color = 'white';
+    //         popup.style.fontSize = '20px';
+    //         popup.style.zIndex = '1000';
+    //         popup.innerText = 'Reconnecting...';
+    //         document.body.appendChild(popup);
+
+    //         setTimeout(() => {
+    //             document.addEventListener('keydown', onDocumentKeyDown);
+    //             document.addEventListener('keyup', onDocumentKeyUp);
+
+    //             // Hide popup alert or loading animation
+    //             document.body.removeChild(popup);
+    //         }, 1000);
+    //     }
+    // };
+
+    function restartGame() {
         console.log('restart');
         velocityRef.current?.copy(INITIAL_VELOCITY);
         paddlePositionDiffRef.current?.set(0, 0, 0);

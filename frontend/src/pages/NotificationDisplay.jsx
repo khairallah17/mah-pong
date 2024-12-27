@@ -3,6 +3,7 @@ import { WebSocketContext } from "../WebSocketProvider/WebSocketProvider";
 
 const NotificationDisplay = () => {
   const { notifications: wsNotifications, wsManager } = useContext(WebSocketContext);
+  const [alerts, setAlerts] = useState(-1);
   const [notifications, setNotifications] = useState([]);
   // old notifications that are not read should still be considered new
   // old notifications that are read should be considered old
@@ -23,13 +24,16 @@ const NotificationDisplay = () => {
     };
 
     fetchNotifications();
+    setAlerts(alerts + 1);
   }, [wsNotifications]);
 
   const [isOpen, setIsOpen] = useState(false);
 
   const toggleNotifications = () => {
-    if (!isOpen)
+    if (!isOpen){
       wsManager.sendMessage("Notifications viewed");
+      setAlerts(0);
+    }
     setIsOpen(!isOpen);
   };
 
@@ -56,7 +60,7 @@ const NotificationDisplay = () => {
         </svg>
         {notifications.length > 0 && (
           <span className="absolute top-4 right-4 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-red-100 transform translate-x-1/2 -translate-y-1/2 bg-red-600 rounded-full">
-            {wsNotifications.length}
+            {alerts}
           </span>
         )}
       </button>

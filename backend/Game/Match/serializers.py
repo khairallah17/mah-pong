@@ -15,7 +15,7 @@ class MatchSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Match
-        fields = ['id', 'datetime', 'player', 'opponent', 'score_player', 'result', 'time']
+        fields = ['id', 'datetime', 'player', 'opponent', 'score_player1', 'score_player2','result', 'time']
 
     def get_player(self, obj):
         return self.context['player']
@@ -25,8 +25,11 @@ class MatchSerializer(serializers.ModelSerializer):
             return obj.username2
         return obj.username1
 
-    def get_score_player(self, obj):
-        return obj.score.get(self.context['player'], 0)
+    def get_score_player1(self, obj):
+        return obj.scoreP1.get(self.context['player'], 0)
+
+    def get_score_player2(self, obj):
+        return obj.scoreP2.get(self.context['player'], 0)
 
     def get_result(self, obj):
         if obj.winner == self.context['player']:
