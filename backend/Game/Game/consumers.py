@@ -370,7 +370,7 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
             
             if self.username in matched_users:
                 # Store the user's state and start a countdown for reconnection
-                opponent = matched_users[self.username]
+                # opponent = matched_users[self.username]
                 scoreP1, scoreP2, isPlayer1 = await self.get_latest_match_scores()
                 countdown_task = asyncio.create_task(self.start_reconnect_countdown(self.username))
                 disconnected_users[self.username] = {
@@ -380,20 +380,11 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
                     'score': {'player1': scoreP1, 'player2': scoreP2} if isPlayer1 else {'player1': scoreP2, 'player2': scoreP1}
                 }
 
-    @database_sync_to_async
-    def get_latest_match_scores(self):
-        opponent = matched_users[self.username]
-        match = Match.objects.filter(
-            Q(username1=self.username, username2=opponent) | Q(username1=opponent, username2=self.username)).latest('datetime')
-        if match.username1 == self.username:
-            return match.scoreP1, match.scoreP2, True
-        else:
-            return match.scoreP2, match.scoreP1, False
-
     async def start_reconnect_countdown(self, username):
         await asyncio.sleep(15)
         if username in disconnected_users:
             opponent = matched_users[username]
+            scoreP1, scoreP2, isPlayer1 = await self.get_latest_match_scores()
             disconnected_users.pop(username)
             await self.channel_layer.send(
                 user_channels[opponent],
@@ -403,7 +394,7 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
                     'message': 'You won because your opponent disconnected.'
                 }
             )
-            await self.update_game_result(username, opponent, winner=opponent)
+            await self.update_game_result(username, opponent, scoreP1, scoreP2, winner=opponent)
 
     async def receive(self, text_data):
         data = json.loads(text_data)
@@ -437,6 +428,17 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
             )
 
     @database_sync_to_async
+    def get_latest_match_scores(self):
+        opponent = matched_users[self.username]
+        logger.warning(f"username1: {self.username}, username2: {opponent}")
+        match = Match.objects.filter(
+            Q(username1=self.username, username2=opponent) | Q(username1=opponent, username2=self.username)).latest('datetime')
+        if match.username1 == self.username:
+            return match.scoreP1, match.scoreP2, True
+        else:
+            return match.scoreP2, match.scoreP1, False
+
+    @database_sync_to_async
     def handle_score_update(self, scoreP1, scoreP2):
         opponent = matched_users[self.username]
         match = Match.objects.filter(
@@ -450,8 +452,6 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
         player1, player2 = self.username, matched_users[self.username]
         scoreP1, scoreP2 = data.get('scoreP1'), data.get('scoreP2')
         await self.update_game_result(player1, player2, scoreP1, scoreP2, winner)
-        matched_users.pop(player1)
-        matched_users.pop(player2)
 
     async def match_users(self):
         users = matchmaking_pool[:2]
@@ -489,11 +489,13 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
 
     @database_sync_to_async
     def update_game_result(self, username1, username2, scoreP1, scoreP2, winner):
-        match = Match.objects.filter(username1=username1, username2=username2).latest('datetime')
+        match = Match.objects.filter(Q(username1=username1, username2=username2) | Q(username1=username2, username2=username1)).latest('datetime')
         match.scoreP1 = scoreP1
         match.scoreP2 = scoreP2
-        match.winner = winner
+        match.winner = username1 if winner == 'player1' else username2
         match.save()
+        matched_users.pop(username1)
+        matched_users.pop(username2)
 
     async def send_error_message(self, error_type, code, message=None):
         logger.warning(f"{error_type}: {message}")
@@ -512,7 +514,7 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
 
     async def game_event(self, event):
         game_event = event['event']
-        player_id = event['player_id']
+        player_id = event.get('player_id', None)
         scoreP1 = event.get('scoreP1')
         scoreP2 = event.get('scoreP2')
         logger.warning(f"Game event: {game_event}, scoreP1: {scoreP1}, scoreP2: {scoreP2}")

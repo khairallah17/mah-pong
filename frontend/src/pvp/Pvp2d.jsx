@@ -67,15 +67,17 @@ function Pvp2d() {
                 //     setGameState(message.game_state);
                 // }
             };
-            wsRef.current.onclose = () => console.log('WebSocket connection closed');
+            wsRef.current.onclose = () => {
+                console.log('WebSocket connection closed')};
+                // window.location.href = '/dashboard';
             wsRef.current.onerror = (e) => console.error('WebSocket error:', e);
         }
         return () => {
 
-            // if (wsRef.current) {
-            //     wsRef.current.close();
-            //     wsRef.current = null;
-            // }
+            if (wsRef.current) {
+                wsRef.current.close();
+                wsRef.current = null;
+            }
         };
     }, [token]);
 
@@ -195,6 +197,7 @@ function Pvp2d() {
                         }
                         return newScores;
                     });
+
                     restartGame(ball);
                 }
 
@@ -241,6 +244,8 @@ function Pvp2d() {
 
     function restartGame(ball) {
         ball.position.set(0, 0.1, 0);
+        paddle1Ref.current.position.set(isPlayer1 ? -2.5 : 2.5, 0.1, 0);
+        paddle2Ref.current.position.set(isPlayer1 ? 2.5 : -2.5, 0.1, 0);
         ballDirection.set(1, 0, 1);
         isPausedRef.current = true;
     }
