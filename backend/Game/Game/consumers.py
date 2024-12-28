@@ -380,20 +380,23 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
                     'score': {'player1': scoreP1, 'player2': scoreP2} if isPlayer1 else {'player1': scoreP2, 'player2': scoreP1}
                 }
 
+    # handle new connection
+    # handle 2 disconnections at the same time if (opponent in disconnected_users)
     async def start_reconnect_countdown(self, username):
         await asyncio.sleep(15)
         if username in disconnected_users:
             opponent = matched_users[username]
             scoreP1, scoreP2, isPlayer1 = await self.get_latest_match_scores()
             disconnected_users.pop(username)
-            await self.channel_layer.send(
-                user_channels[opponent],
-                {
-                    'type': 'game_event',
-                    'event': 'opponent_disconnected',
-                    'message': 'You won because your opponent disconnected.'
-                }
-            )
+            if opponent not in disconnected_users:
+                await self.channel_layer.send(
+                    user_channels[opponent],
+                    {
+                        'type': 'game_event',
+                        'event': 'opponent_disconnected',
+                        'message': 'You won because your opponent disconnected.'
+                    }
+                )
             await self.update_game_result(username, opponent, scoreP1, scoreP2, winner=opponent)
 
     async def receive(self, text_data):
