@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import ProtectRouter from "./protection_axios/ProtectRouter"
 import ProtectLogin from "./protection_axios/ProtectLogin.jsx"
 import { AuthProvider } from "./context_login_Register/AuthContext.jsx"
-import { Register, Login, Dashboard, VerifyPsdEmail, ResetPassword} from "./pages"
+import { Register, Login, Dashboard, VerifyPsdEmail, ResetPassword, Profil} from "./pages"
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 // import { useNavigate } from "react-router-dom";
 import TwoFactorAuth from './pages/OTP_2fa/TwoFactorAuth.jsx'
@@ -90,6 +90,7 @@ function App() {
             <Route path="/pvp2d" element={<Pvp2d />} />
             <Route path="/pve2d" element={<Pve2d />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/profil/:username" element={<Profil />} />
             <Route path="/securityProfile" element={<SecurityProfile />} />
             {/* <Route path="/search" element={<SearchPage />} /> */}
             <Route path='/tournament' element={<Tournament/>}/>

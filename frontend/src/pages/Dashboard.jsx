@@ -11,6 +11,12 @@ export const Dashboard = () => {
   const { wsManager } = useContext(WebSocketContext);
 
   // can fetch match history from `http://localhost:8000/api/match-history/{username}`
+
+  const fetchinfo = async () => {
+    const url = "http://localhost:8000/api/user-info"
+    const req = fetch()
+  }
+
   const sendMessage = () => {
     if (wsManager) {
       wsManager.sendMessage("Hello from Dashboard");

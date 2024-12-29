@@ -536,7 +536,16 @@ class get_allusers(APIView):
         print (users)
         serializer = UserSerial(users, many=True)
         return Response(serializer.data)
+
+
     
+class UserInfoApi(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        serializer = UserSerial(request.user)
+        return Response(serializer.data)
+
 class UserEditProfileView(APIView):
     """
     API View to handle user profile retrieval and updates
@@ -794,6 +803,7 @@ class ChangePasswordView(APIView):
         try:
             # Parse the request body properly
             try:
+
                 old_password = request.data.get('old_password')
                 new_password = request.data.get('new_password')
                 confirm_password = request.data.get('confirm_password')
@@ -829,3 +839,10 @@ class ChangePasswordView(APIView):
         except Exception as e:
             print(f"Error: {str(e)}")
             return Response({'error': 'An error occurred'})
+
+
+#sending Profil info if exemple https://localhost:5173/profil/<username>
+# class Profil(APIView):
+#     permission_classes = [IsAuthenticated]
+
+#     def post(self, request):

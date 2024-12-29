@@ -1,12 +1,16 @@
 import React from 'react';
-import UserProfile from './UserProfile.jsx';
+import MatchHistory from './UserProfil/Components/MatchHistory';
 // import './Profile.css';
 
 const Profil = () => {
+
+  const getinfo = {}
+
+
   return (
     <div className="profile-page">
       <h1>Profile</h1>
-      <UserProfile />
+    <MatchHistory username={eagoumi} />
     </div>
   );
 };
