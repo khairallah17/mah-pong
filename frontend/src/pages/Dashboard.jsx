@@ -9,6 +9,7 @@ export const Dashboard = () => {
 
   const { logoutUsers } = useContext(AuthContext);
   const { wsManager } = useContext(WebSocketContext);
+  const [matchHistory, setMatchHistory] = useState([]);
 
   // can fetch match history from `http://localhost:8000/api/match-history/{username}`
 
@@ -23,19 +24,19 @@ export const Dashboard = () => {
     }
   };
 
+  console.log(matchHistory);
+
   const handleLogout = (e) => {
     e.preventDefault();
     console.log("hellllo");
     logoutUsers();
   }
+    
 
   return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <div className="navbar">
         <NotificationDisplay />
-      </div>
       <h1>Dashboard</h1>
-
       <div className="navigation-buttons">
         <button onClick={() => navigate('/pve2d')}>PVE 2D</button>
         <button onClick={() => navigate('/pvp2d')}>PVP 2D</button>
