@@ -2,6 +2,7 @@ import uuid
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 # from django.db.models import Q
+from django.db.models.signals import post_save
 from django.utils import timezone
 from django.conf import settings
 import os
@@ -63,11 +64,11 @@ class Profil(models.Model):
 
 def create_profile_for_user(sender, instance, created, **keyargs):
     if created:
-        Profile.objects.create(user=instance)
+        Profil.objects.create(user=instance)
 
 #saving Profile users infos
 def saving_user_profile(sender, instance, **keyargs):
-    instance.profile.save()
+    instance.profil.save()
 
 # You might also want to add a model to track 2FA attempts for security
 class TwoFactorAuthAttempt(models.Model):
