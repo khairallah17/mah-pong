@@ -9,19 +9,35 @@ export const Dashboard = () => {
 
   const { logoutUsers } = useContext(AuthContext);
   const { wsManager } = useContext(WebSocketContext);
+  const [matchHistory, setMatchHistory] = useState([]);
 
   // can fetch match history from `http://localhost:8000/api/match-history/{username}`
+
+  useEffect(() => {
+      const fetchMatchHistory = async () => {
+          const response = await fetch(`http://localhost:8000/api/match-history/a`);
+          const data = await response.json();
+          setMatchHistory(data);
+      }
+
+      fetchMatchHistory();
+  }
+  , []);
+
   const sendMessage = () => {
     if (wsManager) {
       wsManager.sendMessage("Hello from Dashboard");
     }
   };
 
+  console.log(matchHistory);
+
   const handleLogout = (e) => {
     e.preventDefault();
     console.log("hellllo");
     logoutUsers();
   }
+    
 
   return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -29,7 +45,6 @@ export const Dashboard = () => {
         <NotificationDisplay />
       </div>
       <h1>Dashboard</h1>
-
       <div className="navigation-buttons">
         <button onClick={() => navigate('/pve2d')}>PVE 2D</button>
         <button onClick={() => navigate('/pvp2d')}>PVP 2D</button>
