@@ -562,14 +562,22 @@ class LogoutViews(APIView):
 
 # Make Comminication Between Game App and Usermanagment App using API
 class UserInfoApi(APIView):
-    permission_classes = [IsAuthenticated]
+    # permission_classes = [IsAuthenticated]
 
-    def get(self, request):
-        serializer = UserSerial(request.user)
-        return Response(serializer.data)
-    
-    def patch(self, request):
+    def get(self, request, username):
         try:
+            logger.info(f"Getting user data for {username}")
+            user = User.objects.get(username=username)
+            serializer = UserSerial(user)
+            return Response(serializer.data)
+        except User.DoesNotExist:
+            logger.error(f"User {username} does not exist")
+            return Response({"error": "User does not exist"}, status=404)
+    
+    def patch(self, request, username):
+        try:
+            logger.info(f"Updating user data for {username}")
+            user = User.objects.get(username=username)
             #allowed Fields to update from Game App
             game_fields = {
                 'nblose',
@@ -578,9 +586,15 @@ class UserInfoApi(APIView):
             }
 
             data = {}
-            for key, value in request.data.items(): # Mean that line request.data.items() Create Pair of Key-Value like ('nblose', 6)
+
+            for key, value in request.data.items():
                 if key in game_fields:
-                    data[key] = value
+                    if key in ['nblose', 'nbwin']:
+                        # Increment the current value
+                        current_value = getattr(user, key, 0)
+                        data[key] = current_value + value
+                    else:
+                        data[key] = value
             serializer = UserSerial(request.user, data=data, partial=True) # partial=True kay3ni update just what field allowed  "game_fields = {'nblose','nbwin', 'score'}" 
             # if partial=False it will always update all fieled in UserSerial all those "fields = ['id', 'username', 'email', 'fullname', 'nblose', 'nbwin', 'score', 'img', 'avatar', 'two_factor_enabled', 'last_login_2fa']" every time
 
