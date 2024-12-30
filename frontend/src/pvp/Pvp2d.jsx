@@ -275,7 +275,7 @@ function Pvp2d() {
 
     const updateUserData = async (username, data) => {
         try {
-            const response = await fetch(`http://localhost:8001/user-info/${username}/`, {
+            const response = await fetch(`http://localhost:8001/api/user-info/${username}/`, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',

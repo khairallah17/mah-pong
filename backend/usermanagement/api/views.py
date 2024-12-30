@@ -590,7 +590,6 @@ class UserInfoApi(APIView):
             for key, value in request.data.items():
                 if key in game_fields:
                     if key in ['nblose', 'nbwin']:
-                        # Increment the current value
                         current_value = getattr(user, key, 0)
                         data[key] = current_value + value
                     else:
@@ -600,9 +599,12 @@ class UserInfoApi(APIView):
 
             if serializer.is_valid():
                 serializer.save()
+                logger.info(f"User data updated for {username}")
                 return Response(serializer.data)
+            logger.error(f"Error updating user data for {username}")
             return Response(serializer.errors, status=400)
         except Exception as e:
+            logger.error(f"Error updating user data for {username}")
             return Response({"error": "Somthing Wrong in updating data"}, status=400)
 
 
