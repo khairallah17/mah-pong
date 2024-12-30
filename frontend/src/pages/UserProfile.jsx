@@ -35,7 +35,7 @@ const UserProfile = ({ userId }) => {
           showConfirmButton: true,
           timerProgressBar: true,
           timer: 3000
-      });
+        });
       } finally {
         setLoading(false);
       }

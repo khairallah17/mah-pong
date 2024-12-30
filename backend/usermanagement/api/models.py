@@ -40,6 +40,9 @@ class User(AbstractUser):
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username']
 
+    def profil(self):
+        profile = Profil.objects.get(user=self)
+
     def update_last_login_2fa(self):
         self.last_login_2fa = timezone.now()
         self.save()
@@ -54,6 +57,18 @@ class User(AbstractUser):
         self.two_factor_secret = secret
         self.save()
 
+class Profil(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)#,  unique=True) ==> if we use "models.ForeignKey(User, on_delete=models.CASCADE, unique=True)"  #mean When We delete User Profile will delete also
+    is_verified = models.BooleanField(default=False)
+
+def create_profile_for_user(sender, instance, created, **keyargs):
+    if created:
+        Profile.objects.create(user=instance)
+
+#saving Profile users infos
+def saving_user_profile(sender, instance, **keyargs):
+    instance.profile.save()
+
 # You might also want to add a model to track 2FA attempts for security
 class TwoFactorAuthAttempt(models.Model):
     user = models.ForeignKey('User', on_delete=models.CASCADE, related_name='auth_attempts')
@@ -67,3 +82,7 @@ class TwoFactorAuthAttempt(models.Model):
 
     def __str__(self):
         return f"{self.user.email if self.user else 'No User'} - {self.timestamp} - {'Success' if self.successful else 'Failed'}"
+
+
+post_save.connect(create_profile_for_user, sender=User)
+post_save.connect(saving_user_profile, sender=User)

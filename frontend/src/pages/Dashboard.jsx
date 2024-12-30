@@ -13,16 +13,10 @@ export const Dashboard = () => {
 
   // can fetch match history from `http://localhost:8000/api/match-history/{username}`
 
-  useEffect(() => {
-      const fetchMatchHistory = async () => {
-          const response = await fetch(`http://localhost:8000/api/match-history/a`);
-          const data = await response.json();
-          setMatchHistory(data);
-      }
-
-      fetchMatchHistory();
+  const fetchinfo = async () => {
+    const url = "http://localhost:8000/api/user-info"
+    const req = fetch()
   }
-  , []);
 
   const sendMessage = () => {
     if (wsManager) {

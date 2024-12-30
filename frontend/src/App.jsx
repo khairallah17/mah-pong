@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import ProtectRouter from "./protection_axios/ProtectRouter"
 import ProtectLogin from "./protection_axios/ProtectLogin.jsx"
 import { AuthProvider } from "./context_login_Register/AuthContext.jsx"
-import { Register, Login, Dashboard, VerifyPsdEmail, ResetPassword} from "./pages"
+import { Register, Login, Dashboard, VerifyPsdEmail, ResetPassword, Profil} from "./pages"
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 // import { useNavigate } from "react-router-dom";
 import TwoFactorAuth from './pages/OTP_2fa/TwoFactorAuth.jsx'
@@ -20,7 +20,7 @@ import Tournament from './pages/tournament/Tournament'
 import TournamentHome from './pages/tournament/tournamentHome';
 import { WebSocketProvider } from './WebSocketProvider/WebSocketProvider.jsx';
 import NotificationDisplay from './pages/NotificationDisplay.jsx';
-import MatchHistory from './pages/UserProfil/Components/MatchHistory.jsx';
+import { MatchHistory, PictureUser, GameStats, Achievement } from "./pages/UserProfil/Components";
 
 function App() {
 
@@ -44,11 +44,31 @@ function App() {
               <Register />
               // </ProtectLogin>
             } />
+
             <Route path="/match-history" element={
               // <ProtectLogin>
               <MatchHistory />
               // </ProtectLogin>
             } />
+
+            <Route path="/achievement" element={
+              // <ProtectLogin>
+              <Achievement />
+              // </ProtectLogin>
+            } />
+
+            <Route path="/picture-user" element={
+              // <ProtectLogin>
+              <PictureUser />
+              // </ProtectLogin>
+            } />
+
+            <Route path="/game-stats" element={
+              // <ProtectLogin>
+              <GameStats />
+              // </ProtectLogin>
+            } />
+            
             <Route path="/password-reset" element={
               <VerifyPsdEmail />
             } />
@@ -68,6 +88,7 @@ function App() {
             <Route path="/pvp2d" element={<Pvp2d />} />
             <Route path="/pve2d" element={<Pve2d />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/profil/:username" element={<Profil />} />
             <Route path="/securityProfile" element={<SecurityProfile />} />
             {/* <Route path="/search" element={<SearchPage />} /> */}
             <Route path='/tournament' element={<Tournament/>}/>

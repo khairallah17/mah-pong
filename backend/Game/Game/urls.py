@@ -22,4 +22,6 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/tournaments', TournamentList.as_view(), name='tournament-list'),
     path('api/match-history/<str:username>/', PlayerMatchHistory.as_view(), name='player-match-history'),
+    path('api/match-history/', PlayerMatchHistory.as_view(), name='current-player-match-history'),
 ]
+

@@ -1,15 +1,48 @@
-import React from 'react';
+import React, { useContext, useState, useEffect } from 'react';
+import AuthContext from "../../../context_login_Register/AuthContext"
+import matchimoji from "../../../images/Frame.svg"
+import Swal from 'sweetalert2'
 
-const MatchHistory = () => {
-  const matches = [
-    { id: 1, date: '23:32, Wed, Dec 6', player1: 'ven', player2: 'mohammed', score: '2-5', result: 'LOST', time: '13:37s' },
-    { id: 2, date: '23:32, Wed, Dec 6', player1: 'ven', player2: 'mohammed', score: '10-5', result: 'WON', time: '13:37s' },
-    { id: 3, date: '23:32, Wed, Dec 6', player1: 'ven', player2: 'mohammed', score: '2-5', result: 'LOST', time: '13:37s' },
-    { id: 4, date: '23:32, Wed, Dec 6', player1: 'ven', player2: 'mohammed', score: '10-5', result: 'WON', time: '13:37s' },
-    { id: 5, date: '23:32, Wed, Dec 6', player1: 'ven', player2: 'mohammed', score: '2-5', result: 'LOST', time: '13:37s' },
-    { id: 6, date: '23:32, Wed, Dec 6', player1: 'ven', player2: 'mohammed', score: '10-5', result: 'WON', time: '13:37s' },
-    { id: 7, date: '23:32, Wed, Dec 6', player1: 'ven', player2: 'mohammed', score: '10-5', result: 'WON', time: '13:37s' },
-  ];
+
+const MatchHistory = ({ Username }) => {
+
+  const [userMatch, setUserMatch] =  useState([]);
+  const { authtoken } = useContext(AuthContext);
+
+  useEffect(() => {
+      const fetchdata = async () => {
+
+        const url = Username
+        ? `http://localhost:8001/api/match-history/${Username}/`
+        : 'http://localhost:8001api/match-history/';
+
+        try {
+          const response = await fetch(url, {
+            headers: {
+              'Authorization': `Bearer ${authtoken?.access}`,
+            }
+          });
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch user stats');
+        }
+
+        const data = await response.json();
+        setUserMatch(data);
+        console.log(data);
+        } catch (error) {
+          // Swal.fire({
+          //   position: "top-end",
+          //   icon: "error",
+          //   title: "Error fetching match history",
+          //   showConfirmButton: true,
+          //   timerProgressBar: true,
+          //   timer: 3000
+          // });
+        }
+      };
+      fetchdata();
+    }, [userMatch, authtoken]);
 
   const summary = {
     wins: 4,
@@ -18,47 +51,57 @@ const MatchHistory = () => {
   };
 
   return (
-    <div className="bg-[#07073A] p-6 rounded-lg max-w-2xl mx-auto">
+    <div className="bg-[#07073A] p-6 w-[640px] h-[710px] rounded-lg max-w-2xl mx-auto">
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center gap-2">
+          <img src={matchimoji} alt="" />
           <h2 className="text-white text-lg font-semibold">Match History</h2>
         </div>
+        <div className="flex justify-center bg-[#393434] w-[152px] h-[50px] rounded-lg">
+          <p className="content-center text-green-400 font-bold text-lg">{summary.wins}W</p>
+          <p className="content-center font-bold m-1">-</p>
+          <p className="content-center text-red-400 font-bold text-lg">{summary.losses}L</p>
+          <p className="content-center text-[#99ABBF] font-bold text-lg">&nbsp;({summary.percentage}%)</p>
+        </div>
       </div>
-
-      {/* <div className="space-y-2"> */}
-        {matches.map((match) => (
-          <div key={match.id} className="relative">
-            <div className="gap-4 justify-end">
-                <span className={`text-sm font-medium ${
-                  match.result === 'WON'
-                    ? 'text-green-400'
-                    : 'text-red-400'
-                }`}>
-                  {match.result}
-                </span>
-            </div>
-            <div className={`p-3 items-center justify-between border-b ${
-                  match.result === 'WON'
-                    ? 'border-green-400'
-                    : 'border-red-400'}`}>
-              <div className="flex items-center justify-center gap-3">
-                <span className="text-white">{match.player1}</span>
-                <div className="w-8 h-8 bg-gray-700 rounded-full"></div>
-                <div className={`px-3 py-1 rounded ${
-                  match.result === 'WON' 
-                    ? 'bg-green-900/90 text-green-400' 
-                    : 'bg-red-900/90 text-red-400'
-                }`}>
-                  {match.score}
-                </div>
-                <div className="w-8 h-8 bg-gray-700 rounded-full"></div>
-                <span className="text-white">{match.player2}</span>
-              </div>
-            </div>
-          </div>
-        ))}
-      {/* </div> */}
-    </div>
+      <div className="flex justify-center items-center">
+          {userMatch.length === 0 ? (
+            <p className="">No matches played yet {console.log("hehererer", userMatch)}</p>
+          ) : (
+            userMatch.map((match) => (
+              <div key={match.id} className="mt-2.5 relative">
+                      <div className="flex items-center justify-between">
+                        <div className="" >{userMatch.datetime}</div>
+                          <span className={`w-16 h-6 rounded-lg justify-end text-sm font-bold ${
+                            match.result === 'win'
+                            ? 'bg-green-400 text-white-400'
+                            : 'bg-red-400 text-white-400'
+                          }`}>
+                            {match.result.toUpperCase()}
+                          </span>
+                      </div>
+                        <div className={`flex items-center justify-center gap-3 border-b ${
+                          match.result === 'win'
+                          ? 'border-green-400'
+                          : 'border-red-400'}`}>
+                          <span className="text-white">{match.player}</span>
+                          <div className="w-8 h-8 bg-gray-700 rounded-full font-bold"></div>
+                          <div className={`flex justify-center content-center w-16 h-6 rounded m-2 ${
+                            match.result === 'win' 
+                            ? 'bg-green-900/90 text-white-400' 
+                            : 'bg-red-900/90 text-white-400'
+                          }`}>
+                              {match.score_player} <p className="font-bold ">-</p>
+                          </div>
+                          <div className="w-8 h-8 bg-gray-700 rounded-full"></div>
+                          <span className="text-white">{match.opponent}</span>
+                        </div>
+                    </div>
+              ))
+            )}
+        </div>
+      </div>
+    // </div>
   );
 };
 
