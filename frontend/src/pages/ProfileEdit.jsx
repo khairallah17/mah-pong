@@ -4,7 +4,7 @@ import intraImage from '../images/intraImage.webp';
 import axios from 'axios';
 import Swal from 'sweetalert2';
 
-export default function Profile_edit() {
+export default function ProfileEdit() {
   const [profileData, setProfileData] = useState({
     fullname: "",
     username: "",

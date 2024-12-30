@@ -1,6 +1,6 @@
 export { default as Login} from "./Login";
 export { default as Register} from "./Register";
-export { default as Profile_edit} from "./Profile-edit";
+export { default as ProfileEdit} from "./ProfileEdit";
 export { default as Dashboard} from "./Dashboard";
 export { default as ResetPassword } from "./ResetPassword"
 export { default as VerifyPsdEmail } from "./VerifyPsdEmail"
