@@ -41,9 +41,7 @@ export const Dashboard = () => {
 
   return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <div className="navbar">
         <NotificationDisplay />
-      </div>
       <h1>Dashboard</h1>
       <div className="navigation-buttons">
         <button onClick={() => navigate('/pve2d')}>PVE 2D</button>
