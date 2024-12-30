@@ -13,7 +13,7 @@ import Pve3d from './pve/Pve3d';
 import Pvp2d from './pvp/Pvp2d';
 import Pve2d from './pve/Pve2d';
 import Pvp3d from './pvp/Pvp3d';
-import Profile from './pages/Profile.jsx'
+import Profile from './pages/Profile-edit.jsx'
 import SecurityProfile from './pages/SecurityProfile'
 // import SearchPage from './pages/SearchPage'
 import Tournament from './pages/tournament/Tournament'
