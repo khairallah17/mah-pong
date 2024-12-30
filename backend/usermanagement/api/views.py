@@ -513,6 +513,39 @@ class LogoutViews(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
+
+# Make Comminication Between Game App and Usermanagment App using API
+class UserInfoApi(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        serializer = UserSerial(request.user)
+        return Response(serializer.data)
+    
+    def patch(self, request):
+        try:
+            #allowed Fields to update from Game App
+            game_fields = {
+                'nblose',
+                'nbwin', 
+                'score',
+            }
+
+            data = {}
+            for key, value in request.data.items(): # Mean that line request.data.items() Create Pair of Key-Value like ('nblose', 6)
+                if key in game_fields:
+                    data[key] = value
+            serializer = UserSerial(request.user, data=data, partial=True) # partial=True kay3ni update just what field allowed  "game_fields = {'nblose','nbwin', 'score'}" 
+            # if partial=False it will always update all fieled in UserSerial all those "fields = ['id', 'username', 'email', 'fullname', 'nblose', 'nbwin', 'score', 'img', 'avatar', 'two_factor_enabled', 'last_login_2fa']" every time
+
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data)
+            return Response(serializer.errors, status=400)
+        except Exception as e:
+            return Response({"error": "Somthing Wrong in updating data"}, status=400)
+
+
 def viewallrouting(request):
     data = [
         'api/'
@@ -537,14 +570,6 @@ class get_allusers(APIView):
         serializer = UserSerial(users, many=True)
         return Response(serializer.data)
 
-
-    
-class UserInfoApi(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def get(self, request):
-        serializer = UserSerial(request.user)
-        return Response(serializer.data)
 
 class UserEditProfileView(APIView):
     """
