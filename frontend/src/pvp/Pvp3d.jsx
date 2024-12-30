@@ -15,6 +15,8 @@ function Pve3d() {
     const wsRef = useRef(null);
     const [isMatched, setIsMatched] = useState(false);
     const [isPlayer1, setIsPlayer1] = useState(true);
+    const [showPopup, setShowPopup] = useState(false);
+    const [countdown, setCountdown] = useState(3);
     const GRAVITY = -0.0012;
     const INITIAL_VELOCITY = new THREE.Vector3(0.005, 0.01, 0.025);
     const TABLE_DIMENSIONS = { width: 1.45, length: 2.6 };
@@ -25,7 +27,6 @@ function Pve3d() {
     useEffect(() => {
         isPlayer1Ref.current = isPlayer1;
     }, [isPlayer1]);
-
 
     useEffect(() => {
         if (token && !wsRef.current) {
@@ -55,7 +56,7 @@ function Pve3d() {
                     if (message.event === 'restart')
                         restartGame(new THREE.Vector3(0, 1, 0));
                     else
-                        updateScene(message.event, message.position);
+                        updateScene(message.event, message.position, message.spin);
                 } else if (message.type === 'game_state') {
                     //gameStateRef.current = message.game_state;
                     //setGameState(message.game_state);
@@ -93,9 +94,12 @@ function Pve3d() {
     };
 
 
-    const updateScene = (event, position) => {
+    const updateScene = (event, position, spin) => {
         if (event === 'player_move') {
             paddle2Ref.current.position.set(position.x, position.y, position.z);
+        }
+        else if (event === 'spin') {
+            paddlePositionDiffRef.current?.set(spin.x, spin.y, spin.z);
         }
         animatePaddleRotation(paddle1Ref.current, paddle2Ref.current);
     };
@@ -118,8 +122,26 @@ function Pve3d() {
         }
     }
 
+    function startCountdown()
+    {
+        setShowPopup(true);
+            setCountdown(3);
+            const interval = setInterval(() => {
+                setCountdown(prevCountdown => {
+                    if (prevCountdown === 1) {
+                        clearInterval(interval);
+                        setShowPopup(false);
+                    }
+                    return prevCountdown - 1;
+                });
+            }, 1000);
+    }
+
     useEffect(() => {
         if (!rendererRef.current && isMatched) {
+
+            startCountdown();
+
             const gameContainer = gameContainerRef.current;
 
             let waitforpaddle2 = false;
@@ -422,6 +444,11 @@ function Pve3d() {
                     firstIntersectionPosition = null;
                     lastIntersectionPosition = null;
                 }
+                wsRef.current.send(JSON.stringify({
+                    type: 'game_event',
+                    event: 'spin',
+                    spin: paddlePositionDiff,
+                }));
                 velocity.x -= paddlePositionDiff.x / 200;
                 velocity.z -= paddlePositionDiff.z / 500;
             }
@@ -608,7 +635,22 @@ function Pve3d() {
                 top: 0,
                 left: 0
             }}
-            />
+            >
+                {showPopup && <div style={{
+                    position: 'absolute',
+                    top: '50%',
+                    left: '50%',
+                    transform: 'translate(-50%, -50%)',
+                    padding: '20px',
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    color: 'white',
+                    fontSize: '20px',
+                    zIndex: '1000'
+                }}
+                >
+                    {countdown}
+                </div>}
+            </div>
         </>
     );
 }

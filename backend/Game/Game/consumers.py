@@ -382,10 +382,13 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
 
     # handle new connection
     # handle 2 disconnections at the same time if (opponent in disconnected_users)
+    # if 2 users disconnect the countdown should be stopped
     async def start_reconnect_countdown(self, username):
-        await asyncio.sleep(15)
+        start_time = asyncio.get_event_loop().time()
+        opponent = matched_users[username]
+        while opponent not in disconnected_users and asyncio.get_event_loop().time() - start_time < 15:
+            await asyncio.sleep(1)
         if username in disconnected_users:
-            opponent = matched_users[username]
             scoreP1, scoreP2, isPlayer1 = await self.get_latest_match_scores()
             disconnected_users.pop(username)
             if opponent not in disconnected_users:
