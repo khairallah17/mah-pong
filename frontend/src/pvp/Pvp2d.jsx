@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { useEffect, useRef, useState } from 'react';
 import GameSettingsButton from './Customize2d';
-import bgi from '../assets/spaaacu.jpg';
+import GameScore from './GameScore';
 
 function Pvp2d() {
     const wsRef = useRef(null);
@@ -59,7 +59,7 @@ function Pvp2d() {
                     console.log("match found with player_id: ", message.player_id, "isPlayer1: ", isPlayer1);
                 } else if (message.type === 'game_event') {
                     updateScene(message.event);
-                } 
+                }
                 if (message.event === 'score_update') {
                     setScores(message.score);
                 }
@@ -67,15 +67,18 @@ function Pvp2d() {
                 //     setGameState(message.game_state);
                 // }
             };
-            wsRef.current.onclose = () => console.log('WebSocket connection closed');
+            wsRef.current.onclose = () => {
+                console.log('WebSocket connection closed')
+            };
+            // window.location.href = '/dashboard';
             wsRef.current.onerror = (e) => console.error('WebSocket error:', e);
         }
         return () => {
 
-            // if (wsRef.current) {
-            //     wsRef.current.close();
-            //     wsRef.current = null;
-            // }
+            if (wsRef.current) {
+                wsRef.current.close();
+                wsRef.current = null;
+            }
         };
     }, [token]);
 
@@ -103,7 +106,7 @@ function Pvp2d() {
             const gameContainer = document.getElementById('game-container');
             const scene = new THREE.Scene();
             const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-            camera.position.set(0, 5, 5);
+            camera.position.set(0, 2.5, 2.5);
             camera.lookAt(scene.position);
             cameraRef.current = camera;
 
@@ -116,9 +119,15 @@ function Pvp2d() {
 
             const controls = new OrbitControls(camera, renderer.domElement);
             controls.enableDamping = true;
-            controls.dampingFactor = 0.25;
+            controls.dampingFactor = 0.75;
             controls.enableZoom = true;
+            controls.mouseButtons = {
+                LEFT: THREE.MOUSE.ROTATE,
+                MIDDLE: THREE.MOUSE.DOLLY,
+                RIGHT: null
+            };
 
+            createSpaceBackground(scene);
             const table = createTable();
             const tableaddons = createTableAddons();
             const { paddle1, paddle2 } = createPaddles(isPlayer1);
@@ -128,9 +137,6 @@ function Pvp2d() {
             paddle2Ref.current = paddle2;
             ballRef.current = ball;
             tableRef.current = table;
-            // const backgroundImage = new THREE.TextureLoader().load(bgi);
-            // backgroundImage.encoding = THREE.sRGBEncoding;
-            // scene.background = backgroundImage;
 
             const alight = new THREE.AmbientLight(0xffffff, 0.5);
             scene.add(table, tableaddons, paddle1, paddle2, ball, alight);
@@ -142,6 +148,12 @@ function Pvp2d() {
             document.addEventListener('visibilitychange', handleVisibilityChange);
 
             const animate = function () {
+
+                // Rotate stars
+                if (scene.userData.stars) {
+                    scene.userData.stars.rotation.y += 0.0001;
+                }
+
                 if (isPausedRef.current) {
                     controls.update();
                     requestAnimationFrame(animate);
@@ -177,24 +189,29 @@ function Pvp2d() {
                     isPausedRef.current = true;
                     setScores(prevScores => {
                         const newScores = { score1: prevScores.score1, score2: prevScores.score2 + 1 };
-                        wsRef.current.send(JSON.stringify({
-                            type: 'game_event',
-                            event: 'score_update',
-                            scoreP1: newScores.score1,
-                            scoreP2: newScores.score2,
-                        }));
                         if (newScores.score2 >= 10) {
                             winnerRef.current = 'Player 2'
+                            if (isPlayer1) {
+                                wsRef.current.send(JSON.stringify({
+                                    type: 'game_event',
+                                    event: 'game_over',
+                                    winner: 'Player 2',
+                                    scoreP1: newScores.score1,
+                                    scoreP2: newScores.score2,
+                                }));
+                            }
+                        }
+                        else {
                             wsRef.current.send(JSON.stringify({
                                 type: 'game_event',
-                                event: 'game_over',
-                                winner: 'Player 2',
+                                event: 'score_update',
                                 scoreP1: newScores.score1,
                                 scoreP2: newScores.score2,
                             }));
                         }
                         return newScores;
                     });
+
                     restartGame(ball);
                 }
 
@@ -204,20 +221,24 @@ function Pvp2d() {
                         const newScores = { score1: prevScores.score1 + 1, score2: prevScores.score2 };
                         if (newScores.score1 >= 10) {
                             winnerRef.current = 'Player 1'
+                            if (!isPlayer1) {
+                                wsRef.current.send(JSON.stringify({
+                                    type: 'game_event',
+                                    event: 'game_over',
+                                    winner: 'Player 1',
+                                    scoreP1: newScores.score1,
+                                    scoreP2: newScores.score2,
+                                }));
+                            }
+                        }
+                        else {
                             wsRef.current.send(JSON.stringify({
                                 type: 'game_event',
-                                event: 'game_over',
-                                winner: 'Player 1',
+                                event: 'score_update',
                                 scoreP1: newScores.score1,
                                 scoreP2: newScores.score2,
                             }));
                         }
-                        wsRef.current.send(JSON.stringify({
-                            type: 'game_event',
-                            event: 'score_update',
-                            scoreP1: newScores.score1,
-                            scoreP2: newScores.score2,
-                        }));
                         return newScores;
                     });
                     restartGame(ball);
@@ -241,6 +262,8 @@ function Pvp2d() {
 
     function restartGame(ball) {
         ball.position.set(0, 0.1, 0);
+        paddle1Ref.current.position.set(isPlayer1 ? -2.5 : 2.5, 0.1, 0);
+        paddle2Ref.current.position.set(isPlayer1 ? 2.5 : -2.5, 0.1, 0);
         ballDirection.set(1, 0, 1);
         isPausedRef.current = true;
     }
@@ -253,6 +276,40 @@ function Pvp2d() {
         }
     };
 
+    const createSpaceBackground = (scene) => {
+        // Create starfield
+        const starsGeometry = new THREE.BufferGeometry();
+        const starsMaterial = new THREE.PointsMaterial({
+            color: 0xFFFFFF,
+            size: 0.1,
+            sizeAttenuation: true
+        });
+
+        const starsVertices = [];
+        for (let i = 0; i < 10000; i++) {
+            const x = (Math.random() - 0.5) * 2000;
+            const y = (Math.random() - 0.5) * 2000;
+            const z = (Math.random() - 0.5) * 2000;
+            starsVertices.push(x, y, z);
+        }
+
+        starsGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starsVertices, 3));
+        const starField = new THREE.Points(starsGeometry, starsMaterial);
+        scene.add(starField);
+        scene.userData.stars = starField;
+
+        // Create space nebula
+        const textureLoader = new THREE.TextureLoader();
+        const spaceTexture = textureLoader.load('/spae-nebula.jpg');
+        const spaceMaterial = new THREE.MeshBasicMaterial({
+            map: spaceTexture,
+            side: THREE.BackSide
+        });
+        const spaceGeometry = new THREE.SphereGeometry(1000, 32, 32);
+        const spaceMesh = new THREE.Mesh(spaceGeometry, spaceMaterial);
+        scene.add(spaceMesh);
+    };
+
     const onDocumentKeyUp = (event) => {
         if (keyPressed && (event.key === 'ArrowUp' || event.key === 'ArrowDown')) {
             keyPressed = false;
@@ -262,12 +319,15 @@ function Pvp2d() {
         }
     };
 
+    const resetCameraPos = () => {
+        cameraRef.current.position.set(0, 2.5, 2.5);
+        cameraRef.current.lookAt(0, 0, 0);
+    };
     const handleVisibilityChange = () => {
         if (document.visibilityState === 'visible') {
             document.removeEventListener('keydown', onDocumentKeyDown);
             document.removeEventListener('keyup', onDocumentKeyUp);
 
-            // Show popup alert or loading animation
             const popup = document.createElement('div');
             popup.id = 'reconnecting-popup';
             popup.style.position = 'fixed';
@@ -293,6 +353,8 @@ function Pvp2d() {
     };
 
     const onDocumentKeyDown = (event) => {
+        if (event.key.toLowerCase() === 'r')
+            resetCameraPos();
         if (!keyPressed) {
             keyPressed = true;
             const moveDirection = event.key === 'ArrowUp' ? -1 : event.key === 'ArrowDown' ? 1 : 0;
@@ -318,6 +380,9 @@ function Pvp2d() {
     };
 
     const updateScene = (event) => {
+        if (event === 'opponent_disconnected') {
+            // Show popup alert or loading animation then redirect to dashboard
+        }
         if (isPausedRef.current && document.visibilityState === 'visible' && event !== 'game_over' && event !== 'score_update') {
             isPausedRef.current = false;
         }
@@ -408,18 +473,39 @@ function Pvp2d() {
     return (
         <>
             <GameSettingsButton />
-            {!isMatched && <h1>Looking for an opponent...</h1>}
+            {!isMatched && (
+                <h1 className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-white text-2xl">
+                    Looking for an opponent...
+                </h1>
+            )}
             {winnerRef.current && (
-                <div className="popup">
-                    <h2>{winnerRef.current} Wins!</h2>
-                    <button onClick={() => window.location.reload()}>Restart Game</button>
+                <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-gray-900/95 p-8 rounded-lg text-center">
+                    <h2 className="text-2xl font-bold text-white mb-4">{winnerRef.current} Wins!</h2>
+                    <button
+                        onClick={() => window.location.reload()}
+                        className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                    >
+                        Restart Game
+                    </button>
+                    {/* maybe redirect to dashboard here instead after showing a popup alert or animation*/}
                 </div>
             )}
-            {isMatched && <div id="game-container">
-                <div id="score1">Player 1: {score1}</div>
-                <div id="score2">Player 2: {score2}</div>
-            </div>}
-            
+            {isMatched && (
+                <div id="game-container">
+                    <GameScore
+                        player1={{
+                            username: "Player 1",
+                            avatar: "/player1.png?height=40&width=40",
+                            score: score1
+                        }}
+                        player2={{
+                            username: "Player 2",
+                            avatar: "/player2.png?height=40&width=40",
+                            score: score2
+                        }}
+                    />
+                </div>
+            )}
         </>
     );
 }

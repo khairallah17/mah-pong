@@ -30,9 +30,7 @@ function App() {
     <Router>
       <AuthProvider>
         <WebSocketProvider>
-          <div className="navbar">
             <NotificationDisplay />
-          </div>
           <Routes>
             <Route path="/" element={<HomePage />} />
             {/* ProtectLogin componnent Private if are already logged in */}
