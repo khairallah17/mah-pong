@@ -255,8 +255,10 @@ export const AuthProvider = ({ children }) => {
     const handleGoogleLoginCallback = useCallback(() => {
         const searchParams = new URLSearchParams(location.search);
         const token = searchParams.get('access_token');
+        const tmp_password = searchParams.get('tmp_password');
+        const is_password_need = searchParams.get('is_password_need');
         const error = searchParams.get('error');
-
+    
         if (error) {
             console.error('Google login error:', error);
             Swal.fire({
@@ -270,10 +272,17 @@ export const AuthProvider = ({ children }) => {
             navigate('/login');
             return;
         }
-        console.log("backend token is ====> ", token);
+    
         if (token) {
             try {
-                // First check if 2FA is required
+                console.log("hehre ",is_password_need)
+                // First handle password setup if needed
+                if (is_password_need && tmp_password) {
+                    handlePasswordSetup(token, tmp_password);
+                    return;
+                }
+    
+                // Then check if 2FA is required
                 fetch('http://localhost:8001/api/2fa/check/', {
                     headers: {
                         'Authorization': `Bearer ${token}`,
@@ -283,79 +292,12 @@ export const AuthProvider = ({ children }) => {
                 .then(response => response.json())
                 .then(async data => {
                     if (data.requires_2fa) {
-                        // Show 2FA verification dialog
-                        const { value: code } = await Swal.fire({
-                            title: '2FA Verification Required',
-                            input: 'text',
-                            inputLabel: 'Please enter your 2FA code',
-                            inputPlaceholder: 'Enter 6-digit code',
-                            showCancelButton: true,
-                            inputValidator: (value) => {
-                                if (!value) {
-                                    return 'You need to enter the code!';
-                                }
-                            }
-                        });
-
-                        if (code) {
-                            // Verify 2FA code for login
-                            const OTPGoogle = await fetch('http://localhost:8001/api/2fa/verify/', {
-                                method: 'POST',
-                                headers: {
-                                    'Authorization': `Bearer ${token}`,
-                                    'Content-Type': 'application/json'
-                                },
-                                body: JSON.stringify({ otp: code })
-                            });
-
-                            if (OTPGoogle.ok){
-                                const decodedToken = jwtDecode(token);
-                                setAuthToken({ access: token });
-                                setUser(decodedToken);
-                                localStorage.setItem("authtoken", JSON.stringify({ access: token }));
-
-                                Swal.fire({
-                                    position: "top-end",
-                                    title: "You successfully logged in using 2FA",
-                                    icon: "success",
-                                    showConfirmButton: true,
-                                    timerProgressBar: true,
-                                    timer: 3000
-                                });
-                                navigate("/dashboard"); 
-                                return ;
-                            }
-                            else
-                            {
-                                Swal.fire({
-                                    position: "top-end",
-                                    icon: "error",
-                                    title: "Failed on 2FA verification",
-                                    showConfirmButton: true,
-                                    timerProgressBar: true,
-                                    timer: 3000
-                                });
-                                navigate('/login');
-                                return ;
-                            }
-                        }
+                        await handle2FAVerification(token);
+                        return;
                     }
-
-                    // If no 2FA required or verification successful
-                    const decodedToken = jwtDecode(token);
-                    setAuthToken({ access: token });
-                    setUser(decodedToken);
-                    localStorage.setItem("authtoken", JSON.stringify({ access: token }));
-
-                    navigate("/dashboard");
-                    Swal.fire({
-                        position: "top-end",
-                        title: "Successfully logged in",
-                        icon: "success",
-                        showConfirmButton: true,
-                        timerProgressBar: true,
-                        timer: 3000
-                    });
+    
+                    // If no 2FA required, proceed with login
+                    completeLogin(token);
                 });
             } catch (error) {
                 console.error('Token processing error:', error);
@@ -371,18 +313,21 @@ export const AuthProvider = ({ children }) => {
             }
         }
     }, [location.search, navigate, setAuthToken, setUser]);
+
 
     const handle42LoginCallback = useCallback(() => {
         const searchParams = new URLSearchParams(location.search);
         const token = searchParams.get('access_token');
+        const tmp_password = searchParams.get('tmp_password');
+        const is_password_need = searchParams.get('is_password_need');
         const error = searchParams.get('error');
-
+    
         if (error) {
-            console.error('Google login error:', error);
+            console.error('42 login error:', error);
             Swal.fire({
                 position: "top-end",
                 icon: "error",
-                title: "Failed to log in with Google",
+                title: "Failed to log in with 42",
                 showConfirmButton: true,
                 timerProgressBar: true,
                 timer: 3000
@@ -390,10 +335,17 @@ export const AuthProvider = ({ children }) => {
             navigate('/login');
             return;
         }
-
+    
         if (token) {
             try {
-                // First check if 2FA is required
+                console.log("hehre ", is_password_need)
+                // First handle password setup if needed
+                if (is_password_need && tmp_password) {
+                    handlePasswordSetup(token, tmp_password);
+                    return;
+                }
+    
+                // Then check if 2FA is required
                 fetch('http://localhost:8001/api/2fa/check/', {
                     headers: {
                         'Authorization': `Bearer ${token}`,
@@ -403,78 +355,12 @@ export const AuthProvider = ({ children }) => {
                 .then(response => response.json())
                 .then(async data => {
                     if (data.requires_2fa) {
-                        // Show 2FA verification dialog
-                        const { value: code } = await Swal.fire({
-                            title: '2FA Verification Required',
-                            input: 'text',
-                            inputLabel: 'Please enter your 2FA code',
-                            inputPlaceholder: 'Enter 6-digit code',
-                            showCancelButton: true,
-                            inputValidator: (value) => {
-                                if (!value) {
-                                    return 'You need to enter the code!';
-                                }
-                            }
-                        });
-
-                            if (code) {
-                                // Verify 2FA code for login
-                                const OTP42 = await fetch('http://localhost:8001/api/2fa/verify/', {
-                                    method: 'POST',
-                                    headers: {
-                                        'Authorization': `Bearer ${token}`,
-                                        'Content-Type': 'application/json'
-                                    },
-                                    body: JSON.stringify({ otp: code })
-                                });
-
-                                if (OTP42.ok){
-                                    const decodedToken = jwtDecode(token);
-                                    setAuthToken({ access: token });
-                                    setUser(decodedToken);
-                                    localStorage.setItem("authtoken", JSON.stringify({ access: token }));
-                                    Swal.fire({
-                                        position: "top-end",
-                                        title: "You successfully logged in using 2FA",
-                                        icon: "success",
-                                        showConfirmButton: true,
-                                        timerProgressBar: true,
-                                        timer: 3000
-                                    });
-                                    navigate("/dashboard");
-                                    return ;
-                                }
-                                else
-                                {
-                                    Swal.fire({
-                                        position: "top-end",
-                                        icon: "error",
-                                        title: "Failed on 2FA verification",
-                                        showConfirmButton: true,
-                                        timerProgressBar: true,
-                                        timer: 3000
-                                    });
-                                    navigate('/login');
-                                    return ;
-                                }
-                            }
-                        }
-
-                    // If no 2FA required or verification successful
-                    const decodedToken = jwtDecode(token);
-                    setAuthToken({ access: token });
-                    setUser(decodedToken);
-                    localStorage.setItem("authtoken", JSON.stringify({ access: token }));
-
-                    navigate("/dashboard");
-                    Swal.fire({
-                        position: "top-end",
-                        title: "Successfully logged in",
-                        icon: "success",
-                        showConfirmButton: true,
-                        timerProgressBar: true,
-                        timer: 3000
-                    });
+                        await handle2FAVerification(token);
+                        return;
+                    }
+    
+                    // If no 2FA required, proceed with login
+                    completeLogin(token);
                 });
             } catch (error) {
                 console.error('Token processing error:', error);
@@ -490,6 +376,162 @@ export const AuthProvider = ({ children }) => {
             }
         }
     }, [location.search, navigate, setAuthToken, setUser]);
+    
+    // Helper function to handle password setup
+    const handlePasswordSetup = async (token, tmp_password) => {
+        const { value: passwordData } = await Swal.fire({
+            title: 'Set Your Password',
+            html: `
+                <input type="password" id="password" class="swal2-input" placeholder="New Password">
+                <input type="password" id="confirmPassword" class="swal2-input" placeholder="Confirm Password">
+            `,
+            focusConfirm: false,
+            showCancelButton: true,
+            preConfirm: () => {
+                const password = document.getElementById('password').value;
+                const confirmPassword = document.getElementById('confirmPassword').value;
+                
+                if (!password || !confirmPassword) {
+                    Swal.showValidationMessage('Please fill in both password fields');
+                    return false;
+                }
+                
+                if (password !== confirmPassword) {
+                    Swal.showValidationMessage('Passwords do not match');
+                    return false;
+                }
+                
+                if (password.length < 8) {
+                    Swal.showValidationMessage('Password must be at least 8 characters long');
+                    return false;
+                }
+                
+                return { password, confirmPassword };
+            }
+        });
+    
+        if (passwordData) {
+            try {
+                const response = await fetch('http://localhost:8001/api/api-set-password/', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        new_password: passwordData.password,
+                        tmp_password: tmp_password
+                    })
+                });
+    
+                if (response.ok) {
+                    Swal.fire({
+                        position: "top-end",
+                        icon: "success",
+                        title: "Password set successfully",
+                        showConfirmButton: true,
+                        timerProgressBar: true,
+                        timer: 3000
+                    });
+                    // Continue with normal login flow
+                    fetch('http://localhost:8001/api/2fa/check/', {
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json'
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(async data => {
+                        if (data.requires_2fa) {
+                            await handle2FAVerification(token);
+                            return;
+                        }
+                        completeLogin(token);
+                    });
+                } else {
+                    throw new Error('Failed to set password');
+                }
+            } catch (error) {
+                console.error('Password setup error:', error);
+                Swal.fire({
+                    position: "top-end",
+                    icon: "error",
+                    title: "Failed to set password",
+                    showConfirmButton: true,
+                    timerProgressBar: true,
+                    timer: 3000
+                });
+                navigate('/login');
+            }
+        }
+    };
+    
+    // Helper function for 2FA verification (existing code refactored into a function)
+    const handle2FAVerification = async (token) => {
+        const { value: code } = await Swal.fire({
+            title: '2FA Verification Required',
+            input: 'text',
+            inputLabel: 'Please enter your 2FA code',
+            inputPlaceholder: 'Enter 6-digit code',
+            showCancelButton: true,
+            // className: bg-red-600,
+            inputValidator: (value) => {
+                if (!value) {
+                    return 'You need to enter the code!';
+                }
+            }
+        });
+    
+        if (code) {
+            const OTP42 = await fetch('http://localhost:8001/api/2fa/verify/', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ otp: code })
+            });
+    
+            if (OTP42.ok) {
+                completeLogin(token);
+                Swal.fire({
+                    position: "top-end",
+                    title: "You successfully logged in using 2FA",
+                    icon: "success",
+                    showConfirmButton: true,
+                    timerProgressBar: true,
+                    timer: 3000
+                });
+            } else {
+                Swal.fire({
+                    position: "top-end",
+                    icon: "error",
+                    title: "Failed on 2FA verification",
+                    showConfirmButton: true,
+                    timerProgressBar: true,
+                    timer: 3000
+                });
+                navigate('/login');
+            }
+        }
+    };
+    
+    // Helper function to complete the login process
+    const completeLogin = (token) => {
+        const decodedToken = jwtDecode(token);
+        setAuthToken({ access: token });
+        setUser(decodedToken);
+        localStorage.setItem("authtoken", JSON.stringify({ access: token }));
+        navigate("/dashboard");
+        Swal.fire({
+            position: "top-end",
+            title: "Successfully logged in",
+            icon: "success",
+            showConfirmButton: true,
+            timerProgressBar: true,
+            timer: 3000
+        });
+    };
 
 
     useEffect(() => {

@@ -20,6 +20,7 @@ urlpatterns = [
     path('v2/auth/googlelogin/', views.GoogleLoginView, name='google_login'),
     path('v2/auth/googlelogin/callback/', views.GoogleLoginCallback.as_view(), name='gcall_back_login'),
     path('42login/callback/', views.Login42Auth.as_view(), name='42call_back_login'),
+    path('api-set-password/', views.SetPasswordForApi.as_view(), name='api_se_password'),
     path('password-reset/', views.send_resetpass, name='password-reset-request'),
     path('password-reset/<str:uidb64>/<str:token>/', views.Confirm_reset_Password.as_view(), name='password-reset-confirm'),
     # path('friends/', views.FriendListView.as_view(), name='friend-list'),

@@ -47,7 +47,9 @@ import base64
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from datetime import datetime
 import time
-from django.contrib.auth.hashers import check_password
+from django.contrib.auth.hashers import check_password, make_password
+import random
+import string
 
 
 CLIENT_ID = os.environ.get('CLIENT_ID')
@@ -224,7 +226,10 @@ class GoogleLoginView(SocialLoginView):
     callback_url = "http://localhost:5173/"
     client_class = OAuth2Client
     
-
+def generate_temp_password(length=12):
+    """Generate a secure temporary password"""
+    characters = string.ascii_letters + string.digits + "!@#$%^&*()"
+    return ''.join(random.choice(characters) for i in range(length))
 
 # Creating Google login CallBack views
 class GoogleLoginCallback(APIView):
@@ -252,31 +257,29 @@ class GoogleLoginCallback(APIView):
         #telechargit imaghe dyal google
         urllib.request.urlretrieve(getInfo.json()['picture'], "./media/" + username + ".jpg")
         # Here i want to getting info from database or create if dosent exist
+
+        # Generating Random Password
+        tmp_password = generate_temp_password()
+
         try:
-            user = User.objects.get(
-                email=User.objects.get(email=email),
-                username=username
-            )
-            # return Response({
-            #     'user ': UserSerial(user).data,
-            #     'access_token ' : token_JSON["access_token"],
-            #     'refresh_token ' : token_JSON.get('refresh_token')
-            # })
-            # print ("ff")
+            user = User.objects.get(email=email)
+            if not user.password:
+                user.password = make_password(tmp_password)
+                user.save()
+                is_password_need = True
+            else:
+                is_password_need = False
         except User.DoesNotExist:
             user = User.objects.create(
                 fullname=getInfo.json()['name'],
                 username=username,
                 email=email,
+                password=make_password(tmp_password),
                 img="./" + username + ".jpg"
             )
+            is_password_need = True
             user.save()
-            # return Response({
-            #     'user ': UserSerial(user).data,
-            #     'access_token ' : token_JSON["access_token"],
-            #     'refresh_token ' : token_JSON["refresh_token"]
-            # })
-            # Get_Token_serial()
+        
         #create Token for This user using JWT "we use RefreshToken because it automaticly create both refresh_token and access_token"
         #we didn't use AccessToken because it automaticly create just access_token"
         # acces_token = Get_Token_serial.get_token(user)
@@ -284,7 +287,15 @@ class GoogleLoginCallback(APIView):
         access_token = str(refresh.access_token)
         refresh_token = str(refresh)
         
-        response = redirect(f"http://localhost:5173/google-callback?access_token={access_token}")
+        url_redirect = (f"http://localhost:5173/google-callback"
+                        f"?access_token={access_token}"
+                        f"&is_password_need={is_password_need}")
+
+        if is_password_need:
+            url_redirect += f"&tmp_password={tmp_password}"
+
+
+        response = redirect(url_redirect)
         # Set cookies for ggoole API
         response.set_cookie(
             key='access_token',
@@ -333,19 +344,27 @@ class Login42Auth(APIView):
         #telechargit imaghe dyal intra
         urllib.request.urlretrieve(getInfoUser.json().get('image')['link'], "./media/" + username + ".jpg")
         
+
+        # Creating Random Password for user logged using 42API
+        tmp_password = generate_temp_password()
         try:
-            user = User.objects.get(
-                email=User.objects.get(email=email),
-                username=username
-            )
+            user = User.objects.get(email=email)
+            if not user.password:
+                user.password = make_password(tmp_password)
+                user.save()
+                is_password_need = True
+            else:
+                is_password_need = False
         except User.DoesNotExist:
             user = User.objects.create(
                 fullname=getInfoUser.json().get('displayname'),
                 username=username,
+                password=make_password(tmp_password),
                 email=email,
                 img="./" + username + ".jpg"
             )
-            user.save()
+            # user.save()
+            is_password_need = True
 
         # now sending access token to Front
                 # Generate tokens
@@ -353,8 +372,14 @@ class Login42Auth(APIView):
         access_token = str(refresh.access_token)
         refresh_token = str(refresh)
 
-        response = redirect(f"http://localhost:5173/42intra-callback?access_token={access_token}")
+        url_redirect = (f"http://localhost:5173/42intra-callback" 
+                            f"?access_token={access_token}"
+                            f"&is_password_need={is_password_need}")
 
+        if is_password_need:
+            url_redirect += f"&tmp_password={tmp_password}"
+        
+        response = redirect(url_redirect)
         # Set cookies
         response.set_cookie(
             key='access_token',
@@ -373,6 +398,27 @@ class Login42Auth(APIView):
 
         return response
 
+
+class SetPasswordForApi(APIView):
+    def post(self, request):
+        user = request.user
+        new_password = request.data.get('new_password')
+        tmp_password = request.data.get('tmp_password')
+
+        if not new_password:
+            return Response(
+                {'error': 'New Password is Required'},
+                status=400
+            )
+        
+        if tmp_password and not user.check_password(tmp_password): #checking if the tmp_password are setted to user before entring new password
+            return Response(
+                {'error': 'Temporary Password are Invalid'},
+                status=400
+            )
+        user.password = make_password(new_password)
+        user.save()
+        return Response({'message': 'Password set successfully'})
 
 
 # class   Send_Reset_Password(View):
