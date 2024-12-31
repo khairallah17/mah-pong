@@ -2,6 +2,8 @@ from django.db import models
 import random
 import string
 from django.contrib.postgres.fields import ArrayField
+from django.db.models.signals import post_migrate
+from django.dispatch import receiver
 
 class Match(models.Model):
     username1 = models.CharField(max_length=100)
@@ -65,3 +67,26 @@ class TournamentMatch(models.Model):
         if self.winner:
             self.winner = self.winner[:10]
         super(TournamentMatch, self).save(*args, **kwargs)
+
+class Achievement(models.Model):
+    name = models.CharField(max_length=100)
+    description = models.TextField()
+
+    def __str__(self):
+        return self.name
+
+@receiver(post_migrate)
+def create_achievements(sender, **kwargs):
+    if sender.name == 'Match':
+        achievements = [
+            {"name": "First Win", "description": "Win your first match."},
+            {"name": "Champion", "description": "Win a tournament."},
+            {"name": "Undefeated", "description": "Win 10 matches in a row."},
+            {"name": "Comeback King", "description": "Win a match after being down by 3 points."},
+            {"name": "Veteran", "description": "Play 100 matches."},
+            {"name": "Quick Finisher", "description": "Win a match in under 5 minutes."},
+            {"name": "Perfect Game", "description": "Win a match without losing a point."},
+        ]
+
+        for achievement in achievements:
+            Achievement.objects.get_or_create(name=achievement["name"], defaults={"description": achievement["description"]})

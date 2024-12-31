@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'channels',
     'Match',
+    'Match.apps.MatchConfig',
 ]
 
 MIDDLEWARE = [
