@@ -346,7 +346,8 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
                 await self.send(text_data=json.dumps({
                     'type': 'match_found',
                     'player_id': user_data['player_id'],
-                    'score': user_data['score']
+                    'score': user_data['score'],
+                    'names': user_data['names']
                 }))
             user_channels[self.username] = self.channel_name
             
@@ -377,15 +378,19 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
                     'task': countdown_task,
                     'channel_name': self.channel_name,
                     'player_id': '1' if isPlayer1 else '2',
-                    'score': {'player1': scoreP1, 'player2': scoreP2} if isPlayer1 else {'player1': scoreP2, 'player2': scoreP1}
+                    'score': {'player1': scoreP1, 'player2': scoreP2} if isPlayer1 else {'player1': scoreP2, 'player2': scoreP1},
+                    'names': {'player1': self.username, 'player2': matched_users[self.username]} if isPlayer1 else {'player1': matched_users[self.username], 'player2': self.username}
                 }
 
     # handle new connection
     # handle 2 disconnections at the same time if (opponent in disconnected_users)
+    # if 2 users disconnect the countdown should be stopped
     async def start_reconnect_countdown(self, username):
-        await asyncio.sleep(15)
+        start_time = asyncio.get_event_loop().time()
+        opponent = matched_users[username]
+        while opponent not in disconnected_users and asyncio.get_event_loop().time() - start_time < 15:
+            await asyncio.sleep(1)
         if username in disconnected_users:
-            opponent = matched_users[username]
             scoreP1, scoreP2, isPlayer1 = await self.get_latest_match_scores()
             disconnected_users.pop(username)
             if opponent not in disconnected_users:
@@ -469,14 +474,17 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
             user_channels[users[0]],
             {
                 'type': 'match_found',
-                'player_id': '1'
+                'player_id': '1',
+                'names': {'player1': users[0], 'player2': users[1]}
             }
         )
+        logger.warning(f"Match found for {users[0]} and {users[1]}")
         await self.channel_layer.send(
             user_channels[users[1]],
             {
                 'type': 'match_found',
-                'player_id': '2'
+                'player_id': '2',
+                'names': {'player1': users[0], 'player2': users[1]}
             }
         )
 
@@ -510,9 +518,11 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
 
     async def match_found(self, event):
         player_id = event['player_id']
+        names = event.get('names', None)
         await self.send(text_data=json.dumps({
             'type': 'match_found',
-            'player_id': player_id
+            'player_id': player_id,
+            'names': names
         }))
 
     async def game_event(self, event):

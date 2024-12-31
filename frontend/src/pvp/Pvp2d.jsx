@@ -7,6 +7,7 @@ import GameScore from './GameScore';
 function Pvp2d() {
     const wsRef = useRef(null);
     const [{ score1, score2 }, setScores] = useState({ score1: 0, score2: 0 });
+    const [{ username1, username2 }, setUsernames] = useState({ username1: '', username2: '' });
     const winnerRef = useRef(null);
     const [gameState, setGameState] = useState(null);
     const [isMatched, setIsMatched] = useState(false);
@@ -23,6 +24,7 @@ function Pvp2d() {
     const tableRef = useRef(null);
     const isPausedRef = useRef(true);
     let token = localStorage.getItem('authtoken');
+    const accessToken = JSON.parse(localStorage.getItem('authtoken')).access;
 
     useEffect(() => {
         if (winnerRef.current) {
@@ -32,7 +34,6 @@ function Pvp2d() {
 
     useEffect(() => {
         if (token && !wsRef.current) {
-            const accessToken = JSON.parse(localStorage.getItem('authtoken')).access;
             wsRef.current = new WebSocket('ws://localhost:8000/ws/matchmaking/?token=' + accessToken);
             wsRef.current.onopen = () => {
                 console.log('WebSocket connection established');
@@ -53,6 +54,12 @@ function Pvp2d() {
                 if (message.type === 'match_found') {
                     if (message.score && message.score.player1 && message.score.player2)
                         setScores({ score1: message.score.player1, score2: message.score.player2 });
+                    console.log("message: ", message);
+                    if (message.names && message.names.player1 && message.names.player2)
+                        {
+                            console.log("usernames: ", message.names.player1, message.names.player2);
+                            setUsernames({ username1: message.names.player1, username2: message.names.player2 });
+                        }
                     if (message.player_id === '2')
                         setIsPlayer1(false);
                     setIsMatched(true);
@@ -87,17 +94,19 @@ function Pvp2d() {
         try {
             const response = await fetch(refreshtokenUrl, {
                 method: 'POST',
-                credentials: 'include'
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ refresh: JSON.parse(token).refresh })
             });
-            if (response.ok) {
-                const data = await response.json();
-                return data;
-            } else {
-                return null;
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
             }
+            const data = await response.json();
+            console.log('New access token:', data.access);
+            return data.access;
         } catch (error) {
-            console.error('Failed to refresh token:', error);
-            return null;
+            console.error('Error refreshing token:', error);
         }
     };
 
@@ -199,6 +208,8 @@ function Pvp2d() {
                                     scoreP1: newScores.score1,
                                     scoreP2: newScores.score2,
                                 }));
+                                handleMatchResult(username2, true);
+                                handleMatchResult(username1, false);
                             }
                         }
                         else {
@@ -229,6 +240,8 @@ function Pvp2d() {
                                     scoreP1: newScores.score1,
                                     scoreP2: newScores.score2,
                                 }));
+                                handleMatchResult(username2, false);
+                                handleMatchResult(username1, true);
                             }
                         }
                         else {
@@ -259,6 +272,39 @@ function Pvp2d() {
             window.removeEventListener('resize', onWindowResize);
         }
     }, [isMatched, isPlayer1, gameState]);
+
+    const updateUserData = async (username, data) => {
+        try {
+            const response = await fetch(`http://localhost:8001/api/user-info/${username}/`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${accessToken}`,
+                },
+                body: JSON.stringify(data),
+            });
+
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+
+            const responseData = await response.json();
+            console.log('User data updated successfully:', responseData);
+        } catch (error) {
+            console.error('Error updating user data:', error);
+        }
+    };
+
+    // Example usage
+    const handleMatchResult = (username, isWin) => {
+        const data = {
+            nblose: isWin ? 0 : 1,
+            nbwin: isWin ? 1 : 0,
+            // score: ,
+        };
+
+        updateUserData(username, data);
+    };
 
     function restartGame(ball) {
         ball.position.set(0, 0.1, 0);
@@ -494,12 +540,12 @@ function Pvp2d() {
                 <div id="game-container">
                     <GameScore
                         player1={{
-                            username: "Player 1",
+                            username: username1,
                             avatar: "/player1.png?height=40&width=40",
                             score: score1
                         }}
                         player2={{
-                            username: "Player 2",
+                            username: username2,
                             avatar: "/player2.png?height=40&width=40",
                             score: score2
                         }}
