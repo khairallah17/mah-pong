@@ -50,12 +50,12 @@ const Chat = ({ roomName }) => {
     useEffect(() => {
         if (selectedUser) {
             const chatSocket = new WebSocket(
-                'ws://localhost:8000/ws/chat/${roomName}/'
+                'ws://localhost:8000/ws/chat/${selectedUser}/'
             );
             
             chatSocket.onmessage = (e) => {
                 const data = JSON.parse(e.data);
-                setMessages((prevMessages) => [...prevMessages, data.message]);
+                setMessages((prevMessages) => [...prevMessages, data]);
             };
             
             chatSocket.onclose = () => {
