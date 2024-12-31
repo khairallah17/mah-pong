@@ -16,12 +16,13 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-from Match.views import TournamentList, PlayerMatchHistory
+from Match.views import TournamentList, PlayerMatchHistory, PlayerStats
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/tournaments', TournamentList.as_view(), name='tournament-list'),
     path('api/match-history/<str:username>/', PlayerMatchHistory.as_view(), name='player-match-history'),
     path('api/match-history/', PlayerMatchHistory.as_view(), name='current-player-match-history'),
+    path('api/player-stats/<str:username>/', PlayerStats.as_view(), name='player-stats'),
 ]
 

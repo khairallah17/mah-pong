@@ -24,7 +24,7 @@ function Pvp2d() {
     const tableRef = useRef(null);
     const isPausedRef = useRef(true);
     let token = localStorage.getItem('authtoken');
-    const accessToken = JSON.parse(localStorage.getItem('authtoken')).access;
+    const accessToken = JSON.parse(token).access;
 
     useEffect(() => {
         if (winnerRef.current) {
@@ -208,8 +208,8 @@ function Pvp2d() {
                                     scoreP1: newScores.score1,
                                     scoreP2: newScores.score2,
                                 }));
-                                handleMatchResult(username2, true);
-                                handleMatchResult(username1, false);
+                                // handleMatchResult(username2, true);
+                                // handleMatchResult(username1, false);
                             }
                         }
                         else {
@@ -240,8 +240,8 @@ function Pvp2d() {
                                     scoreP1: newScores.score1,
                                     scoreP2: newScores.score2,
                                 }));
-                                handleMatchResult(username2, false);
-                                handleMatchResult(username1, true);
+                                // handleMatchResult(username2, false);
+                                // handleMatchResult(username1, true);
                             }
                         }
                         else {

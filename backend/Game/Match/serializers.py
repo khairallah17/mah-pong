@@ -38,3 +38,9 @@ class MatchSerializer(serializers.ModelSerializer):
 
     def get_time(self, obj):
         return obj.datetime.strftime('%H:%M:%S')
+
+class PlayerStatsSerializer(serializers.Serializer):
+    username = serializers.CharField()
+    wins = serializers.IntegerField()
+    losses = serializers.IntegerField()
+    elo = serializers.IntegerField()

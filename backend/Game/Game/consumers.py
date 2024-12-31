@@ -498,9 +498,42 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
             winner=None
         )
 
+    def calculate_elo(self, username, player, previous_match):
+        matches = Match.objects.filter(Q(username1=username) | Q(username2=username))
+        total_matches = matches.count()
+        wins = 0
+        losses = 0
+        for match in matches:
+            if match.winner == username:
+                wins += 1
+            else:
+                losses += 1
+        k = 400 # K-factor for elo change sensitivity
+        win_rate = wins / total_matches
+        normalized_win_rate = win_rate - 0.5
+        rating_change = k * normalized_win_rate * (total_matches ** 0.5)
+        if previous_match and player == "player1":
+            if previous_match.winner == username:
+                return previous_match.ratingP1 + rating_change
+            else:
+                return previous_match.ratingP1 - rating_change
+        elif previous_match and player == "player2":
+            if previous_match.winner == username:
+                return previous_match.ratingP2 + rating_change
+            else:
+                return previous_match.ratingP2 - rating_change
+        return 1000
+
     @database_sync_to_async
     def update_game_result(self, username1, username2, scoreP1, scoreP2, winner):
         match = Match.objects.filter(Q(username1=username1, username2=username2) | Q(username1=username2, username2=username1)).latest('datetime')
+        #need prev match, nbr losses, nbr wins
+        try:
+            previous_match = Match.objects.filter(Q(username1=username1, username2=username2) | Q(username1=username2, username2=username1)).exclude(id=match.id).latest('datetime')
+        except Match.DoesNotExist:
+            previous_match = None
+        match.ratingP1 = self.calculate_elo(username1, "player1", previous_match)
+        match.ratingP2 = self.calculate_elo(username2, "player2", previous_match)
         match.scoreP1 = scoreP1
         match.scoreP2 = scoreP2
         match.winner = username1 if winner == 'player1' else username2

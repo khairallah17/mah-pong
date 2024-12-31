@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from rest_framework import generics, status
 from django.db.models import Q
 from .models import Tournament, Match
-from .serializers import TournamentSerializer, MatchSerializer
+from .serializers import TournamentSerializer, MatchSerializer, PlayerStatsSerializer
 
 class TournamentList(generics.ListCreateAPIView):
     queryset = Tournament.objects.all()
@@ -14,4 +14,30 @@ class PlayerMatchHistory(APIView):
     def get(self, request, username=None):
         matches = Match.objects.filter(Q(username1=username) | Q(username2=username))
         serializer = MatchSerializer(matches, many=True, context={'player': username})
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+class PlayerStats(APIView):
+    def get(self, request, username=None):
+        if not username:
+            return Response({'error': 'Username is required'}, status=status.HTTP_400_BAD_REQUEST)
+        matches = Match.objects.filter(Q(username1=username) | Q(username2=username))
+        latest_match = matches.latest('datetime')
+        total_matches = matches.count()
+        elo = latest_match.ratingP1 if latest_match.username1 == username else latest_match.ratingP2
+        wins = 0
+        losses = 0
+        for match in matches:
+            if match.winner == username:
+                wins += 1
+            else:
+                losses += 1
+        
+        data = {
+            'username': username,
+            'wins': wins,
+            'losses': losses,
+            'elo': elo
+        }
+        
+        serializer = PlayerStatsSerializer(data)
         return Response(serializer.data, status=status.HTTP_200_OK)
