@@ -13,6 +13,7 @@ function Pve3d() {
     const paddlePositionDiffRef = useRef(null);
     const velocityRef = useRef(null);
     const wsRef = useRef(null);
+    const isPausedRef = useRef(true);
     const [isMatched, setIsMatched] = useState(false);
     const [isPlayer1, setIsPlayer1] = useState(true);
     const [showPopup, setShowPopup] = useState(false);
@@ -102,7 +103,6 @@ function Pve3d() {
         }
         else if (event === 'spin') {
             paddlePositionDiffRef.current?.set(spin.x, spin.y, spin.z);
-            console.log(spin);
         }
         // animatePaddleRotation(paddle1Ref.current, paddle2Ref.current);
     };
@@ -125,26 +125,25 @@ function Pve3d() {
         }
     }
 
-    function startCountdown()
-    {
-        setShowPopup(true);
+    function startCountdown() {
+        if (isPausedRef.current) {
+            setShowPopup(true);
             setCountdown(3);
             const interval = setInterval(() => {
                 setCountdown(prevCountdown => {
                     if (prevCountdown === 1) {
                         clearInterval(interval);
                         setShowPopup(false);
+                        isPausedRef.current = false;
                     }
                     return prevCountdown - 1;
                 });
             }, 1000);
+        }
     }
 
     useEffect(() => {
         if (!rendererRef.current && isMatched) {
-
-            startCountdown();
-
             const gameContainer = gameContainerRef.current;
 
             let waitforpaddle2 = false;
@@ -186,6 +185,7 @@ function Pve3d() {
                 addLights(scene);
                 startGameListeners(mouse, paddle1, camera, table, paddle2, velocity, renderer, scene);
                 animate();
+                startCountdown();
             });
 
             function createCamera() {
@@ -349,6 +349,11 @@ function Pve3d() {
 
             function animate() {
                 // updatePaddle2AI();
+                if (isPausedRef.current) {
+                    requestAnimationFrame(animate);
+                    renderer.render(scene, camera);
+                    return;
+                }
 
                 applyGravity();
                 moveBall();
@@ -425,6 +430,7 @@ function Pve3d() {
                 }
 
                 handleSpin();
+                console.log(paddlePositionDiffRef.current);
 
                 if (ballBox.intersectsBox(paddle2Box)) {
                     handlePaddle2Collision(ballBox, paddle2Box);
@@ -446,12 +452,12 @@ function Pve3d() {
                     console.log(paddlePositionDiff);
                     firstIntersectionPosition = null;
                     lastIntersectionPosition = null;
+                    wsRef.current.send(JSON.stringify({
+                        type: 'game_event',
+                        event: 'spin',
+                        spin: { x: paddlePositionDiff.x, y: paddlePositionDiff.y, z: paddlePositionDiff.z },
+                    }));
                 }
-                wsRef.current.send(JSON.stringify({
-                    type: 'game_event',
-                    event: 'spin',
-                    spin: {x: paddlePositionDiff.x, y: paddlePositionDiff.y, z: paddlePositionDiff.z},
-                }));
                 velocity.x -= paddlePositionDiff.x / 200;
                 velocity.z -= paddlePositionDiff.z / 500;
             }
@@ -626,6 +632,8 @@ function Pve3d() {
         velocityRef.current?.copy(INITIAL_VELOCITY);
         paddlePositionDiffRef.current?.set(0, 0, 0);
         ballRef.current?.position.copy(initBallPos);
+        isPausedRef.current = true;
+        startCountdown();
     }
 
     return (
