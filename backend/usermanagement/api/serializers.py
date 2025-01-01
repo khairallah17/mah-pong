@@ -74,6 +74,13 @@ class ProfilSerializer(serializers.ModelSerializer):
         model = Profil
         fields = ['is_verified']
 
+    def get_is_verified(self, obj):
+        # Check if user has an email and update verification
+        if obj.user.email:
+            obj.is_verified = True
+            obj.save()
+        return obj.is_verified
+
 class UserProfileSerializer(serializers.ModelSerializer):
     profil = ProfilSerializer()
     

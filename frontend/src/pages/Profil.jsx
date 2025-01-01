@@ -9,7 +9,7 @@ const Profil = () => {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const response = await fetch(`http://localhost:8001/api/${username}/`);
+        const response = await fetch(`http://localhost:8001/api/user-profile/${username}/`);
         if (!response.ok) {
           throw new Error('Profile not found');
         }
