@@ -57,9 +57,9 @@ function App() {
               // </ProtectLogin>
             } />
 
-            <Route path="/picture-user" element={
+            <Route path="/profil/:username" element={
               // <ProtectLogin>
-              <PictureUser />
+              <Profil />
               // </ProtectLogin>
             } />
 

@@ -2,6 +2,8 @@ from django.db import models
 import random
 import string
 from django.contrib.postgres.fields import ArrayField
+from django.db.models.signals import post_migrate
+from django.dispatch import receiver
 
 class Match(models.Model):
     username1 = models.CharField(max_length=100)
@@ -9,6 +11,8 @@ class Match(models.Model):
     scoreP1 = models.IntegerField(default=0)
     scoreP2 = models.IntegerField(default=0)
     winner = models.CharField(max_length=100, null=True, blank=True)
+    ratingP1 = models.IntegerField(default=1000)
+    ratingP2 = models.IntegerField(default=1000)
     datetime = models.DateTimeField(auto_now_add=True)
 
     def save(self, *args, **kwargs):
@@ -32,8 +36,7 @@ class Tournament(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="waiting")
     code = models.CharField(max_length=6, unique=True)
-    # max_players = models.IntegerField(default=4)
-    players = ArrayField(models.CharField(max_length=100), default=list, blank=True)
+    players = ArrayField(models.CharField(max_length=10), default=list, blank=True)
 
     def save(self, *args, **kwargs):
         if not self.code:
@@ -45,14 +48,13 @@ class Tournament(models.Model):
     
 class TournamentMatch(models.Model):
     tournament = models.ForeignKey(Tournament, on_delete=models.CASCADE)
-    # code = models.CharField(max_length=10, null= True)
     round = models.IntegerField()
     position = models.IntegerField()
     # scoreP1 = models.IntegerField(default=0)
     # scoreP2 = models.IntegerField(default=0)
-    player1 = models.CharField(max_length=100, blank=True, null=True)
-    player2 = models.CharField(max_length=100, blank=True, null=True)
-    winner = models.CharField(max_length=100, blank=True, null=True)
+    player1 = models.CharField(max_length=10, blank=True, null=True)
+    player2 = models.CharField(max_length=10, blank=True, null=True)
+    winner = models.CharField(max_length=10, blank=True, null=True)
     player1_ready = models.BooleanField(default=False)
     player2_ready = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -65,3 +67,26 @@ class TournamentMatch(models.Model):
         if self.winner:
             self.winner = self.winner[:10]
         super(TournamentMatch, self).save(*args, **kwargs)
+
+class Achievement(models.Model):
+    name = models.CharField(max_length=100)
+    description = models.TextField()
+
+    def __str__(self):
+        return self.name
+
+@receiver(post_migrate)
+def create_achievements(sender, **kwargs):
+    if sender.name == 'Match':
+        achievements = [
+            {"name": "First Win", "description": "Win your first match."},
+            {"name": "Champion", "description": "Win a tournament."},
+            {"name": "Undefeated", "description": "Win 10 matches in a row."},
+            {"name": "Comeback King", "description": "Win a match after being down by 3 points."},
+            {"name": "Veteran", "description": "Play 100 matches."},
+            {"name": "Quick Finisher", "description": "Win a match in under 5 minutes."},
+            {"name": "Perfect Game", "description": "Win a match without losing a point."},
+        ]
+
+        for achievement in achievements:
+            Achievement.objects.get_or_create(name=achievement["name"], defaults={"description": achievement["description"]})

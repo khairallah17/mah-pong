@@ -3,7 +3,7 @@ from django.db import models
 from django.db.models import Q
 from django.http import HttpResponse, HttpResponseRedirect
 from .models import User, TwoFactorAuthAttempt
-from .serializers import Get_Token_serial, RegistrationSerial, UserSerial, LogoutSerial
+from .serializers import Get_Token_serial, RegistrationSerial, UserSerial, LogoutSerial, UserProfileSerializer
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenObtainPairView
@@ -559,6 +559,16 @@ class LogoutViews(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
+class UserProfileApi(APIView):
+    def get(self, request, username):
+        try:
+            # logger.info(f"Getting profile data for {username}")
+            user = get_object_or_404(User, username=username)
+            serializer = UserProfileSerializer(user)
+            return Response(serializer.data)
+        except Exception as e:
+            # logger.error(f"Error getting profile for {username}: {str(e)}")
+            return Response({"error": str(e)}, status=400)
 
 # Make Comminication Between Game App and Usermanagment App using API
 class UserInfoApi(APIView):

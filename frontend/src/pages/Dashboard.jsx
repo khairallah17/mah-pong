@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import AuthContext from "../context_login_Register/AuthContext"
 import NotificationDisplay from './NotificationDisplay'
 import { WebSocketContext } from "../WebSocketProvider/WebSocketProvider";
+import { jwtDecode } from 'jwt-decode';
 
 export const Dashboard = () => {
   const navigate = useNavigate();
@@ -12,11 +13,28 @@ export const Dashboard = () => {
   const [matchHistory, setMatchHistory] = useState([]);
 
   // can fetch match history from `http://localhost:8000/api/match-history/{username}`
+  // can fetch player stats from `http://localhost:8000/api/player-stats/{username}`
+  const accessToken = JSON.parse(localStorage.getItem('authtoken')).access;
+  const username = jwtDecode(accessToken).username;
 
   const fetchinfo = async () => {
-    const url = "http://localhost:8000/api/user-info"
-    const req = fetch()
+    const url = `http://localhost:8000/api/player-stats/${username}`;
+    const req = fetch(url, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${localStorage.getItem("token")}`
+      }
+    });
+    const res = await req;
+    const data = await res.json();
+    console.log(data);
   }
+
+  useEffect(() => {
+    fetchinfo();
+  }
+  , []);
 
   const sendMessage = () => {
     if (wsManager) {
