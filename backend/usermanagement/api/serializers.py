@@ -1,5 +1,5 @@
 from rest_framework_simplejwt.tokens import Token
-from .models import User, TwoFactorAuthAttempt
+from .models import User, TwoFactorAuthAttempt, Profil
 from django.contrib.auth.password_validation import validate_password
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework import serializers
@@ -69,6 +69,19 @@ class   RegistrationSerial(serializers.ModelSerializer):
         
         return user
     
+class ProfilSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Profil
+        fields = ['is_verified']
+
+class UserProfileSerializer(serializers.ModelSerializer):
+    profil = ProfilSerializer()
+    
+    class Meta:
+        model = User
+        fields = ['id', 'fullname', 'username', 'email', 'nblose', 
+                 'nbwin', 'score', 'img', 'avatar', 'profil']
+
 class LogoutSerial(serializers.Serializer):
     refresh = serializers.CharField()
     
