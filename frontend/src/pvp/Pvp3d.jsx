@@ -102,8 +102,9 @@ function Pve3d() {
         }
         else if (event === 'spin') {
             paddlePositionDiffRef.current?.set(spin.x, spin.y, spin.z);
+            console.log(spin);
         }
-        animatePaddleRotation(paddle1Ref.current, paddle2Ref.current);
+        // animatePaddleRotation(paddle1Ref.current, paddle2Ref.current);
     };
     function animatePaddleRotation(paddle1, paddle2) {
         let rotationy = Math.atan2(Math.abs(paddle1.position.y), paddle1.position.x * 5);
@@ -449,7 +450,7 @@ function Pve3d() {
                 wsRef.current.send(JSON.stringify({
                     type: 'game_event',
                     event: 'spin',
-                    spin: paddlePositionDiff,
+                    spin: {x: paddlePositionDiff.x, y: paddlePositionDiff.y, z: paddlePositionDiff.z},
                 }));
                 velocity.x -= paddlePositionDiff.x / 200;
                 velocity.z -= paddlePositionDiff.z / 500;

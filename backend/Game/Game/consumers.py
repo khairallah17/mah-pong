@@ -430,6 +430,7 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
                     'event': event,
                     'player_id': player_id,
                     'position': data.get('position'),
+                    'spin': data.get('spin'),
                     'scoreP1': data.get('scoreP1'),
                     'scoreP2': data.get('scoreP2')
                 }
@@ -569,6 +570,7 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
             'event': game_event,
             'player_id': player_id,
             'position': event.get('position'),
+            'spin': event.get('spin'),
             'scoreP1': scoreP1,
             'scoreP2': scoreP2
         }))
