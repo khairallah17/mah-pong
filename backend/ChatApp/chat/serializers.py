@@ -8,7 +8,7 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ['id', 'username']
 
 class MessageSerializer(serializers.ModelSerializer):
-    sender = serializer.CharField(source='sender.username')
+    sender = serializers.CharField(source='sender.username')
     receiver = serializers.CharField(source='receiver.username')
 
     class Meta:

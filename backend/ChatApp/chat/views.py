@@ -1,12 +1,14 @@
 from django.shortcuts import render
 from django.contrib.auth.models import User
 from rest_framework.decorators import api_view
-from rest_framework.response import response
+from rest_framework.response import Response
 from .models import Message
 from .serializers import MessageSerializer, UserSerializer
 
 @api_view(['GET'])
 def get_users(request):
+    print(request)
+    print("heeere i am ")
     users = User.objects.exclude(id=request.user.id) #Exclude current user
     serializer = UserSerializer(users, many=True)
     return Response(serializer.data)
@@ -21,3 +23,8 @@ def get_conversation(request, user_id):
 
     serializer = MessageSerializer(messages, many=True)
     return Response(serializer.data)
+
+@api_view(['GET'])
+def test(request):
+    test = "fasdf"
+    return Response(test)

@@ -26,7 +26,8 @@ const Chat = ({ roomName }) => {
 
     const fetchUsers = async () => {
         try {
-            const response = await axios.get('http://localhost:8000/api/users/');
+            const response = await axios.get('http://localhost:8000/chat/api/users/');
+            console.log("FETCHED USERS ==> ", res)
             setUsers(response.data);
         } catch (error) {
             console.error("Error fetching users:", error);
@@ -38,7 +39,7 @@ const Chat = ({ roomName }) => {
     const loadConversation = async (userId) => {
         try {
             setSelectedUser(userId); //Highlight selected user
-            const response = await axios.get('http://localhost:8000/api/conversation/${userId}/');
+            const response = await axios.get(`http://localhost:8000/chat/api/conversation/${userId}/`);
             setMessages(response.data);
         } catch (error) {
             console.error("Error Loading conversation:", error);
@@ -50,7 +51,7 @@ const Chat = ({ roomName }) => {
     useEffect(() => {
         if (selectedUser) {
             const chatSocket = new WebSocket(
-                'ws://localhost:8000/ws/chat/${selectedUser}/'
+                `ws://localhost:8000/ws/chat/${selectedUser}/` // array
             );
             
             chatSocket.onmessage = (e) => {
