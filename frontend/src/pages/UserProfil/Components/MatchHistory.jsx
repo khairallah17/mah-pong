@@ -1,27 +1,22 @@
 import React, { useContext, useState, useEffect } from 'react';
 import AuthContext from "../../../context_login_Register/AuthContext"
 import matchimoji from "../../../images/Frame.svg"
+import { useParams } from 'react-router-dom';
 import Swal from 'sweetalert2'
 
 
-const MatchHistory = ({ Username }) => {
+const MatchHistory = () => {
 
   const [userMatch, setUserMatch] =  useState([]);
   const { authtoken } = useContext(AuthContext);
+  const { username } = useParams();
+
 
   useEffect(() => {
       const fetchdata = async () => {
 
-        const url = Username
-        ? `http://localhost:8001/api/match-history/${Username}/`
-        : 'http://localhost:8001api/match-history/';
-
         try {
-          const response = await fetch(url, {
-            headers: {
-              'Authorization': `Bearer ${authtoken?.access}`,
-            }
-          });
+          const response = await fetch(`http://localhost:8000/api/player-stats/${username}/`)
 
         if (!response.ok) {
           throw new Error('Failed to fetch user stats');
@@ -42,8 +37,15 @@ const MatchHistory = ({ Username }) => {
         }
       };
       fetchdata();
+      console.log(username);
     }, [userMatch, authtoken]);
 
+    // if (error) return (
+    //   <div className="flex items-center justify-center h-screen text-red-500">
+    //     Error: {error}
+    //   </div>
+    // );
+    
   const summary = {
     wins: 4,
     losses: 3,

@@ -1,18 +1,17 @@
-import React from 'react';
-import MatchHistory from './UserProfil/Components/MatchHistory';
-// import './Profile.css';
+import React from 'react'
+import {PictureUser, MatchHistory} from './UserProfil/Components/'
 
-const Profil = () => {
-
-  const getinfo = {}
-
-
+export const Profil = () => {
   return (
-    <div className="profile-page">
-      <h1>Profile</h1>
-    <MatchHistory username={eagoumi} />
+    <div className='flex'>
+      <div className=''>
+        <PictureUser />
+      </div>
+      {/* <div className=''>
+        <MatchHistory />
+      </div> */}
     </div>
-  );
-};
+  )
+}
 
 export default Profil;

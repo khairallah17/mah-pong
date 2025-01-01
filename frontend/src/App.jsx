@@ -57,11 +57,6 @@ function App() {
               // </ProtectLogin>
             } />
 
-            <Route path="/picture-user" element={
-              // <ProtectLogin>
-              <PictureUser />
-              // </ProtectLogin>
-            } />
 
             <Route path="/game-stats" element={
               // <ProtectLogin>
@@ -88,7 +83,11 @@ function App() {
             <Route path="/pvp2d" element={<Pvp2d />} />
             <Route path="/pve2d" element={<Pve2d />} />
             <Route path="/profile" element={<Profile />} />
-            <Route path="/profil/:username" element={<Profil />} />
+            <Route path="/profil/:username" element={
+              // <ProtectLogin>
+              <Profil />
+              // </ProtectLogin>
+            } />
             <Route path="/securityProfile" element={<SecurityProfile />} />
             {/* <Route path="/search" element={<SearchPage />} /> */}
             <Route path='/tournament' element={<Tournament/>}/>
