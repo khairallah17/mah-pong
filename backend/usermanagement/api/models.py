@@ -8,7 +8,7 @@ from django.conf import settings
 import os
 import random
 
-
+# class Friendlists()
 
 class User(AbstractUser):
     fullname = models.CharField(max_length=250)
@@ -32,6 +32,8 @@ class User(AbstractUser):
         upload_to='./',
         default=get_random_image
     )
+
+    friends = models.ManyToManyField("User", blank=True, related_name="friends")
     
     # Add these new fields for 2FA
     two_factor_enabled = models.BooleanField(default=False)
@@ -40,6 +42,16 @@ class User(AbstractUser):
     
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username']
+
+    def add_friends():
+    
+    def remove_friend():
+    
+    def recieve():
+
+    def unfriend():
+    
+    def is_it_friend():
 
     def profil(self):
         profile = Profil.objects.get(user=self)
@@ -57,6 +69,14 @@ class User(AbstractUser):
         self.two_factor_enabled = True
         self.two_factor_secret = secret
         self.save()
+class FriendRequest(models.Model):
+
+    def accept(self):
+    
+    def decline(self):
+    
+    def cancel(self):
+    
 
 class Profil(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)#,  unique=True) ==> if we use "models.ForeignKey(User, on_delete=models.CASCADE, unique=True)"  #mean When We delete User Profile will delete also
