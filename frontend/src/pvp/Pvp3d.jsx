@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { useEffect, useRef, useState } from 'react';
 import { gsap } from 'gsap';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
-
+import GameScore from './GameScore';
 
 function Pve3d() {
     const gameContainerRef = useRef(null);
@@ -18,6 +18,12 @@ function Pve3d() {
     const [isPlayer1, setIsPlayer1] = useState(true);
     const [showPopup, setShowPopup] = useState(false);
     const [countdown, setCountdown] = useState(3);
+    const [isPlayerReady, setIsPlayerReady] = useState(false);
+    const [opponentReady, setOpponentReady] = useState(false);
+    const countdownRef = useRef(null);
+    const [{ score1, score2 }, setScores] = useState({ score1: 0, score2: 0 });
+    const [{ username1, username2 }, setUsernames] = useState({ username1: '', username2: '' });
+    const winnerRef = useRef(null);
     const GRAVITY = -0.0012;
     const INITIAL_VELOCITY = new THREE.Vector3(0.005, 0.01, 0.025);
     const TABLE_DIMENSIONS = { width: 1.45, length: 2.6 };
@@ -35,6 +41,7 @@ function Pve3d() {
             wsRef.current = new WebSocket('ws://localhost:8000/ws/matchmaking/?token=' + accessToken);
             wsRef.current.onopen = () => {
                 console.log('WebSocket connection established');
+                wsRef.current.send(JSON.stringify({ type: 'player_ready' }));
             };
             wsRef.current.onmessage = async (event) => {
                 const message = JSON.parse(event.data);
@@ -50,14 +57,17 @@ function Pve3d() {
                     }
                 }
                 if (message.type === 'match_found') {
-                    setIsMatched(true)
-                    if (message.player_id === '2')
-                        setIsPlayer1(false);
+                    setIsMatched(true);
+                    if (message.player_id === '2') setIsPlayer1(false);
+                    if (message.score && message.score.player1 && message.score.player2)
+                        setScores({ score1: message.score.player1, score2: message.score.player2 });
+                    if (message.names && message.names.player1 && message.names.player2)
+                        setUsernames({ username1: message.names.player1, username2: message.names.player2 });
+                } else if (message.type === 'player_ready') {
+                    setOpponentReady(true);
                 } else if (message.type === 'game_event') {
-                    if (message.event === 'restart')
-                        restartGame(new THREE.Vector3(0, 1, 0));
-                    else
-                        updateScene(message.event, message.position, message.spin);
+                    if (message.event === 'restart') restartGame(new THREE.Vector3(0, 1, 0));
+                    else updateScene(message.event, message.position, message.spin);
                 } else if (message.type === 'game_state') {
                     //gameStateRef.current = message.game_state;
                     //setGameState(message.game_state);
@@ -74,6 +84,12 @@ function Pve3d() {
             }
         };
     }, [token]);
+
+    useEffect(() => {
+        if (isMatched && isPlayerReady && opponentReady) {
+            startCountdown();
+        }
+    }, [isMatched, isPlayerReady, opponentReady]);
 
     const refreshToken = async () => {
         let refreshtokenUrl = "http://localhost:8001/api/token/refresh/"
@@ -129,10 +145,11 @@ function Pve3d() {
         if (isPausedRef.current) {
             setShowPopup(true);
             setCountdown(3);
-            const interval = setInterval(() => {
+            if (countdownRef.current) clearInterval(countdownRef.current);
+            countdownRef.current = setInterval(() => {
                 setCountdown(prevCountdown => {
                     if (prevCountdown === 1) {
-                        clearInterval(interval);
+                        clearInterval(countdownRef.current);
                         setShowPopup(false);
                         isPausedRef.current = false;
                     }
@@ -385,12 +402,6 @@ function Pve3d() {
                 velocity.y += GRAVITY;
             }
 
-            function applyAirResistance() {
-                velocity.x -= velocity.x * 0.01;
-                velocity.z -= velocity.z * 0.01;
-                velocity.y -= velocity.y * 0.01;
-            }
-
             function handleCollisions() {
                 const ballBox = new THREE.Box3().setFromObject(ball);
                 const paddle1Box = new THREE.Box3().setFromObject(paddle1).expandByScalar(0.01);
@@ -404,20 +415,71 @@ function Pve3d() {
 
                 if (ball.position.z > 1.5) {
                     // Player 1 scores
-                    wsRef.current.send(JSON.stringify({
-                        type: 'game_event',
-                        event: 'restart',
-                    }));
-                    restartGame();
+                    setScores(prevScores => {
+                        const newScores = { score1: prevScores.score1 + 1, score2: prevScores.score2 };
+                        if (newScores.score2 >= 10) {
+                            if (isPlayer1) {
+                                wsRef.current.send(JSON.stringify({
+                                    type: 'game_event',
+                                    event: 'game_over',
+                                    winner: 'Player 1',
+                                    scoreP1: newScores.score1,
+                                    scoreP2: newScores.score2,
+                                }));
+                            }
+                            winnerRef.current = 'Player 1'
+                            isPausedRef.current = true;
+                            setShowPopup(true);
+                        }
+                        else {
+                            wsRef.current.send(JSON.stringify({
+                                type: 'game_event',
+                                event: 'score_update',
+                                scoreP1: newScores.score1,
+                                scoreP2: newScores.score2,
+                            }));
+                            wsRef.current.send(JSON.stringify({
+                                type: 'game_event',
+                                event: 'restart',
+                            }));
+                            restartGame();
+                        }
+                        return newScores;
+                    });
                 } else if (ball.position.z < -1.5) {
                     // Player 2 scores
-                    wsRef.current.send(JSON.stringify({
-                        type: 'game_event',
-                        event: 'restart',
-                    }));
-                    restartGame();
-                }
-                else if (ball.position.y < 0.2) {
+                    setScores(prevScores => {
+                        const newScores = { score1: prevScores.score1, score2: prevScores.score2 + 1};
+                        if (newScores.score2 >= 10) {
+                            if (isPlayer1) {
+                                wsRef.current.send(JSON.stringify({
+                                    type: 'game_event',
+                                    event: 'game_over',
+                                    winner: 'Player 2',
+                                    scoreP1: newScores.score1,
+                                    scoreP2: newScores.score2,
+                                }));
+                            }
+                            winnerRef.current = 'Player 2'
+                            isPausedRef.current = true;
+                            setShowPopup(true);
+                        }
+                        else {
+                            wsRef.current.send(JSON.stringify({
+                                type: 'game_event',
+                                event: 'score_update',
+                                scoreP1: newScores.score1,
+                                scoreP2: newScores.score2,
+                            }));
+                            wsRef.current.send(JSON.stringify({
+                                type: 'game_event',
+                                event: 'restart',
+                            }));
+                            restartGame();
+                        }
+                        return newScores;
+                    });
+                } else if (ball.position.y < 0.2) {
                     wsRef.current.send(JSON.stringify({
                         type: 'game_event',
                         event: 'restart',
@@ -429,8 +491,7 @@ function Pve3d() {
                     handlePaddle1Collision(ballBox, paddle1Box);
                 }
 
-                handleSpin();
-                console.log(paddlePositionDiffRef.current);
+                //handleSpin();
 
                 if (ballBox.intersectsBox(paddle2Box)) {
                     handlePaddle2Collision(ballBox, paddle2Box);
@@ -576,21 +637,16 @@ function Pve3d() {
             }
 
             return () => {
+                window.removeEventListener('resize', () => onWindowResize(camera, renderer));
+                window.removeEventListener('keydown', onRestartKey);
+                window.removeEventListener('click', onToggleListening);
+                window.removeEventListener('mousemove', (event) => onMouseMove(event, mouse, paddle1, camera, table));
+                console.log('cleanup');
                 if (gameContainer && renderer.domElement) {
                     gameContainer.removeChild(renderer.domElement);
                 }
                 renderer.dispose();
 
-                // paddle1?.geometry.dispose();
-                // paddle2?.geometry.dispose();
-                // ball?.geometry.dispose();
-                // table?.geometry.dispose();
-                // grid?.geometry.dispose();
-
-                window.removeEventListener('resize', () => onWindowResize(camera, renderer));
-                window.removeEventListener('keydown', onRestartKey);
-                window.removeEventListener('click', onToggleListening);
-                window.removeEventListener('mousemove', (event) => onMouseMove(event, mouse, paddle1, camera, table));
                 // document.removeEventListener('visibilitychange', handleVisibilityChange);
                 scene.clear();
             };
@@ -627,10 +683,33 @@ function Pve3d() {
     //     }
     // };
 
+    function handleScoreUpdate(newScores) {
+        setScores(newScores);
+        wsRef.current.send(JSON.stringify({
+            type: 'game_event',
+            event: 'score_update',
+            scoreP1: newScores.score1,
+            scoreP2: newScores.score2,
+        }));
+    }
+
+    function handleGameOver(winner) {
+        winnerRef.current = winner;
+        wsRef.current.send(JSON.stringify({
+            type: 'game_event',
+            event: 'game_over',
+            winner: winner,
+            scoreP1: score1,
+            scoreP2: score2,
+        }));
+    }
+
     function restartGame() {
         console.log('restart');
         velocityRef.current?.copy(INITIAL_VELOCITY);
         paddlePositionDiffRef.current?.set(0, 0, 0);
+        // paddle1Ref.current?.position.set(0, 1, 1);
+        // paddle2Ref.current?.position.set(0, 1, -1);
         ballRef.current?.position.copy(initBallPos);
         isPausedRef.current = true;
         startCountdown();
@@ -639,6 +718,33 @@ function Pve3d() {
     return (
         <>
             {!isMatched && <h1>Looking for an opponent...</h1>}
+            {winnerRef.current && (
+                <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-gray-900/95 p-8 rounded-lg text-center">
+                    <h2 className="text-2xl font-bold text-white mb-4">{winnerRef.current} Wins!</h2>
+                    <button
+                        onClick={() => window.location.reload()}
+                        className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                    >
+                        Restart Game
+                    </button>
+                </div>
+            )}
+            {isMatched && (
+                <div id="game-container">
+                    <GameScore
+                        player1={{
+                            username: username1,
+                            avatar: "/player1.png?height=40&width=40",
+                            score: score1
+                        }}
+                        player2={{
+                            username: username2,
+                            avatar: "/player2.png?height=40&width=40",
+                            score: score2
+                        }}
+                    />
+                </div>
+            )}
             <div ref={gameContainerRef} id="game-container" style={{
                 margin: 0,
                 padding: 0,
@@ -661,6 +767,28 @@ function Pve3d() {
                 >
                     {countdown}
                 </div>}
+                {winnerRef.current && (
+                    <div style={{
+                        position: 'absolute',
+                        top: '50%',
+                        left: '50%',
+                        transform: 'translate(-50%, -50%)',
+                        padding: '20px',
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        color: 'white',
+                        fontSize: '20px',
+                        zIndex: '1000',
+                        textAlign: 'center'
+                    }}>
+                        <h2>{winnerRef.current} Wins!</h2>
+                        <button onClick={() => {
+                            setScores({ score1: 0, score2: 0 });
+                            winnerRef.current = null;
+                            restartGame();
+                        }}>Play Again</button>
+                        <button onClick={() => window.location.href = '/Dashboard'}>Quit</button>
+                    </div>
+                )}
             </div>
         </>
     );

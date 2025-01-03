@@ -21,92 +21,93 @@ import TournamentHome from './pages/tournament/tournamentHome';
 import { WebSocketProvider } from './WebSocketProvider/WebSocketProvider.jsx';
 import NotificationDisplay from './pages/NotificationDisplay.jsx';
 import { MatchHistory, PictureUser, GameStats, Achievement } from "./pages/UserProfil/Components";
+import ColorProvider from './context/ColorContext';
 
 function App() {
 
 
   return (
-    // <div className='sidebar'>
-    <Router>
-      <AuthProvider>
-        <WebSocketProvider>
-            <NotificationDisplay />
-          <Routes>
-            <Route path="/" element={<HomePage />} />
-            {/* ProtectLogin componnent Private if are already logged in */}
-            <Route path="/login" element={
-              // <ProtectLogin>
-              <Login />
-              // </ProtectLogin>
-            } />
-            <Route path="/register" element={
-              // <ProtectLogin>
-              <Register />
-              // </ProtectLogin>
-            } />
+    <ColorProvider>
+      <Router>
+        <AuthProvider>
+          <WebSocketProvider>
+              <NotificationDisplay />
+            <Routes>
+              <Route path="/" element={<HomePage />} />
+              {/* ProtectLogin componnent Private if are already logged in */}
+              <Route path="/login" element={
+                // <ProtectLogin>
+                <Login />
+                // </ProtectLogin>
+              } />
+              <Route path="/register" element={
+                // <ProtectLogin>
+                <Register />
+                // </ProtectLogin>
+              } />
 
-            <Route path="/match-history" element={
-              // <ProtectLogin>
-              <MatchHistory />
-              // </ProtectLogin>
-            } />
+              <Route path="/match-history" element={
+                // <ProtectLogin>
+                <MatchHistory />
+                // </ProtectLogin>
+              } />
 
-            <Route path="/achievement" element={
-              // <ProtectLogin>
-              <Achievement />
-              // </ProtectLogin>
-            } />
-
-
-            <Route path="/game-stats" element={
-              // <ProtectLogin>
-              <GameStats />
-              // </ProtectLogin>
-            } />
-            
-            <Route path="/password-reset" element={
-              <VerifyPsdEmail />
-            } />
-
-          <Route path="/password-reset/confirm" element={
-            <ResetPassword />
-          } />
+              <Route path="/achievement" element={
+                // <ProtectLogin>
+                <Achievement />
+                // </ProtectLogin>
+              } />
 
 
-          {/* ProtectRouter component Private if are not logged in */}
-          <Route element={<ProtectRouter />}>
-            <Route path="/security" element={<SecurityPage />} />
-            <Route path="/search" element={<SearchPage />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/pve3d" element={<Pve3d />} />
-            <Route path="/pvp3d" element={<Pvp3d />} />
-            <Route path="/pvp2d" element={<Pvp2d />} />
-            <Route path="/pve2d" element={<Pve2d />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/profil/:username" element={
-              // <ProtectLogin>
-              <Profil />
-              // </ProtectLogin>
-            } />
-            <Route path="/securityProfile" element={<SecurityProfile />} />
-            {/* <Route path="/search" element={<SearchPage />} /> */}
-            <Route path='/tournament' element={<Tournament/>}/>
-            <Route path='/tournamentHome' element={<TournamentHome/>}/>
-            <Route path="/TwoFactorAuth" element={
-                <TwoFactorAuth />
-            } />
-            
-            
-          </Route>
+              <Route path="/game-stats" element={
+                // <ProtectLogin>
+                <GameStats />
+                // </ProtectLogin>
+              } />
+              
+              <Route path="/password-reset" element={
+                <VerifyPsdEmail />
+              } />
 
-            {/* Catch all other routes */}
-            {/* <Route path="*" element={<Navigate to="/" replace />} /> */}
-            {/* we should to replace / to /404-error page (Error 404 Page )*/}
-          </Routes>
-        </WebSocketProvider>
-      </AuthProvider>
-    </Router>
-    // </div>
+            <Route path="/password-reset/confirm" element={
+              <ResetPassword />
+            } />
+
+
+            {/* ProtectRouter component Private if are not logged in */}
+            <Route element={<ProtectRouter />}>
+              <Route path="/security" element={<SecurityPage />} />
+              <Route path="/search" element={<SearchPage />} />
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/pve3d" element={<Pve3d />} />
+              <Route path="/pvp3d" element={<Pvp3d />} />
+              <Route path="/pvp2d" element={<Pvp2d />} />
+              <Route path="/pve2d" element={<Pve2d />} />
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/profil/:username" element={
+                // <ProtectLogin>
+                <Profil />
+                // </ProtectLogin>
+              } />
+              <Route path="/securityProfile" element={<SecurityProfile />} />
+              {/* <Route path="/search" element={<SearchPage />} /> */}
+              <Route path='/tournament' element={<Tournament/>}/>
+              <Route path='/tournamentHome' element={<TournamentHome/>}/>
+              <Route path="/TwoFactorAuth" element={
+                  <TwoFactorAuth />
+              } />
+              
+              
+            </Route>
+
+              {/* Catch all other routes */}
+              {/* <Route path="*" element={<Navigate to="/" replace />} /> */}
+              {/* we should to replace / to /404-error page (Error 404 Page )*/}
+            </Routes>
+          </WebSocketProvider>
+        </AuthProvider>
+      </Router>
+    </ColorProvider>
   );
 }
 

@@ -16,12 +16,6 @@ class Match(models.Model):
     datetime = models.DateTimeField(auto_now_add=True)
 
     def save(self, *args, **kwargs):
-        if self.username1:
-            self.username1 = self.username1[:10]
-        if self.username2:
-            self.username2 = self.username2[:10]
-        if self.winner:
-            self.winner = self.winner[:10]
         super(Match, self).save(*args, **kwargs)
 
     def __str__(self):
@@ -50,8 +44,6 @@ class TournamentMatch(models.Model):
     tournament = models.ForeignKey(Tournament, on_delete=models.CASCADE)
     round = models.IntegerField()
     position = models.IntegerField()
-    # scoreP1 = models.IntegerField(default=0)
-    # scoreP2 = models.IntegerField(default=0)
     player1 = models.CharField(max_length=10, blank=True, null=True)
     player2 = models.CharField(max_length=10, blank=True, null=True)
     winner = models.CharField(max_length=10, blank=True, null=True)
@@ -60,12 +52,6 @@ class TournamentMatch(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def save(self, *args, **kwargs):
-        if self.player1:
-            self.player1 = self.player1[:10]
-        if self.player2:
-            self.player2 = self.player2[:10]
-        if self.winner:
-            self.winner = self.winner[:10]
         super(TournamentMatch, self).save(*args, **kwargs)
 
 class Achievement(models.Model):
