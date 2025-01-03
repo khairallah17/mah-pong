@@ -38,7 +38,7 @@ const NotificationDisplay = () => {
   };
 
   return (
-    <div className="fixed top-4 right-4 z-50">
+    <div className="z-50">
       <button
         onClick={toggleNotifications}
         className="p-2 rounded-full bg-blue-500 text-white hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300"

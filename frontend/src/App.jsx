@@ -36,7 +36,6 @@ function App() {
       <Providers>
         <AuthProvider>
           <WebSocketProvider>
-              <NotificationDisplay />
             <Routes>
               <Route path="/" element={<HomePage />} />
               {/* ProtectLogin componnent Private if are already logged in */}
@@ -86,10 +85,10 @@ function App() {
                 <Route path="/search" element={<SearchPage />} />
                 {/* <Route path="/dashboard" element={<FullDashboard />} /> */}
                 <Route path='/dashboard' element={<FullDashboard />} />
+                <Route path="/pvp2d" element={<ColorProvider> <Pvp2d /> </ColorProvider> } />
+                <Route path="/pve2d" element={<ColorProvider> <Pve2d /> </ColorProvider>} />
                 <Route path="/pve3d" element={<Pve3d />} />
                 <Route path="/pvp3d" element={<Pvp3d />} />
-                <Route path="/pvp2d" element={<Pvp2d />} />
-                <Route path="/pve2d" element={<Pve2d />} />
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/profil/:username" element={
                   // <ProtectLogin>

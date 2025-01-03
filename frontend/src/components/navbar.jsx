@@ -1,8 +1,12 @@
 import { useSidebarContext } from '../hooks/useSidebar'
 import { Search, X, Menu } from 'lucide-react'
+import NotificationDisplay from '../pages/NotificationDisplay'
+import { jwtDecode } from 'jwt-decode';
 
 const Navbar = () => {
 
+    const accessToken = JSON.parse(localStorage.getItem('authtoken')).access;
+    const username = jwtDecode(accessToken).username;
     const { toggleSidebar, open } = useSidebarContext()    
 
     console.log("OPEN ==> ", open)
@@ -21,12 +25,13 @@ const Navbar = () => {
             <div className='flex items-center justify-between w-full pl-10'>
                 <div className='flex items-center gap-2'>
                     <Search className='text-gray-500' size={16}/>
-                    <input type="search" name='search' className='outline-none bg-transparent text-gray-500 text-xs' placeholder='Search For a Friend' />
+                    <input type="search" name='search' className='outline-none bg-transparent text-gray-500 text-xs' placeholder='Search For a Player' />
                 </div>
                 <div className='items-center gap-3 md:flex hidden'>
+                    <NotificationDisplay />
                     <div>
-                        <p className=''>Mohammed khairallah</p>
-                        <p className='text-gray-500 text-sm'>mkhairal</p>
+                        <p className=''>{username}</p>
+                        <p className='text-gray-500 text-sm'>idk what to put here</p>
                     </div>
                     <div className='w-12 h-12 bg-white rounded-full'></div>
                 </div>

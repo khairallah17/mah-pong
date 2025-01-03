@@ -37,7 +37,7 @@ export const Login = () => {
   
 
   return (
-    <div className='cnt-lg grid grid-cols-2 gap-2 p-2 text-white justify-items-center'>
+    <div className='cnt-lg grid grid-cols-2 gap-2 p-2 text-white justify-items-center bg-black'>
       <div className=' w-full h-full content-center'>
         <form onSubmit={loginsubmit} className='w-[454px] h-[531px] '>
               <h1 className='font-bold rgb(255, 255, 255)'>LOGIN</h1>

@@ -8,6 +8,7 @@ const Layout = () => {
   const { open } = useSidebarContext()
 
   return (
+    <div>
       <nav className={`root-grid bg-root-background bg-cover bg-no-repeat bg-center h-screen font-inter max-h-screen ${!open ? "grid-cols-[80px_1fr]" : "grid-cols-[200px_1fr]"}`}>
           <Navbar/>
           <Sidebar/>
@@ -15,6 +16,7 @@ const Layout = () => {
             <Outlet/>
           </main>
       </nav>
+    </div>
   )
 }
 
