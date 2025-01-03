@@ -7,6 +7,8 @@ import { Achievements } from '../components/AchievementBadgeProps';
 import { PlayerList } from '../components/PlayerList';
 
 const FullDashboard = () => {
+  // can fetch match history from `http://localhost:8000/api/match-history/{username}`
+  // can fetch player stats from `http://localhost:8000/api/player-stats/{username}`
   const [activeTab, setActiveTab] = useState('matches');
   const [selectedMode, setSelectedMode] = useState(null);
 

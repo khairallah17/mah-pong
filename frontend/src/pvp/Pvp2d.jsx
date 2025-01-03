@@ -29,7 +29,6 @@ function Pvp2d() {
     const [inviteCode, setInviteCode] = useState(new URLSearchParams(window.location.search).get('invite'));
 
     const { tableMainColor, tableSecondaryColor, paddlesColor } = useContext(ColorContext);
-    const tableAddonsRef = useRef(null);
 
     useEffect(() => {
         if (winnerRef.current) {
@@ -145,7 +144,6 @@ function Pvp2d() {
             createSpaceBackground(scene);
             const table = createTable();
             const tableaddons = createTableAddons();
-            tableAddonsRef.current = tableaddons;
             const { paddle1, paddle2 } = createPaddles(isPlayer1);
             const ball = createBall();
 
@@ -279,25 +277,6 @@ function Pvp2d() {
             window.removeEventListener('resize', onWindowResize);
         }
     }, [isMatched, isPlayer1, gameState, tableMainColor, tableSecondaryColor, paddlesColor]);
-
-    // Watch for color changes
-    useEffect(() => {
-        if (tableRef.current) {
-            tableRef.current.material.color.set(tableMainColor);
-        }
-        if (tableAddonsRef.current) {
-            tableAddonsRef.current.children.forEach((child, index) => {
-                if (index < 5) {
-                    // Stripes
-                    child.material.color.set(tableSecondaryColor);
-                }
-            });
-        }
-        if (paddle1Ref.current && paddle2Ref.current) {
-            paddle1Ref.current.material.color.set(paddlesColor);
-            paddle2Ref.current.material.color.set(paddlesColor);
-        }
-    }, [tableMainColor, tableSecondaryColor, paddlesColor]);
 
     const updateUserData = async (username, data) => {
         try {
