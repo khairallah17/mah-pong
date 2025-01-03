@@ -31,7 +31,7 @@ function App() {
 
 
   return (
-    // <div className='sidebar'>
+    // gotta use color provider here
     <Router>
       <Providers>
         <AuthProvider>
