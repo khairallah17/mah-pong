@@ -1,13 +1,20 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useSidebarContext } from "../../hooks/useSidebar";
 
 const TournamentHome = () => {
+
+    const { setActiveLink } = useSidebarContext()
+
     const navigate = useNavigate();
     const [tournamentCode, setTournamentCode] = useState("");
     const [tournaments, setTournaments] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
+    
+        setActiveLink("tournament");
+    
         const fetchTournaments = async () => {
             try {
                 const response = await fetch("http://localhost:8000/api/tournaments");
@@ -29,12 +36,12 @@ const TournamentHome = () => {
     }, []);
 
     return (
-        <div className="min-h-screen p-6 bg-gradient-to-br from-blue-900 via-blue-700 to-blue-500 text-white">
-            <div className="max-w-4xl mx-auto">
-                <h1 className="text-4xl font-bold mb-8 text-center animate-fade-in-down">
+        <div className="w-full h-full flex">
+            <div className="mx-auto self-center justify-self-center">
+                <h1 className="text-4xl font-bold mb-8 text-center animate-fade-in-down zen-dots">
                     Tournament Home
                 </h1>
-                <div className="mb-8 bg-white/10 p-6 rounded-lg backdrop-blur-sm animate-fade-in">
+                <div className="mb-8 bg-black/50 rounded-xl border border-gray-800 overflow-hidden backdrop-blur-sm p-6 animate-fade-in">
                     <input
                         className="w-full p-3 border border-blue-300 rounded mb-4 bg-white/20 text-white placeholder-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-400 transition duration-300"
                         placeholder="Tournament code"
@@ -44,13 +51,13 @@ const TournamentHome = () => {
                     <div className="flex space-x-4">
                         <button
                             className="flex-1 p-3 bg-blue-500 text-white rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 transition duration-300 transform hover:scale-105"
-                            onClick={() => navigate(`/tournament?code=${tournamentCode}`)}
+                            onClick={() => navigate(`/dashboard/tournament/live?code=${tournamentCode}`)}
                         >
                             Join
                         </button>
                         <button
                             className="flex-1 p-3 bg-green-500 text-white rounded hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-400 transition duration-300 transform hover:scale-105"
-                            onClick={() => navigate("/tournament")}
+                            onClick={() => navigate("/dashboard/tournament/live")}
                         >
                             Create
                         </button>
@@ -71,7 +78,7 @@ const TournamentHome = () => {
                             >
                                 <button
                                     className="w-full text-left"
-                                    onClick={() => navigate(`/tournament?code=${tournament.code}`)}
+                                    onClick={() => navigate(`/dashboard/tournament/live?code=${tournament.code}`)}
                                 >
                                     <div className="flex flex-col">
                                         <p className="text-lg font-semibold mb-2">{tournament.name || 'Unnamed Tournament'}</p>

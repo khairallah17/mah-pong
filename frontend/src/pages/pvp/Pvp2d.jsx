@@ -1,8 +1,8 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { useEffect, useRef, useState } from 'react';
-import GameSettingsButton from './Customize2d';
-import GameScore from './GameScore';
+import GameSettingsButton from '../../components/pvp/Customize2d';
+import GameScore from '../../components/pvp/GameScore';
 
 function Pvp2d() {
     const wsRef = useRef(null);

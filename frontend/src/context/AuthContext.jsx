@@ -1,10 +1,9 @@
 import { useState, useEffect, createContext, useCallback } from "react";
 import { jwtDecode } from "jwt-decode"
 import { useNavigate, useLocation } from "react-router-dom"
-import Swal from 'sweetalert2'
+import useAxios from "../hooks/useAxios";
 
-
-// const Swal = require('sweetSwal2')
+import Swal from "sweetalert2";
 
 const AuthContext = createContext()
 
@@ -101,6 +100,9 @@ export const AuthProvider = ({ children }) => {
                     timer: 3000
                 });
             } else {
+                
+                const d = response.status
+                console.log(d)
                 Swal.fire({
                     position: "top-end",
                     icon: "error",
@@ -126,6 +128,8 @@ export const AuthProvider = ({ children }) => {
     
     const registerUsers = async (fullname, username, email, password, confirm_password) => {
 
+        console.log({fullname, username, email, password, confirm_password})
+
     let tokenUrlregister = "http://localhost:8001/api/register/"
     const response = await fetch(tokenUrlregister ,{
         method: 'POST',
@@ -143,7 +147,7 @@ export const AuthProvider = ({ children }) => {
         // setAuthToken(JsonData) //JsonData have access token an the refresh token
         // setUser(jwtDecode(JsonData.access)) // decode access token
         // localStorage.getItem("AuthToken", JSON.stringify(JsonData));
-        navigation("/login") // Routing the USERS after he loggedin "Success"
+        // navigation("/login") // Routing the USERS after he loggedin "Success"
         Swal.fire({
             position: "top-end",
             title: "you have successfully Registred",
@@ -156,7 +160,9 @@ export const AuthProvider = ({ children }) => {
     else 
     {
         console.log(response.status)
-        console.error("An Error Occurred")
+        const d = await response.json()
+        console.log(d)
+        console.error("An Error Occurred ",)
         Swal.fire({
             position: "top-end",
             title: "There is some error in Your registration",

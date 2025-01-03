@@ -1,4 +1,4 @@
-// FullDashboard.jsx
+// Dashboard.jsx
 import React, { useState } from 'react';
 import { GameModes } from '../components/GameModes';
 import { MatchHistory } from '../components/Match-history';
@@ -6,7 +6,7 @@ import { Statistics } from '../components/StatisticUser';
 import { Achievements } from '../components/AchievementBadgeProps';
 import { PlayerList } from '../components/PlayerList';
 
-const FullDashboard = () => {
+const Dashboard = () => {
   const [activeTab, setActiveTab] = useState('matches');
   const [selectedMode, setSelectedMode] = useState(null);
 
@@ -25,7 +25,7 @@ const FullDashboard = () => {
 
   return (
     <div className="w-full h-full">
-      <div className="p-4 lg:p-6 space-y-6 mt-[100px]">
+      <div className="p-4 lg:p-6 space-y-6">
         <div className="grid md:grid-cols-3 lg:grid-cols-4 gap-4 lg:gap-6">
           <div className="md:col-span-2 lg:col-span-3 bg-black/50 rounded-xl border border-gray-800 overflow-hidden backdrop-blur-sm">
             <div className="relative h-[450px] lg:h-90">
@@ -78,4 +78,4 @@ const FullDashboard = () => {
   );
 };
 
-export default FullDashboard;
+export default Dashboard;

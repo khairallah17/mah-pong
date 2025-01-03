@@ -1,7 +1,7 @@
 import { React, useState, useRef, useEffect, useContext } from 'react'
 import { Trophy } from 'lucide-react'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { WebSocketContext } from '../../WebSocketProvider/WebSocketProvider'
+import { WebSocketContext } from '../../websockets/WebSocketProvider'
 
 // class Match(models.Model):
 //   player1 = models.CharField(max_length=100)
@@ -88,7 +88,7 @@ export default function Tournament() {
     wsRef.current.send(JSON.stringify({ type: 'quit_tournament' }));
     setTimeout(() => {
       setLoadingQuit(false);
-      navigate('/TournamentHome');
+      navigate('/dashboard/tournament');
     }, 1000);
   };
 
@@ -139,11 +139,11 @@ export default function Tournament() {
   };
 
   return (
-    <div className="min-h-screen bg-[#1a1464] p-8">
-      <div className="max-w-7xl mx-auto">
+    <div className="w-full h-full justify-between flex flex-col bg-[#1a1464] p-8 pt-24">
+      <div className="mx-auto w-full">
         {/* Tournament Title */}
         <div className="text-center mb-12">
-          <h1 className="text-6xl font-bold text-white tracking-wider" style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.3)' }}>
+          <h1 className="text-6xl font-bold text-white tracking-wider zen-dots" style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.3)' }}>
             TOURNAMENT
           </h1>
           <div className="w-48 h-1 bg-white mx-auto mt-2"></div>
@@ -160,23 +160,23 @@ export default function Tournament() {
                     <div className="flex flex-col gap-4">
                       <button
                         onClick={() => match.player1 && handleWinnerSelection(match.id, match.player1)}
-                        className={`p-0 bg-transparent relative flex items-center overflow-visible transition-all duration-300 ${match.winner === match.player1 ? 'ring-2 ring-yellow-400' : ''
+                        className={`p-0 bg-transparent relative flex items-center overflow-visible rounded-xl transition-all duration-300 ${match.winner === match.player1 ? 'ring-1 ring-white' : ''
                           }`}
                       >
-                        <div className="absolute left-[2%] z-[1] w-[60px] h-[90%] bg-[#9a77ff] rounded-tr-[15px] rounded-bl-[15px]"></div>
-                        <div className="relative bg-white w-[100%] h-[100px] flex items-center clip-card">
+                        <div className="absolute z-[1] w-[80px] h-full rounded-l-xl bg-[#9a77ff]"></div>
+                        <div className="relative bg-black/50 border border-gray-800 overflow-hidden backdrop-blur-sm w-[100%] h-[100px] flex items-center clip-card rounded-xl">
                           <span className="absolute left-[20%] pl-12">{match.player1 || 'TBD'}</span>
                         </div>
                         <div className="absolute left-[100%] top-[50%] w-[13%] h-[2px] bg-white"></div>
-                        <div className='absolute left-[113%] top-[50%] w-[2px] h-[120%] bg-white'></div>
+                        <div className='absolute left-[113%] top-[50%] w-[2px] h-[118%] bg-white'></div>
                       </button>
                       <button
                         onClick={() => match.player2 && handleWinnerSelection(match.id, match.player2)}
-                        className={`p-0 bg-transparent relative flex items-center overflow-visible transition-all duration-300 ${match.winner === match.player2 ? 'ring-2 ring-yellow-400' : ''
+                        className={`p-0 bg-transparent relative flex items-center overflow-visible transition-all duration-300 rounded-xl ${match.winner === match.player2 ? 'ring-1 ring-white' : ''
                           }`}
                       >
-                        <div className="absolute left-[2%] z-[1] w-[60px] h-[90%] bg-[#9a77ff] rounded-tr-[15px] rounded-bl-[15px]"></div>
-                        <div className="relative bg-white w-[100%] h-[100px] flex items-center clip-card">
+                        <div className="absolute z-[1] w-[80px] h-full rounded-l-xl bg-[#9a77ff]"></div>
+                        <div className="relative bg-black/50 border border-gray-800 overflow-hidden backdrop-blur-sm w-[100%] h-[100px] flex items-center clip-card rounded-xl">
                           <span className="absolute left-[20%] pl-12">{match.player2 || 'TBD'}</span>
                         </div>
                         <div className="absolute left-[100%] top-[50%] w-[13%] h-[2px] bg-white"></div>
@@ -193,23 +193,23 @@ export default function Tournament() {
                     <div className="flex flex-col gap-4">
                       <button
                         onClick={() => match.player1 && handleWinnerSelection(match.id, match.player1)}
-                        className={`p-0 bg-transparent relative flex items-center overflow-visible transition-all duration-300 ${match.winner === match.player1 ? 'ring-2 ring-yellow-400' : ''
+                        className={`p-0 bg-transparent relative flex items-center overflow-visible transition-all duration-300 rounded-xl ${match.winner === match.player1 ? 'ring-1 ring-white' : ''
                           }`}
                       >
-                        <div className="absolute left-[2%] z-[1] w-[60px] h-[90%] bg-[#9a77ff] rounded-tr-[15px] rounded-bl-[15px]"></div>
-                        <div className="relative bg-white w-[100%] h-[100px] flex items-center clip-card">
+                        <div className="absolute z-[1] w-[80px] h-full rounded-l-xl bg-[#9a77ff]"></div>
+                        <div className="relative bg-black/50 border border-gray-800 overflow-hidden backdrop-blur-sm w-[100%] h-[100px] flex items-center clip-card rounded-xl">
                           <span className="absolute left-[20%] pl-12">{match.player1 || 'TBD'}</span>
                         </div>
                         <div className="absolute left-[100%] top-[50%] w-[13%] h-[2px] bg-white"></div>
-                        <div className='absolute left-[113%] top-[50%] w-[2px] h-[120%] bg-white'></div>
+                        <div className='absolute left-[113%] top-[50%] w-[2px] h-[118%] bg-white'></div>
                       </button>
                       <button
                         onClick={() => match.player2 && handleWinnerSelection(match.id, match.player2)}
-                        className={`p-0 bg-transparent relative flex items-center overflow-visible transition-all duration-300 ${match.winner === match.player2 ? 'ring-2 ring-yellow-400' : ''
+                        className={`p-0 bg-transparent relative flex items-center overflow-visible transition-all duration-300 rounded-xl ${match.winner === match.player2 ? 'ring-1 ring-white' : ''
                           }`}
                       >
-                        <div className="absolute left-[2%] z-[1] w-[60px] h-[90%] bg-[#9a77ff] rounded-tr-[15px] rounded-bl-[15px]"></div>
-                        <div className="relative bg-white w-[100%] h-[100px] flex items-center clip-card">
+                        <div className="absolute z-[1] w-[80px] h-full rounded-l-xl bg-[#9a77ff]"></div>
+                        <div className="relative bg-black/50 border border-gray-800 overflow-hidden backdrop-blur-sm w-[100%] h-[100px] flex items-center clip-card rounded-xl">
                           <span className="absolute left-[20%] pl-12">{match.player2 || 'TBD'}</span>
                         </div>
                         <div className="absolute left-[100%] top-[50%] w-[13%] h-[2px] bg-white"></div>
@@ -227,35 +227,43 @@ export default function Tournament() {
               <Trophy className="w-24 h-24 text-yellow-400" />
               <div className="text-yellow-400 text-2xl font-bold text-center mt-2">CHAMPION</div>
             </div>
-            <div className="w-[80%] h-12 bg-white rounded-md relative overflow-hidden">
+            <div className="w-[80%] h-12 bg-black/50 border border-gray-800 backdrop-blur-sm rounded-md relative overflow-hidden">
               <div className="absolute left-0 top-0 bottom-0 w-8 bg-violet-400"></div>
               <span className="pl-12">
                 {matches.length > 0 && matches[matches.length - 1].winner || 'TBD'}
               </span>
             </div>
           </div>
+
+          
         </div>
       </div>
-      <div className="fixed bottom-4 right-4">
-        <button
-          onClick={handleReady}
-          className={`px-4 py-2 bg-green-500 text-white rounded-md flex items-center gap-2 ${isReady || loadingReady ? 'opacity-50 cursor-not-allowed' : ''}`}
-          disabled={isReady || loadingReady}
-        >
-          {loadingReady ? <Spinner /> : 'Ready'}
-        </button>
-        <button
-          onClick={handleQuit}
-          className="px-4 py-2 bg-red-500 text-white rounded-md flex items-center gap-2"
-          disabled={loadingQuit}
-        >
-          {loadingQuit ? <Spinner /> : 'Quit'}
-        </button>
+
+
+      <div className="w-full flex items-end flex-col  bottom-4 right-4">
+        <div className="flex gap-4">
+          <button
+            onClick={handleReady}
+            className={`px-4 py-2 bg-green-500 text-white rounded-md flex items-center gap-2 ${isReady || loadingReady ? 'opacity-50 cursor-not-allowed' : ''}`}
+            disabled={isReady || loadingReady}
+          >
+            {loadingReady ? <Spinner /> : 'Ready'}
+          </button>
+          <button
+            onClick={handleQuit}
+            className="px-4 py-2 bg-red-500 text-white rounded-md flex items-center gap-2"
+            disabled={loadingQuit}
+          >
+            {loadingQuit ? <Spinner /> : 'Quit'}
+          </button>
+        </div>
         {/* tournament code */}
         <div className="text-white mt-4">
           Tournament Code: {tournamentCode}
         </div>
       </div>
+
+
     </div>
   )
 }
