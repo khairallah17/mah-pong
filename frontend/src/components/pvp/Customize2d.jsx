@@ -1,18 +1,19 @@
-import React, { useContext, useState, useEffect } from 'react';
-import { Settings, X } from 'lucide-react';
-import { ColorContext } from '../context/ColorContext';
+import React, { useState, useEffect } from 'react'
+import { Settings, X } from 'lucide-react'
 
 export default function GameSettingsButton() {
-  const { tableMainColor, setTableMainColor, tableSecondaryColor, setTableSecondaryColor, paddlesColor, setPaddlesColor } = useContext(ColorContext);
-  const [isOpen, setIsOpen] = useState(false);
-  const [isDarkTheme, setIsDarkTheme] = useState(false);
+  const [isOpen, setIsOpen] = useState(false)
+  const [tableMainColor, setTableMainColor] = useState('#00ff00')
+  const [tableSecondaryColor, setTableSecondaryColor] = useState('#008000')
+  const [paddlesColor, setPaddlesColor] = useState('#ffffff')
+  const [isDarkTheme, setIsDarkTheme] = useState(false)
 
-  const togglePopup = () => setIsOpen(!isOpen);
+  const togglePopup = () => setIsOpen(!isOpen)
 
   useEffect(() => {
     // Apply the theme to the document when it changes
-    document.documentElement.classList.toggle('dark', isDarkTheme);
-  }, [isDarkTheme]);
+    document.documentElement.classList.toggle('dark', isDarkTheme)
+  }, [isDarkTheme])
 
   return (
     <div className="fixed right-0 top-1/2 -translate-y-1/2">
@@ -114,6 +115,6 @@ export default function GameSettingsButton() {
         </div>
       </div>
     </div>
-  );
+  )
 }
 

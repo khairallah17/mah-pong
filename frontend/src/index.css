@@ -23,5 +23,20 @@
 
 .content-grid {
   grid-area: c;
-  margin-top: -100px;
+}
+
+.zen-dots {
+  font-family: "Zen Dots", sans-serif;
+  font-weight: 400;
+  font-style: normal;
+}
+
+@layer base {
+
+  * {
+    font-family: "Rajdhani", serif;
+    font-weight: 400;
+    font-style: normal;
+  }
+
 }

@@ -1,14 +1,47 @@
 
 import SidebarList from "./sidebarList"
-import { LayoutGrid, MessageCircleMore, Wallet } from "lucide-react"
+import { LayoutGrid, MessageCircleMore, Settings, Gamepad2, Trophy, UserPen, LockKeyhole } from "lucide-react"
 import { useSidebarContext } from "../hooks/useSidebar"
 import { LogOut } from "lucide-react"
 import { NavLink } from "react-router-dom"
 
 const navigation = [
-    {icon: <LayoutGrid size={24} />,root: "dashboard", link:"dashboard", list: ["overview","game", "leaderboard"]},
-    {icon: <MessageCircleMore size={24} />,root: "chat", link:"dashboard/chat", list: []},
-    {icon: <Wallet size={24} />,root: "shop", link:"dashboard/shop", list: []}
+    {
+        icon: <LayoutGrid size={24} />,
+        root: "dashboard",
+        link:"dashboard",
+        list: []
+    },
+    {
+        icon: <Gamepad2 size={24} />,
+        root: "Game",
+        link:"dashboard/game",
+        list: []
+    },
+    {
+        icon: <Trophy size={24} />,
+        root: "Tournament",
+        link:"dashboard/tournament",
+        list: []
+    },
+    {
+        icon: <MessageCircleMore size={24} />,
+        root: "chat",
+        link:"dashboard/chat",
+        list: []
+    },
+    {
+        icon: <LockKeyhole size={24} />,
+        root: "security",
+        link:"dashboard/security",
+        list: []
+    },
+    {
+        icon: <UserPen size={24} />,
+        root: "profile",
+        link:"dashboard/profile",
+        list: []
+    },
 ]
 
 const Sidebar = () => {
@@ -29,7 +62,7 @@ const Sidebar = () => {
                     <div className='w-6 h-6 bg-white rounded-full'></div>
                     <p className={`text-gray-500 text-sm hover:text-white duration-200 ${open ? "inline" : "hidden"}`}>mkhairal</p>
                 </NavLink>
-                <button className="text-gray-500 flex items-center gap-2 hover:text-white duration-200">
+                <button className="text-gray-500 flex items-center gap-2 !hover:text-white duration-200">
                     <LogOut className="text-gray-500"/>
                     <p className={`${open ? "flex" : "hidden"}`}>Logout</p>
                 </button>

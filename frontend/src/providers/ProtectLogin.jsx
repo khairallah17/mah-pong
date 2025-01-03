@@ -1,6 +1,6 @@
 import { useContext, useEffect } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
-import AuthContext from "../context_login_Register/AuthContext";
+import AuthContext from "../context/AuthContext";
 
 const ProtectLogin = ({ children }) => {
     const authtoken = useContext(AuthContext);

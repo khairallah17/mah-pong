@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import google_logo from '../images/google_logo.png'
 import intra_logo from '../images/42_Logo.png'
 import pong_rihgt from "../images/pong right.png"
-import AuthContext from "../context_login_Register/AuthContext"
+import AuthContext from "../context/AuthContext"
 
 export const Register = () => {
   const [fullname, setFullname] = useState("")

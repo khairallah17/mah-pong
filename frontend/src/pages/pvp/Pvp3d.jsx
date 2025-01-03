@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { useEffect, useRef, useState } from 'react';
 import { gsap } from 'gsap';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
-import GameScore from './GameScore';
+import GameScore from '../../components/pvp/GameScore';
 
 function Pve3d() {
     const gameContainerRef = useRef(null);

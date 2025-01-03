@@ -1,5 +1,5 @@
 import React, { useContext, useState, useEffect } from 'react';
-import AuthContext from "../../../context_login_Register/AuthContext"
+import AuthContext from "../../../context/AuthContext"
 import matchimoji from "../../../images/Frame.svg"
 import { useParams } from 'react-router-dom';
 import Swal from 'sweetalert2'

@@ -1,6 +1,6 @@
 import React, { useContext, useState, useEffect } from 'react';
-import AuthContext from "../context_login_Register/AuthContext"
-
+import AuthContext from "../context/AuthContext"
+import { useSidebarContext } from '../hooks/useSidebar';
 
 const UserProfile = ({ userId }) => {
   const [userStats, setUserStats] = useState(null);
@@ -8,7 +8,12 @@ const UserProfile = ({ userId }) => {
   const [error, setError] = useState(null);
   const { authTokens } = useContext(AuthContext);
 
+  const { setActiveLink } = useSidebarContext()
+
   useEffect(() => {
+
+    setActiveLink("profile")
+
     const fetchUserStats = async () => {
       try {
         const url = userId 

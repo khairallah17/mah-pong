@@ -3,6 +3,7 @@ import googleImage from '../images/google.svg';
 import intraImage from '../images/intraImage.webp';
 import axios from 'axios';
 import Swal from 'sweetalert2';
+import { useSidebarContext } from '../hooks/useSidebar';
 
 export default function Profile() {
   const [profileData, setProfileData] = useState({
@@ -12,6 +13,8 @@ export default function Profile() {
     avatar: null,
     profile_image: null,
   });
+
+  const { setActiveLink } = useSidebarContext()
 
   const fetchProfile = async () => {
     try {
@@ -186,6 +189,7 @@ export default function Profile() {
   };
 
   useEffect(() => {
+    setActiveLink("profile")
     fetchProfile();
   }, []);
 
@@ -239,8 +243,8 @@ export default function Profile() {
   // }, [profileData])
 
   return (
-    <div className="w-full bg-gradient-to-r bg-gradient-to-r from-blue-800 to-indigo-900 rounded-lg max-w-6xl mx-auto p-8 space-y-8">
-      <h2 className="text-2xl font-inter text-white mb-6">Account</h2>
+    <div className="w-full max-w-6xl mx-auto p-8 space-y-8 bg-black/50 rounded-xl border border-gray-800 backdrop-blur-sm">
+      <h2 className="text-2xl font-inter text-white mb-6 zen-dots">Account</h2>
       <div className="flex flex-col md:flex-row justify-between items-center gap-8">
         <div className="flex flex-col md:flex-row items-center gap-4">
           <div className="w-24 h-24 bg-blue-800 rounded-full border-2 border-white/40 flex items-center justify-center text-white text-2xl font-inter">
