@@ -50,6 +50,10 @@ import time
 from django.contrib.auth.hashers import check_password, make_password
 import random
 import string
+from django.utils import timezone
+from .models import FriendRequest, UserOnlineStatus
+from rest_framework.decorators import action
+from django.db.models import Q
 
 
 CLIENT_ID = os.environ.get('CLIENT_ID')
@@ -938,8 +942,152 @@ class ChangePasswordView(APIView):
             return Response({'error': 'An error occurred'})
 
 
+class FriendManagementView(APIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
+
+    def get(self, request):
+        """Get user's friends list and their online status"""
+        user = request.user
+        friends = user.friends.all()
+        serializer = UserSerial(friends, many=True, context={'request': request})
+        return Response(serializer.data)
+
+    def post(self, request):
+        """Send friend request"""
+        user_id = request.data.get('user_id')
+        if not user_id:
+            return Response(
+                {"error": "User ID is required"}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            to_user = User.objects.get(id=user_id)
+            
+            if request.user == to_user:
+                return Response(
+                    {"error": "You cannot send friend request to yourself"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            if request.user.is_friend(to_user):
+                return Response(
+                    {"error": "Already friends"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # Check if request already exists
+            if FriendRequest.objects.filter(
+                Q(sender=request.user, receiver=to_user) | 
+                Q(sender=to_user, receiver=request.user),
+                status='pending'
+            ).exists():
+                return Response(
+                    {"error": "Friend request already exists"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            FriendRequest.objects.create(
+                sender=request.user,
+                receiver=to_user,
+                status='pending'
+            )
+
+            return Response({"message": "Friend request sent successfully"})
+
+        except User.DoesNotExist:
+            return Response(
+                {"error": "User not found"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+class FriendRequestView(APIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
+
+    def get(self, request):
+        """Get all pending friend requests"""
+        pending_requests = FriendRequest.objects.filter(
+            Q(receiver=request.user, status='pending') |
+            Q(sender=request.user, status='pending')
+        )
+        serializer = FriendRequestSerializer(pending_requests, many=True)
+        return Response(serializer.data)
+
+    def post(self, request):
+        """Accept or decline friend request"""
+        request_id = request.data.get('request_id')
+        action = request.data.get('action')
+
+        if not request_id or not action:
+            return Response(
+                {"error": "Request ID and action are required"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            friend_request = FriendRequest.objects.get(
+                id=request_id,
+                receiver=request.user,
+                status='pending'
+            )
+
+            if action == 'accept':
+                friend_request.accept()
+                return Response({"message": "Friend request accepted"})
+            elif action == 'decline':
+                friend_request.decline()
+                return Response({"message": "Friend request declined"})
+            else:
+                return Response(
+                    {"error": "Invalid action"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+        except FriendRequest.DoesNotExist:
+            return Response(
+                {"error": "Friend request not found"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+class UserOnlineStatusView(APIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
+
+    def post(self, request):
+        """Update user's online status"""
+        try:
+            status_obj, created = UserOnlineStatus.objects.get_or_create(
+                user=request.user
+            )
+            status_obj.is_online = True
+            status_obj.last_activity = timezone.now()
+            status_obj.save()
+            return Response({"message": "Online status updated"})
+        except Exception as e:
+            return Response(
+                {"error": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+    def delete(self, request):
+        """Set user as offline"""
+        try:
+            status_obj = UserOnlineStatus.objects.get(user=request.user)
+            status_obj.is_online = False
+            status_obj.save()
+            return Response({"message": "User set to offline"})
+        except UserOnlineStatus.DoesNotExist:
+            return Response(
+                {"error": "Status not found"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+
 #sending Profil info if exemple https://localhost:5173/profil/<username>
 # class Profil(APIView):
 #     permission_classes = [IsAuthenticated]
 
 #     def post(self, request):
+

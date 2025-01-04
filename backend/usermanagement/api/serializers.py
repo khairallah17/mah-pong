@@ -1,5 +1,5 @@
 from rest_framework_simplejwt.tokens import Token
-from .models import User, TwoFactorAuthAttempt, Profil
+from .models import User, TwoFactorAuthAttempt, Profil, FriendRequest, UserOnlineStatus
 from django.contrib.auth.password_validation import validate_password
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework import serializers
@@ -13,12 +13,40 @@ import pyotp
 
 class   UserSerial(serializers.ModelSerializer):
     id = serializers.UUIDField(read_only=True)
+    is_online = serializers.SerializerMethodField()
+    friend_count = serializers.SerializerMethodField()
+    is_friend = serializers.SerializerMethodField() 
     
     class   Meta:
         model = User
         fields = ['id', 'username', 'email', 'fullname', 'nblose', 'nbwin', 
-                 'score', 'img', 'avatar', 'two_factor_enabled', 'last_login_2fa']
+                 'score', 'img', 'avatar', 'two_factor_enabled', 'last_login_2fa',
+                 'is_online', 'friend_count', 'is_friend']
         read_only_fields = ['two_factor_enabled', 'last_login_2fa']
+    
+    def get_is_online(self, obj):
+        try:
+            return obj.useronlinestatus.is_online
+        except UserOnlineStatus.DoesNotExist:
+            return False
+    
+    def get_count_friends(self, obj):
+        return obj.friends.count()
+    
+    def get_is_friend(self, obj):
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            return request.user.is_friend(obj)
+
+
+class FriendRequestSerializer(serializers.ModelSerializer):
+    sender = UserSerial(read_only=True)
+    receiver = UserSerial(read_only=True)
+    
+    class Meta:
+        model = FriendRequest
+        fields = ['id', 'sender', 'receiver', 'status', 'timestamp']
+        
 
 class   Get_Token_serial(TokenObtainPairSerializer):
     @classmethod
@@ -30,6 +58,7 @@ class   Get_Token_serial(TokenObtainPairSerializer):
         # print(user.fullname)
         token['username'] = user.username
         token['email'] = user.email
+        token['friend_count'] = user.friends.count()
         # token['bio'] = user.profile.bio
         # token['lvl'] = user.profile.bio
         # token['wallet'] = user.profile.bio
@@ -83,11 +112,25 @@ class ProfilSerializer(serializers.ModelSerializer):
 
 class UserProfileSerializer(serializers.ModelSerializer):
     profil = ProfilSerializer()
+    friends = UserSerial(many=True, read_only=True)
+    friend_count = serializers.SerializerMethodField()
+    pending_friend_requests = serializers.SerializerMethodField()
     
     class Meta:
         model = User
         fields = ['id', 'fullname', 'username', 'email', 'nblose', 
-                 'nbwin', 'score', 'img', 'avatar', 'profil']
+                 'nbwin', 'score', 'img', 'avatar', 'profil',
+                 'friends', 'friend_count', 'pending_friend_requests']
+    
+    def get_friend_count(self, obj):
+        return obj.friends.count()
+
+    def get_pending_friend_requests(self, obj):
+        pending_requests = FriendRequest.objects.filter(
+            receiver=obj,
+            status='pending'
+        )
+        return FriendRequestSerializer(pending_requests, many=True).data
 
 class LogoutSerial(serializers.Serializer):
     refresh = serializers.CharField()

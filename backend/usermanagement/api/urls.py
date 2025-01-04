@@ -33,4 +33,8 @@ urlpatterns = [
     path('2fa/verify/', views.Verify2FAView.as_view(), name='2fa-verify'),
     path('2fa/disable/', views.Disable2FAView.as_view(), name='2fa-disable'),
     path('2fa/check/', views.Check2FAStatusView.as_view(), name='2fa-check'),
+    # Friend Request and Status Online Offline
+    path('api/friends/', views.FriendManagementView.as_view(), name='friend-management'),
+    path('api/friend-requests/', views.FriendRequestView.as_view(), name='friend-requests'),
+    path('api/online-status/', views.UserOnlineStatusView.as_view(), name='online-status'),
 ]
