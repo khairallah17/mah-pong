@@ -9,10 +9,10 @@ import { Si42 } from "react-icons/si";
 import { MdOutlineArrowOutward } from "react-icons/md";
 import { CiWarning } from "react-icons/ci";
 
-
 import { useForm } from "react-hook-form"
 
 import { motion } from "framer-motion"
+import { toast } from 'react-toastify';
 
 const LoginForm = ({setSwap}) => {
 
@@ -30,7 +30,17 @@ const LoginForm = ({setSwap}) => {
             const res = await loginUsers(data.email, data.password)
             
         } catch (error) {
-            console.error("LOGIN ERROR ==> ", error.message)
+            toast.error("incorrect username or password", {
+                position: "top-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: false,
+                pauseOnHover: true,
+                draggable: true,
+                progress: undefined,
+                theme: "dark",
+                transition: Bounce,
+            })
         }
     }
     
@@ -41,14 +51,14 @@ const LoginForm = ({setSwap}) => {
 
                 <div className="w-full">
                     <input
-                    className="w-full bg-transparent border-b-2 border-white placeholder:text-white placeholder:text-opacity-50 placeholder:font-semibold py-2 focus:outline-none"
-                    placeholder="EMAIL"
-                    type="email"
-                    name="email"
-                    {
-                    ...register("email",{required: "You must specify an email"})
-                    }
-                />
+                        className="w-full bg-transparent border-b-2 border-white/50 focus:border-white duration-200 placeholder:text-white placeholder:text-opacity-50 placeholder:font-semibold py-2 focus:outline-none"
+                        placeholder="EMAIL"
+                        type="email"
+                        name="email"
+                        {
+                        ...register("email",{required: "You must specify an email"})
+                        }
+                    />
                 {errors.email?.type &&
                     <div className="text-red-500 flex items-center gap-1 mt-2">
                         <CiWarning />
@@ -57,29 +67,32 @@ const LoginForm = ({setSwap}) => {
                 }
                 </div>
 
-                <div className="w-full">
-                <input
-                    className="w-full bg-transparent border-b-2 border-white placeholder:text-white placeholder:text-opacity-50 placeholder:font-semibold py-2 focus:outline-none"
-                    placeholder="PASSWORD"
-                    type="password"
-                    name="password"
-                    {...register(
-                    "password",
+                <div className="w-full space-y-2">
+                    <input
+                        className="w-full bg-transparent border-b-2 border-white/50 focus:border-white duration-200 placeholder:text-white placeholder:text-opacity-50 placeholder:font-semibold py-2 focus:outline-none"
+                        placeholder="PASSWORD"
+                        type="password"
+                        name="password"
+                        {...register(
+                        "password",
+                        {
+                            required: "You must specify a password",
+                            minLength: {
+                            value: 8,
+                            message: "Password must have at least 8 characters"
+                            }
+                        })}
+                    />
                     {
-                        required: "You must specify a password",
-                        minLength: {
-                        value: 8,
-                        message: "Password must have at least 8 characters"
-                        }
-                    })}
-                />
-                {
-                    errors.password?.type == "required" &&
-                    <span className="text-red-500 flex items-center gap-1 mt-1">
-                        <CiWarning />
-                        {errors.password?.message}
-                    </span>
-                }
+                        errors.password?.type == "required" &&
+                        <span className="text-red-500 flex items-center gap-1 mt-1">
+                            <CiWarning />
+                            {errors.password?.message}
+                        </span>
+                    }
+                    <NavLink to="/reset-password" className='text-red-500 uppercase hover:underline'>
+                        forget password?
+                    </NavLink>
                 </div>
 
                 <button type="submit" className="bg-black w-1/4 self-center rounded-lg py-2 font-bold text-2xl hover:bg-white hover:text-black">
@@ -96,13 +109,13 @@ const LoginForm = ({setSwap}) => {
             </div>
 
             <div className="space-y-4 w-3/4 self-center">
-                <button className="bg-white w-full flex items-center justify-center gap-4 rounded-lg py-2">
+                <button onClick={GoogleLogin} className="bg-white w-full flex items-center justify-center gap-4 rounded-lg py-2">
                     <FcGoogle size={24}/>
                     <p className="text-slate-600 font-semibold text-lg">Continue with google</p>
                 </button>
-                <button className="bg-black w-full flex items-center justify-center gap-4 rounded-lg py-2">
+                <button onClick={Intra42Login} className="bg-black w-full flex items-center justify-center gap-4 rounded-lg py-2">
                     <Si42 size={24} color="white" />
-                    <p className="text-white font-semibold text-lg">Continue with google</p>
+                    <p className="text-white font-semibold text-lg">Continue with 42</p>
                 </button>
                 <div className="w-full flex items-center justify-between">
                     <p className="uppercase">don't have an account?</p>

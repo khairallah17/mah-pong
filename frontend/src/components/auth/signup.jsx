@@ -11,7 +11,7 @@ import { useForm } from "react-hook-form"
 
 const SignupForm = ({setSwap}) => {
 
-    const { registerUsers } = useContext(AuthContext)
+    const { registerUsers, GoogleLogin, Intra42Login } = useContext(AuthContext)
 
     const {
         register,
@@ -34,6 +34,9 @@ const SignupForm = ({setSwap}) => {
                 data.confPassword
             )
 
+            if (res)
+                setSwap()
+
         } catch (error) {
             console.log("signup error ==> ", error.message)
         }
@@ -49,7 +52,7 @@ const SignupForm = ({setSwap}) => {
                 <div className="w-full flex gap-4">
                     <div className='w-full'>
                         <input
-                            className="w-full bg-transparent border-b-2 border-white placeholder:text-white placeholder:text-opacity-50 placeholder:font-semibold py-2 focus:outline-none"
+                            className="w-full bg-transparent border-b-2 focus:border-white duration-200 border-white/50 placeholder:text-white placeholder:text-opacity-50 placeholder:font-semibold py-2 focus:outline-none"
                             placeholder="FULLNAME"
                             type="text"
                             name="fullname"
@@ -67,7 +70,7 @@ const SignupForm = ({setSwap}) => {
                     </div>
                     <div className='w-full'>
                         <input
-                            className="w-full bg-transparent border-b-2 border-white placeholder:text-white placeholder:text-opacity-50 placeholder:font-semibold py-2 focus:outline-none"
+                            className="w-full bg-transparent border-b-2 focus:border-white duration-200 border-white/50 placeholder:text-white placeholder:text-opacity-50 placeholder:font-semibold py-2 focus:outline-none"
                             placeholder="USERNAME"
                             type="text"
                             name="username"
@@ -87,7 +90,7 @@ const SignupForm = ({setSwap}) => {
 
                 <div className="w-full">
                     <input
-                        className="w-full bg-transparent border-b-2 border-white placeholder:text-white placeholder:text-opacity-50 placeholder:font-semibold py-2 focus:outline-none"
+                        className="w-full bg-transparent border-b-2 focus:border-white duration-200 border-white/50 placeholder:text-white placeholder:text-opacity-50 placeholder:font-semibold py-2 focus:outline-none"
                         placeholder="EMAIL"
                         type="email"
                         name="email"
@@ -108,7 +111,7 @@ const SignupForm = ({setSwap}) => {
 
                 <div className="w-full">
                     <input
-                        className="w-full bg-transparent border-b-2 border-white placeholder:text-white placeholder:text-opacity-50 placeholder:font-semibold py-2 focus:outline-none"
+                        className="w-full bg-transparent border-b-2 focus:border-white duration-200 border-white/50 placeholder:text-white placeholder:text-opacity-50 placeholder:font-semibold py-2 focus:outline-none"
                         placeholder="PASSWORD"
                         type="password"
                         name="password"
@@ -133,7 +136,7 @@ const SignupForm = ({setSwap}) => {
 
                 <div className="w-full">
                     <input
-                        className="w-full bg-transparent border-b-2 border-white placeholder:text-white placeholder:text-opacity-50 placeholder:font-semibold py-2 focus:outline-none"
+                        className="w-full bg-transparent border-b-2 focus:border-white duration-200 border-white/50 placeholder:text-white placeholder:text-opacity-50 placeholder:font-semibold py-2 focus:outline-none"
                         placeholder="CONFIRM PASSWORD"
                         type="password"
                         name="confPassword"
@@ -166,13 +169,13 @@ const SignupForm = ({setSwap}) => {
             </div>
 
             <div className="space-y-4 w-3/4 self-center">
-                <button className="bg-white w-full flex items-center justify-center gap-4 rounded-lg py-2">
+                <button onClick={GoogleLogin} className="bg-white w-full flex items-center justify-center gap-4 rounded-lg py-2">
                     <FcGoogle size={24}/>
                     <p className="text-slate-600 font-semibold text-lg">Continue with google</p>
                 </button>
-                <button className="bg-black w-full flex items-center justify-center gap-4 rounded-lg py-2">
+                <button onClick={Intra42Login} className="bg-black w-full flex items-center justify-center gap-4 rounded-lg py-2">
                     <Si42 size={24} color="white" />
-                    <p className="text-white font-semibold text-lg">Continue with google</p>
+                    <p className="text-white font-semibold text-lg">Continue with 42</p>
                 </button>
                 <div className="w-full flex items-center justify-between">
                     <p className="uppercase">already have an account?</p>

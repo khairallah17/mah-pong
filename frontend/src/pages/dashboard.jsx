@@ -1,4 +1,3 @@
-// Dashboard.jsx
 import React, { useState } from 'react';
 import { GameModes } from '../components/GameModes';
 import { MatchHistory } from '../components/Match-history';

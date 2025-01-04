@@ -16,10 +16,12 @@ import Chat from "./pages/chat.jsx";
 import Game from "./pages/game.jsx";
 import Settings from "./pages/settings.jsx";
 
+import VerifyPsdEmail from "./pages/VerifyPsdEmail.jsx";
+import ResetPassowrd from "./pages/ResetPassword"
+
 import Layout from './components/layout';
 
 import Providers from './providers/providers.jsx';
-// import ColorProvider from './context/ColorContext';
 import NotFound from "./pages/404.jsx";
 
 function App() {
@@ -30,8 +32,10 @@ function App() {
       <Providers>
 
             <Routes>
+              
               <Route path="/" element={<HomePage />} />
               <Route path="/login" element={<Authentication />} />
+              <Route path="/reset-password" element={<VerifyPsdEmail />} />
 
               <Route element={<ProtectRouter />}>
                 <Route element={<Layout/>}>
@@ -67,7 +71,7 @@ function App() {
               </Route>
 
               <Route path="*" element={<NotFound/>} />
-              
+
             </Routes>
 
         </Providers>

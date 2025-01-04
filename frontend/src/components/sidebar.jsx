@@ -1,9 +1,10 @@
-
 import SidebarList from "./sidebarList"
 import { LayoutGrid, MessageCircleMore, Settings, Gamepad2, Trophy, UserPen, LockKeyhole } from "lucide-react"
 import { useSidebarContext } from "../hooks/useSidebar"
 import { LogOut } from "lucide-react"
 import { NavLink } from "react-router-dom"
+
+import { useAuthContext } from "../hooks/useAuthContext"
 
 const navigation = [
     {
@@ -46,6 +47,8 @@ const navigation = [
 
 const Sidebar = () => {
 
+    const { logoutUsers } = useAuthContext()
+
     const { open } = useSidebarContext()
 
     return (
@@ -62,8 +65,8 @@ const Sidebar = () => {
                     <div className='w-6 h-6 bg-white rounded-full'></div>
                     <p className={`text-gray-500 text-sm hover:text-white duration-200 ${open ? "inline" : "hidden"}`}>mkhairal</p>
                 </NavLink>
-                <button className="text-gray-500 flex items-center gap-2 !hover:text-white duration-200">
-                    <LogOut className="text-gray-500"/>
+                <button onClick={logoutUsers} className="text-gray-500 flex items-center gap-2 hover:text-white duration-200">
+                    <LogOut />
                     <p className={`${open ? "flex" : "hidden"}`}>Logout</p>
                 </button>
             </div>

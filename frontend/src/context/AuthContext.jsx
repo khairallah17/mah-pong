@@ -5,6 +5,8 @@ import useAxios from "../hooks/useAxios";
 
 import Swal from "sweetalert2";
 
+import { toast, Bounce } from "react-toastify";
+
 const AuthContext = createContext()
 
 export default AuthContext
@@ -50,15 +52,17 @@ export const AuthProvider = ({ children }) => {
             const data = await response.json();
 
             if (response.status === 401) {
-                Swal.fire({
-                    position: "top-end",
-                    title: "you don't have an account you should to register",
-                    icon: "error",
-                    showConfirmButton: true,
-                    timerProgressBar: true,
-                    timer: 6000
+                toast.error("you don't have an account you should to register", {
+                    position: "top-right",
+                    autoClose: 5000,
+                    hideProgressBar: false,
+                    closeOnClick: false,
+                    pauseOnHover: true,
+                    draggable: true,
+                    progress: undefined,
+                    theme: "dark",
+                    transition: Bounce,
                 });
-                navigation("/register");
                 return;
             }
 
@@ -91,36 +95,42 @@ export const AuthProvider = ({ children }) => {
                 localStorage.setItem("authtoken", JSON.stringify(data));
 
                 navigation("/dashboard");
-                Swal.fire({
-                    position: "top-end",
-                    title: "you have successfully logged in",
-                    icon: "success",
-                    showConfirmButton: true,
-                    timerProgressBar: true,
-                    timer: 3000
+                toast.success("you have successfully logged in", {
+                    position: "top-right",
+                    autoClose: 5000,
+                    hideProgressBar: false,
+                    closeOnClick: false,
+                    pauseOnHover: true,
+                    draggable: true,
+                    progress: undefined,
+                    theme: "dark",
+                    transition: Bounce,
                 });
-            } else {
                 
-                const d = response.status
-                console.log(d)
-                Swal.fire({
-                    position: "top-end",
-                    icon: "error",
-                    title: "Invalid credentials or 2FA code",
-                    showConfirmButton: true,
-                    timerProgressBar: true,
-                    timer: 3000
+            } else {
+                toast.error("Invalid credentials or 2FA code", {
+                    position: "top-right",
+                    autoClose: 5000,
+                    hideProgressBar: false,
+                    closeOnClick: false,
+                    pauseOnHover: true,
+                    draggable: true,
+                    progress: undefined,
+                    theme: "dark",
+                    transition: Bounce,
                 });
             }
         } catch (error) {
-            console.error("Login error:", error);
-            Swal.fire({
-                position: "top-end",
-                icon: "error",
-                title: "An error occurred during login",
-                showConfirmButton: true,
-                timerProgressBar: true,
-                timer: 3000
+            toast.error("error during login", {
+                position: "top-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: false,
+                pauseOnHover: true,
+                draggable: true,
+                progress: undefined,
+                theme: "dark",
+                transition: Bounce,
             });
         }
     };
@@ -128,59 +138,51 @@ export const AuthProvider = ({ children }) => {
     
     const registerUsers = async (fullname, username, email, password, confirm_password) => {
 
-        console.log({fullname, username, email, password, confirm_password})
-
-    let tokenUrlregister = "http://localhost:8001/api/register/"
-    const response = await fetch(tokenUrlregister ,{
-        method: 'POST',
-        body: JSON.stringify({fullname, username, email, password, confirm_password}), // JSON.stringify: Coverting javascrit value to JSON string
-        headers: {
-            'Content-Type': 'application/json',
-        },
-    })
-    // console.log(response.status)
-    
-
-    // const JsonData =  await response.json()
-    if (response.status === 201) // 201 status Created
-    {
-        // setAuthToken(JsonData) //JsonData have access token an the refresh token
-        // setUser(jwtDecode(JsonData.access)) // decode access token
-        // localStorage.getItem("AuthToken", JSON.stringify(JsonData));
-        // navigation("/login") // Routing the USERS after he loggedin "Success"
-        Swal.fire({
-            position: "top-end",
-            title: "you have successfully Registred",
-            icon: "success",
-            showConfirmButton: true,
-            timerProgressBar: true,
-            timer: 3000
-        }) 
-    } 
-    else 
-    {
-        console.log(response.status)
-        const d = await response.json()
-        console.log(d)
-        console.error("An Error Occurred ",)
-        Swal.fire({
-            position: "top-end",
-            title: "There is some error in Your registration",
-            showConfirmButton: true,
-            timerProgressBar: true,
-            timer: 3000
+        let tokenUrlregister = "http://localhost:8001/api/register/"
+        const response = await fetch(tokenUrlregister ,{
+            method: 'POST',
+            body: JSON.stringify({fullname, username, email, password, confirm_password}),
+            headers: {
+                'Content-Type': 'application/json',
+            },
         })
+
+        if (response.status === 201)
+        {
+
+            toast.success('you have successfully Registred', {
+                position: "top-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: false,
+                pauseOnHover: true,
+                draggable: true,
+                progress: undefined,
+                theme: "dark",
+                transition: Bounce,
+            });
+        } 
+        else 
+        {
+
+            toast.error('There is some error in Your registration', {
+                position: "top-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: false,
+                pauseOnHover: true,
+                draggable: true,
+                progress: undefined,
+                theme: "dark",
+                transition: Bounce,
+            });
+        }
+
     }
-    }
-    // const [error, setError] = useState('');
-    //Logout Routing
-    // To Logout the user we should just delete the tokens
+    
     const logoutUsers = async () => {
-        // setAuthToken(null)
-        // setUser(null)
-        // localStorage.removeItem("authtoken")
+
         try {
-            // Get tokens from localStorage
             const authData = localStorage.getItem('authtoken');
             if (!authData) {
                 throw new Error('No auth token found');
@@ -201,42 +203,27 @@ export const AuthProvider = ({ children }) => {
                 })
             });
     
-            // Clear tokens regardless of response
-            setAuthToken(null);
-            setUser(null);
-            localStorage.removeItem("authtoken");
-    
-            navigation("/login");
-            if (response.ok) {
-                Swal.fire({
-                    position: "top-end",
-                    title: "Successfully logged out",
-                    icon: "success",
-                    showConfirmButton: true,
-                    timerProgressBar: true,
-                    timer: 3000
-                });
-            }
     
     
         } catch (error) {
-            console.error('Logout error:', error);
             
-            // Clear tokens even if request fails
+        } finally {
             setAuthToken(null);
             setUser(null);
             localStorage.removeItem("authtoken");
-            
-            Swal.fire({
-                position: "top-end",
-                title: "Logged out (with errors)",
-                icon: "warning",
-                showConfirmButton: true,
-                timerProgressBar: true,
-                timer: 3000
-            });
-            
+    
             navigation("/login");
+            toast.success("Successfully logged out", {
+                position: "top-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: false,
+                pauseOnHover: true,
+                draggable: true,
+                progress: undefined,
+                theme: "dark",
+                transition: Bounce,
+            });
         }
     };
 
