@@ -15,6 +15,7 @@ import TournamentHome from './pages/tournament/tournamentHome';
 import Chat from "./pages/chat.jsx";
 import Game from "./pages/game.jsx";
 import Settings from "./pages/settings.jsx";
+import { ColorProvider } from "./context/ColorContext.jsx";
 
 import VerifyPsdEmail from "./pages/VerifyPsdEmail.jsx";
 import ResetPassowrd from "./pages/ResetPassword"
@@ -48,8 +49,8 @@ function App() {
                       <Route index element={<Game />} />
                       <Route path="pve3d" element={<Pve3d />} />
                       <Route path="pvp3d" element={<Pvp3d />} />
-                      <Route path="pvp2d" element={<Pvp2d />} />
-                      <Route path="pve2d" element={<Pve2d />} />
+                      <Route path="pvp2d" element={<ColorProvider><Pvp2d /></ColorProvider>} />
+                      <Route path="pve2d" element={<ColorProvider><Pve2d /></ColorProvider>} />
                     </Route>
                     
                     {/* <Route path="profil/:username" element={<Profil />} /> */}

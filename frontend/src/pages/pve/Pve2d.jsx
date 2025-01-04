@@ -3,7 +3,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { useEffect, useRef, useState, useContext } from 'react';
 import GameSettingsButton from '../../components/pvp/Customize2d'; 
 import GameScore from '../../components/pvp/GameScore';
-// import { ColorContext } from '../context/ColorContext';
+import { ColorContext } from '../../context/ColorContext';
 
 export default function Pve2d() {
   // Default single-player scoreboard

@@ -1,8 +1,9 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useContext } from 'react';
 import GameSettingsButton from '../../components/pvp/Customize2d';
 import GameScore from '../../components/pvp/GameScore';
+import { ColorContext } from '../../context/ColorContext';
 
 function Pvp2d() {
     const wsRef = useRef(null);
@@ -25,6 +26,7 @@ function Pvp2d() {
     const isPausedRef = useRef(true);
     let token = localStorage.getItem('authtoken');
     const accessToken = JSON.parse(token).access;
+    const { tableMainColor, tableSecondaryColor, paddlesColor } = useContext(ColorContext);
 
     useEffect(() => {
         if (winnerRef.current) {
@@ -272,6 +274,23 @@ function Pvp2d() {
             window.removeEventListener('resize', onWindowResize);
         }
     }, [isMatched, isPlayer1, gameState]);
+
+    useEffect(() => {
+        if (tableRef.current) {
+            tableRef.current.material.color.set(tableMainColor);
+        }
+        if (tableAddonsRef?.current?.children) {
+            tableAddonsRef.current.children.forEach((child, index) => {
+                if (index < 5) {
+                    child.material.color.set(tableSecondaryColor);
+                }
+            });
+        }
+        if (paddle1Ref.current && paddle2Ref.current) {
+            paddle1Ref.current.material.color.set(paddlesColor);
+            paddle2Ref.current.material.color.set(paddlesColor);
+        }
+    }, [tableMainColor, tableSecondaryColor, paddlesColor]);
 
     const updateUserData = async (username, data) => {
         try {
