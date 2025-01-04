@@ -14,4 +14,4 @@ export const ColorProvider = ({ children }) => {
   );
 };
 
-export default ColorContext;
+export default ColorProvider;

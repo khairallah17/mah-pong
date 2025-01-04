@@ -328,12 +328,6 @@ export default function Pve2d() {
           >
             Restart Game
           </button>
-          <button
-            onClick={() => { window.location.href = "/dashboard"; }}
-            className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors ml-2"
-          >
-            Quit
-          </button>
         </div>
       )}
       <div id="game-container">

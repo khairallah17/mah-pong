@@ -23,9 +23,12 @@ function Pvp2d() {
     const paddle2Ref = useRef(null);
     const ballRef = useRef(null);
     const tableRef = useRef(null);
+    const tableAddonsRef = useRef(null);
     const isPausedRef = useRef(true);
     let token = localStorage.getItem('authtoken');
     const accessToken = JSON.parse(token).access;
+    const [inviteCode, setInviteCode] = useState(new URLSearchParams(window.location.search).get('invite'));
+
     const { tableMainColor, tableSecondaryColor, paddlesColor } = useContext(ColorContext);
 
     useEffect(() => {
@@ -36,7 +39,8 @@ function Pvp2d() {
 
     useEffect(() => {
         if (token && !wsRef.current) {
-            wsRef.current = new WebSocket('ws://localhost:8000/ws/matchmaking/?token=' + accessToken);
+            const wsUrl = `ws://localhost:8000/ws/matchmaking/?token=${accessToken}${inviteCode ? `&invite=${inviteCode}` : ''}`;
+            wsRef.current = new WebSocket(wsUrl);
             wsRef.current.onopen = () => {
                 console.log('WebSocket connection established');
             };
@@ -89,7 +93,7 @@ function Pvp2d() {
                 wsRef.current = null;
             }
         };
-    }, [token]);
+    }, [token, inviteCode]);
 
     const refreshToken = async () => {
         let refreshtokenUrl = "http://localhost:8001/api/token/refresh/"
@@ -148,6 +152,7 @@ function Pvp2d() {
             paddle2Ref.current = paddle2;
             ballRef.current = ball;
             tableRef.current = table;
+            tableAddonsRef.current = tableaddons;
 
             const alight = new THREE.AmbientLight(0xffffff, 0.5);
             scene.add(table, tableaddons, paddle1, paddle2, ball, alight);
@@ -273,15 +278,15 @@ function Pvp2d() {
             document.removeEventListener('visibilitychange', handleVisibilityChange);
             window.removeEventListener('resize', onWindowResize);
         }
-    }, [isMatched, isPlayer1, gameState]);
+    }, [isMatched, isPlayer1, gameState, tableMainColor, tableSecondaryColor, paddlesColor]);
 
     useEffect(() => {
         if (tableRef.current) {
             tableRef.current.material.color.set(tableMainColor);
         }
-        if (tableAddonsRef?.current?.children) {
-            tableAddonsRef.current.children.forEach((child, index) => {
-                if (index < 5) {
+        if (tableAddonsRef.current?.children) {
+            tableAddonsRef.current.children.forEach((child, i) => {
+                if (i < 5) {
                     child.material.color.set(tableSecondaryColor);
                 }
             });
@@ -462,14 +467,14 @@ function Pvp2d() {
 
     const createTable = () => {
         const geometry = new THREE.BoxGeometry(5, 0.1, 3);
-        const material = new THREE.MeshStandardMaterial({ color: 0x228B22 });
+        const material = new THREE.MeshStandardMaterial({ color: tableMainColor });
         const table = new THREE.Mesh(geometry, material);
         table.receiveShadow = true;
         return table;
     };
 
     const createTableAddons = () => {
-        const stripeColor = 0x000000; // Same color as paddles
+        const stripeColor = tableSecondaryColor; // Use the selected secondary color
         const stripeThickness = 0.05;
 
         const stripes = [
@@ -516,7 +521,7 @@ function Pvp2d() {
 
     const createPaddles = (isPlayer1) => {
         const geometry = new THREE.BoxGeometry(0.2, 0.02, 1);
-        const material = new THREE.MeshStandardMaterial({ color: 0x000000 });
+        const material = new THREE.MeshStandardMaterial({ color: paddlesColor });
         const paddle1 = new THREE.Mesh(geometry, material);
         const paddle2 = new THREE.Mesh(geometry, material);
 
@@ -535,13 +540,25 @@ function Pvp2d() {
         return light;
     };
 
+    const generateInviteLink = () => {
+        const code = Math.random().toString(36).substring(2, 15);
+        setInviteCode(code);
+        const inviteLink = `${window.location.origin}/pvp2d?invite=${code}`;
+        navigator.clipboard.writeText(inviteLink).then(() => {
+            alert('Invite link copied to clipboard!');
+        });
+    };
+
     return (
         <>
             <GameSettingsButton />
             {!isMatched && (
-                <h1 className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-white text-2xl">
-                    Looking for an opponent...
-                </h1>
+                <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-white text-2xl">
+                    <h1>Looking for an opponent...</h1>
+                    <button onClick={generateInviteLink} className="mt-4 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors">
+                        Generate Invite Link
+                    </button>
+                </div>
             )}
             {winnerRef.current && (
                 <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-gray-900/95 p-8 rounded-lg text-center">
@@ -576,3 +593,4 @@ function Pvp2d() {
 }
 
 export default Pvp2d;
+
