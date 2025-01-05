@@ -18,61 +18,130 @@ const Chat = ({ roomName }) => {
     const [selectedUser, setSelectedUser] = useState(null);
     const [socket, setSocket] = useState(null);
 
-    // Fetch users from Django API on component mount
+    // Fetch Users List
 
     useEffect(() => {
-        fetchUsers();
-    }, []);
+        axios.get("http://localhost:8000/chat/api/users/")
+            .then((response) => {
+                console.log(response.json());
+                if (Array.isArray(response.data)) {
+                    setUsers(response.data);
+                } else {
+                    setUsers([]);
+                }
+            })   
+            .catch((error) => {
+                setUsers([]);
+        });
+}, []);
 
-    const fetchUsers = async () => {
-        try {
-            const response = await axios.get('http://localhost:8000/chat/api/users/');
-            console.log("FETCHED USERS ==> ", res)
-            setUsers(response.data);
-        } catch (error) {
-            console.error("Error fetching users:", error);
-        }
+    // // Fetch users from Django API on component mount
+
+    // useEffect(() => {
+    //     fetchUsers();
+    // }, []);
+
+    // const fetchUsers = async () => {
+    //     try {
+    //         const response = await axios.get('http://localhost:8000/chat/api/users/');
+    //         console.log("FETCHED USERS ==> ", res)
+    //         setUsers(response.data);
+    //     } catch (error) {
+    //         console.error("Error fetching users:", error);
+    //     }
+    // };
+    
+    // Fetch Conversation with Selected User
+
+    const loadConversation = (user) => {
+        setSelectedUser(user);
+
+        axios.get(`http://localhost:8000/chat/api/conversation/${user.id}/`)
+            .then((response) => setMessages(response.data))
+            .catch((error) => console.error("Error fetching messages:", error));
+        
+        //Establish WebSocket for Real-Time Messaging
+
+        const chatSocket = new WebSocket(
+            `ws://localhost:8000/ws/chat/${user.id}/`
+        );
+
+        chatSocket.onmessage = (e) => {
+            const data = JSON.parse(e.data);
+            setMessages((prevMessages) => [...prevMessages, data]);
+        };
+
+        chatSocket.onclose = () => {
+            console.log("WebSocket closed");
+        };
+
+        setSocket(chatSocket);
     };
 
-    //Load conversation messages dynamically
+    // //Load conversation messages dynamically
 
-    const loadConversation = async (userId) => {
-        try {
-            setSelectedUser(userId); //Highlight selected user
-            const response = await axios.get(`http://localhost:8000/chat/api/conversation/${userId}/`);
-            setMessages(response.data);
-        } catch (error) {
-            console.error("Error Loading conversation:", error);
-        }
-    };
+    // const loadConversation = async (userId) => {
+    //     try {
+    //         setSelectedUser(userId); //Highlight selected user
+    //         const response = await axios.get(`http://localhost:8000/chat/api/conversation/${userId}/`);
+    //         setMessages(response.data);
+    //     } catch (error) {
+    //         console.error("Error Loading conversation:", error);
+    //     }
+    // };
 
-    // WebSocket connection for real-time messaging
+    // // WebSocket connection for real-time messaging
 
-    useEffect(() => {
-        if (selectedUser) {
-            const chatSocket = new WebSocket(
-                `ws://localhost:8000/ws/chat/${selectedUser}/` // array
-            );
+    // useEffect(() => {
+    //     if (selectedUser) {
+    //         const chatSocket = new WebSocket(
+    //             `ws://localhost:8000/ws/chat/${selectedUser}/` // array
+    //         );
             
-            chatSocket.onmessage = (e) => {
-                const data = JSON.parse(e.data);
-                setMessages((prevMessages) => [...prevMessages, data]);
-            };
+    //         chatSocket.onmessage = (e) => {
+    //             const data = JSON.parse(e.data);
+    //             setMessages((prevMessages) => [...prevMessages, data]);
+    //         };
             
-            chatSocket.onclose = () => {
-                console.log("WebSocket closed");
-            };
+    //         chatSocket.onclose = () => {
+    //             console.log("WebSocket closed");
+    //         };
             
-            setSocket(chatSocket);
-            return () => chatSocket.close();
-        }
-    }, [selectedUser]);
+    //         setSocket(chatSocket);
+    //         return () => chatSocket.close();
+    //     }
+    // }, [selectedUser]);
+
+    // Send Message
         
     const sendMessage = () => {
         if (socket && message.trim() !== "") {
+            const newMessage = {
+                sender_id: 1,  // Replace with actual sender ID (from context/auth)
+                receiver_id: 2,  // Replace with actual receiver ID (selected chat)
+                message: message, 
+            };
+
+            // Send message through WebSocket for real-time update
             socket.send(JSON.stringify({ message }));
-            setMessage("");
+
+            // Post message to Django backend to save in the database
+            axios.post("http://localhost:8000/chat/api/send-message/", newMessage)
+                .then((response) => {
+                    
+                    //Update chat with the new message
+                    
+                    setMessages((prevMessages) => [
+                        ...prevMessages,
+                        response.data
+                    ]);
+                    setMessage("");
+                })
+                .catch((error) => {
+                    console.error("Failed to send message:", error);
+                });
         }
+        console.log("goooooood");
     };
     const friends = [];
     for (let i = 0; i < 20; i++) {
@@ -131,8 +200,8 @@ const Chat = ({ roomName }) => {
                     {/* {friends} */}
                     {users.map((user) => (
                         <div key={user.id}
-                             onClick={() => loadConversation(user.id)}>
-                             className={`bg-purple-800 p-2 rounded-lg flex gap-2 cursor-pointer ${selectedUser === user.id ? 'bg-purple-700' : ''}`}
+                             onClick={() => loadConversation(user.id)}
+                             className={`bg-purple-800 p-2 rounded-lg flex gap-2 cursor-pointer ${selectedUser === user.id ? 'bg-purple-700' : ''}`}>
                             <div className="h-12 w-12 rounded-full overflow-hidden borded borded-purple-950">
                                 <img src="img.webp" alt="profile" />
                             </div>
@@ -164,9 +233,9 @@ const Chat = ({ roomName }) => {
                 <div className="overflow-auto px-4 gap-2 flex flex-col">
                     {/* {chats} */}
                     {messages.map((msg, index) => (
-                        <div key={index} className={`p-2 rounded-2xl px-3 w-fit max-w-[60%] ${msg.sender === 'You' ? 'place-self-end bg-blue-700' : 'bg-purple-600'}`}>
+                        <div key={index} className={`p-2 rounded-2xl px-3 w-fit max-w-[60%] flex flex-col break-all ${msg.sender === 1 ? 'place-self-end bg-blue-600' : 'bg-gray-700'}`}>
                             <p>{msg.content}</p>
-                            <div className="flex place-self-end justify-end gap items-center">
+                            <div className="flex place-self-end justify-end gap-1 items-center">
                                 <p className="text-xs">{msg.timestamp}</p>
                                 <IoCheckmarkDoneOutline className="text-sm" />
                             </div>
@@ -214,5 +283,57 @@ const Chat = ({ roomName }) => {
             </div>
         </div>
     )
+
+// return (
+//     <div className="flex h-full w-full">
+//         {/* User List (Sidebar) */}
+//         <div className="w-[320px] bg-purple-900 p-4 overflow-y-auto">
+//             <h1 className="text-white text-xl font-bold mb-4">Messages</h1>
+//             {users.map((user) => (
+//                 <div
+//                     key={user.id}
+//                     onClick={() => loadConversation(user)}
+//                     className={`p-3 rounded-lg cursor-pointer ${selectedUser?.id === user.id ? 'bg-purple-700' : 'bg-purple-800'}`}
+//                 >
+//                     <p className="text-white">{user.username}</p>
+//                 </div>
+//             ))}
+//         </div>
+
+//         {/* Chat Section */}
+//         <div className="grow bg-purple-900 flex flex-col">
+//             {selectedUser ? (
+//                 <>
+//                     <div className="bg-yellow-800 p-4">
+//                         <h2 className="text-white">{selectedUser.username}</h2>
+//                     </div>
+//                     <div className="flex-1 p-4 overflow-auto">
+//                         {messages.map((msg, index) => (
+//                             <div key={index} className={`p-2 rounded-lg max-w-xs ${msg.sender.username === selectedUser.username ? 'bg-purple-600' : 'bg-green-600'}`}>
+//                                 <p>{msg.content}</p>
+//                                 <small>{new Date(msg.timestamp).toLocaleTimeString()}</small>
+//                             </div>
+//                         ))}
+//                     </div>
+//                     <div className="p-4 bg-black flex items-center gap-2">
+//                         <input
+//                             type="text"
+//                             value={message}
+//                             onChange={(e) => setMessage(e.target.value)}
+//                             onKeyPress={(e) => e.key === "Enter" && sendMessage()}
+//                             placeholder="Type your message..."
+//                             className="w-full p-2 rounded-lg"
+//                         />
+//                         <button onClick={sendMessage} className="bg-blue-600 px-4 py-2 rounded-lg text-white">Send</button>
+//                     </div>
+//                 </>
+//             ) : (
+//                 <div className="flex justify-center items-center flex-1">
+//                     <p className="text-white">Select a user to start chatting</p>
+//                 </div>
+//             )}
+//         </div>
+//     </div>
+// );
 }
 export default Chat;

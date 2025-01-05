@@ -1,8 +1,11 @@
 from django.urls import path
-from .views import get_users, get_conversation, test
+from . import views
 
 urlpatterns = [
-    path('api/users/', get_users, name='get-users'),
-    path('api/conversation/<int:user_id>', get_conversation, name='get-conversation'),
-    path('api/test/', test, name="test")
+    # path('api/users/', get_users, name='get-users'),
+    # path('api/users/', views.user_list, name='user-list'),
+    path('api/users/', views.ApiUsers.as_view(), name='user-list'),
+    path('api/conversation/<str:user_id>', views.get_conversation, name='get-conversation'),
+    path('api/test/', views.test, name="test"),
+    path('api/send-message/', views.send_message, name='send-message'),
 ]
