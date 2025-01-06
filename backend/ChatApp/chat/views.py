@@ -51,7 +51,7 @@ def test(request):
 @api_view(['POST'])
 def send_message(request):
     sender_id = request.data.get('sender_id')
-    receiver_is = request.data.get('receiver_id')
+    receiver_id = request.data.get('receiver_id')
     content = request.data.get('message')
 
     try:
@@ -72,3 +72,5 @@ def send_message(request):
         "content": message.content,
         "timestamp": message.timestamp
     })
+# class ConversationView(ApiView):
+#     pass 
