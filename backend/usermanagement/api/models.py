@@ -5,6 +5,7 @@ from django.contrib.auth.models import AbstractUser
 from django.db.models.signals import post_save
 from django.utils import timezone
 from django.conf import settings
+from django.dispatch import receiver
 import os
 import random
 
@@ -33,7 +34,7 @@ class User(AbstractUser):
         default=get_random_image
     )
 
-    friends = models.ManyToManyField("User", blank=True, related_name="friends")
+    friends = models.ManyToManyField("User", blank=True)#, related_name="friends")
     
     # Add these new fields for 2FA
     two_factor_enabled = models.BooleanField(default=False)

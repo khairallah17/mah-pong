@@ -8,6 +8,7 @@ export { default as Dashboard} from "./Dashboard";
 // export { default as PictureUser} from "./UserProfil/Components/PictureUser";
 // export { default as Achievement} from "./UserProfil/Components/Achievement";
 export { default as ResetPassword } from "./ResetPassword"
+export { default as Friends } from "./Friends"
 export { default as VerifyPsdEmail } from "./VerifyPsdEmail"
 export { default as Leaderboard } from "./leaderboard/Leaderboard"
 export { default as TwoFactorSetup } from "./OTP_2fa/TwoFactorAuth"

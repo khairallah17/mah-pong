@@ -20,7 +20,7 @@ const FriendsList = () => {
 
   const fetchFriends = async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/friends/', {
+      const response = await fetch('http://localhost:8001/api/friends/', {
         headers: getAuthHeaders()
       });
       if (!response.ok) throw new Error('Failed to fetch friends');
@@ -31,54 +31,55 @@ const FriendsList = () => {
     } finally {
       setLoading(false);
     }
+    console.log(data);
   };
 
-  const searchUsers = async () => {
-    if (!searchTerm.trim()) return;
+  // const searchUsers = async () => {
+  //   if (!searchTerm.trim()) return;
     
-    try {
-      const response = await fetch(`http://localhost:8000/api/users/search/?query=${searchTerm}`, {
-        headers: getAuthHeaders()
-      });
-      if (!response.ok) throw new Error('Failed to search users');
-      const data = await response.json();
-      setSearchResults(data);
-    } catch (err) {
-      setError(err.message);
-    }
-  };
+  //   try {
+  //     const response = await fetch(`http://localhost:8000/api/users/search/?query=${searchTerm}`, {
+  //       headers: getAuthHeaders()
+  //     });
+  //     if (!response.ok) throw new Error('Failed to search users');
+  //     const data = await response.json();
+  //     setSearchResults(data);
+  //   } catch (err) {
+  //     setError(err.message);
+  //   }
+  // };
 
-  const sendFriendRequest = async (userId) => {
-    try {
-      const response = await fetch(`http://localhost:8000/api/friends/request/send/${userId}/`, {
-        method: 'POST',
-        headers: getAuthHeaders()
-      });
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || 'Failed to send request');
-      }
-      setSearchResults(searchResults.filter(user => user.id !== userId));
-      alert('Friend request sent successfully!');
-    } catch (err) {
-      alert(err.message);
-    }
-  };
+  // const sendFriendRequest = async (userId) => {
+  //   try {
+  //     const response = await fetch(`http://localhost:8000/api/friends/request/send/${userId}/`, {
+  //       method: 'POST',
+  //       headers: getAuthHeaders()
+  //     });
+  //     if (!response.ok) {
+  //       const data = await response.json();
+  //       throw new Error(data.error || 'Failed to send request');
+  //     }
+  //     setSearchResults(searchResults.filter(user => user.id !== userId));
+  //     alert('Friend request sent successfully!');
+  //   } catch (err) {
+  //     alert(err.message);
+  //   }
+  // };
 
-  const removeFriend = async (userId) => {
-    if (!window.confirm('Are you sure you want to remove this friend?')) return;
+  // const removeFriend = async (userId) => {
+  //   if (!window.confirm('Are you sure you want to remove this friend?')) return;
 
-    try {
-      const response = await fetch(`http://localhost:8000/api/friends/${userId}/remove/`, {
-        method: 'POST',
-        headers: getAuthHeaders()
-      });
-      if (!response.ok) throw new Error('Failed to remove friend');
-      fetchFriends();
-    } catch (err) {
-      alert(err.message);
-    }
-  };
+  //   try {
+  //     const response = await fetch(`http://localhost:8000/api/friends/${userId}/remove/`, {
+  //       method: 'POST',
+  //       headers: getAuthHeaders()
+  //     });
+  //     if (!response.ok) throw new Error('Failed to remove friend');
+  //     fetchFriends();
+  //   } catch (err) {
+  //     alert(err.message);
+  //   }
+  // };
 
   if (loading) return <div className="friends-loading">Loading...</div>;
   if (error) return <div className="friends-error">{error}</div>;
@@ -89,20 +90,20 @@ const FriendsList = () => {
       <div className="search-section">
         <h2>Find Friends</h2>
         <div className="search-box">
-          <input
+          {/* <input
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Search users..."
             className="search-input"
-          />
-          <button onClick={searchUsers} className="search-button">
+          /> */}
+          {/* <button onClick={searchUsers} className="search-button">
             Search
-          </button>
+          </button> */}
         </div>
 
         {/* Search Results */}
-        <div className="search-results">
+        {/* <div className="search-results">
           {searchResults.map(user => (
             <div key={user.id} className="user-card">
               <img 
@@ -115,14 +116,14 @@ const FriendsList = () => {
                 <p>@{user.username}</p>
               </div>
               <button 
-                onClick={() => sendFriendRequest(user.id)}
-                className="add-friend-button"
+                // onClick={() => sendFriendRequest(user.id)}
+                // className="add-friend-button"
               >
                 Add Friend
               </button>
             </div>
           ))}
-        </div>
+        </div> */}
       </div>
 
       {/* Friends List */}
@@ -145,12 +146,12 @@ const FriendsList = () => {
                   {friend.friend.is_online ? 'Online' : 'Offline'}
                 </div>
               </div>
-              <button 
+              {/* <button 
                 onClick={() => removeFriend(friend.friend.id)}
                 className="remove-friend-button"
               >
                 Remove
-              </button>
+              </button> */}
             </div>
           ))
         )}
@@ -179,7 +180,7 @@ const FriendRequests = () => {
 
   const fetchRequests = async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/friends/requests/', {
+      const response = await fetch('http://localhost:8000/api/friends/x/', {
         headers: getAuthHeaders()
       });
       if (!response.ok) throw new Error('Failed to fetch requests');

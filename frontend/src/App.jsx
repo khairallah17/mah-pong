@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import ProtectRouter from "./protection_axios/ProtectRouter"
 import ProtectLogin from "./protection_axios/ProtectLogin.jsx"
 import { AuthProvider } from "./context_login_Register/AuthContext.jsx"
-import { Register, Login, VerifyPsdEmail, ResetPassword, Profil} from "./pages"
+import { Register, Login, VerifyPsdEmail, ResetPassword, Profil, Friends} from "./pages"
 import FullDashboard from './pages/fulldashboard';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 // import { useNavigate } from "react-router-dom";
@@ -21,6 +21,7 @@ import Tournament from './pages/tournament/Tournament'
 import TournamentHome from './pages/tournament/tournamentHome';
 import { WebSocketProvider } from './WebSocketProvider/WebSocketProvider.jsx';
 import NotificationDisplay from './pages/NotificationDisplay.jsx';
+// import Friendrequest from './pages/Friendrequest.jsx';
 import { MatchHistory, PictureUser, GameStats, Achievement } from "./pages/UserProfil/Components";
 import Layout from './components/layout';
 
@@ -82,6 +83,7 @@ function App() {
             <Route element={<ProtectRouter />}>
               <Route element={<Layout/>}>
                 <Route path="/security" element={<SecurityPage />} />
+                <Route path="/friends" element={<Friends />} />
                 <Route path="/search" element={<SearchPage />} />
                 {/* <Route path="/dashboard" element={<FullDashboard />} /> */}
                 <Route path='/dashboard' element={<FullDashboard />} />
