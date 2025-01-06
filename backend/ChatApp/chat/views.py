@@ -41,6 +41,7 @@ def get_conversation(request, user_id):
     ).order_by('timestamp')
 
     serializer = MessageSerializer(messages, many=True)
+    print (serializer.data)
     return Response(serializer.data)
 
 @api_view(['GET'])

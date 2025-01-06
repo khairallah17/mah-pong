@@ -17,13 +17,18 @@ const Chat = ({ roomName }) => {
     const [message, setMessage] = useState("");
     const [selectedUser, setSelectedUser] = useState(null);
     const [socket, setSocket] = useState(null);
+    const [selectedUserId, setSelectedUserId] = useState(null);
+
+    const handleIserSelect = (userId) => {
+        setSelectedUserId(userId);
+    };
 
     // Fetch Users List
 
     useEffect(() => {
         axios.get("http://localhost:8000/chat/api/users/")
             .then((response) => {
-                console.log(response.json());
+                console.log(response.data);
                 if (Array.isArray(response.data)) {
                     setUsers(response.data);
                 } else {
@@ -31,6 +36,7 @@ const Chat = ({ roomName }) => {
                 }
             })   
             .catch((error) => {
+                console.log('error',error);
                 setUsers([]);
         });
 }, []);
@@ -55,10 +61,10 @@ const Chat = ({ roomName }) => {
 
     const loadConversation = (user) => {
         setSelectedUser(user);
-
+        console.log("here == ", user)
         axios.get(`http://localhost:8000/chat/api/conversation/${user.id}/`)
             .then((response) => setMessages(response.data))
-            .catch((error) => console.error("Error fetching messages:", error));
+        .catch((error) => console.error("Error fetching messages:", error));
         
         //Establish WebSocket for Real-Time Messaging
 
@@ -76,6 +82,7 @@ const Chat = ({ roomName }) => {
         };
 
         setSocket(chatSocket);
+        // console.log(data);
     };
 
     // //Load conversation messages dynamically
@@ -117,8 +124,8 @@ const Chat = ({ roomName }) => {
     const sendMessage = () => {
         if (socket && message.trim() !== "") {
             const newMessage = {
-                sender_id: 1,  // Replace with actual sender ID (from context/auth)
-                receiver_id: 2,  // Replace with actual receiver ID (selected chat)
+                sender_id: 1,  
+                receiver_id: selectedUserId, 
                 message: message, 
             };
 
@@ -200,7 +207,7 @@ const Chat = ({ roomName }) => {
                     {/* {friends} */}
                     {users.map((user) => (
                         <div key={user.id}
-                             onClick={() => loadConversation(user.id)}
+                             onClick={() => loadConversation(user)}
                              className={`bg-purple-800 p-2 rounded-lg flex gap-2 cursor-pointer ${selectedUser === user.id ? 'bg-purple-700' : ''}`}>
                             <div className="h-12 w-12 rounded-full overflow-hidden borded borded-purple-950">
                                 <img src="img.webp" alt="profile" />
