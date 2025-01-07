@@ -4,8 +4,10 @@ import { useEffect, useRef, useState, useContext } from 'react';
 import GameSettingsButton from '../../components/pvp/Customize2d';
 import GameScore from '../../components/pvp/GameScore';
 import { ColorContext } from '../../context/ColorContext';
+import { useHistory } from 'react-router-dom';
 
 function Pvp2d() {
+    const history = useHistory();
     const wsRef = useRef(null);
     const [{ score1, score2 }, setScores] = useState({ score1: 0, score2: 0 });
     const [{ username1, username2 }, setUsernames] = useState({ username1: '', username2: '' });
@@ -28,6 +30,7 @@ function Pvp2d() {
     let token = localStorage.getItem('authtoken');
     const accessToken = JSON.parse(token).access;
     const [inviteCode, setInviteCode] = useState(new URLSearchParams(window.location.search).get('invite'));
+    const [matchId, setMatchId] = useState(new URLSearchParams(window.location.search).get('match_id'));
 
     const { tableMainColor, tableSecondaryColor, paddlesColor } = useContext(ColorContext);
 
@@ -39,7 +42,7 @@ function Pvp2d() {
 
     useEffect(() => {
         if (token && !wsRef.current) {
-            const wsUrl = `ws://localhost:8000/ws/matchmaking/?token=${accessToken}${inviteCode ? `&invite=${inviteCode}` : ''}`;
+            const wsUrl = `ws://localhost:8000/ws/matchmaking/?token=${accessToken}${inviteCode ? `&invite=${inviteCode}` : ''}${matchId ? `&match_id=${matchId}` : ''}`;
             wsRef.current = new WebSocket(wsUrl);
             wsRef.current.onopen = () => {
                 console.log('WebSocket connection established');
@@ -61,11 +64,10 @@ function Pvp2d() {
                     if (message.score && message.score.player1 && message.score.player2)
                         setScores({ score1: message.score.player1, score2: message.score.player2 });
                     console.log("message: ", message);
-                    if (message.names && message.names.player1 && message.names.player2)
-                        {
-                            console.log("usernames: ", message.names.player1, message.names.player2);
-                            setUsernames({ username1: message.names.player1, username2: message.names.player2 });
-                        }
+                    if (message.names && message.names.player1 && message.names.player2) {
+                        console.log("usernames: ", message.names.player1, message.names.player2);
+                        setUsernames({ username1: message.names.player1, username2: message.names.player2 });
+                    }
                     if (message.player_id === '2')
                         setIsPlayer1(false);
                     setIsMatched(true);
@@ -93,7 +95,7 @@ function Pvp2d() {
                 wsRef.current = null;
             }
         };
-    }, [token, inviteCode]);
+    }, [token, inviteCode, matchId]);
 
     const refreshToken = async () => {
         let refreshtokenUrl = "http://localhost:8001/api/token/refresh/"
@@ -563,13 +565,22 @@ function Pvp2d() {
             {winnerRef.current && (
                 <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-gray-900/95 p-8 rounded-lg text-center">
                     <h2 className="text-2xl font-bold text-white mb-4">{winnerRef.current} Wins!</h2>
-                    <button
-                        onClick={() => window.location.reload()}
-                        className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
-                    >
-                        Restart Game
-                    </button>
-                    {/* maybe redirect to dashboard here instead after showing a popup alert or animation*/}
+                    {!matchId && (
+                        <button
+                            onClick={() => window.location.reload()}
+                            className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                        >
+                            Restart Game
+                        </button>
+                    )}
+                    {matchId && (
+                        <button
+                            onClick={() => history.goBack()}
+                            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors mt-4"
+                        >
+                            Back to Tournament
+                        </button>
+                    )}
                 </div>
             )}
             {isMatched && (

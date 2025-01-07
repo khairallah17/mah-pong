@@ -32,22 +32,25 @@ services:
       dockerfile: Dockerfile
     ports:
       - 8001:8000
+    depends_on:
+      - usermanagement_db
     env_file:
       - .env
+    networks:
+      - usermanagement-network
 
-  # frontend:
-  #     container_name: frontend
-  #     build: 
-  #       context: "./frontend"
-  #       dockerfile: Dockerfile
-  #     ports:
-  #       - "5173:5173"
-  #     env_file:
-  #       - .env
-  #     volumes:
-  #       - front_vm:/app
-  #       - /app/node_modules
-  
+  frontend:
+      container_name: frontend
+      build: 
+        context: "./frontend"
+        dockerfile: Dockerfile
+      ports:
+        - "5173:5173"
+      env_file:
+        - .env
+      volumes:
+        - front_vm:/app
+        - /app/node_modules
     
   notifications:
     container_name: notifications
@@ -64,11 +67,25 @@ services:
     networks:
       - notification-network
 
+  usermanagement_db:
+    image: postgres:15-alpine
+    container_name: usermanagement_db
+    expose:
+      - 5432
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: mydatabase
+    volumes:
+      - usermanagement_db_data:/var/lib/postgresql/data
+    networks:
+      - usermanagement-network
+
   game_db:
     image: postgres:15-alpine
     container_name: game_db
-    expose:
-      - 5432
+    ports:
+      - 5432:5432
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password
@@ -96,6 +113,7 @@ services:
 volumes:
   game_db_data:
   notif_db_data:
+  usermanagement_db_data:
   front_vm:
     driver: local
     driver_opts:
@@ -107,4 +125,6 @@ networks:
   game-network:
     driver: bridge
   notification-network:
+    driver: bridge
+  usermanagement-network:
     driver: bridge

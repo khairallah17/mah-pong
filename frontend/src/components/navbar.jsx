@@ -12,6 +12,7 @@ const Navbar = () => {
 
     console.log("OPEN ==> ", open)
 
+    
     return (
         <div className='navbar-grid text-white flex items-center w-full px-6 bg-black bg-opacity-45'>
             <div className='w-[176px] md:min-w-[176px] flex items-center gap-2'>
