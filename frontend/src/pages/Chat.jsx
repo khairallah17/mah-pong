@@ -61,27 +61,31 @@ const Chat = ({ roomName }) => {
 
     const loadConversation = (user) => {
         setSelectedUser(user);
-        console.log("here == ", user)
+        console.log("here == ", user.id)
         axios.get(`http://localhost:8000/chat/api/conversation/${user.id}/`)
             .then((response) => setMessages(response.data))
         .catch((error) => console.error("Error fetching messages:", error));
         
         //Establish WebSocket for Real-Time Messaging
 
-        const chatSocket = new WebSocket(
-            `ws://localhost:8000/ws/chat/${user.id}/`
-        );
+        // const chatSocket = new WebSocket(
+        //     `ws://localhost:8000/ws/chat/1/`
+        // );
+        // console.log("WebSocket URL: ", chatSocket);
 
-        chatSocket.onmessage = (e) => {
-            const data = JSON.parse(e.data);
-            setMessages((prevMessages) => [...prevMessages, data]);
-        };
+        // chatSocket.onopen = () => console.log("Connected");
+        // chatSocket.onerror = (error) => console.error("WebSocket error:", error);
 
-        chatSocket.onclose = () => {
-            console.log("WebSocket closed");
-        };
+        // chatSocket.onmessage = (e) => {
+        //     const data = JSON.parse(e.data);
+        //     setMessages((prevMessages) => [...prevMessages, data]);
+        // };
 
-        setSocket(chatSocket);
+        // chatSocket.onclose = () => {
+        //     console.log("WebSocket closed");
+        // };
+
+        // setSocket(chatSocket);
         // console.log(data);
     };
 
@@ -102,9 +106,10 @@ const Chat = ({ roomName }) => {
     // useEffect(() => {
     //     if (selectedUser) {
     //         const chatSocket = new WebSocket(
-    //             `ws://localhost:8000/ws/chat/${selectedUser}/` // array
+    //             `ws://localhost:8000/ws/chat/` // array
     //         );
             
+    //         chatSocket.onopen = () => {console.log("open")}
     //         chatSocket.onmessage = (e) => {
     //             const data = JSON.parse(e.data);
     //             setMessages((prevMessages) => [...prevMessages, data]);
@@ -208,7 +213,7 @@ const Chat = ({ roomName }) => {
                     {users.map((user) => (
                         <div key={user.id}
                              onClick={() => loadConversation(user)}
-                             className={`bg-purple-800 p-2 rounded-lg flex gap-2 cursor-pointer ${selectedUser === user.id ? 'bg-purple-700' : ''}`}>
+                             className={`bg-purple-800 p-2 rounded-lg flex gap-2 cursor-pointer ${selectedUser?.id === user.id ? 'bg-purple-700' : ''}`}>
                             <div className="h-12 w-12 rounded-full overflow-hidden borded borded-purple-950">
                                 <img src="img.webp" alt="profile" />
                             </div>
@@ -229,7 +234,7 @@ const Chat = ({ roomName }) => {
                             <img src="img.webp" alt="profile"/>
                         </div>
                         <div className="flex flex-col justify-center"> {/* sender info*/}
-                            <p className="font-semibold">{selectedUser ? users.find(user => user.id === selectedUser)?.username : 'Select a user'}</p>
+                            <p className="font-semibold">{selectedUser?.id ? users.find(user => user.id === selectedUser?.id)?.username : 'Select a user'}</p>
                             <p className="text-green-600">Online</p>
                         </div>
                     </div>

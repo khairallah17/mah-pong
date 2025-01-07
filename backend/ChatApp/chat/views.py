@@ -2,23 +2,24 @@ from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
-from .models import Message, User
+from .models import Message, Conversation
+from .models import Message, CustomUser as User
 from .serializers import MessageSerializer, UserSerializer
 from rest_framework import authentication, permissions
 from rest_framework.permissions import AllowAny, IsAuthenticated
+from django.db.models import Q
+from django.contrib.auth.models import AnonymousUser
+
+
 
 
 
 class ApiUsers(APIView):
-    permissions = [IsAuthenticated]
-
     def get(self, request):
-        print(request)
-        print("heeere i am ")
-        users = User.objects.exclude(id=request.user.id) #Exclude current user
+        users = User.objects.all()
         serializer = UserSerializer(users, many=True)
-        print("here ==>  ", serializer.data)
         return Response(serializer.data)
+
 
 # @api_view(['GET'])
 # def get_users(request):
@@ -33,16 +34,44 @@ def user_list(self, request):
     users = User.objects.all().values("id", "username")
     return JsonResponse(list(users), safe=False)
 
-@api_view(['GET'])
-def get_conversation(request, user_id):
-    user = User.objects.get(id=user_id)
-    messages = Message.objects.filter(
-        sender__in=[user]
-    ).order_by('timestamp')
+# @api_view(['GET'])
+# def get_conversation(request, user_id):
+#     user = User.objects.get(id=user_id)
+#     messages = Message.objects.filter(
+#         sender__in=[user]
+#     ).order_by('timestamp')
 
-    serializer = MessageSerializer(messages, many=True)
-    print (serializer.data)
-    return Response(serializer.data)
+#     serializer = MessageSerializer(messages, many=True)
+#     print (serializer.data)
+#     return Response(serializer.data)
+@api_view(['GET'])
+def get_conversation(request, id):
+    try:
+        # Get the authenticated user
+        user1 = request.user.id
+        user2 = User.objects.get(id=id)
+
+        # Find the conversation between the two users
+        conversation = Conversation.objects.filter(
+            (Q(user1=user1) & Q(user2=user2)) |
+            (Q(user1=user2) & Q(user2=user1))
+        ).first()
+
+        if not conversation.exists():
+                conversation = Conversation.objects.create(name="New Conversation", user1=user1, user2=user2)
+
+            # Retrieve messages for the conversation
+        messages = Message.objects.filter(conversation=conversation).order_by('timestamp')
+
+        # Serialize the messages
+        serializer = MessageSerializer(messages, many=True)
+        return Response(serializer.data)
+
+    except User.DoesNotExist:
+        return Response({"error": "User not found"}, status=404)
+
+
+
 
 @api_view(['GET'])
 def test(request):

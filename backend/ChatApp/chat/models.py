@@ -1,33 +1,57 @@
 from django.db import models
 import uuid
+from django.contrib.auth.models import AbstractUser
 
-class User(models.Model):
+class CustomUser(AbstractUser):
     fullname = models.CharField(max_length=250)
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    username = models.CharField(max_length=50)
     email = models.EmailField(unique=True)
-    nblose = models.IntegerField(default=0)
-    nbwin = models.IntegerField(default=0)
     score = models.IntegerField(default=0)
     img = models.ImageField(
-        upload_to='./',
-        default='./pic1.jpeg'
+        upload_to='profile_pics/',  # Store images in a profile_pics/ directory
+        default='profile_pics/default.jpg'
     )
 
+    def __str__(self):
+        return self.username
+
+
+# class Conversation(models.Model):
+#     name = models.CharField(max_length=255)
+#     users = models.ManyToManyField(CustomUser, related_name='conversations')
+#     # feild off  
+#     def __str__(self):
+#         return self.name
+
+
+# class Message(models.Model):
+#     sender = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="message_sender")
+#     receiver = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="message_receiver")
+#     content = models.TextField()
+#     timestamp = models.DateTimeField(auto_now_add=True)
+#     seen = models.BooleanField(default=False)
+
+#     def __str__(self):
+#         return f"From {self.sender.username} to {self.receiver.username}: {self.content[:20]}"
 class Conversation(models.Model):
     name = models.CharField(max_length=255)
-    # users 
-    # messages  // list of message object 
+    user1 = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='conversation_user1')
+    user2 = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='conversation_user2')
 
     def __str__(self):
-        return self.name
+        return f"{self.user1.username} - {self.user2.username}"
+
+    def get_messages(self):
+        # Filter messages where the conversation involves user1 and user2
+        return self.messages.all().order_by('timestamp')
+
 
 class Message(models.Model):
-    sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name="message_sender")
-    receiver = models.ForeignKey(User, on_delete=models.CASCADE, related_name="message_receiver")
+    conversation = models.ForeignKey(Conversation, on_delete=models.CASCADE, related_name="messages")
+    sender = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="message_sender")
+    receiver = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="message_receiver")
     content = models.TextField()
     timestamp = models.DateTimeField(auto_now_add=True)
     seen = models.BooleanField(default=False)
 
     def __str__(self):
-        return f"From {self.sender} to {self.receiver}: {self.content[:20]}"
+        return f"From {self.sender.username} to {self.receiver.username}: {self.content[:20]}"
