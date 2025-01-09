@@ -1,5 +1,5 @@
 from rest_framework_simplejwt.tokens import Token
-from .models import User, TwoFactorAuthAttempt, Profil
+from .models import User, TwoFactorAuthAttempt, Profil, FriendRequest, FriendList
 from django.contrib.auth.password_validation import validate_password
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework import serializers
@@ -88,6 +88,52 @@ class UserProfileSerializer(serializers.ModelSerializer):
         model = User
         fields = ['id', 'fullname', 'username', 'email', 'nblose', 
                  'nbwin', 'score', 'img', 'avatar', 'profil']
+
+# Friend Request Serializer
+class FriendRequestSerializer(serializers.ModelSerializer):
+    receiver = serializers.CharField(write_only=True)  # Accept username string
+    sender_username = serializers.CharField(source='sender.username', read_only=True)
+    receiver_username = serializers.CharField(source='receiver.username', read_only=True)
+
+    class Meta:
+        model = FriendRequest
+        fields = ['id', 'receiver', 'status', 'created_at', 'sender_username', 'receiver_username']
+        read_only_fields = ['id', 'status', 'created_at']
+
+    def create(self, validated_data):
+        receiver_username = validated_data.pop('receiver')
+        try:
+            receiver = User.objects.get(username=receiver_username)
+            sender = self.context['request'].user
+
+            # Check if request already exists
+            existing_request = FriendRequest.objects.filter(
+                sender=sender,
+                receiver=receiver,
+                status=FriendRequest.PENDING
+            ).exists()
+
+            if existing_request:
+                raise serializers.ValidationError('Friend request already exists')
+
+            if sender == receiver:
+                raise serializers.ValidationError('Cannot send friend request to yourself')
+
+            return FriendRequest.objects.create(
+                sender=sender,
+                receiver=receiver,
+                **validated_data
+            )
+        except User.DoesNotExist:
+            raise serializers.ValidationError(f'User {receiver_username} not found')
+
+# Friend List Serializer
+class FriendListSerializer(serializers.ModelSerializer):
+    friends = UserProfileSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = FriendList
+        fields = ['user', 'friends'] #, 'is_online', 'last_seen']
 
 class LogoutSerial(serializers.Serializer):
     refresh = serializers.CharField()

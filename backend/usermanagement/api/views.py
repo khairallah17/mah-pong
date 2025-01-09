@@ -2,8 +2,8 @@ from django.shortcuts import redirect, get_object_or_404
 from django.db import models
 from django.db.models import Q
 from django.http import HttpResponse, HttpResponseRedirect
-from .models import User, TwoFactorAuthAttempt
-from .serializers import Get_Token_serial, RegistrationSerial, UserSerial, LogoutSerial, UserProfileSerializer
+from .models import User, TwoFactorAuthAttempt, FriendRequest, FriendList
+from .serializers import Get_Token_serial, RegistrationSerial, UserSerial, LogoutSerial, UserProfileSerializer, FriendRequestSerializer, FriendListSerializer
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenObtainPairView
@@ -50,7 +50,13 @@ import time
 from django.contrib.auth.hashers import check_password, make_password
 import random
 import string
-
+from rest_framework import viewsets, status
+from rest_framework.decorators import action
+from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
+from django.shortcuts import get_object_or_404
+# from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
 
 CLIENT_ID = os.environ.get('CLIENT_ID')
 CLIENT_SECRET = os.environ.get('CLIENT_SECRET')
@@ -938,8 +944,145 @@ class ChangePasswordView(APIView):
             return Response({'error': 'An error occurred'})
 
 
-#sending Profil info if exemple https://localhost:5173/profil/<username>
-# class Profil(APIView):
-#     permission_classes = [IsAuthenticated]
+class FriendRequestListCreateView(generics.ListCreateAPIView):
+    serializer_class = FriendRequestSerializer
+    permission_classes = [IsAuthenticated]
 
-#     def post(self, request):
+    def get_queryset(self):
+        # Include both pending and accepted requests in the list
+        return FriendRequest.objects.filter(
+            (models.Q(sender=self.request.user) | models.Q(receiver=self.request.user))
+        ).select_related('sender', 'receiver')
+
+    def create(self, request, *args, **kwargs):
+        try:
+            receiver_username = request.data.get('receiver')
+            if not receiver_username:
+                return Response(
+                    {'detail': 'Receiver username is required'}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            try:
+                receiver = User.objects.get(username=receiver_username)
+            except User.DoesNotExist:
+                return Response(
+                    {'detail': f'User {receiver_username} not found'}, 
+                    status=status.HTTP_404_NOT_FOUND
+                )
+
+            # Check for any existing requests (both directions)
+            existing_request = FriendRequest.objects.filter(
+                (models.Q(sender=request.user, receiver=receiver) |
+                 models.Q(sender=receiver, receiver=request.user)),
+                status='pending'
+            ).first()
+
+            if existing_request:
+                return Response(
+                    {'detail': 'Friend request already exists'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # Check if they're already friends
+            if FriendList.objects.filter(
+                user=request.user,
+                friends=receiver
+            ).exists():
+                return Response(
+                    {'detail': 'Already friends'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            friend_request = FriendRequest.objects.create(
+                sender=request.user,
+                receiver=receiver,
+                status='pending'
+            )
+
+            serializer = self.get_serializer(friend_request)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+        except Exception as e:
+            print("Error:", str(e))  # Debug log
+            return Response(
+                {'detail': 'An error occurred while processing your request'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+class FriendRequestDetailView(generics.RetrieveAPIView):
+    serializer_class = FriendRequestSerializer
+    permission_classes = [IsAuthenticated]
+    queryset = FriendRequest.objects.all()
+
+class FriendRequestAcceptView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, pk):
+        friend_request = get_object_or_404(FriendRequest, pk=pk)
+        
+        if friend_request.receiver != request.user:
+            return Response(
+                {'detail': 'Not authorized'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        friend_request.status = FriendRequest.ACCEPTED
+        friend_request.save()
+
+        # Add to friend lists
+        sender_friend_list, _ = FriendList.objects.get_or_create(user=friend_request.sender)
+        receiver_friend_list, _ = FriendList.objects.get_or_create(user=friend_request.receiver)
+        
+        sender_friend_list.friends.add(friend_request.receiver)
+        receiver_friend_list.friends.add(friend_request.sender)
+
+        return Response({'status': 'friend request accepted'})
+
+class FriendRequestRejectView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, pk):
+        friend_request = get_object_or_404(FriendRequest, pk=pk)
+        if friend_request.receiver != request.user:
+            return Response(
+                {'detail': 'Not authorized'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        friend_request.status = FriendRequest.REJECTED
+        friend_request.save()
+        return Response({'status': 'friend request rejected'})
+
+class FriendRequestCancelView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, pk):
+        friend_request = get_object_or_404(FriendRequest, pk=pk)
+        if friend_request.sender != request.user:
+            return Response(
+                {'detail': 'Not authorized'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        friend_request.delete()
+        return Response({'status': 'friend request cancelled'})
+
+class FriendListView(generics.ListAPIView):
+    serializer_class = FriendListSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return FriendList.objects.filter(user=self.request.user)
+
+class RemoveFriendView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        friend = get_object_or_404(User, username=request.data.get('username'))
+        friend_list = get_object_or_404(FriendList, user=request.user)
+        friend_list.friends.remove(friend)
+        
+        # Remove from friend's list as well
+        friend_friend_list = get_object_or_404(FriendList, user=friend)
+        friend_friend_list.friends.remove(request.user)
+        
+        return Response({'status': 'friend removed'})
