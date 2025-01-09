@@ -13,6 +13,8 @@ class TournamentList(generics.ListCreateAPIView):
 class PlayerMatchHistory(APIView):
     def get(self, request, username=None):
         matches = Match.objects.filter(Q(username1=username) | Q(username2=username))
+        if not matches.exists():
+            return Response({'error': 'No matches found for this player'}, status=status.HTTP_404_NOT_FOUND)
         serializer = MatchSerializer(matches, many=True, context={'player': username})
         return Response(serializer.data, status=status.HTTP_200_OK)
 

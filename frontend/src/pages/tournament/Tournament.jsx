@@ -52,6 +52,7 @@ export default function Tournament() {
           }
         } else if (message.type === 'tournament_update') {
           setMatches(message.matches);
+          setIsReady(message.is_ready);
           console.log('Tournament updated:', message.matches);
         } else if (message.type === 'match_start') {
           console.log('Match started:', message.tournamentMatch_id);

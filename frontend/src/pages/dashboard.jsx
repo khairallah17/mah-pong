@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { GameModes } from '../components/GameModes';
 import { MatchHistory } from '../components/Match-history';
 import { Statistics } from '../components/StatisticUser';
@@ -8,6 +8,25 @@ import { PlayerList } from '../components/PlayerList';
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState('matches');
   const [selectedMode, setSelectedMode] = useState(null);
+    
+  // useEffect( () =>{
+  //   const fetchstats = async () => {
+  //   const response = await fetch("http://localhost:8000/api/player-stats/alemsafi");
+  //   const data = await response.json();
+  //   console.log("player stats:", data);
+  //   }
+
+  //   fetchstats();
+
+  //   const fetchHistory = async () => {
+  //   const response = await fetch("http://localhost:8000/api/match-history/alemsafi");
+  //   const data = await response.json();
+  //   console.log("match history:", data);
+  //   }
+
+  //   fetchHistory();
+    
+  // }, []);
 
   const renderTabContent = () => {
     switch (activeTab) {
