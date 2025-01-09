@@ -106,6 +106,7 @@ import { WebSocketContext } from '../../../websockets/WebSocketProvider.jsx';
 
 const PictureUser = () => {
   const [profil, setProfil] = useState(null);
+  const [requests, setRequests] = useState([]);
   const [error, setError] = useState(null);
   const [friendStatus, setFriendStatus] = useState(null);
   const { username } = useParams();
@@ -127,7 +128,7 @@ const PictureUser = () => {
         }
 
         const requests = await response.json();
-        
+        setRequests(requests);
         // Check for any pending or accepted requests between the users
         const existingRequest = requests.find(request => 
             (request.sender_username === currentUser && request.receiver_username === username) ||
@@ -158,12 +159,11 @@ const PictureUser = () => {
         const friendsData = await friendsResponse.json();
         const isFriend = friendsData.friends?.some(friend => friend.username === username);
         setFriendStatus(isFriend ? 'friends' : 'none');
-
     } catch (err) {
         console.error('Error checking friend status:', err);
         setFriendStatus('none');
     }
-};
+  };
 
   useEffect(() => {
     const fetchProfil = async () => {
@@ -221,6 +221,183 @@ const PictureUser = () => {
     }
   };
 
+  // const handleRemoveFriend = async () => {
+  //   try {
+  //     const response = await fetch('http://localhost:8001/api/friends/remove/', {
+  //       method: 'POST',
+  //       headers: {
+  //         'Content-Type': 'application/json',
+  //         'Authorization': `Bearer ${token}`
+  //       },
+  //       body: JSON.stringify({ username })
+  //     });
+
+  //     if (!response.ok) {
+  //       throw new Error('Failed to remove friend');
+  //     }
+
+  //     setFriendStatus('none');
+  //   } catch (err) {
+  //     console.error('Error removing friend:', err);
+  //     setError(err.message);
+  //   }
+  // };
+
+  // const renderFriendButton = () => {
+  //   if (currentUser === profil?.username) {
+  //     return null;
+  //   }
+
+  //   switch (friendStatus) {
+  //     case 'none':
+  //       return (
+  //         <button 
+  //           onClick={handleFriendRequest}
+  //           className="w-[317px] h-[60px] bg-gray-800 text-white py-3 rounded-xl hover:bg-gray-700 transition-colors"
+  //         >
+  //           Add Friend
+  //         </button>
+  //       );
+  //     case 'pending':
+  //       return (
+  //         <button 
+  //           disabled
+  //           className="w-[317px] h-[60px] bg-gray-600 text-white py-3 rounded-xl cursor-not-allowed"
+  //         >
+  //           Request Pending
+  //         </button>
+  //       );
+  //     case 'friends':
+  //       return (
+  //         <button 
+  //           onClick={handleRemoveFriend}
+  //           className="w-[317px] h-[60px] bg-red-800 text-white py-3 rounded-xl hover:bg-red-700 transition-colors"
+  //         >
+  //           Remove Friend
+  //         </button>
+  //       );
+  //     default:
+  //       return null;
+  //   }
+  // };
+  const handleAcceptRequest = async () => {
+    try {
+      // First get the pending request ID
+      const response = await fetch(`http://localhost:8001/api/friend-requests/`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      const requests = await response.json();
+      
+      const pendingRequest = requests.find(request => 
+        request.sender_username === username && 
+        request.receiver_username === currentUser &&
+        request.status === 'pending'
+      );
+
+      if (!pendingRequest) {
+        throw new Error('Friend request not found');
+      }
+
+      // Accept the request
+      const acceptResponse = await fetch(`http://localhost:8001/api/friend-requests/${pendingRequest.id}/accept/`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!acceptResponse.ok) {
+        throw new Error('Failed to accept friend request');
+      }
+
+      setFriendStatus('friends');
+      wsManager?.sendMessage(JSON.stringify({
+        type: 'friend_request_accepted',
+        message: `${currentUser} accepted your friend request`,
+        to_user: username
+      }));
+    } catch (err) {
+      console.error('Error accepting friend request:', err);
+      setError(err.message);
+    }
+  };
+
+  const handleRejectRequest = async () => {
+    try {
+      const response = await fetch(`http://localhost:8001/api/friend-requests/`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      const requests = await response.json();
+      
+      const pendingRequest = requests.find(request => 
+        request.sender_username === username && 
+        request.receiver_username === currentUser &&
+        request.status === 'pending'
+      );
+
+      if (!pendingRequest) {
+        throw new Error('Friend request not found');
+      }
+
+      const rejectResponse = await fetch(`http://localhost:8001/api/friend-requests/${pendingRequest.id}/reject/`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!rejectResponse.ok) {
+        throw new Error('Failed to reject friend request');
+      }
+
+      setFriendStatus('none');
+    } catch (err) {
+      console.error('Error rejecting friend request:', err);
+      setError(err.message);
+    }
+  };
+
+  const handleCancelRequest = async () => {
+    try {
+      const response = await fetch(`http://localhost:8001/api/friend-requests/`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      const requests = await response.json();
+      
+      const pendingRequest = requests.find(request => 
+        request.sender_username === currentUser && 
+        request.receiver_username === username &&
+        request.status === 'pending'
+      );
+
+      if (!pendingRequest) {
+        throw new Error('Friend request not found');
+      }
+
+      const cancelResponse = await fetch(`http://localhost:8001/api/friend-requests/${pendingRequest.id}/cancel/`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!cancelResponse.ok) {
+        throw new Error('Failed to cancel friend request');
+      }
+
+      setFriendStatus('none');
+    } catch (err) {
+      console.error('Error canceling friend request:', err);
+      setError(err.message);
+    }
+  };
+
   const handleRemoveFriend = async () => {
     try {
       const response = await fetch('http://localhost:8001/api/friends/remove/', {
@@ -242,43 +419,77 @@ const PictureUser = () => {
       setError(err.message);
     }
   };
-
-  const renderFriendButton = () => {
+  const renderActionButtons = () => {
     if (currentUser === profil?.username) {
-      return null;
+      return (
+        <>
+          <button className="w-[317px] h-[60px] bg-gray-800 text-white py-3 rounded-xl hover:bg-gray-700 transition-colors">
+            Edit Profile
+          </button>
+          <button className="w-[317px] h-[60px] bg-gray-800 text-white py-3 rounded-xl hover:bg-gray-700 transition-colors">
+            Invite Game
+          </button>
+        </>
+      );
     }
 
-    switch (friendStatus) {
-      case 'none':
-        return (
+    return (
+      <>
+        {/* Friend action button */}
+        {friendStatus === 'none' && (
           <button 
             onClick={handleFriendRequest}
             className="w-[317px] h-[60px] bg-gray-800 text-white py-3 rounded-xl hover:bg-gray-700 transition-colors"
           >
             Add Friend
           </button>
-        );
-      case 'pending':
-        return (
-          <button 
-            disabled
-            className="w-[317px] h-[60px] bg-gray-600 text-white py-3 rounded-xl cursor-not-allowed"
-          >
-            Request Pending
-          </button>
-        );
-      case 'friends':
-        return (
+        )}
+        
+        {friendStatus === 'pending' && (
+          <>
+            {/* If we sent the request */}
+            {requests.find(request => request.sender_username === currentUser)?.id ? (
+              <button 
+                onClick={handleCancelRequest}
+                className="w-[317px] h-[60px] bg-gray-600 text-white py-3 rounded-xl hover:bg-gray-500 transition-colors"
+              >
+                Cancel Request
+              </button>
+            ) : (
+              /* If we received the request */
+              <div className="space-y-2">
+                <button 
+                  onClick={handleAcceptRequest}
+                  className="w-[317px] h-[60px] bg-green-600 text-white py-3 rounded-xl hover:bg-green-700 transition-colors"
+                >
+                  Accept Request
+                </button>
+                <button 
+                  onClick={handleRejectRequest}
+                  className="w-[317px] h-[60px] bg-red-600 text-white py-3 rounded-xl hover:bg-red-700 transition-colors"
+                >
+                  Reject Request
+                </button>
+              </div>
+            )}
+          </>
+        )}
+        
+        {friendStatus === 'friends' && (
           <button 
             onClick={handleRemoveFriend}
             className="w-[317px] h-[60px] bg-red-800 text-white py-3 rounded-xl hover:bg-red-700 transition-colors"
           >
             Remove Friend
           </button>
-        );
-      default:
-        return null;
-    }
+        )}
+
+        {/* Game invite button */}
+        <button className="w-[317px] h-[60px] bg-gray-800 text-white py-3 rounded-xl hover:bg-gray-700 transition-colors">
+          Invite Game
+        </button>
+      </>
+    );
   };
 
   // Your existing JSX render code...
@@ -323,7 +534,7 @@ const PictureUser = () => {
 
         {/* Action Buttons */}
         <div className="space-y-3">
-          {currentUser === profil?.username ? (
+          {/* {currentUser === profil?.username ? (
             <>
               <button className="w-[317px] h-[60px] bg-gray-800 text-white py-3 rounded-xl hover:bg-gray-700 transition-colors">
                 Edit Profile
@@ -339,7 +550,8 @@ const PictureUser = () => {
                 Invite Game
               </button>
             </>
-          )}
+          )} */}
+          {renderActionButtons()}
         </div>
       </div>
     </div>
