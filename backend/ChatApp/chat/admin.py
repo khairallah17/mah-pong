@@ -16,5 +16,5 @@ class MessageAdmin(admin.ModelAdmin):
 
 @admin.register(Conversation)
 class ConversationAdmin(admin.ModelAdmin):
-    list_display = ["id","name"]
+    list_display = ["id","name","user1","user2"]
 

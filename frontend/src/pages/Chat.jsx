@@ -5,7 +5,7 @@ import { MdEmojiEmotions } from "react-icons/md";
 import { IoCheckmarkDoneOutline } from "react-icons/io5";
 import { RiSendPlaneFill } from "react-icons/ri";
 import { IoSearchOutline } from "react-icons/io5";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import axios from 'axios';
 
 
@@ -15,146 +15,180 @@ const Chat = ({ roomName }) => {
     const [users, setUsers] = useState([]);
     const [messages, setMessages] = useState([]);
     const [message, setMessage] = useState("");
+    const [newMessage, setNewMessage] = useState("");
     const [selectedUser, setSelectedUser] = useState(null);
     const [socket, setSocket] = useState(null);
     const [selectedUserId, setSelectedUserId] = useState(null);
+    const [loading, setLoading] = useState(false);
+    const socketRef = useRef(null);
 
-    const handleIserSelect = (userId) => {
+    useEffect(() => {
+
+        loadUsers();
+    }, []);
+
+    useEffect(() => {
+        if (selectedUserId !== null) {
+            loadConversation(selectedUserId);
+            // initializeWebSocket(selectedUserId);
+        }
+    }, [selectedUserId]);
+
+    const loadUsers = async () => {
+        try {
+            const response = await axios.get("http://localhost:8000/chat/api/users/", {
+                headers: {
+                    Authorization: `Bearer ${localStorage.getItem('access_token')}`
+                },
+                withCredentials: true
+            });
+            setUsers(response.data);
+        } catch (error) {
+            console.error("Error loading users:", error);
+            alert("Failed to load users");
+        }
+        console.log("heeeer",localStorage.getItem('access_token'));
+    };
+
+    const loadConversation = async (userId) => {  // Fixed userId casing
+        setLoading(true);
+        try {
+            const response = await axios.get(`http://localhost:8000/chat/api/conversation/${parseInt(userId, 10)}/`, {
+                // headers: {
+                //     // Authorization: `Bearer ${localStorage.getItem('access_token')}`
+                // },
+                // withCredentials: true
+            });
+            console.log(response.data)
+            setMessages(response.data);
+        } catch (error) {
+            // console.error("Error loading conversation:", error);
+            // alert("Failed to load messages");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // const initializeWebSocket = (userId) => {
+    //     if (socketRef.current) {
+    //         socketRef.current.close();  
+    //     }
+
+    //     const chatSocket = new WebSocket(`ws://localhost:8000/ws/chat/${parseInt(userId, 10)}/`);
+
+    //     socketRef.current = chatSocket;
+
+    //     chatSocket.onmessage = (e) => {
+    //         const data = JSON.parse(e.data);
+    //         if (data.type === "chat_message") {
+    //             setMessages((prev) => [...prev, data]);
+    //         }
+    //     };
+
+    //     chatSocket.onclose = () => {
+    //         console.error("Chat socket closed unexpectedly");
+    //     };
+    // };
+
+    const handleUserSelect = (userId) => {
         setSelectedUserId(userId);
     };
 
-    // Fetch Users List
+    const handleSendMessage = () => {
+        if (newMessage.trim() !== "") {
+            // const chatSocket = new WebSocket(
+            //     `ws://localhost:8000/ws/chat/${selectedUserId}/`
+            // );
 
-    useEffect(() => {
-        axios.get("http://localhost:8000/chat/api/users/")
-            .then((response) => {
-                console.log(response.data);
-                if (Array.isArray(response.data)) {
-                    setUsers(response.data);
-                } else {
-                    setUsers([]);
-                }
-            })   
-            .catch((error) => {
-                console.log('error',error);
-                setUsers([]);
-        });
-}, []);
-
-    // // Fetch users from Django API on component mount
-
-    // useEffect(() => {
-    //     fetchUsers();
-    // }, []);
-
-    // const fetchUsers = async () => {
-    //     try {
-    //         const response = await axios.get('http://localhost:8000/chat/api/users/');
-    //         console.log("FETCHED USERS ==> ", res)
-    //         setUsers(response.data);
-    //     } catch (error) {
-    //         console.error("Error fetching users:", error);
-    //     }
-    // };
-    
-    // Fetch Conversation with Selected User
-
-    const loadConversation = (user) => {
-        setSelectedUser(user);
-        console.log("here == ", user.id)
-        axios.get(`http://localhost:8000/chat/api/conversation/${user.id}/`)
-            .then((response) => setMessages(response.data))
-        .catch((error) => console.error("Error fetching messages:", error));
-        
-        //Establish WebSocket for Real-Time Messaging
-
-        // const chatSocket = new WebSocket(
-        //     `ws://localhost:8000/ws/chat/1/`
-        // );
-        // console.log("WebSocket URL: ", chatSocket);
-
-        // chatSocket.onopen = () => console.log("Connected");
-        // chatSocket.onerror = (error) => console.error("WebSocket error:", error);
-
-        // chatSocket.onmessage = (e) => {
-        //     const data = JSON.parse(e.data);
-        //     setMessages((prevMessages) => [...prevMessages, data]);
-        // };
-
-        // chatSocket.onclose = () => {
-        //     console.log("WebSocket closed");
-        // };
-
-        // setSocket(chatSocket);
-        // console.log(data);
-    };
-
-    // //Load conversation messages dynamically
-
-    // const loadConversation = async (userId) => {
-    //     try {
-    //         setSelectedUser(userId); //Highlight selected user
-    //         const response = await axios.get(`http://localhost:8000/chat/api/conversation/${userId}/`);
-    //         setMessages(response.data);
-    //     } catch (error) {
-    //         console.error("Error Loading conversation:", error);
-    //     }
-    // };
-
-    // // WebSocket connection for real-time messaging
-
-    // useEffect(() => {
-    //     if (selectedUser) {
-    //         const chatSocket = new WebSocket(
-    //             `ws://localhost:8000/ws/chat/` // array
-    //         );
-            
-    //         chatSocket.onopen = () => {console.log("open")}
-    //         chatSocket.onmessage = (e) => {
-    //             const data = JSON.parse(e.data);
-    //             setMessages((prevMessages) => [...prevMessages, data]);
-    //         };
-            
-    //         chatSocket.onclose = () => {
-    //             console.log("WebSocket closed");
-    //         };
-            
-    //         setSocket(chatSocket);
-    //         return () => chatSocket.close();
-    //     }
-    // }, [selectedUser]);
-
-    // Send Message
-        
-    const sendMessage = () => {
-        if (socket && message.trim() !== "") {
-            const newMessage = {
-                sender_id: 1,  
-                receiver_id: selectedUserId, 
-                message: message, 
-            };
-
-            // Send message through WebSocket for real-time update
-            socket.send(JSON.stringify({ message }));
-
-            // Post message to Django backend to save in the database
-            axios.post("http://localhost:8000/chat/api/send-message/", newMessage)
-                .then((response) => {
-                    
-                    //Update chat with the new message
-                    
-                    setMessages((prevMessages) => [
-                        ...prevMessages,
-                        response.data
-                    ]);
-                    setMessage("");
-                })
-                .catch((error) => {
-                    console.error("Failed to send message:", error);
-                });
+            // chatSocket.onopen = () => {
+            //     chatSocket.send(
+            //         JSON.stringify({
+            //             message: newMessage,
+            //             user_id: selectedUserId,
+            //         })
+            //     );
+            //     setNewMessage("");
+            // };
         }
-        console.log("goooooood");
     };
+
+//     // Fetch Users List
+
+//     useEffect(() => {
+//         axios.get("http://localhost:8000/chat/api/users/")
+//             .then((response) => {
+//                 console.log(response.data);
+//                 if (Array.isArray(response.data)) {
+//                     setUsers(response.data);
+//                 } else {
+//                     setUsers([]);
+//                 }
+//             })   
+//             .catch((error) => {
+//                 console.log('error',error);
+//                 setUsers([]);
+//         });
+// }, []);
+
+//     const loadConversation = (user) => {
+//         setSelectedUser(user);
+//         console.log("here == ", user.id)
+//         axios.get(`http://localhost:8000/chat/api/conversation/${user.id}/`)
+//             .then((response) => setMessages(response.data))
+//         .catch((error) => console.error("Error fetching messages:", error));
+        
+//         //Establish WebSocket for Real-Time Messaging
+
+//         // const chatSocket = new WebSocket(
+//         //     `ws://localhost:8000/ws/chat/1/`
+//         // );
+//         // console.log("WebSocket URL: ", chatSocket);
+
+//         // chatSocket.onopen = () => console.log("Connected");
+//         // chatSocket.onerror = (error) => console.error("WebSocket error:", error);
+
+//         // chatSocket.onmessage = (e) => {
+//         //     const data = JSON.parse(e.data);
+//         //     setMessages((prevMessages) => [...prevMessages, data]);
+//         // };
+
+//         // chatSocket.onclose = () => {
+//         //     console.log("WebSocket closed");
+//         // };
+
+//         // setSocket(chatSocket);
+//         // console.log(data);
+//     };
+        
+//     const sendMessage = () => {
+//         if (socket && message.trim() !== "") {
+//             const newMessage = {
+//                 sender_id: 1,  
+//                 receiver_id: selectedUserId, 
+//                 message: message, 
+//             };
+
+//             // Send message through WebSocket for real-time update
+//             socket.send(JSON.stringify({ message }));
+
+//             // Post message to Django backend to save in the database
+//             axios.post("http://localhost:8000/chat/api/send-message/", newMessage)
+//                 .then((response) => {
+                    
+//                     //Update chat with the new message
+                    
+//                     setMessages((prevMessages) => [
+//                         ...prevMessages,
+//                         response.data
+//                     ]);
+//                     setMessage("");
+//                 })
+//                 .catch((error) => {
+//                     console.error("Failed to send message:", error);
+//                 });
+//         }
+//         console.log("goooooood");
+//     };
     const friends = [];
     for (let i = 0; i < 20; i++) {
         friends.push(
@@ -199,7 +233,7 @@ const Chat = ({ roomName }) => {
 
             {/* User List Section */}
             <div className="md:w-[320px] bg-purple-900 flex flex-col gap-10 py-2 md:py-0">
-                <div className="md:flex hidden flex-col gap-2 pt-4 px-4"> {/* search*/}
+                <div className="md:flex hidden flex-col gap-2 pt-4 px-4">
                     <h1 className="font-bold text-white text-xl">Messages</h1>
                     <div className="flex gap-2 items-center bg-white py-1 px-3 rounded-full">
                         <IoSearchOutline className="text-2xl"/>
@@ -208,16 +242,15 @@ const Chat = ({ roomName }) => {
                 </div>
 
                 {/* Dynamic User List */}
-                <div className="flex flex-col gap-2 overflow-y-auto px-4"> {/* container friends*/}
-                    {/* {friends} */}
+                <div className="flex flex-col gap-2 overflow-y-auto px-4">
                     {users.map((user) => (
                         <div key={user.id}
-                             onClick={() => loadConversation(user)}
-                             className={`bg-purple-800 p-2 rounded-lg flex gap-2 cursor-pointer ${selectedUser?.id === user.id ? 'bg-purple-700' : ''}`}>
-                            <div className="h-12 w-12 rounded-full overflow-hidden borded borded-purple-950">
-                                <img src="img.webp" alt="profile" />
+                             onClick={() => handleUserSelect(user.id)}
+                             className={`bg-purple-800 p-2 rounded-lg flex gap-2 cursor-pointer user ${selectedUserId === user.id ? "selected" : ""}`}>
+                            <div className="h-12 w-12 rounded-full overflow-hidden">
+                                <img src="img.webp" alt="profile"/>
                             </div>
-                            <div className="md:flex flex-col justify-center hidden">
+                            <div className="md:flex flex-col hidden">
                                 <p className="font-semibold">{user.username}</p>
                                 <p className="text-sm">Click to chat</p>
                             </div>
@@ -227,30 +260,26 @@ const Chat = ({ roomName }) => {
             </div>
 
             {/* Chat Section */}
-            <div className="grow bg-purple-900 flex flex-col gap-5"> {/* chat*/}
-                <div className="bg-yellow-800 p-4 flex items-center justify-between"> {/* header*/}
+            <div className="grow bg-purple-900 flex flex-col gap-5">
+                <div className="bg-yellow-800 p-4 flex items-center justify-between">
                     <div className="flex gap-2">
-                        <div className="h-12 w-12 rounded-full overflow-hidden border border-purple-950"> {/* sender img*/}
+                        <div className="h-12 w-12 rounded-full overflow-hidden">
                             <img src="img.webp" alt="profile"/>
                         </div>
-                        <div className="flex flex-col justify-center"> {/* sender info*/}
-                            <p className="font-semibold">{selectedUser?.id ? users.find(user => user.id === selectedUser?.id)?.username : 'Select a user'}</p>
+                        <div className="flex flex-col">
+                            <p className="font-semibold">
+                                {selectedUserId ? users.find(user => user.id === selectedUserId)?.username : 'Select a user'}
+                            </p>
                             <p className="text-green-600">Online</p>
                         </div>
                     </div>
                     <MdInfoOutline className="text-2xl"/>
                 </div>
 
-                {/* Chat Messages */}
                 <div className="overflow-auto px-4 gap-2 flex flex-col">
-                    {/* {chats} */}
                     {messages.map((msg, index) => (
-                        <div key={index} className={`p-2 rounded-2xl px-3 w-fit max-w-[60%] flex flex-col break-all ${msg.sender === 1 ? 'place-self-end bg-blue-600' : 'bg-gray-700'}`}>
-                            <p>{msg.content}</p>
-                            <div className="flex place-self-end justify-end gap-1 items-center">
-                                <p className="text-xs">{msg.timestamp}</p>
-                                <IoCheckmarkDoneOutline className="text-sm" />
-                            </div>
+                        <div key={index} className={`p-2 rounded-2xl ${msg.sender === 1 ? 'place-self-end bg-blue-600' : 'bg-gray-700'}`}>
+                            <p>{msg.message}</p>
                         </div>
                     ))}
                 </div>
@@ -262,11 +291,12 @@ const Chat = ({ roomName }) => {
                             <LuCirclePlus className="text-2xl text-blue-700"/>
                             {/* <MdEmojiEmotions className="text-2xl text-blue-700"/> */}
                             <input type="text" 
-                                   value={message} 
-                                   onChange={(e) => setMessage(e.target.value)} 
-                                   onKeyPress={(e) => e.key === "Enter" && sendMessage()}
-                                   placeholder="Type your message here ..." className="rounded-lg p-1 px-3 w-full outline-none bg-transparent text-white" />
-                            <RiSendPlaneFill onClick={sendMessage} className="text-2xl text-blue-700"/>
+                               value={newMessage} 
+                               onChange={(e) => setNewMessage(e.target.value)} 
+                               onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
+                               placeholder="Type your message here..." 
+                               className="w-full bg-transparent text-white focus-none"/>
+                            <RiSendPlaneFill onClick={handleSendMessage} className="text-2xl text-blue-700"/>  
                         </div>
                     </div>
                 </div>

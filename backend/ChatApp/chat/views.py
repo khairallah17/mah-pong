@@ -47,22 +47,22 @@ def user_list(self, request):
 #     print (serializer.data)
 #     return Response(serializer.data)
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+# @permission_classes([IsAuthenticated])
 def get_conversation(request, id):
     try:
-        # Get the conversation by ID
-        conversation = get_object_or_404(Conversation, id=id)
+        conversation = Conversation.objects.filter(
+            (Q(user1=request.user) & Q(user2_id=id)) |
+            (Q(user2=request.user) & Q(user1_id=id))
+        ).first()
 
-        # Check if the user is part of the conversation
-        if request.user != conversation.user1 and request.user != conversation.user2:
-            return Response({'error': 'You do not have permission to view this conversation.'}, status=403)
+        if not conversation:
+            return Response({'error': 'No conversation found between these users.'}, status=404)
 
         # Serialize the conversation along with messages
         serializer = ConversationSerializer(conversation)
         return Response(serializer.data)
-
     except Exception as e:
-        return Response({"error": str(e)}, status=500)
+        return Response({'error': str(e)}, status=500)
     # try:
     #     # Ensure the user is authenticated
     #     if not request.user.is_authenticated:
