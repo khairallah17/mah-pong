@@ -1,0 +1,12 @@
+asgiref==3.8.1
+channels==4.2.0
+Django==4.2.17
+django-cors-headers==4.6.0
+djangorestframework==3.15.2
+pillow==11.1.0
+sqlparse==0.5.3
+typing_extensions==4.12.2
+channels_redis
+django-redis
+pyjwt
+psycopg2-binary
