@@ -1,3 +1,5 @@
+import requests
+from django.conf import settings
 from django.shortcuts import render # type: ignore
 from rest_framework.views import APIView # type: ignore
 from rest_framework.decorators import api_view, permission_classes, authentication_classes # type: ignore
@@ -17,10 +19,35 @@ from django.shortcuts import get_object_or_404  # type: ignore
 
 
 class ApiUsers(APIView):
+    # permission_classes = [IsAuthenticated]
+
     def get(self, request):
-        users = User.objects.all()
-        serializer = UserSerializer(users, many=True)
-        return Response(serializer.data)
+        try:
+            # Fetch users from the UserManagement service
+            response = requests.get(
+                f"{settings.USERMANAGEMENT_SERVICE_URL}/api/friends/",
+                headers={"Authorization": f"Bearer {request.auth.token}"}
+            )
+            response.raise_for_status()
+            users = response.json()
+
+            # Store users in the Chat service's database
+            for user_data in users:
+                User.objects.update_or_create(
+                    id=user_data['id'],
+                    defaults={
+                        'username': user_data['username'],
+                        'fullname': user_data.get('fullname', ''),
+                        'email': user_data['email'],
+                        'img': user_data.get('img', 'profile_pics/default.jpg')
+                    }
+                )
+
+            # Serialize and return the users
+            serializer = UserSerializer(User.objects.all(), many=True)
+            return Response(serializer.data)
+        except requests.RequestException as e:
+            return Response({"error": str(e)}, status=500)
 
 
 # @api_view(['GET'])

@@ -1068,7 +1068,7 @@ class FriendRequestCancelView(APIView):
 
 class FriendListView(generics.ListAPIView):
     serializer_class = FriendListSerializer
-    permission_classes = [IsAuthenticated]
+    # permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         return FriendList.objects.filter(user=self.request.user)

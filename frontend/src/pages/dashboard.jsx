@@ -9,24 +9,42 @@ const Dashboard = () => {
   const [activeTab, setActiveTab] = useState('matches');
   const [selectedMode, setSelectedMode] = useState(null);
     
-  // useEffect( () =>{
-  //   const fetchstats = async () => {
-  //   const response = await fetch("http://localhost:8000/api/player-stats/alemsafi");
-  //   const data = await response.json();
-  //   console.log("player stats:", data);
-  //   }
+  useEffect( () =>{
+    // const fetchstats = async () => {
+    // const response = await fetch("http://localhost:8000/api/player-stats/alemsafi");
+    // const data = await response.json();
+    // console.log("player stats:", data);
+    // }
 
-  //   fetchstats();
+    // fetchstats();
 
-  //   const fetchHistory = async () => {
-  //   const response = await fetch("http://localhost:8000/api/match-history/alemsafi");
-  //   const data = await response.json();
-  //   console.log("match history:", data);
-  //   }
+    // const fetchHistory = async () => {
+    // const response = await fetch("http://localhost:8000/api/match-history/alemsafi");
+    // const data = await response.json();
+    // console.log("match history:", data);
+    // }
 
-  //   fetchHistory();
+    // fetchHistory();
+
+    const fetchFriends = async () => {
+    const response = await fetch("http://localhost:8001/api/friends/", 
+    {
+      credentials: "include",
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    }
+    );
+    const data = await response.json();
+    console.log("friends:", data);
+    }
+
+    fetchFriends();
     
-  // }, []);
+  }, []);
+
+  
 
   const renderTabContent = () => {
     switch (activeTab) {

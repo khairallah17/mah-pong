@@ -8,9 +8,6 @@ import { IoSearchOutline } from "react-icons/io5";
 import React, { useState, useEffect, useRef } from "react";
 import axios from 'axios';
 
-
-
-
 const ChatComponent = ({ roomName }) => {
     const [users, setUsers] = useState([]);
     const [messages, setMessages] = useState([]);
@@ -23,7 +20,6 @@ const ChatComponent = ({ roomName }) => {
     const socketRef = useRef(null);
 
     useEffect(() => {
-
         loadUsers();
     }, []);
 
@@ -36,9 +32,9 @@ const ChatComponent = ({ roomName }) => {
 
     const loadUsers = async () => {
         try {
-            const response = await axios.get("http://localhost:8000/chat/api/users/", {
+            const response = await axios.get("http://localhost:8003/chat/api/users/", {
                 headers: {
-                    Authorization: `Bearer ${localStorage.getItem('access_token')}`
+                    Authorization: `Bearer ${JSON.parse(localStorage.getItem('authtoken')).access}`
                 },
                 withCredentials: true
             });
@@ -47,15 +43,15 @@ const ChatComponent = ({ roomName }) => {
             console.error("Error loading users:", error);
             alert("Failed to load users");
         }
-        console.log("heeeer",localStorage.getItem('access_token'));
+        console.log("heeeer",JSON.parse(localStorage.getItem('authtoken')).access);
     };
 
     const loadConversation = async (userId) => {  // Fixed userId casing
         setLoading(true);
         try {
-            const response = await axios.get(`http://localhost:8000/chat/api/conversation/${parseInt(userId, 10)}/`, {
+            const response = await axios.get(`http://localhost:8003/chat/api/conversation/${parseInt(userId, 10)}/`, {
                 // headers: {
-                //     // Authorization: `Bearer ${localStorage.getItem('access_token')}`
+                //     // Authorization: `Bearer ${JSON.parse(localStorage.getItem('authtoken')).access}`
                 // },
                 // withCredentials: true
             });
@@ -115,7 +111,7 @@ const ChatComponent = ({ roomName }) => {
 //     // Fetch Users List
 
 //     useEffect(() => {
-//         axios.get("http://localhost:8000/chat/api/users/")
+//         axios.get("http://localhost:8003/chat/api/users/")
 //             .then((response) => {
 //                 console.log(response.data);
 //                 if (Array.isArray(response.data)) {
@@ -133,7 +129,7 @@ const ChatComponent = ({ roomName }) => {
 //     const loadConversation = (user) => {
 //         setSelectedUser(user);
 //         console.log("here == ", user.id)
-//         axios.get(`http://localhost:8000/chat/api/conversation/${user.id}/`)
+//         axios.get(`http://localhost:8003/chat/api/conversation/${user.id}/`)
 //             .then((response) => setMessages(response.data))
 //         .catch((error) => console.error("Error fetching messages:", error));
         
@@ -172,7 +168,7 @@ const ChatComponent = ({ roomName }) => {
 //             socket.send(JSON.stringify({ message }));
 
 //             // Post message to Django backend to save in the database
-//             axios.post("http://localhost:8000/chat/api/send-message/", newMessage)
+//             axios.post("http://localhost:8003/chat/api/send-message/", newMessage)
 //                 .then((response) => {
                     
 //                     //Update chat with the new message

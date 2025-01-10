@@ -5,7 +5,6 @@ from django.contrib.auth.models import AbstractUser # type: ignore
 class CustomUser(AbstractUser): 
     fullname = models.CharField(max_length=250)
     email = models.EmailField(unique=True)
-    score = models.IntegerField(default=0)
     img = models.ImageField(
         upload_to='profile_pics/',  # Store images in a profile_pics/ directory
         default='profile_pics/default.jpg'
