@@ -10,3 +10,4 @@ channels_redis
 django-redis
 pyjwt
 psycopg2-binary
+requests

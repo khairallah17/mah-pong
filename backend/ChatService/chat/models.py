@@ -3,6 +3,7 @@ import uuid
 from django.contrib.auth.models import AbstractUser # type: ignore
 
 class CustomUser(AbstractUser): 
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     fullname = models.CharField(max_length=250)
     email = models.EmailField(unique=True)
     img = models.ImageField(

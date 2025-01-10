@@ -104,7 +104,7 @@ DATABASES = {
         'NAME': 'mydatabase',
         'USER': 'postgres',
         'PASSWORD': 'password',
-        'HOST': 'game_db',
+        'HOST': 'chat_db',
         'PORT': '5432',
     }
 }
@@ -171,4 +171,4 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-USERMANAGEMENT_SERVICE_URL = "http://localhost:8001"
+USERMANAGEMENT_SERVICE_URL = "http://usermanagement:8000"

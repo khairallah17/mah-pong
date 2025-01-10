@@ -38,12 +38,11 @@ const ChatComponent = ({ roomName }) => {
                 },
                 withCredentials: true
             });
+            console.log(response.data);
             setUsers(response.data);
         } catch (error) {
             console.error("Error loading users:", error);
-            alert("Failed to load users");
         }
-        console.log("heeeer",JSON.parse(localStorage.getItem('authtoken')).access);
     };
 
     const loadConversation = async (userId) => {  // Fixed userId casing

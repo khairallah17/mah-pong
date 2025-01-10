@@ -13,40 +13,58 @@ from rest_framework.authentication import SessionAuthentication, TokenAuthentica
 from django.db.models import Q # type: ignore
 from django.contrib.auth.models import AnonymousUser # type: ignore
 from django.shortcuts import get_object_or_404  # type: ignore
+import logging
 
-# logger = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 
 class ApiUsers(APIView):
-    # permission_classes = [IsAuthenticated]
 
     def get(self, request):
         try:
-            # Fetch users from the UserManagement service
+            auth_header = request.headers.get('Authorization')
+            if not auth_header:
+                return Response({"error": "Authorization header missing"}, status=400)
+
+            token = auth_header.split(' ')[1]
+
+            logger.warning(f"Request: {request} Request headers: {request.headers} request done")
+            logger.warning(f"Token: {token}")
+            logger.warning(f"UserManagement Service URL: {settings.USERMANAGEMENT_SERVICE_URL}")
+
             response = requests.get(
                 f"{settings.USERMANAGEMENT_SERVICE_URL}/api/friends/",
-                headers={"Authorization": f"Bearer {request.auth.token}"}
+                headers={"Authorization": f"Bearer {token}"}
             )
             response.raise_for_status()
-            users = response.json()
+            users_data = response.json()
+            logger.warning(f"Users: {users_data}")
 
             # Store users in the Chat service's database
-            for user_data in users:
-                User.objects.update_or_create(
-                    id=user_data['id'],
-                    defaults={
-                        'username': user_data['username'],
-                        'fullname': user_data.get('fullname', ''),
-                        'email': user_data['email'],
-                        'img': user_data.get('img', 'profile_pics/default.jpg')
-                    }
-                )
+            for user_data in users_data:
+                for friend in user_data['friends']:
+                    User.objects.update_or_create(
+                        id=friend['id'],
+                        defaults={
+                            'username': friend['username'],
+                            'fullname': friend.get('fullname', ''),
+                            'email': friend['email'],
+                            'img': friend.get('img', 'profile_pics/default.jpg')
+                        }
+                    )
 
             # Serialize and return the users
             serializer = UserSerializer(User.objects.all(), many=True)
             return Response(serializer.data)
+        except requests.ConnectionError as e:
+            logger.error(f"ConnectionError: {e}")
+            return Response({"error": "Failed to connect to UserManagement service"}, status=500)
         except requests.RequestException as e:
+            logger.error(f"RequestException: {e}")
+            return Response({"error": str(e)}, status=500)
+        except Exception as e:
+            logger.error(f"Exception: {e}")
             return Response({"error": str(e)}, status=500)
 
 
@@ -140,7 +158,7 @@ def send_message(request):
         sender = User.objects.get(id=sender_id)
         receiver = User.objects.get(id=receiver_id)
     except User.DoesNotExist:
-        return Response({"error": "User not foound"}, status=404)
+        return Response({"error": "User not found"}, status=404)
 
     message = Message.objects.create(
         sender=sender,
@@ -155,4 +173,4 @@ def send_message(request):
         "timestamp": message.timestamp
     })
 # class ConversationView(ApiView):
-#     pass 
+#     pass
