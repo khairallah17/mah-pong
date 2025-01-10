@@ -1,36 +1,35 @@
-// import * as THREE from 'three';
-// import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
-// import { useEffect, useRef, useState, useContext } from 'react';
-// import GameSettingsButton from '../../components/pvp/Customize2d';
-// import GameScore from '../../components/pvp/GameScore';
-// import { ColorContext } from '../../context/ColorContext';
-// import { useHistory } from 'react-router-dom';
+import * as THREE from 'three';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
+import { useEffect, useRef, useState, useContext } from 'react';
+import GameSettingsButton from '../../components/pvp/Customize2d';
+import GameScore from '../../components/pvp/GameScore';
+import { ColorContext } from '../../context/ColorContext';
+import { Navigate } from 'react-router-dom';
 
-// function Pvp2d() {
-//     const history = useHistory();
-//     const wsRef = useRef(null);
-//     const [{ score1, score2 }, setScores] = useState({ score1: 0, score2: 0 });
-//     const [{ username1, username2 }, setUsernames] = useState({ username1: '', username2: '' });
-//     const winnerRef = useRef(null);
-//     const [gameState, setGameState] = useState(null);
-//     const [isMatched, setIsMatched] = useState(false);
-//     let keyPressed = false;
-//     const [isPlayer1, setIsPlayer1] = useState(true);
-//     let ballDirection = new THREE.Vector3(1, 0, 1);
-//     const PADDLE_SPEED = 0.05;
-//     const intervalIdRef = useRef(null);
-//     const rendererRef = useRef(null);
-//     const cameraRef = useRef(null);
-//     const paddle1Ref = useRef(null);
-//     const paddle2Ref = useRef(null);
-//     const ballRef = useRef(null);
-//     const tableRef = useRef(null);
-//     const tableAddonsRef = useRef(null);
-//     const isPausedRef = useRef(true);
-//     let token = localStorage.getItem('authtoken');
-//     const accessToken = JSON.parse(token).access;
-//     const [inviteCode, setInviteCode] = useState(new URLSearchParams(window.location.search).get('invite'));
-//     const [matchId, setMatchId] = useState(new URLSearchParams(window.location.search).get('match_id'));
+function Pvp2d() {
+    const wsRef = useRef(null);
+    const [{ score1, score2 }, setScores] = useState({ score1: 0, score2: 0 });
+    const [{ username1, username2 }, setUsernames] = useState({ username1: '', username2: '' });
+    const winnerRef = useRef(null);
+    const [gameState, setGameState] = useState(null);
+    const [isMatched, setIsMatched] = useState(false);
+    let keyPressed = false;
+    const [isPlayer1, setIsPlayer1] = useState(true);
+    let ballDirection = new THREE.Vector3(1, 0, 1);
+    const PADDLE_SPEED = 0.05;
+    const intervalIdRef = useRef(null);
+    const rendererRef = useRef(null);
+    const cameraRef = useRef(null);
+    const paddle1Ref = useRef(null);
+    const paddle2Ref = useRef(null);
+    const ballRef = useRef(null);
+    const tableRef = useRef(null);
+    const tableAddonsRef = useRef(null);
+    const isPausedRef = useRef(true);
+    let token = localStorage.getItem('authtoken');
+    const accessToken = JSON.parse(token).access;
+    const [inviteCode, setInviteCode] = useState(new URLSearchParams(window.location.search).get('invite'));
+    const [matchId, setMatchId] = useState(new URLSearchParams(window.location.search).get('match_id'));
 
 //     const { tableMainColor, tableSecondaryColor, paddlesColor } = useContext(ColorContext);
 
@@ -40,55 +39,54 @@
 //         }
 //     }, [winnerRef.current]);
 
-//     useEffect(() => {
-//         if (token && !wsRef.current) {
-//             const wsUrl = `ws://localhost:8000/ws/matchmaking/?token=${accessToken}${inviteCode ? `&invite=${inviteCode}` : ''}${matchId ? `&match_id=${matchId}` : ''}`;
-//             wsRef.current = new WebSocket(wsUrl);
-//             wsRef.current.onopen = () => {
-//                 console.log('WebSocket connection established');
-//             };
-//             wsRef.current.onmessage = async (event) => {
-//                 const message = JSON.parse(event.data);
-//                 if (message.type === 'token_expired') {
-//                     const newToken = await refreshToken();
-//                     if (newToken) {
-//                         localStorage.setItem('authtoken', JSON.stringify(newToken));
-//                         wsRef.current = new WebSocket('ws://localhost:8000/ws/matchmaking/?token=' + newToken.access);
-//                         console.log('WebSocket connection established with new token');
-//                     } else {
-//                         localStorage.removeItem('authtoken');
-//                         window.location.href = '/login';
-//                     }
-//                 }
-//                 if (message.type === 'match_found') {
-//                     if (message.score && message.score.player1 && message.score.player2)
-//                         setScores({ score1: message.score.player1, score2: message.score.player2 });
-//                     console.log("message: ", message);
-//                     if (message.names && message.names.player1 && message.names.player2) {
-//                         console.log("usernames: ", message.names.player1, message.names.player2);
-//                         setUsernames({ username1: message.names.player1, username2: message.names.player2 });
-//                     }
-//                     if (message.player_id === '2')
-//                         setIsPlayer1(false);
-//                     setIsMatched(true);
-//                     console.log("match found with player_id: ", message.player_id, "isPlayer1: ", isPlayer1);
-//                 } else if (message.type === 'game_event') {
-//                     updateScene(message.event);
-//                 }
-//                 if (message.event === 'score_update') {
-//                     setScores(message.score);
-//                 }
-//                 // else if (message.type === 'game_state') {
-//                 //     setGameState(message.game_state);
-//                 // }
-//             };
-//             wsRef.current.onclose = () => {
-//                 console.log('WebSocket connection closed')
-//             };
-//             // window.location.href = '/dashboard';
-//             wsRef.current.onerror = (e) => console.error('WebSocket error:', e);
-//         }
-//         return () => {
+    useEffect(() => {
+        if (token && !wsRef.current) {
+            const wsUrl = `ws://localhost:8000/ws/matchmaking/?token=${accessToken}${inviteCode ? `&invite=${inviteCode}` : ''}${matchId ? `&match_id=${matchId}` : ''}`;
+            wsRef.current = new WebSocket(wsUrl);
+            wsRef.current.onopen = () => {
+                console.log('WebSocket connection established');
+            };
+            wsRef.current.onmessage = async (event) => {
+                const message = JSON.parse(event.data);
+                if (message.type === 'token_expired') {
+                    const newToken = await refreshToken();
+                    if (newToken) {
+                        localStorage.setItem('authtoken', JSON.stringify(newToken));
+                        wsRef.current = new WebSocket('ws://localhost:8000/ws/matchmaking/?token=' + newToken.access);
+                        console.log('WebSocket connection established with new token');
+                    } else {
+                        localStorage.removeItem('authtoken');
+                        window.location.href = '/login';
+                    }
+                }
+                if (message.type === 'match_found') {
+                    if (message.scoreP1 !== undefined && message.scoreP2 !== undefined && message.scoreP1 !== null && message.scoreP2 !== null)
+                        setScores({ score1: isPlayer1? message.scoreP1 : message.scoreP2, score2: isPlayer1? message.scoreP2 : message.scoreP1 });
+                    console.log("message: ", message);
+                    if (message.names && message.names.player1 && message.names.player2) {
+                        console.log("usernames: ", message.names.player1, message.names.player2);
+                        setUsernames({ username1: message.names.player1, username2: message.names.player2 });
+                    }
+                    if (message.player_id === '2')
+                        setIsPlayer1(false);
+                    setIsMatched(true);
+                    console.log("match found with player_id: ", message.player_id, "isPlayer1: ", isPlayer1);
+                } else if (message.type === 'game_event') {
+                    updateScene(message.event);
+                }
+                if (message.type === 'score_update') {
+                    setScores({ score1: message.scoreP1, score2: message.scoreP2 });
+                }
+                // else if (message.type === 'game_state') {
+                //     setGameState(message.game_state);
+                // }
+            };
+            wsRef.current.onclose = () => {
+                console.log('WebSocket connection closed')
+            };
+            wsRef.current.onerror = (e) => console.error('WebSocket error:', e);
+        }
+        return () => {
 
 //             if (wsRef.current) {
 //                 wsRef.current.close();
@@ -172,14 +170,14 @@
 //                     scene.userData.stars.rotation.y += 0.0001;
 //                 }
 
-//                 if (isPausedRef.current) {
-//                     controls.update();
-//                     requestAnimationFrame(animate);
-//                     renderer.render(scene, camera);
-//                     return;
-//                 }
-//                 requestAnimationFrame(animate);
-//                 ball.position.add(ballDirection.clone().multiplyScalar(0.05));
+                if (isPausedRef.current) {
+                    controls.update();
+                    requestAnimationFrame(animate);
+                    renderer.render(scene, camera);
+                    return;
+                }
+                requestAnimationFrame(animate);
+                ball.position.add(ballDirection.clone().multiplyScalar(0.02));
 
 //                 const paddle1Box = new THREE.Box3().setFromObject(paddle1);
 //                 const paddle2Box = new THREE.Box3().setFromObject(paddle2);
@@ -299,38 +297,37 @@
 //         }
 //     }, [tableMainColor, tableSecondaryColor, paddlesColor]);
 
-//     const updateUserData = async (username, data) => {
-//         try {
-//             const response = await fetch(`http://localhost:8001/api/user-info/${username}/`, {
-//                 method: 'PATCH',
-//                 headers: {
-//                     'Content-Type': 'application/json',
-//                     'Authorization': `Bearer ${accessToken}`,
-//                 },
-//                 body: JSON.stringify(data),
-//             });
+    // const updateUserData = async (username, data) => {
+    //     try {
+    //         const response = await fetch(`http://localhost:8001/api/user-info/${username}/`, {
+    //             method: 'PATCH',
+    //             headers: {
+    //                 'Content-Type': 'application/json',
+    //                 'Authorization': `Bearer ${accessToken}`,
+    //             },
+    //             body: JSON.stringify(data),
+    //         });
 
-//             if (!response.ok) {
-//                 throw new Error('Network response was not ok');
-//             }
+    //         if (!response.ok) {
+    //             throw new Error('Network response was not ok');
+    //         }
 
-//             const responseData = await response.json();
-//             console.log('User data updated successfully:', responseData);
-//         } catch (error) {
-//             console.error('Error updating user data:', error);
-//         }
-//     };
+    //         const responseData = await response.json();
+    //         console.log('User data updated successfully:', responseData);
+    //     } catch (error) {
+    //         console.error('Error updating user data:', error);
+    //     }
+    // };
 
-//     // Example usage
-//     const handleMatchResult = (username, isWin) => {
-//         const data = {
-//             nblose: isWin ? 0 : 1,
-//             nbwin: isWin ? 1 : 0,
-//             // score: ,
-//         };
+    // const handleMatchResult = (username, isWin) => {
+    //     const data = {
+    //         nblose: isWin ? 0 : 1,
+    //         nbwin: isWin ? 1 : 0,
+    //         // score: ,
+    //     };
 
-//         updateUserData(username, data);
-//     };
+    //     updateUserData(username, data);
+    // };
 
 //     function restartGame(ball) {
 //         ball.position.set(0, 0.1, 0);
@@ -451,21 +448,38 @@
 //         }
 //     };
 
-//     const updateScene = (event) => {
-//         if (event === 'opponent_disconnected') {
-//             // Show popup alert or loading animation then redirect to dashboard
-//         }
-//         if (isPausedRef.current && document.visibilityState === 'visible' && event !== 'game_over' && event !== 'score_update') {
-//             isPausedRef.current = false;
-//         }
-//         if (paddle1Ref.current && paddle2Ref.current) {
-//             if (event === 'player_move_up') {
-//                 paddle2Ref.current.position.z -= PADDLE_SPEED;
-//             } else if (event === 'player_move_down') {
-//                 paddle2Ref.current.position.z += PADDLE_SPEED;
-//             }
-//         }
-//     };
+    const updateScene = (event) => {
+        if (event === 'opponent_disconnected') {
+            const popup = document.createElement('div');
+            popup.id = 'disconnected-popup';
+            popup.style.position = 'fixed';
+            popup.style.top = '50%';
+            popup.style.left = '50%';
+            popup.style.transform = 'translate(-50%, -50%)';
+            popup.style.padding = '20px';
+            popup.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
+            popup.style.color = 'white';
+            popup.style.fontSize = '20px';
+            popup.style.zIndex = '1000';
+            popup.innerText = 'You won because your opponent disconnected.';
+            document.body.appendChild(popup);
+
+            setTimeout(() => {
+                document.body.removeChild(popup);
+                Navigate('/dashboard');
+            }, 3000);
+        }
+        if (isPausedRef.current && document.visibilityState === 'visible' && event !== 'game_over' && event !== 'score_update') {
+            isPausedRef.current = false;
+        }
+        if (paddle1Ref.current && paddle2Ref.current) {
+            if (event === 'player_move_up') {
+                paddle2Ref.current.position.z -= PADDLE_SPEED;
+            } else if (event === 'player_move_down') {
+                paddle2Ref.current.position.z += PADDLE_SPEED;
+            }
+        }
+    };
 
 //     const createTable = () => {
 //         const geometry = new THREE.BoxGeometry(5, 0.1, 3);
@@ -542,66 +556,66 @@
 //         return light;
 //     };
 
-//     const generateInviteLink = () => {
-//         const code = Math.random().toString(36).substring(2, 15);
-//         setInviteCode(code);
-//         const inviteLink = `${window.location.origin}/pvp2d?invite=${code}`;
-//         navigator.clipboard.writeText(inviteLink).then(() => {
-//             alert('Invite link copied to clipboard!');
-//         });
-//     };
+    const generateInviteLink = () => {
+        const code = Math.random().toString(36).substring(2, 15);
+        setInviteCode(code);
+        const inviteLink = `${window.location.origin}/dashboard/game/pvp2d?invite=${code}`;
+        navigator.clipboard.writeText(inviteLink).then(() => {
+            alert('Invite link copied to clipboard!');
+        });
+    };
 
-//     return (
-//         <>
-//             <GameSettingsButton />
-//             {!isMatched && (
-//                 <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-white text-2xl">
-//                     <h1>Looking for an opponent...</h1>
-//                     <button onClick={generateInviteLink} className="mt-4 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors">
-//                         Generate Invite Link
-//                     </button>
-//                 </div>
-//             )}
-//             {winnerRef.current && (
-//                 <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-gray-900/95 p-8 rounded-lg text-center">
-//                     <h2 className="text-2xl font-bold text-white mb-4">{winnerRef.current} Wins!</h2>
-//                     {!matchId && (
-//                         <button
-//                             onClick={() => window.location.reload()}
-//                             className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
-//                         >
-//                             Restart Game
-//                         </button>
-//                     )}
-//                     {matchId && (
-//                         <button
-//                             onClick={() => history.goBack()}
-//                             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors mt-4"
-//                         >
-//                             Back to Tournament
-//                         </button>
-//                     )}
-//                 </div>
-//             )}
-//             {isMatched && (
-//                 <div id="game-container">
-//                     <GameScore
-//                         player1={{
-//                             username: username1,
-//                             avatar: "/player1.png?height=40&width=40",
-//                             score: score1
-//                         }}
-//                         player2={{
-//                             username: username2,
-//                             avatar: "/player2.png?height=40&width=40",
-//                             score: score2
-//                         }}
-//                     />
-//                 </div>
-//             )}
-//         </>
-//     );
-// }
+    return (
+        <>
+            <GameSettingsButton />
+            {!isMatched && (
+                <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-white text-2xl">
+                    <h1>Waiting for an opponent...</h1>
+                    <button onClick={generateInviteLink} className="mt-4 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors">
+                        Generate Invite Link
+                    </button>
+                </div>
+            )}
+            {winnerRef.current && (
+                <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-gray-900/95 p-8 rounded-lg text-center">
+                    <h2 className="text-2xl font-bold text-white mb-4">{winnerRef.current} Wins!</h2>
+                    {!matchId && (
+                        <button
+                            onClick={() => window.location.reload()}
+                            className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                        >
+                            Restart Game
+                        </button>
+                    )}
+                    {matchId && (
+                        <button
+                            onClick={() => Navigate(-1)}
+                            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors mt-4"
+                        >
+                            Back to Tournament
+                        </button>
+                    )}
+                </div>
+            )}
+            {isMatched && (
+                <div id="game-container">
+                    <GameScore
+                        player1={{
+                            username: username1,
+                            avatar: "/player1.png?height=40&width=40",
+                            score: score1
+                        }}
+                        player2={{
+                            username: username2,
+                            avatar: "/player2.png?height=40&width=40",
+                            score: score2
+                        }}
+                    />
+                </div>
+            )}
+        </>
+    );
+}
 
 // export default Pvp2d;
 

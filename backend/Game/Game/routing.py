@@ -1,5 +1,5 @@
 from channels.routing import ProtocolTypeRouter, URLRouter # type: ignore
-from django.urls import path
+from django.urls import path # type: ignore
 from . import consumers
 
 websocket_urlpatterns = [

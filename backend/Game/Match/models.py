@@ -1,9 +1,9 @@
-from django.db import models
+from django.db import models # type: ignore
 import random
-import string
-from django.contrib.postgres.fields import ArrayField
-from django.db.models.signals import post_migrate
-from django.dispatch import receiver
+import string 
+from django.contrib.postgres.fields import ArrayField # type: ignore
+from django.db.models.signals import post_migrate # type: ignore
+from django.dispatch import receiver # type: ignore
 
 class Match(models.Model):
     username1 = models.CharField(max_length=100)
@@ -47,8 +47,8 @@ class TournamentMatch(models.Model):
     player1 = models.CharField(max_length=100, blank=True, null=True)
     player2 = models.CharField(max_length=100, blank=True, null=True)
     winner = models.CharField(max_length=100, blank=True, null=True)
-    player1_ready = models.BooleanField(default=False)
-    player2_ready = models.BooleanField(default=False)
+    # player1_ready = models.BooleanField(default=False)
+    # player2_ready = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def save(self, *args, **kwargs):

@@ -1,11 +1,11 @@
 import uuid
-from django.db import models
-from django.contrib.auth.models import AbstractUser
+from django.db import models # type: ignore
+from django.contrib.auth.models import AbstractUser # type: ignore
 # from django.db.models import Q
-from django.db.models.signals import post_save
-from django.dispatch import receiver
-from django.utils import timezone
-from django.conf import settings
+from django.db.models.signals import post_save # type: ignore
+from django.dispatch import receiver # type: ignore
+from django.utils import timezone # type: ignore
+from django.conf import settings # type: ignore
 import os
 import random
 

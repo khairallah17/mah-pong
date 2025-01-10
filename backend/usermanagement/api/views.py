@@ -1,62 +1,62 @@
-from django.shortcuts import redirect, get_object_or_404
-from django.db import models
-from django.db.models import Q
-from django.http import HttpResponse, HttpResponseRedirect
+from django.shortcuts import redirect, get_object_or_404 # type: ignore
+from django.db import models # type: ignore
+from django.db.models import Q # type: ignore
+from django.http import HttpResponse, HttpResponseRedirect # type: ignore
 from .models import User, TwoFactorAuthAttempt, FriendRequest, FriendList
 from .serializers import Get_Token_serial, RegistrationSerial, UserSerial, LogoutSerial, UserProfileSerializer, FriendRequestSerializer, FriendListSerializer
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.response import Response
-from rest_framework_simplejwt.views import TokenObtainPairView
-from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
-from rest_framework import generics
-from rest_framework.permissions import AllowAny, IsAuthenticated
-from rest_framework import status, views, viewsets
-from rest_framework.decorators import action
-from django.contrib.auth import authenticate, get_user_model
+from rest_framework.decorators import api_view, permission_classes # type: ignore
+from rest_framework.response import Response # type: ignore
+from rest_framework_simplejwt.views import TokenObtainPairView # type: ignore
+from rest_framework_simplejwt.tokens import RefreshToken, AccessToken # type: ignore
+from rest_framework import generics # type: ignore
+from rest_framework.permissions import AllowAny, IsAuthenticated # type: ignore
+from rest_framework import status, views, viewsets # type: ignore
+from rest_framework.decorators import action # type: ignore
+from django.contrib.auth import authenticate, get_user_model # type: ignore
 # For Google Login/registring api
-from allauth.socialaccount.providers.google.views import GoogleOAuth2Adapter
-from allauth.socialaccount.providers.oauth2.client import OAuth2Client
-from dj_rest_auth.registration.views import SocialLoginView
+from allauth.socialaccount.providers.google.views import GoogleOAuth2Adapter # type: ignore
+from allauth.socialaccount.providers.oauth2.client import OAuth2Client # type: ignore
+from dj_rest_auth.registration.views import SocialLoginView # type: ignore
 import os
-from django.conf import settings
+from django.conf import settings # type: ignore
 import uuid
-from allauth.socialaccount.adapter import DefaultSocialAccountAdapter
-from django.views import View
-from django.views.decorators.csrf import csrf_exempt
-from django.http import JsonResponse
+from allauth.socialaccount.adapter import DefaultSocialAccountAdapter # type: ignore
+from django.views import View # type: ignore
+from django.views.decorators.csrf import csrf_exempt # type: ignore
+from django.http import JsonResponse # type: ignore
 import requests
-from rest_framework.views import APIView
-from django.utils.encoding import force_bytes, force_str
-from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
-from .token_reset_passwordd import account_activation_token
-from django.core.mail import send_mail, EmailMessage
+from rest_framework.views import APIView # type: ignore
+from django.utils.encoding import force_bytes, force_str # type: ignore
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode # type: ignore
+from .token_reset_passwordd import account_activation_token # type: ignore
+from django.core.mail import send_mail, EmailMessage # type: ignore
 import urllib.request
-from django.core.exceptions import ValidationError
-from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError # type: ignore
+from django.contrib.auth.password_validation import validate_password # type: ignore
 
-from django.utils.decorators import method_decorator
-from django.http import JsonResponse
+from django.utils.decorators import method_decorator # type: ignore
+from django.http import JsonResponse # type: ignore
 import json
 
-from django_otp.plugins.otp_totp.models import TOTPDevice
-import pyotp
-import qrcode
-import qrcode.image.svg
+from django_otp.plugins.otp_totp.models import TOTPDevice # type: ignore
+import pyotp # type: ignore
+import qrcode # type: ignore
+import qrcode.image.svg # type: ignore
 from io import BytesIO
 import base64
-from rest_framework_simplejwt.authentication import JWTAuthentication
+from rest_framework_simplejwt.authentication import JWTAuthentication # type: ignore
 from datetime import datetime
 import time
-from django.contrib.auth.hashers import check_password, make_password
+from django.contrib.auth.hashers import check_password, make_password # type: ignore
 import random
 import string
-from rest_framework import viewsets, status
-from rest_framework.decorators import action
-from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
-from django.shortcuts import get_object_or_404
+from rest_framework import viewsets, status # type: ignore
+from rest_framework.decorators import action # type: ignore
+from rest_framework.response import Response # type: ignore
+from rest_framework.permissions import IsAuthenticated # type: ignore
+from django.shortcuts import get_object_or_404 # type: ignore
 # from channels.layers import get_channel_layer
-from asgiref.sync import async_to_sync
+from asgiref.sync import async_to_sync # type: ignore
 
 CLIENT_ID = os.environ.get('CLIENT_ID')
 CLIENT_SECRET = os.environ.get('CLIENT_SECRET')
@@ -558,7 +558,7 @@ class LogoutViews(APIView):
                 {'message': 'Successfully logged out'}, 
                 status=status.HTTP_200_OK
             )
-        except TokenError as e:
+        except TokenError as e: # type: ignore
             print ("ahyya Hanyaa12")
             return Response(
                 {'error': 'Invalid token'}, 
@@ -582,17 +582,17 @@ class UserInfoApi(APIView):
 
     def get(self, request, username):
         try:
-            logger.info(f"Getting user data for {username}")
+            logger.info(f"Getting user data for {username}") # type: ignore
             user = User.objects.get(username=username)
             serializer = UserSerial(user)
             return Response(serializer.data)
         except User.DoesNotExist:
-            logger.error(f"User {username} does not exist")
+            logger.error(f"User {username} does not exist") # type: ignore
             return Response({"error": "User does not exist"}, status=404)
     
     def patch(self, request, username):
         try:
-            logger.info(f"Updating user data for {username}")
+            logger.info(f"Updating user data for {username}") # type: ignore
             user = User.objects.get(username=username)
             #allowed Fields to update from Game App
             game_fields = {
@@ -615,12 +615,12 @@ class UserInfoApi(APIView):
 
             if serializer.is_valid():
                 serializer.save()
-                logger.info(f"User data updated for {username}")
+                logger.info(f"User data updated for {username}") # type: ignore
                 return Response(serializer.data)
-            logger.error(f"Error updating user data for {username}")
+            logger.error(f"Error updating user data for {username}") # type: ignore
             return Response(serializer.errors, status=400)
         except Exception as e:
-            logger.error(f"Error updating user data for {username}")
+            logger.error(f"Error updating user data for {username}") # type: ignore
             return Response({"error": "Somthing Wrong in updating data"}, status=400)
 
 
