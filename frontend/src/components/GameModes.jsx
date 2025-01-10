@@ -5,51 +5,39 @@ import { Trophy, Gamepad2, Swords, GraduationCap, Users, Clock, Star } from 'luc
 export const GameModes = ({ selectedMode, setSelectedMode }) => {
   const gameModes = [
     {
-      id: 'ranked',
-      title: 'Ranked Match',
-      icon: <Trophy className="w-6 h-6" />,
-      description: 'Compete in intense ranked matches',
-      color: 'from-amber-400 to-orange-500',
-      stats: { 
-        players: '1,234',
-        difficulty: 'High',
-        xpMultiplier: '2.5x'
+      id: '3d-mode',
+      title: '3D Mode',
+      icon: <Swords className="w-6 h-6" />,
+      description: 'Play in a 3D environment: Remote or AI',
+      color: 'from-cyan-400 to-blue-500',
+      stats: {
+        players: '888',
+        difficulty: 'Medium',
+        xpMultiplier: '1.5x'
       }
     },
     {
-      id: 'casual',
-      title: 'Casual Play',
+      id: '2d-mode',
+      title: '2D Mode',
       icon: <Gamepad2 className="w-6 h-6" />,
-      description: 'Play relaxed, unranked matches',
-      color: 'from-emerald-400 to-green-500',
+      description: 'Play in a 2D environment: Remote or AI',
+      color: 'from-teal-400 to-green-500',
       stats: {
-        players: '2,567',
+        players: '777',
         difficulty: 'Medium',
-        xpMultiplier: '1x'
+        xpMultiplier: '1.25x'
       }
     },
     {
       id: 'tournament',
       title: 'Tournament',
-      icon: <Swords className="w-6 h-6" />,
+      icon: <Trophy className="w-6 h-6" />,
       description: 'Join competitive tournaments',
       color: 'from-violet-400 to-purple-500',
       stats: {
         players: '456',
         difficulty: 'Expert',
         xpMultiplier: '3x'
-      }
-    },
-    {
-      id: 'training',
-      title: 'Training Mode',
-      icon: <GraduationCap className="w-6 h-6" />,
-      description: 'Practice and improve your skills',
-      color: 'from-sky-400 to-blue-500',
-      stats: {
-        players: '789',
-        difficulty: 'Custom',
-        xpMultiplier: '0.5x'
       }
     }
   ];

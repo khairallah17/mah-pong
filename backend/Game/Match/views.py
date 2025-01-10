@@ -1,8 +1,8 @@
-from django.shortcuts import render
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import generics, status
-from django.db.models import Q
+from django.shortcuts import render # type: ignore
+from rest_framework.views import APIView # type: ignore
+from rest_framework.response import Response # type: ignore
+from rest_framework import generics, status # type: ignore
+from django.db.models import Q # type: ignore
 from .models import Tournament, Match
 from .serializers import TournamentSerializer, MatchSerializer, PlayerStatsSerializer
 
@@ -13,6 +13,8 @@ class TournamentList(generics.ListCreateAPIView):
 class PlayerMatchHistory(APIView):
     def get(self, request, username=None):
         matches = Match.objects.filter(Q(username1=username) | Q(username2=username))
+        if not matches.exists():
+            return Response({'error': 'No matches found for this player'}, status=status.HTTP_404_NOT_FOUND)
         serializer = MatchSerializer(matches, many=True, context={'player': username})
         return Response(serializer.data, status=status.HTTP_200_OK)
 

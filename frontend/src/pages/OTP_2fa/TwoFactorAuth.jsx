@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
-import AuthContext from '../../context_login_Register/AuthContext';
+import AuthContext from '../../context/AuthContext';
 import Swal from 'sweetalert2';
 
 const TwoFactorAuth = () => {

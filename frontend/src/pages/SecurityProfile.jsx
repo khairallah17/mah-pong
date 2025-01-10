@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 import axios from 'axios';
 import Swal from 'sweetalert2';
+import { useSidebarContext } from '../hooks/useSidebar';
 
 export default function Security() {
   const [oldPassword, setOldPassword] = useState("");
@@ -17,7 +18,10 @@ export default function Security() {
   const [isVerifying, setIsVerifying] = useState(false);
   const [verificationError, setVerificationError] = useState("");
 
+  const { setActiveLink } = useSidebarContext()
+
   useEffect(() => {
+    setActiveLink('security')
     fetchQRCode();
   }, []);
 
@@ -238,7 +242,7 @@ export default function Security() {
   };
 
   return (
-    <div className="w-full bg-gradient-to-r from-blue-900 to-indigo-800 rounded-3xl max-w-7xl mx-auto p-8 space-y-4">
+    <div className="w-full bg-black/50 rounded-xl border border-gray-800 overflow-hidden backdrop-blur-sm max-w-7xl mx-auto p-8 space-y-4">
       <h2 className="text-xl font-inter text-white">Security</h2>
       <p className="text-xl font-normal text-gray-500">Secure your account</p>
       <form onSubmit={handleUpdatePassword} className="space-y-6 pt-8 border-t border-white/80">

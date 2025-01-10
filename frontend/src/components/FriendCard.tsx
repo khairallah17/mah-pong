@@ -1,12 +1,7 @@
 // src/FriendCard.tsx
 import React from 'react';
 
-interface FriendCardProps {
-    name: string;
-    imageUrl: string;
-}
-
-const FriendCard: React.FC<FriendCardProps> = ({ name, imageUrl }) => {
+const FriendCard = ({ name, imageUrl }) => {
     return (
         <div className="relative flex flex-col items-center shadow-lg overflow-hidden rounded-bl-[30px]  w-full h-full"> {/* Card dimensions */}
             <img 

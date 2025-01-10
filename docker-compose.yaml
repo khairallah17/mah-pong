@@ -1,29 +1,30 @@
 version: '3.8'
 
 services:
-  # game:
-  #   container_name: game
-  #   build:
-  #     context: "./backend/Game"
-  #     dockerfile: Dockerfile
-  #   ports:
-  #     - "8000:8000"
-  #   depends_on:
-  #     - redis
-  #     - game_db
-  #   env_file:
-  #     - .env
-  #   networks:
-  #     - game-network
+  game:
+    container_name: game
+    build:
+      context: "./backend/Game"
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    depends_on:
+      - redis
+      - game_db
+    env_file:
+      - .env
+    networks:
+      - game-network
 
-  # redis:
-  #   image: "redis:alpine"
-  #   container_name: redis
-  #   networks:
-  #     - game-network
-  #     - notification-network
-  #   expose:
-  #     - 6379
+  redis:
+    image: "redis:alpine"
+    container_name: redis
+    networks:
+      - game-network
+      - notification-network
+      - chat-network
+    expose:
+      - 6379
 
   usermanagement:
     container_name: usermanagement
@@ -32,8 +33,13 @@ services:
       dockerfile: Dockerfile
     ports:
       - 8001:8000
+    depends_on:
+      - usermanagement_db
     env_file:
       - .env
+    networks:
+      - usermanagement-network
+      - chat-network
 
   frontend:
       container_name: frontend
@@ -47,55 +53,99 @@ services:
       volumes:
         - front_vm:/app
         - /app/node_modules
-  
     
-  # notifications:
-  #   container_name: notifications
-  #   build:
-  #     context: "./backend/notifications"
-  #     dockerfile: Dockerfile
-  #   ports:
-  #     - 8002:8000
-  #   depends_on:
-  #     - notif_db
-  #     - redis
-  #   env_file:
-  #     - .env
-  #   networks:
-  #     - notification-network
+  notifications:
+    container_name: notifications
+    build:
+      context: "./backend/notifications"
+      dockerfile: Dockerfile
+    ports:
+      - 8002:8000
+    depends_on:
+      - notif_db
+      - redis
+    env_file:
+      - .env
+    networks:
+      - notification-network
 
-  # game_db:
-  #   image: postgres:15-alpine
-  #   container_name: game_db
-  #   expose:
-  #     - 5432
-  #   environment:
-  #     POSTGRES_USER: postgres
-  #     POSTGRES_PASSWORD: password
-  #     POSTGRES_DB: mydatabase
-  #   volumes:
-  #     - game_db_data:/var/lib/postgresql/data
-  #   networks:
-  #     - game-network
+  chat:
+    container_name: chat
+    build:
+      context: "./backend/ChatService"
+      dockerfile: Dockerfile
+    ports:
+      - 8003:8000
+    depends_on:
+      - chat_db
+      - redis
+    env_file:
+      - .env
+    networks:
+      - chat-network
+      - usermanagement-network
 
-  # notif_db:
-  #   image: postgres:15-alpine
-  #   container_name: notif_db
-  #   expose:
-  #     - 5432
-  #   environment:
-  #     POSTGRES_USER: postgres
-  #     POSTGRES_PASSWORD: password
-  #     POSTGRES_DB: mydatabase
-  #   volumes:
-  #     - notif_db_data:/var/lib/postgresql/data
-  #   networks:
-  #     - notification-network
+  usermanagement_db:
+    image: postgres:15-alpine
+    container_name: usermanagement_db
+    expose:
+      - 5432
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: mydatabase
+    volumes:
+      - usermanagement_db_data:/var/lib/postgresql/data
+    networks:
+      - usermanagement-network
 
+  game_db:
+    image: postgres:15-alpine
+    container_name: game_db
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: mydatabase
+    volumes:
+      - game_db_data:/var/lib/postgresql/data
+    networks:
+      - game-network
+
+  notif_db:
+    image: postgres:15-alpine
+    container_name: notif_db
+    expose:
+      - 5432
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: mydatabase
+    volumes:
+      - notif_db_data:/var/lib/postgresql/data
+    networks:
+      - notification-network
+  
+  chat_db:
+    image: postgres:15-alpine
+    container_name: chat_db
+    expose:
+      - 5432
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: mydatabase
+    volumes:
+      - chat_db_data:/var/lib/postgresql/data
+    networks:
+      - chat-network
 
 volumes:
-#   game_db_data:
-#   notif_db_data:
+  game_db_data:
+  notif_db_data:
+  usermanagement_db_data:
+  chat_db_data:
   front_vm:
     driver: local
     driver_opts:
@@ -103,8 +153,12 @@ volumes:
       type: none
       o: bind
 
-# networks:
-#   game-network:
-#     driver: bridge
-#   notification-network:
-#     driver: bridge
+networks:
+  game-network:
+    driver: bridge
+  notification-network:
+    driver: bridge
+  usermanagement-network:
+    driver: bridge
+  chat-network:
+    driver: bridge

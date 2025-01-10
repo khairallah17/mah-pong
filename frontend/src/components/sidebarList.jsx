@@ -37,7 +37,7 @@ const SidebarList = ({item, list, icon, link}) => {
                 {
                     open && list.map((i, index) => (
                         <li key={index} className='hover:text-white duration-200'>
-                            <NavLink className={`${activeSublink?.toLocaleLowerCase() == i?.toLocaleLowerCase() && "text-white"}`} to={`/dashboard/${i}`}>
+                            <NavLink className={`${activeSublink?.toLocaleLowerCase() == i?.toLocaleLowerCase() && "text-white"}`} to={`/dashboard/${item.toLocaleLowerCase()}/${i}`}>
                                 {i}
                             </NavLink>
                         </li>

@@ -1,7 +1,7 @@
 import { React, useState, useRef, useEffect, useContext } from 'react'
 import { Trophy } from 'lucide-react'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { WebSocketContext } from '../../WebSocketProvider/WebSocketProvider'
+import { WebSocketContext } from '../../websockets/WebSocketProvider'
 
 // class Match(models.Model):
 //   player1 = models.CharField(max_length=100)
@@ -20,8 +20,6 @@ export default function Tournament() {
     { id: 3, round: 2, position: 1 },
   ]);
 
-  const [isReady, setIsReady] = useState(false);
-  const [loadingReady, setLoadingReady] = useState(false);
   const [loadingQuit, setLoadingQuit] = useState(false);
   const [playerId, setPlayerId] = useState(null);
   const token = localStorage.getItem('authtoken');
@@ -44,7 +42,7 @@ export default function Tournament() {
           const newToken = await refreshToken();
           if (newToken) {
             localStorage.setItem('authtoken', JSON.stringify(newToken));
-            wsRef.current = new WebSocket('ws://localhost:8000/ws/tournament/?token=' + newToken.access);
+            wsRef.current = new WebSocket('ws://localhost:8000/ws/tournament/?token=' + JSON.stringify(newToken.access));
             console.log('WebSocket connection established with new token');
           } else {
             localStorage.removeItem('authtoken');
@@ -54,13 +52,13 @@ export default function Tournament() {
           setMatches(message.matches);
           console.log('Tournament updated:', message.matches);
         } else if (message.type === 'match_start') {
-          console.log('Match started:');
-          //navigate('/pvp2d');
+          console.log('Match started:', message.tournamentMatch_id);
         } else if (message.type === 'tournament_code') {
           setTournamentCode(message.code);
         } else if (message.type === 'players_ready') {
           console.log('Players ready:', message.players);
           wsManager.sendMessage('players_ready', message.players);
+          navigate(`/dashboard/game/pvp2d?match_id=${message.tournamentMatch_id}`);
         }
       };
 
@@ -76,19 +74,12 @@ export default function Tournament() {
     };
   }, [token]);
 
-  const handleReady = () => {
-    setLoadingReady(true);
-    setIsReady(true);
-    wsRef.current.send(JSON.stringify({ type: 'player_ready' }));
-    setTimeout(() => setLoadingReady(false), 1000);
-  };
-
   const handleQuit = () => {
     setLoadingQuit(true);
     wsRef.current.send(JSON.stringify({ type: 'quit_tournament' }));
     setTimeout(() => {
       setLoadingQuit(false);
-      navigate('/TournamentHome');
+      navigate('/dashboard/tournament');
     }, 1000);
   };
 
@@ -107,50 +98,25 @@ export default function Tournament() {
       }
       const data = await response.json();
       console.log('New access token:', data.access);
-      return data.access;
+      return data;
     } catch (error) {
       console.error('Error refreshing token:', error);
     }
   };
 
-  const handleWinnerSelection = (matchId, player) => {
-    setMatches(prevMatches => {
-      const newMatches = [...prevMatches];
-      const currentMatch = newMatches.find(m => m.id === matchId);
-      if (currentMatch) {
-        currentMatch.winner = player;
-
-        // Find and update next match
-        const nextRoundMatch = newMatches.find(m =>
-          m.round === currentMatch.round + 1 &&
-          Math.ceil(currentMatch.position / 2) === m.position
-        );
-
-        if (nextRoundMatch) {
-          if (currentMatch.position % 2 === 1) {
-            nextRoundMatch.player1 = player;
-          } else {
-            nextRoundMatch.player2 = player;
-          }
-        }
-      }
-      return newMatches;
-    });
-  };
-
   return (
-    <div className="min-h-screen bg-[#1a1464] p-8">
-      <div className="max-w-7xl mx-auto">
+    <div className="w-full h-full justify-between flex flex-col bg-[#1a1464] p-8 pt-24">
+      <div className="mx-auto w-full">
         {/* Tournament Title */}
         <div className="text-center mb-12">
-          <h1 className="text-6xl font-bold text-white tracking-wider" style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.3)' }}>
+          <h1 className="text-6xl font-bold text-white tracking-wider zen-dots" style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.3)' }}>
             TOURNAMENT
           </h1>
           <div className="w-48 h-1 bg-white mx-auto mt-2"></div>
         </div>
 
         {/* Tournament Bracket */}
-        <div className="flex justify-between items-center text-black">
+        <div className="flex justify-between items-center text-white">
           <div className="flex-1">
             <div className="grid grid-cols-2 gap-36 mr-20">
               {/* Round 1 */}
@@ -158,29 +124,21 @@ export default function Tournament() {
                 {matches.filter(m => m.round === 1).map((match) => (
                   <div key={match.id} className="relative">
                     <div className="flex flex-col gap-4">
-                      <button
-                        onClick={() => match.player1 && handleWinnerSelection(match.id, match.player1)}
-                        className={`p-0 bg-transparent relative flex items-center overflow-visible transition-all duration-300 ${match.winner === match.player1 ? 'ring-2 ring-yellow-400' : ''
-                          }`}
-                      >
-                        <div className="absolute left-[2%] z-[1] w-[60px] h-[90%] bg-[#9a77ff] rounded-tr-[15px] rounded-bl-[15px]"></div>
-                        <div className="relative bg-white w-[100%] h-[100px] flex items-center clip-card">
+                      <div className={`p-0 bg-transparent relative flex items-center overflow-visible rounded-xl transition-all duration-300 ${match.winner === match.player1 ? 'ring-1 ring-white' : ''}`}>
+                        <div className="absolute z-[1] w-[40px] h-full rounded-l-xl bg-[#9a77ff]"></div>
+                        <div className="relative bg-black/50 border border-gray-800 overflow-hidden backdrop-blur-sm w-[100%] h-[100px] flex items-center clip-card rounded-xl">
                           <span className="absolute left-[20%] pl-12">{match.player1 || 'TBD'}</span>
                         </div>
                         <div className="absolute left-[100%] top-[50%] w-[13%] h-[2px] bg-white"></div>
-                        <div className='absolute left-[113%] top-[50%] w-[2px] h-[120%] bg-white'></div>
-                      </button>
-                      <button
-                        onClick={() => match.player2 && handleWinnerSelection(match.id, match.player2)}
-                        className={`p-0 bg-transparent relative flex items-center overflow-visible transition-all duration-300 ${match.winner === match.player2 ? 'ring-2 ring-yellow-400' : ''
-                          }`}
-                      >
-                        <div className="absolute left-[2%] z-[1] w-[60px] h-[90%] bg-[#9a77ff] rounded-tr-[15px] rounded-bl-[15px]"></div>
-                        <div className="relative bg-white w-[100%] h-[100px] flex items-center clip-card">
+                        <div className='absolute left-[113%] top-[50%] w-[2px] h-[118%] bg-white'></div>
+                      </div>
+                      <div className={`p-0 bg-transparent relative flex items-center overflow-visible transition-all duration-300 rounded-xl ${match.winner === match.player2 ? 'ring-1 ring-white' : ''}`}>
+                        <div className="absolute z-[1] w-[40px] h-full rounded-l-xl bg-[#9a77ff]"></div>
+                        <div className="relative bg-black/50 border border-gray-800 overflow-hidden backdrop-blur-sm w-[100%] h-[100px] flex items-center clip-card rounded-xl">
                           <span className="absolute left-[20%] pl-12">{match.player2 || 'TBD'}</span>
                         </div>
                         <div className="absolute left-[100%] top-[50%] w-[13%] h-[2px] bg-white"></div>
-                      </button>
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -191,29 +149,21 @@ export default function Tournament() {
                 {matches.filter(m => m.round === 2).map((match) => (
                   <div key={match.id} className="relative">
                     <div className="flex flex-col gap-4">
-                      <button
-                        onClick={() => match.player1 && handleWinnerSelection(match.id, match.player1)}
-                        className={`p-0 bg-transparent relative flex items-center overflow-visible transition-all duration-300 ${match.winner === match.player1 ? 'ring-2 ring-yellow-400' : ''
-                          }`}
-                      >
-                        <div className="absolute left-[2%] z-[1] w-[60px] h-[90%] bg-[#9a77ff] rounded-tr-[15px] rounded-bl-[15px]"></div>
-                        <div className="relative bg-white w-[100%] h-[100px] flex items-center clip-card">
+                      <div className={`p-0 bg-transparent relative flex items-center overflow-visible transition-all duration-300 rounded-xl ${match.winner === match.player1 ? 'ring-1 ring-white' : ''}`}>
+                        <div className="absolute z-[1] w-[40px] h-full rounded-l-xl bg-[#9a77ff]"></div>
+                        <div className="relative bg-black/50 border border-gray-800 overflow-hidden backdrop-blur-sm w-[100%] h-[100px] flex items-center clip-card rounded-xl">
                           <span className="absolute left-[20%] pl-12">{match.player1 || 'TBD'}</span>
                         </div>
                         <div className="absolute left-[100%] top-[50%] w-[13%] h-[2px] bg-white"></div>
-                        <div className='absolute left-[113%] top-[50%] w-[2px] h-[120%] bg-white'></div>
-                      </button>
-                      <button
-                        onClick={() => match.player2 && handleWinnerSelection(match.id, match.player2)}
-                        className={`p-0 bg-transparent relative flex items-center overflow-visible transition-all duration-300 ${match.winner === match.player2 ? 'ring-2 ring-yellow-400' : ''
-                          }`}
-                      >
-                        <div className="absolute left-[2%] z-[1] w-[60px] h-[90%] bg-[#9a77ff] rounded-tr-[15px] rounded-bl-[15px]"></div>
-                        <div className="relative bg-white w-[100%] h-[100px] flex items-center clip-card">
+                        <div className='absolute left-[113%] top-[50%] w-[2px] h-[118%] bg-white'></div>
+                      </div>
+                      <div className={`p-0 bg-transparent relative flex items-center overflow-visible transition-all duration-300 rounded-xl ${match.winner === match.player2 ? 'ring-1 ring-white' : ''}`}>
+                        <div className="absolute z-[1] w-[40px] h-full rounded-l-xl bg-[#9a77ff]"></div>
+                        <div className="relative bg-black/50 border border-gray-800 overflow-hidden backdrop-blur-sm w-[100%] h-[100px] flex items-center clip-card rounded-xl">
                           <span className="absolute left-[20%] pl-12">{match.player2 || 'TBD'}</span>
                         </div>
                         <div className="absolute left-[100%] top-[50%] w-[13%] h-[2px] bg-white"></div>
-                      </button>
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -227,7 +177,7 @@ export default function Tournament() {
               <Trophy className="w-24 h-24 text-yellow-400" />
               <div className="text-yellow-400 text-2xl font-bold text-center mt-2">CHAMPION</div>
             </div>
-            <div className="w-[80%] h-12 bg-white rounded-md relative overflow-hidden">
+            <div className="w-[80%] h-12 bg-black/50 border border-gray-800 backdrop-blur-sm rounded-md relative overflow-hidden">
               <div className="absolute left-0 top-0 bottom-0 w-8 bg-violet-400"></div>
               <span className="pl-12">
                 {matches.length > 0 && matches[matches.length - 1].winner || 'TBD'}
@@ -236,21 +186,17 @@ export default function Tournament() {
           </div>
         </div>
       </div>
-      <div className="fixed bottom-4 right-4">
-        <button
-          onClick={handleReady}
-          className={`px-4 py-2 bg-green-500 text-white rounded-md flex items-center gap-2 ${isReady || loadingReady ? 'opacity-50 cursor-not-allowed' : ''}`}
-          disabled={isReady || loadingReady}
-        >
-          {loadingReady ? <Spinner /> : 'Ready'}
-        </button>
-        <button
-          onClick={handleQuit}
-          className="px-4 py-2 bg-red-500 text-white rounded-md flex items-center gap-2"
-          disabled={loadingQuit}
-        >
-          {loadingQuit ? <Spinner /> : 'Quit'}
-        </button>
+
+      <div className="w-full flex items-end flex-col  bottom-4 right-4">
+        <div className="flex gap-4">
+          <button
+            onClick={handleQuit}
+            className="px-4 py-2 bg-red-500 text-white rounded-md flex items-center gap-2"
+            disabled={loadingQuit}
+          >
+            {loadingQuit ? <Spinner /> : 'Quit'}
+          </button>
+        </div>
         {/* tournament code */}
         <div className="text-white mt-4">
           Tournament Code: {tournamentCode}

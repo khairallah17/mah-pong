@@ -2,6 +2,7 @@ import {React, useState} from 'react'
 // import Popup from 'reactjs-popup'
 // import { Link } from 'react-router-dom'
 // import axios from 'axios';
+import { toast } from 'react-toastify'
 
 
 export const VerifyPsdEmail = () => {
@@ -28,8 +29,7 @@ export const VerifyPsdEmail = () => {
             const data = await response.json();
             
             if (response.ok) {
-                // setMessage(data.message);
-                // setEmail("");
+                console.log(data)
                 console.log("OK.OK.OK.OK.OK");
             } else {
                 console.log("KO.KO.KO.KO.KO");
@@ -42,47 +42,26 @@ export const VerifyPsdEmail = () => {
             setLoading(false);
         }
     };
-//   return (
-//     <div className='email-pop' >
-//         <Popup trigger={<Link>Forgot your password?</Link>} modal nested>
-//                 {
-//                     close => (
-//                         <div className='popfp'>
-//                             <div>
-//                                 <button onClick=
-//                                     {() => close()}>
-//                                         close {/* icone Close matnsash tajoutiha */}
-//                                 </button>
-//                             </div>
-//                             <div className='content'>
-//                                 <h2>Reset Your Password</h2>
-//                                 <span>Enter the Email Adresse linked to your 'Project Name' account and we'll send you an email.</span>
-//                                 <form onSubmit={VerifyPsdEmail}>
-//                                     <input type='email' onChange={(event)=>setEmail(event.target.value)} placeholder='Enter Your Valid Email Account'></input>
-//                                     <div className='pop-button'>
-//                                         <button type="submit" onClick={EmailVerfy}>Send Link</button>
-//                                     </div>
-//                                 </form>
-//                             </div>
-//                         </div>
-//                     )
-//                 }
-//         </Popup>
-//     </div>
-//   )
-
-
 
     return(
-        <div>
-            <div>
-                <image>LOGO</image>
-            </div>
-            <div>
-                <form action="">
-                    <input type='email' onChange={(e)=>setEmail(e.target.value)} placeholder='Enter Your Valid Email Account'></input>
-                    <button type="submit" onClick={handleSubmit}>Send Link</button>
-                </form>
+        <div className="bg-root-background h-screen w-screen text-white">
+            <div className="flex flex-col gap-4 items-center justify-center h-full w-full">
+                <img/>
+                <div>
+                    <form onSubmit={handleSubmit} className="flex gap-4 flex-col w-full">
+                        <input
+                            className="w-full bg-transparent border-b-2 border-white/50 focus:border-white placeholder:text-white placeholder:text-opacity-50 placeholder:font-semibold py-2 focus:outline-none"
+                            placeholder="EMAIL"
+                            type="email"
+                            name="email"
+                            onChange={(e) => setEmail(e.target.value)}
+                            value={email}
+                        />
+                        <button type="submit" className="bg-black w-full self-center rounded-lg py-2 font-bold text-2xl hover:bg-white hover:text-black">
+                            VERIFY
+                        </button>
+                    </form>
+                </div>
             </div>
         </div>
     )
