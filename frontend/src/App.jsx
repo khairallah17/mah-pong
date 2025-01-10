@@ -6,10 +6,11 @@ import TwoFactorAuth from './pages/OTP_2fa/TwoFactorAuth.jsx'
 import HomePage from './HomePage';
 import SecurityPage from './pages/SecurityProfile.jsx';
 import Pve3d from './pages/pve/Pve3d';
-import Pvp2d from './pages/pvp/Pvp2d';
+// import Pvp2d from './pages/pvp/Pvp2d';
 import Pve2d from './pages/pve/Pve2d';
 import Pvp3d from './pages/pvp/Pvp3d';
 import Profile from './pages/Profile.jsx'
+import Profil from './pages/Profil.jsx'
 import Tournament from './pages/tournament/Tournament'
 import TournamentHome from './pages/tournament/tournamentHome';
 import Chat from "./pages/chat.jsx";
@@ -49,11 +50,11 @@ function App() {
                       <Route index element={<Game />} />
                       <Route path="pve3d" element={<Pve3d />} />
                       <Route path="pvp3d" element={<Pvp3d />} />
-                      <Route path="pvp2d" element={<ColorProvider><Pvp2d /></ColorProvider>} />
+                      {/* <Route path="pvp2d" element={<ColorProvider><Pvp2d /></ColorProvider>} /> */}
                       <Route path="pve2d" element={<ColorProvider><Pve2d /></ColorProvider>} />
                     </Route>
                     
-                    {/* <Route path="profil/:username" element={<Profil />} /> */}
+                    <Route path="profil/:username" element={<Profil />} />
                     
                     <Route path='tournament'>
                       <Route index element={<TournamentHome/>}/>

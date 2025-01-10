@@ -1,16 +1,16 @@
-from django.shortcuts import render
-from rest_framework.views import APIView
-from rest_framework.decorators import api_view, permission_classes, authentication_classes
-from rest_framework.response import Response
+from django.shortcuts import render # type: ignore
+from rest_framework.views import APIView # type: ignore
+from rest_framework.decorators import api_view, permission_classes, authentication_classes # type: ignore
+from rest_framework.response import Response # type: ignore
 from .models import Message, Conversation
 from .models import Message, CustomUser as User
 from .serializers import MessageSerializer, UserSerializer, ConversationSerializer
-from rest_framework import authentication, permissions
-from rest_framework.permissions import AllowAny, IsAuthenticated
-from rest_framework.authentication import SessionAuthentication, TokenAuthentication
-from django.db.models import Q
-from django.contrib.auth.models import AnonymousUser
-from django.shortcuts import get_object_or_404 
+from rest_framework import authentication, permissions # type: ignore
+from rest_framework.permissions import AllowAny, IsAuthenticated # type: ignore
+from rest_framework.authentication import SessionAuthentication, TokenAuthentication # type: ignore
+from django.db.models import Q # type: ignore
+from django.contrib.auth.models import AnonymousUser # type: ignore
+from django.shortcuts import get_object_or_404  # type: ignore
 
 # logger = logging.getLogger(__name__)
 
@@ -34,7 +34,7 @@ class ApiUsers(APIView):
 @api_view(['GET'])
 def user_list(self, request):
     users = User.objects.all().values("id", "username")
-    return JsonResponse(list(users), safe=False)
+    return JsonResponse(list(users), safe=False) # type: ignore
 
 # @api_view(['GET'])
 # def get_conversation(request, user_id):

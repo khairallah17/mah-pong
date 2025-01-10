@@ -1,10 +1,11 @@
 import uuid
-from django.db import models
-from django.contrib.auth.models import AbstractUser
+from django.db import models # type: ignore
+from django.contrib.auth.models import AbstractUser # type: ignore
 # from django.db.models import Q
-from django.db.models.signals import post_save
-from django.utils import timezone
-from django.conf import settings
+from django.db.models.signals import post_save # type: ignore
+from django.dispatch import receiver # type: ignore
+from django.utils import timezone # type: ignore
+from django.conf import settings # type: ignore
 import os
 import random
 
@@ -13,7 +14,7 @@ import random
 class User(AbstractUser):
     fullname = models.CharField(max_length=250)
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    username = models.CharField(max_length=50)
+    username = models.CharField(max_length=50, unique=True)
     email = models.EmailField(unique=True)
     nblose = models.IntegerField(default=0)
     nbwin = models.IntegerField(default=0)
@@ -42,7 +43,10 @@ class User(AbstractUser):
     REQUIRED_FIELDS = ['username']
 
     def profil(self):
-        profile = Profil.objects.get(user=self)
+        try:
+            return Profil.objects.get(user=self)
+        except Profil.DoesNotExist:
+            return None
 
     def update_last_login_2fa(self):
         self.last_login_2fa = timezone.now()
@@ -59,16 +63,91 @@ class User(AbstractUser):
         self.save()
 
 class Profil(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)#,  unique=True) ==> if we use "models.ForeignKey(User, on_delete=models.CASCADE, unique=True)"  #mean When We delete User Profile will delete also
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
     is_verified = models.BooleanField(default=False)
 
-def create_profile_for_user(sender, instance, created, **keyargs):
+    def __str__(self):
+        return f"{self.user.username}'s profile"
+
+
+
+@receiver(post_save, sender=User)
+def create_user_profile(sender, instance, created, **kwargs):
     if created:
         Profil.objects.create(user=instance)
 
-#saving Profile users infos
-def saving_user_profile(sender, instance, **keyargs):
-    instance.profil.save()
+@receiver(post_save, sender=User)
+def save_user_profile(sender, instance, **kwargs):
+    try:
+        if hasattr(instance, 'profile'):
+            instance.profile.save()
+    except Profil.DoesNotExist:
+        Profil.objects.create(user=instance)
+
+# def create_profile_for_user(sender, instance, created, **keyargs):
+#     if created:
+#         Profil.objects.create(user=instance)
+
+# #saving Profile users infos
+# def saving_user_profile(sender, instance, **keyargs):
+#     instance.profil.save()
+
+
+# Fiends Requests Class
+class FriendRequest(models.Model):
+    PENDING = 'pending'
+    ACCEPTED = 'accepted'
+    REJECTED = 'rejected'
+    STATUS = [
+        (PENDING, 'pending'),
+        (ACCEPTED, 'accepted'),
+        (REJECTED, 'rejected'),
+    ]
+    
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    sender = models.ForeignKey(User, related_name='sent_friend_requests', on_delete=models.CASCADE)
+    receiver = models.ForeignKey(User, related_name='received_friend_requests', on_delete=models.CASCADE)
+    status = models.CharField(max_length=8, choices=STATUS, default=PENDING)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        unique_together = ['sender', 'receiver']
+
+    def __str__(self):
+        return f"{self.sender.username} -> {self.receiver.username} ({self.status})"
+        
+# Friends List
+class FriendList(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='friend_list')
+    friends = models.ManyToManyField(User, related_name='friends')
+
+    def __str__(self):
+        return f"{self.user.username}'s friends"
+
+    @classmethod
+    def add_friend(cls, user1, user2):
+        friend_list1, _ = cls.objects.get_or_create(user=user1)
+        friend_list2, _ = cls.objects.get_or_create(user=user2)
+        
+        friend_list1.friends.add(user2)
+        friend_list2.friends.add(user1)
+
+    @classmethod
+    def remove_friend(cls, user1, user2):
+        friend_list1 = cls.objects.filter(user=user1).first()
+        friend_list2 = cls.objects.filter(user=user2).first()
+        
+        if friend_list1:
+            friend_list1.friends.remove(user2)
+        if friend_list2:
+            friend_list2.friends.remove(user1)
+    
+@receiver(post_save, sender=User)
+def create_user_friend_list(sender, instance, created, **kwargs):
+    if created:
+        FriendList.objects.create(user=instance)
+
 
 # You might also want to add a model to track 2FA attempts for security
 class TwoFactorAuthAttempt(models.Model):
@@ -85,5 +164,6 @@ class TwoFactorAuthAttempt(models.Model):
         return f"{self.user.email if self.user else 'No User'} - {self.timestamp} - {'Success' if self.successful else 'Failed'}"
 
 
-post_save.connect(create_profile_for_user, sender=User)
-post_save.connect(saving_user_profile, sender=User)
+post_save.connect(create_user_profile, sender=User)
+post_save.connect(save_user_profile, sender=User)
+post_save.connect(create_user_friend_list, sender=User)
