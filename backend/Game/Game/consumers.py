@@ -1,15 +1,15 @@
 import asyncio
-from channels.generic.websocket import AsyncWebsocketConsumer
+from channels.generic.websocket import AsyncWebsocketConsumer # type: ignore
 import json
 import logging
 import jwt
-from django.conf import settings
-from channels.db import database_sync_to_async
+from django.conf import settings # type: ignore
+from channels.db import database_sync_to_async # type: ignore
 from Match.models import Match, Tournament, TournamentMatch
-from django.db import transaction
+from django.db import transaction # type: ignore
 from urllib.parse import parse_qs
-from django.core.cache import cache
-from django.db.models import Q
+from django.core.cache import cache # type: ignore
+from django.db.models import Q # type: ignore
 
 logger = logging.getLogger(__name__)
 matchmaking_pool = []
@@ -44,7 +44,7 @@ class TournamentConsumer(AsyncWebsocketConsumer):
                 logger.warning(f"tournament: {self.tournament} not reconnected")
                 cache.set(f"user_reconnect_{self.username}", True)
             else:
-                self.tournament = await self.is_user_in_tournament(self.username)
+                self.tournament = await self.self.is_user_in_tournament(self.username)
                 logger.warning(f"tournament: {self.tournament} reconnected")
 
             if self.tournament:
@@ -101,6 +101,8 @@ class TournamentConsumer(AsyncWebsocketConsumer):
             elif message_type == 'quit_tournament':
                 cache.set(f"user_reconnect_{self.username}", False)
                 await self.schedule_remove_player()
+            elif message_type == 'start_final_match':
+                await self.start_final_match()
         except Exception as e:
             logger.error(f"Error in receive: {e}")
 
@@ -147,9 +149,9 @@ class TournamentConsumer(AsyncWebsocketConsumer):
     @database_sync_to_async
     def is_user_in_tournament(self, username):
         try:
-            tournament = Tournament.objects.filter(Q(players__contains=[username]) & (Q(status='waiting') | Q(status='active'))).first()
+            tournament = Tournament.objects.filter(Q(players__contains=[username]) & (Q(status='waiting') | Q(status='active'))).latest('created_at')
             if tournament:
-                match = TournamentMatch.objects.filter(Q(tournament=tournament) & (Q(player1=username) | Q(player2=username))).first()
+                match = TournamentMatch.objects.filter(Q(tournament=tournament) & (Q(player1=username) | Q(player2=username))).latest('created_at')
                 self.current_match = match.id
                 return tournament
         except Exception as e:
@@ -175,7 +177,7 @@ class TournamentConsumer(AsyncWebsocketConsumer):
     def remove_player_from_tournament(self, username):
         try:
             with transaction.atomic():
-                tournament = Tournament.objects.filter(Q(players__contains=[username]) & (Q(status='waiting') | Q(status='active'))).first()
+                tournament = Tournament.objects.filter(Q(players__contains=[username]) & (Q(status='waiting') | Q(status='active'))).latest('created_at')
                 if tournament:
                     tournament.players = [player for player in tournament.players if player != username]
                     self.tournament = tournament
@@ -252,6 +254,21 @@ class TournamentConsumer(AsyncWebsocketConsumer):
                     "players": self.tournament.players,
                 }
             )
+
+    async def start_final_match(self):
+        try:
+            tournament = await self.is_user_in_tournament(self.username)
+            if tournament:
+                final_match, _ = TournamentMatch.objects.get(tournament=tournament, round=2, position=1)
+                if final_match.player1 and final_match.player2:
+                    await self.channel_layer.group_send(
+                        self.tournament_group_name,
+                        {
+                            "type": "match_start",
+                        }
+                    )
+        except Exception as e:
+            logger.error(f"Error starting final match: {e}")        
 
     @database_sync_to_async
     def handle_match_result(self, data):
@@ -646,10 +663,7 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
             match.winner = player1 if winner == 'player1' else player2
             match.save()
 
-            next_round = match.round + 1
-            next_position = match.position // 2
-
-            next_match, _ = TournamentMatch.objects.get_or_create(tournament=match.tournament, round=next_round, position=next_position)
+            next_match, _ = TournamentMatch.objects.get_or_create(tournament=match.tournament, round=2, position=1)
 
             if match.position % 2 == 0:
                 next_match.player1 = match.winner

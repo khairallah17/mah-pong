@@ -1,9 +1,9 @@
-from django.db import models
+from django.db import models # type: ignore
 import random
-import string
-from django.contrib.postgres.fields import ArrayField
-from django.db.models.signals import post_migrate
-from django.dispatch import receiver
+import string 
+from django.contrib.postgres.fields import ArrayField # type: ignore
+from django.db.models.signals import post_migrate # type: ignore
+from django.dispatch import receiver # type: ignore
 
 class Match(models.Model):
     username1 = models.CharField(max_length=100)

@@ -1,8 +1,8 @@
-from django.shortcuts import render
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import generics, status
-from django.db.models import Q
+from django.shortcuts import render # type: ignore
+from rest_framework.views import APIView # type: ignore
+from rest_framework.response import Response # type: ignore
+from rest_framework import generics, status # type: ignore
+from django.db.models import Q # type: ignore
 from .models import Tournament, Match
 from .serializers import TournamentSerializer, MatchSerializer, PlayerStatsSerializer
 

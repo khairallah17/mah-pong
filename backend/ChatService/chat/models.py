@@ -1,6 +1,6 @@
-from django.db import models
+from django.db import models # type: ignore
 import uuid
-from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import AbstractUser # type: ignore
 
 class CustomUser(AbstractUser): 
     fullname = models.CharField(max_length=250)

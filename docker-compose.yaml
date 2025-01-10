@@ -39,6 +39,7 @@ services:
       - .env
     networks:
       - usermanagement-network
+      - chat-network
 
   frontend:
       container_name: frontend
@@ -82,6 +83,7 @@ services:
       - .env
     networks:
       - chat-network
+      - usermanagement-network
 
   usermanagement_db:
     image: postgres:15-alpine
