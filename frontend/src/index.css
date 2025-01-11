@@ -40,3 +40,57 @@
   }
 
 }
+
+/*zouhair style*/
+@keyframes shine {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.animate-shine {
+  animation: shine 2s infinite;
+}
+
+.animate-float {
+  animation: float 3s infinite;
+}
+
+@keyframes flash {
+  0%, 100% { opacity: 0; }
+  50% { opacity: 0.5; }
+}
+
+@keyframes border-glow {
+  0%, 100% { box-shadow: 0 0 15px rgba(255,255,255,0.5); }
+  50% { box-shadow: 0 0 30px rgba(255,255,255,0.8); }
+}
+
+@keyframes spin-slow {
+  0% { transform: translate(-50%, 0) rotate(0deg); }
+  100% { transform: translate(-50%, 0) rotate(360deg); }
+}
+
+.animate-flash {
+  animation: flash 1s ease-in-out infinite;
+}
+
+.animate-border-glow {
+  animation: border-glow 1.5s ease-in-out infinite;
+}
+
+.animate-spin-slow {
+  animation: spin-slow 2s linear infinite;
+}

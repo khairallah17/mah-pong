@@ -1,12 +1,16 @@
-// GameModes.jsx
-import React from 'react';
-import { Trophy, Gamepad2, Swords, GraduationCap, Users, Clock, Star } from 'lucide-react';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Trophy, Gamepad2, Swords, Users, Clock, Star } from 'lucide-react';
 
-export const GameModes = ({ selectedMode, setSelectedMode }) => {
+export const GameModes = () => {
+  const [selectedMode, setSelectedMode] = useState(null);
+  const navigate = useNavigate();
+
   const gameModes = [
     {
       id: '3d-mode',
       title: '3D Mode',
+      path: '/dashboard/game/pve3d',
       icon: <Swords className="w-6 h-6" />,
       description: 'Play in a 3D environment: Remote or AI',
       color: 'from-cyan-400 to-blue-500',
@@ -19,6 +23,7 @@ export const GameModes = ({ selectedMode, setSelectedMode }) => {
     {
       id: '2d-mode',
       title: '2D Mode',
+      path: '/dashboard/game/pve2d',
       icon: <Gamepad2 className="w-6 h-6" />,
       description: 'Play in a 2D environment: Remote or AI',
       color: 'from-teal-400 to-green-500',
@@ -31,6 +36,7 @@ export const GameModes = ({ selectedMode, setSelectedMode }) => {
     {
       id: 'tournament',
       title: 'Tournament',
+      path: '/dashboard/tournament',
       icon: <Trophy className="w-6 h-6" />,
       description: 'Join competitive tournaments',
       color: 'from-violet-400 to-purple-500',
@@ -41,6 +47,13 @@ export const GameModes = ({ selectedMode, setSelectedMode }) => {
       }
     }
   ];
+
+  const handleStartGame = () => {
+    const selectedPath = gameModes.find(mode => mode.id === selectedMode)?.path;
+    if (selectedPath) {
+      navigate(selectedPath);
+    }
+  };
 
   return (
     <div>
@@ -73,16 +86,13 @@ export const GameModes = ({ selectedMode, setSelectedMode }) => {
               transition-all duration-300 ease-out hover:scale-[1.02]
             `}
           >
-            {/* Background Effects */}
             <div className={`
               absolute inset-0 bg-gradient-to-br ${mode.color} opacity-20
               group-hover:opacity-30 transition-opacity duration-300
             `} />
             <div className="absolute inset-0 bg-black/60 group-hover:bg-black/50 transition-colors" />
 
-            {/* Content */}
             <div className="relative p-6 h-full">
-              {/* Top Section */}
               <div className="flex items-start justify-between mb-4">
                 <div className={`
                   p-3 rounded-xl bg-gradient-to-br ${mode.color}
@@ -98,13 +108,11 @@ export const GameModes = ({ selectedMode, setSelectedMode }) => {
                 </div>
               </div>
 
-              {/* Title & Description */}
               <div className="mb-4">
                 <h3 className="text-xl font-bold text-white mb-1">{mode.title}</h3>
                 <p className="text-sm text-gray-400">{mode.description}</p>
               </div>
 
-              {/* Stats */}
               <div className="flex items-center gap-4 text-sm">
                 <div className="flex items-center gap-1">
                   <Users size={14} className="text-blue-400" />
@@ -112,30 +120,13 @@ export const GameModes = ({ selectedMode, setSelectedMode }) => {
                 </div>
                 <div className={`
                   px-2 py-0.5 rounded-full text-xs font-medium
-                  ${mode.stats.difficulty === 'High' ? 'bg-red-500/20 text-red-400' :
-                    mode.stats.difficulty === 'Medium' ? 'bg-yellow-500/20 text-yellow-400' :
-                    mode.stats.difficulty === 'Expert' ? 'bg-purple-500/20 text-purple-400' :
-                    'bg-blue-500/20 text-blue-400'}
+                  ${mode.stats.difficulty === 'Expert' ? 'bg-purple-500/20 text-purple-400' :
+                    'bg-yellow-500/20 text-yellow-400'}
                 `}>
                   {mode.stats.difficulty}
                 </div>
               </div>
-
-              {/* Selection Indicator */}
-              {selectedMode === mode.id && (
-                <>
-                  <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-white/0 via-white to-white/0" />
-                  <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-white/0 via-white to-white/0" />
-                </>
-              )}
             </div>
-
-            {/* Hover Effect */}
-            <div className={`
-              absolute inset-0 opacity-0 group-hover:opacity-100
-              bg-gradient-to-t from-black/80 via-transparent to-transparent
-              transition-opacity duration-300
-            `} />
           </button>
         ))}
       </div>
@@ -143,13 +134,15 @@ export const GameModes = ({ selectedMode, setSelectedMode }) => {
       {/* Action Button */}
       {selectedMode && (
         <div className="mt-8">
-          <button className={`
-            w-full py-4 rounded-xl font-bold text-lg
-            bg-gradient-to-r ${gameModes.find(m => m.id === selectedMode)?.color}
-            transform transition-all duration-300
-            hover:scale-105 hover:shadow-lg hover:shadow-current/30
-            focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-current
-          `}>
+          <button
+            onClick={handleStartGame}
+            className={`
+              w-full py-4 rounded-xl font-bold text-lg
+              bg-gradient-to-r ${gameModes.find(m => m.id === selectedMode)?.color}
+              transform transition-all duration-300
+              hover:scale-105 hover:shadow-lg
+            `}
+          >
             Start Game
           </button>
         </div>

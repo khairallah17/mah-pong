@@ -9,7 +9,8 @@ class TournamentSerializer(serializers.ModelSerializer):
 class MatchSerializer(serializers.ModelSerializer):
     player = serializers.SerializerMethodField()
     opponent = serializers.SerializerMethodField()
-    score_player = serializers.SerializerMethodField()
+    score_player1 = serializers.SerializerMethodField()
+    score_player2 = serializers.SerializerMethodField()
     result = serializers.SerializerMethodField()
     time = serializers.SerializerMethodField()
 
@@ -26,11 +27,11 @@ class MatchSerializer(serializers.ModelSerializer):
         return obj.username1
 
     def get_score_player1(self, obj):
-        return obj.scoreP1.get(self.context['player'], 0)
+        return obj.scoreP1
 
     def get_score_player2(self, obj):
-        return obj.scoreP2.get(self.context['player'], 0)
-
+        return obj.scoreP2
+    
     def get_result(self, obj):
         if obj.winner == self.context['player']:
             return 'win'
