@@ -18,6 +18,7 @@ const ChatComponent = ({ roomName }) => {
     const [selectedUserId, setSelectedUserId] = useState(null);
     const [loading, setLoading] = useState(false);
     const socketRef = useRef(null);
+    const token = JSON.parse(localStorage.getItem("authtoken")).access
 
     useEffect(() => {
         loadUsers();
@@ -32,14 +33,19 @@ const ChatComponent = ({ roomName }) => {
 
     const loadUsers = async () => {
         try {
-            const response = await axios.get("http://localhost:8003/chat/api/users/", {
+            const friendsResponse = await fetch(`http://localhost:8001/api/friends/`, {
                 headers: {
-                    Authorization: `Bearer ${JSON.parse(localStorage.getItem('authtoken')).access}`
-                },
-                withCredentials: true
+                    'Authorization': `Bearer ${token}`
+                }
             });
-            console.log(response.data);
-            setUsers(response.data);
+    
+            if (!friendsResponse.ok) {
+                throw new Error('Failed to fetch friends list');
+            }
+    
+            const friendsData = await friendsResponse.json();
+            setUsers(friendsData[0].friends);
+            console.log("usersssssssss===>", users[0]);
         } catch (error) {
             console.error("Error loading users:", error);
         }
