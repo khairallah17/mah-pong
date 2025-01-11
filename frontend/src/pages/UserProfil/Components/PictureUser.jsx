@@ -108,7 +108,7 @@ const PictureUser = () => {
   const [profil, setProfil] = useState(null);
   const [requests, setRequests] = useState([]);
   const [error, setError] = useState(null);
-  const [friendStatus, setFriendStatus] = useState(null);
+  const [friendStatus, setFriendStatus] = useState('none');
   const { username } = useParams();
   const token = JSON.parse(localStorage.getItem('authtoken')).access;
   const currentUser = jwtDecode(token).username;
@@ -140,9 +140,11 @@ const PictureUser = () => {
                 setFriendStatus('pending');
                 return;
             } else if (existingRequest.status === 'accepted') {
+              console.log('hna l9a existging request o dar friend')
                 setFriendStatus('friends');
                 return;
             }
+            // setFriendStatus()
         }
 
         // If no request exists, check friends list
@@ -158,6 +160,8 @@ const PictureUser = () => {
 
         const friendsData = await friendsResponse.json();
         const isFriend = friendsData.friends?.some(friend => friend.username === username);
+        console.log('hna l9a jiha ta7taniya wach is friend:', isFriend)
+
         setFriendStatus(isFriend ? 'friends' : 'none');
     } catch (err) {
         console.error('Error checking friend status:', err);
@@ -165,6 +169,9 @@ const PictureUser = () => {
     }
   };
 
+  useEffect(() => {
+    console.log(friendStatus, 'status changge')
+  }, [friendStatus])
   useEffect(() => {
     const fetchProfil = async () => {
       try {
@@ -414,6 +421,7 @@ const PictureUser = () => {
       }
 
       setFriendStatus('none');
+      console.log()
     } catch (err) {
       console.error('Error removing friend:', err);
       setError(err.message);
