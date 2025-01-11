@@ -26,7 +26,7 @@ const ChatComponent = ({ roomName }) => {
     useEffect(() => {
         if (selectedUserId !== null) {
             loadConversation(selectedUserId);
-            // initializeWebSocket(selectedUserId);
+            initializeWebSocket(selectedUserId);
         }
     }, [selectedUserId]);
 
@@ -48,14 +48,14 @@ const ChatComponent = ({ roomName }) => {
     const loadConversation = async (userId) => {  // Fixed userId casing
         setLoading(true);
         try {
-            const response = await axios.get(`http://localhost:8003/chat/api/conversation/${parseInt(userId, 10)}/`, {
-                // headers: {
-                //     // Authorization: `Bearer ${JSON.parse(localStorage.getItem('authtoken')).access}`
-                // },
-                // withCredentials: true
+            const response = await axios.get(`http://localhost:8003/chat/api/conversation/${userId}/`, {
+                headers: {
+                    Authorization: `Bearer ${JSON.parse(localStorage.getItem('authtoken')).access}`
+                },
+                withCredentials: true
             });
             console.log(response.data)
-            setMessages(response.data);
+            setMessages(response.data.messages);
         } catch (error) {
             // console.error("Error loading conversation:", error);
             // alert("Failed to load messages");
@@ -64,26 +64,26 @@ const ChatComponent = ({ roomName }) => {
         }
     };
 
-    // const initializeWebSocket = (userId) => {
-    //     if (socketRef.current) {
-    //         socketRef.current.close();  
-    //     }
+    const initializeWebSocket = (userId) => {
+        if (socketRef.current) {
+            socketRef.current.close();  
+        }
 
-    //     const chatSocket = new WebSocket(`ws://localhost:8000/ws/chat/${parseInt(userId, 10)}/`);
+        const chatSocket = new WebSocket(`ws://localhost:8003/ws/chat/?user_id=${userId}&token=${JSON.parse(localStorage.getItem('authtoken')).access}`);
 
-    //     socketRef.current = chatSocket;
+        socketRef.current = chatSocket;
 
-    //     chatSocket.onmessage = (e) => {
-    //         const data = JSON.parse(e.data);
-    //         if (data.type === "chat_message") {
-    //             setMessages((prev) => [...prev, data]);
-    //         }
-    //     };
+        chatSocket.onmessage = (e) => {
+            const data = JSON.parse(e.data);
+            if (data.type === "chat_message") {
+                setMessages((prev) => [...prev, data]);
+            }
+        };
 
-    //     chatSocket.onclose = () => {
-    //         console.error("Chat socket closed unexpectedly");
-    //     };
-    // };
+        chatSocket.onclose = () => {
+            console.error("Chat socket closed unexpectedly");
+        };
+    };
 
     const handleUserSelect = (userId) => {
         setSelectedUserId(userId);

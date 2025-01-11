@@ -14,8 +14,8 @@ const NotificationDisplay = () => {
         const response = await fetch("http://localhost:8002/api/notifications");
         const data = await response.json();
         const oldNotifications = data.filter((notification) => notification.read);
-        console.log("oldNotifications", oldNotifications);
-        console.log("data", data);
+        // console.log("oldNotifications", oldNotifications);
+        // console.log("data", data);
         const combinedNotifications = [...oldNotifications, ...wsNotifications];
         setNotifications(combinedNotifications);
       } catch (error) {

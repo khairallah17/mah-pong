@@ -556,6 +556,10 @@ function Pvp2d() {
         return light;
     };
 
+    // this function will only generate invite link and copy it to clipboard 
+    // if you give it to another player he wont be matched with the current one 
+    // unless you also redirect the current one to the same link
+
     const generateInviteLink = () => {
         const code = Math.random().toString(36).substring(2, 15);
         setInviteCode(code);
@@ -584,12 +588,12 @@ function Pvp2d() {
                             onClick={() => window.location.reload()}
                             className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
                         >
-                            Restart Game
+                            Restart Game 
                         </button>
                     )}
                     {matchId && (
                         <button
-                            onClick={() => Navigate(-1)}
+                            onClick={() => window.location.href = '/dashboard/tournament/live'}
                             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors mt-4"
                         >
                             Back to Tournament

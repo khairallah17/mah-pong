@@ -20,10 +20,8 @@ export default function Tournament() {
     { id: 3, round: 2, position: 1 },
   ]);
 
-  const [isReady, setIsReady] = useState(false);
-  const [loadingReady, setLoadingReady] = useState(false);
   const [loadingQuit, setLoadingQuit] = useState(false);
-  const [playerId, setPlayerId] = useState(null);
+  const [wrongTournament, setWrongTournament] = useState(false);
   const token = localStorage.getItem('authtoken');
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
@@ -52,7 +50,6 @@ export default function Tournament() {
           }
         } else if (message.type === 'tournament_update') {
           setMatches(message.matches);
-          setIsReady(message.is_ready);
           console.log('Tournament updated:', message.matches);
         } else if (message.type === 'match_start') {
           console.log('Match started:', message.tournamentMatch_id);
@@ -64,6 +61,10 @@ export default function Tournament() {
           //wsManager implement broadcastmsg and selfmsg (here we should use selfmsg)
           //make this received only once
           navigate(`/dashboard/game/pvp2d?match_id=${message.tournamentMatch_id}`);
+        }
+        else if (message.type === 'already_in_tournament') {
+          console.log('Already in tournament');
+          setWrongTournament(true);
         }
       };
 
@@ -79,12 +80,11 @@ export default function Tournament() {
     };
   }, [token]);
 
-  const handleReady = () => {
-    setLoadingReady(true);
-    setIsReady(true);
-    wsRef.current.send(JSON.stringify({ type: 'player_ready' }));
-    setTimeout(() => setLoadingReady(false), 1000);
-  };
+  // const handleReady = () => {
+  //   setLoadingReady(true);
+  //   wsRef.current.send(JSON.stringify({ type: 'player_ready' }));
+  //   setTimeout(() => setLoadingReady(false), 1000);
+  // };
 
   const handleQuit = () => {
     setLoadingQuit(true);
@@ -119,6 +119,14 @@ export default function Tournament() {
   return (
     <div className="w-full h-full justify-between flex flex-col bg-[#1a1464] p-8 pt-24">
       <div className="mx-auto w-full">
+        {wrongTournament && (
+          <button
+            onClick={() => window.location.href = '/dashboard/tournament/live'}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors mt-4"
+          >
+            Back to Tournament
+          </button>
+        )}
         {/* Tournament Title */}
         <div className="text-center mb-12">
           <h1 className="text-6xl font-bold text-white tracking-wider zen-dots" style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.3)' }}>
@@ -201,13 +209,6 @@ export default function Tournament() {
 
       <div className="w-full flex items-end flex-col  bottom-4 right-4">
         <div className="flex gap-4">
-          <button
-            onClick={handleReady}
-            className={`px-4 py-2 bg-green-500 text-white rounded-md flex items-center gap-2 ${isReady || loadingReady ? 'opacity-50 cursor-not-allowed' : ''}`}
-            disabled={isReady || loadingReady}
-          >
-            {loadingReady ? <Spinner /> : 'Ready'}
-          </button>
           <button
             onClick={handleQuit}
             className="px-4 py-2 bg-red-500 text-white rounded-md flex items-center gap-2"
