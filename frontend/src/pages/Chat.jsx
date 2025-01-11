@@ -5,6 +5,8 @@ import { MdEmojiEmotions } from "react-icons/md";
 import { IoCheckmarkDoneOutline } from "react-icons/io5";
 import { RiSendPlaneFill } from "react-icons/ri";
 import { IoSearchOutline } from "react-icons/io5";
+import { CgBlock } from "react-icons/cg";
+import { PiGameControllerFill } from "react-icons/pi";
 import React, { useState, useEffect, useRef } from "react";
 import axios from 'axios';
 
@@ -21,6 +23,7 @@ const Chat = ({ roomName }) => {
     const [selectedUserId, setSelectedUserId] = useState(null);
     const [loading, setLoading] = useState(false);
     const socketRef = useRef(null);
+    const [hand, setHand] = useState(false);
 
     useEffect(() => {
 
@@ -44,8 +47,8 @@ const Chat = ({ roomName }) => {
             });
             setUsers(response.data);
         } catch (error) {
-            console.error("Error loading users:", error);
-            alert("Failed to load users");
+            // console.error("Error loading users:", error);
+            // alert("Failed to load users");
         }
         console.log("heeeer",localStorage.getItem('access_token'));
     };
@@ -227,22 +230,26 @@ const Chat = ({ roomName }) => {
             </div>
         )
     }
+    const handel = () => {
+        setHand(!hand);
+    }
+
     return (
-        <div className="flex h-full w-full relative">
+        <div  className="flex h-full text-[#FFFFFF50] bg-[#10104F] w-full relative">
             <div className="absolute bg-black h-full w-full opacity-50 z-[-1]"></div>
 
             {/* User List Section */}
-            <div className="md:w-[320px] bg-purple-900 flex flex-col gap-10 py-2 md:py-0">
+            <div className="md:w-[320px] my-[20px] ml-[20px] border-[3px] border-blue-950 bg-gradient-to-t  from-black/25 to-black/50  abg-opacity-30 rounded-l-3xl  flex flex-col gap-10 py-2 md:py-0">
                 <div className="md:flex hidden flex-col gap-2 pt-4 px-4">
                     <h1 className="font-bold text-white text-xl">Messages</h1>
                     <div className="flex gap-2 items-center bg-white py-1 px-3 rounded-full">
-                        <IoSearchOutline className="text-2xl"/>
+                        <IoSearchOutline className=" text-black text-2xl"/>
                         <input type="text" placeholder="Search" className="rounded-lg p-1 px-3 w-full outline-none "/>
                     </div>
                 </div>
 
                 {/* Dynamic User List */}
-                <div className="flex flex-col gap-2 overflow-y-auto px-4">
+                <div className="flex flex-col  gap-2 overflow-y-auto px-4">
                     {users.map((user) => (
                         <div key={user.id}
                              onClick={() => handleUserSelect(user.id)}
@@ -260,20 +267,20 @@ const Chat = ({ roomName }) => {
             </div>
 
             {/* Chat Section */}
-            <div className="grow bg-purple-900 flex flex-col gap-5">
-                <div className="bg-yellow-800 p-4 flex items-center justify-between">
-                    <div className="flex gap-2">
-                        <div className="h-12 w-12 rounded-full overflow-hidden">
+            <div className="grow my-[20px] flex justify-between  rounded-r-[30px] mr-[20px]   border-[3px] border-l-0 border-blue-950 flex-col gap-5">
+                <div className="border-blue-950 bg-gradient-to-l  from-black/15 to-black/50  abg-opacity-30 bg-opacity-25 p-4 flex h-[100px] rounded-tr-[27px] items-center justify-between">
+                    <div className="flex gap-2 ml-[15px]">
+                        <div className="h-16 w-16 rounded-full overflow-hidden">
                             <img src="img.webp" alt="profile"/>
                         </div>
-                        <div className="flex flex-col">
+                        <div className="ml-3 justify-center flex flex-col text-lg">
                             <p className="font-semibold">
                                 {selectedUserId ? users.find(user => user.id === selectedUserId)?.username : 'Select a user'}
                             </p>
-                            <p className="text-green-600">Online</p>
+                            <p className="text-green-600">Online</p> {/* changing online and offline*/}
                         </div>
                     </div>
-                    <MdInfoOutline className="text-2xl"/>
+                        <MdInfoOutline onClick={handel} className="text-[30px] cursor-pointer"/>
                 </div>
 
                 <div className="overflow-auto px-4 gap-2 flex flex-col">
@@ -286,41 +293,38 @@ const Chat = ({ roomName }) => {
 
                 {/* Message Input */}
                 <div className=""> {/* send msg footer*/}
-                    <div className="px-4 pb-4 "> {/* sending msg*/}
-                        <div className="flex gap-2 items-center bg-black py-1 px-3 rounded-full">
-                            <LuCirclePlus className="text-2xl text-blue-700"/>
+                    <div className="px-4 pb-4  "> {/* sending msg*/}
+                        <div className="flex h-[45px] gap-2 items-center bg-black py-1 px-3 rounded-full">
+                            <MdEmojiEmotions className="text-2xl cursor-pointer text-blue-700"/>
                             {/* <MdEmojiEmotions className="text-2xl text-blue-700"/> */}
-                            <input type="text" 
+                            <input  type="text" 
                                value={newMessage} 
                                onChange={(e) => setNewMessage(e.target.value)} 
                                onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
                                placeholder="Type your message here..." 
-                               className="w-full bg-transparent text-white focus-none"/>
-                            <RiSendPlaneFill onClick={handleSendMessage} className="text-2xl text-blue-700"/>  
+                               className="w-full  focus:outline-none bg-transparent text-white focus-none"/>
+                                <RiSendPlaneFill onClick={handleSendMessage} className="text-2xl cursor-pointer hover:text-red-500 text-blue-700"/>  
                         </div>
                     </div>
                 </div>
             </div>
-            <div className="w-[320px] p-4 bg-purple-900 hidden lg:flex">
-                <div className="flex flex-col gap-8 pt-4 px-4"> {/* User details*/}
+            <div className={` my-[20px] mr-[20px]   w-[400px]  xl:flex ${hand ? "flex" : "hidden"} `}>
+                <div className="flex flex-col gap-14  w-full pt-9 px-2 border-[3px] border-blue-950 rounded-[30px]"> {/* User details*/}
                     <h1 className="font-bold text-3xl text-white text-center">Details</h1>
                     <div className="flex flex-col items-center gap-3">
                         <div className=" h-28 w-28 rounded-full overflow-hidden border-4 border-green-700 place-items-center">
                             <img src="img.webp" alt="photo" />
                         </div>
-                        <div className="flex flex-col items-center">
-                            <p className="font-semibold text-2xl">hamza salam</p>
-                            <p className="font-semibold">sirius</p>
-                        </div>
-                        <div className="flex flex-col items-center">
-                            <button className="h-10 w-32 rounded-full bg-blue-900">View Profile</button>
+                        <div className="flex flex-col items-center gap-1">
+                            <p className="font-semibold text-2xl">hamza salam</p> {/* Fallname */}
+                            <p className="font-semibold text-xl">sirius</p> {/* Username */}
                         </div>
                     </div>
-                    <div className="flex flex-col border-t-2 rounded-full px-32 items-center"></div>
-                    <div className="flex flex-col gap-3 items-center"> {/* challange/ block*/}
-                        <button className="h-10 w-52 rounded-full bg-blue-500 font-semibold">Invite game</button>
-                        <button className="h-10 w-52 rounded-full bg-red-600 font-bold">Block</button>
-                    </div>
+                    {/*< div className="flex flex-col border-t-2 rounded-full px-32 items-center"></div> */}
+                    <div className="flex gap-8 justify-center items-center"> {/* challange/ block*/}
+                        <button className="h-16 w-32 border-[6px] border-blue-900 flex items-center justify-center hover:bg-blue-900 rounded-3xl  font-bold"><PiGameControllerFill className="text-[45px]"/> </button>
+                        <button className="h-16 w-32 border-4 flex items-center justify-center rounded-3xl hover:bg-red-600 font-bold"><CgBlock className="text-[45px]"/></button>
+                    </div>     
                 </div>
             </div>
         </div>
