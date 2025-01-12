@@ -39,8 +39,8 @@ const navigation = [
     },
     {
         icon: <UserPen size={24} />,
-        root: "profile",
-        link:"dashboard/profile",
+        root: "edit-profil",
+        link:"dashboard/edit-profil",
         list: []
     },
 ]

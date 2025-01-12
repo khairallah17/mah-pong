@@ -17,7 +17,7 @@ export const Statistics = () => {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const username = 'zouhairlrs'; // Replace with actual username
+        const username = 'a'; // Replace with actual username
         const response = await fetch(`http://localhost:8000/api/player-stats/${username}/`);
         const data = await response.json();
 

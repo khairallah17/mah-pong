@@ -1,15 +1,39 @@
-import React, { useState, useEffect } from 'react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import React, { useState, useEffect, useRef } from 'react';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+  Filler
+} from 'chart.js';
+import { Line } from 'react-chartjs-2';
+
+// Register ChartJS components
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+  Filler
+);
 
 export const WeeklyChart = () => {
   const [matchData, setMatchData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const chartRef = useRef(null);
 
   useEffect(() => {
     const fetchMatchData = async () => {
       try {
-        const username = 'zouhairlrs';
+        const username = 'z';
         const response = await fetch(`http://localhost:8000/api/match-history/${username}/`);
         if (!response.ok) throw new Error('Failed to fetch match data');
         const data = await response.json();
@@ -28,7 +52,7 @@ export const WeeklyChart = () => {
 
   const processDataForChart = () => {
     const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-    const dailyData = days.map(day => ({ name: day, matches: 0 }));
+    const dailyCounts = new Array(7).fill(0);
     
     const today = new Date();
     const startOfWeek = new Date(today);
@@ -39,11 +63,80 @@ export const WeeklyChart = () => {
       const matchDate = new Date(match.datetime);
       if (matchDate >= startOfWeek) {
         const dayIndex = matchDate.getDay();
-        dailyData[dayIndex].matches++;
+        dailyCounts[dayIndex]++;
       }
     });
 
-    return dailyData;
+    return { labels: days, data: dailyCounts };
+  };
+
+  const { labels, data } = processDataForChart();
+
+  const chartData = {
+    labels,
+    datasets: [
+      {
+        label: 'Matches Played',
+        data: data,
+        fill: true,
+        borderColor: '#8B5CF6',
+        backgroundColor: 'rgba(139, 92, 246, 0.1)',
+        tension: 0.4,
+        pointBackgroundColor: '#8B5CF6',
+        pointBorderColor: '#6D28D9',
+        pointBorderWidth: 2,
+        pointRadius: 4,
+        pointHoverRadius: 6,
+        pointHoverBackgroundColor: '#A78BFA',
+        pointHoverBorderColor: '#7C3AED',
+      }
+    ]
+  };
+
+  const options = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        display: false
+      },
+      tooltip: {
+        backgroundColor: '#1F2937',
+        titleColor: '#9CA3AF',
+        bodyColor: '#E5E7EB',
+        borderColor: '#374151',
+        borderWidth: 1,
+        padding: 10,
+        cornerRadius: 6,
+        displayColors: false,
+        callbacks: {
+          label: function(context) {
+            return `${context.parsed.y} matches`;
+          }
+        }
+      }
+    },
+    scales: {
+      x: {
+        grid: {
+          color: '#374151',
+          tickLength: 0
+        },
+        ticks: {
+          color: '#9CA3AF'
+        }
+      },
+      y: {
+        beginAtZero: true,
+        grid: {
+          color: '#374151'
+        },
+        ticks: {
+          color: '#9CA3AF',
+          stepSize: 1
+        }
+      }
+    }
   };
 
   if (loading) {
@@ -62,60 +155,11 @@ export const WeeklyChart = () => {
     );
   }
 
-  const chartData = processDataForChart();
-
   return (
     <div className="bg-black/30 rounded-lg p-4 border border-gray-800">
       <h3 className="text-lg font-bold mb-4">Weekly Match Activity</h3>
       <div className="h-64 w-full">
-        <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={chartData}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-            <XAxis 
-              dataKey="name" 
-              stroke="#9CA3AF"
-              tick={{ fill: '#9CA3AF' }}
-            />
-            <YAxis 
-              stroke="#9CA3AF"
-              tick={{ fill: '#9CA3AF' }}
-              allowDecimals={false}
-            />
-            <Tooltip 
-              contentStyle={{ 
-                backgroundColor: '#1F2937',
-                border: '1px solid #374151',
-                borderRadius: '0.375rem'
-              }}
-              labelStyle={{ color: '#9CA3AF' }}
-              itemStyle={{ color: '#E5E7EB' }}
-            />
-            <Line 
-              type="monotone" 
-              dataKey="matches" 
-              stroke="url(#colorGradient)" 
-              strokeWidth={2}
-              dot={{ 
-                fill: '#8B5CF6',
-                stroke: '#6D28D9',
-                strokeWidth: 2,
-                r: 4
-              }}
-              activeDot={{ 
-                fill: '#A78BFA',
-                stroke: '#7C3AED',
-                strokeWidth: 2,
-                r: 6
-              }}
-            />
-            <defs>
-              <linearGradient id="colorGradient" x1="0" y1="0" x2="1" y2="0">
-                <stop offset="0%" stopColor="#3B82F6" />
-                <stop offset="100%" stopColor="#8B5CF6" />
-              </linearGradient>
-            </defs>
-          </LineChart>
-        </ResponsiveContainer>
+        <Line ref={chartRef} data={chartData} options={options} />
       </div>
     </div>
   );

@@ -61,7 +61,7 @@ function App() {
                     </Route>
 
                     <Route path="security" element={<SecurityPage />} />
-                    <Route path="profile" element={<Profile />} />
+                    <Route path="edit-profil" element={<Profile />} />
 
                   </Route>
                   
