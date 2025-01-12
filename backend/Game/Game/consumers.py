@@ -1,18 +1,19 @@
 import asyncio
-from channels.generic.websocket import AsyncWebsocketConsumer
+from channels.generic.websocket import AsyncWebsocketConsumer # type: ignore
 import json
 import logging
 import jwt
-from django.conf import settings
-from channels.db import database_sync_to_async
+from django.conf import settings # type: ignore
+from channels.db import database_sync_to_async # type: ignore
 from Match.models import Match, Tournament, TournamentMatch
-from django.db import transaction
+from django.db import transaction # type: ignore
 from urllib.parse import parse_qs
-from django.core.cache import cache
-from django.db.models import Q
+from django.core.cache import cache # type: ignore
+from django.db.models import Q # type: ignore
 
 logger = logging.getLogger(__name__)
 matchmaking_pool = []
+pools = {}
 user_channels = {}
 matched_users = {}
 game_states = {}
@@ -39,21 +40,20 @@ class TournamentConsumer(AsyncWebsocketConsumer):
             if not is_reconnected:
                 self.tournament = await self._initialize_tournament(tournament_code)
                 await self.add_player_to_tournament(self.tournament.id, self.username)
-                if (self.tournament.status == 'active'):
-                    await self.send(text_data=json.dumps({"type": "players_ready", "players": self.tournament.players}))
-                    logger.warning(f"sending: {self.tournament.players}")
                 await self.get_or_create_tournament_matches(self.tournament, self.username)
                 logger.warning(f"tournament: {self.tournament} not reconnected")
                 cache.set(f"user_reconnect_{self.username}", True)
             else:
-                self.tournament = await self.is_user_in_tournament(self.username)
+                self.tournament = await self.self.is_user_in_tournament(self.username)
                 logger.warning(f"tournament: {self.tournament} reconnected")
-                # cache.set(f"user_reconnect_{self.username}", True, timeout=6)
 
             if self.tournament:
                 self.tournament_group_name = f"tournament_{self.tournament.id}"
                 await self.channel_layer.group_add(self.tournament_group_name, self.channel_name)
                 await self.send_tournament_state(self.tournament)
+                await self.handle_player_ready()
+                if self.tournament.status == 'active':
+                    self.match_start()
             else:
                 logger.error("Failed to initialize tournament")
 
@@ -74,9 +74,6 @@ class TournamentConsumer(AsyncWebsocketConsumer):
         # if self.tournament:
         #     await self.send_tournament_state(self.tournament)
 
-# 1- take away player removal when user disconnects /done
-# 2- add player removal when user clicks quit button /done
-# 3- make sure no changes happen when user reconnects /done
 # 4- implement notifications when players ready
 
     async def schedule_remove_player(self):
@@ -101,11 +98,11 @@ class TournamentConsumer(AsyncWebsocketConsumer):
 
             if message_type == 'match_result':
                 await self.handle_match_result(data)
-            elif message_type == 'player_ready':
-                await self.handle_player_ready(data)
             elif message_type == 'quit_tournament':
                 cache.set(f"user_reconnect_{self.username}", False)
                 await self.schedule_remove_player()
+            elif message_type == 'start_final_match':
+                await self.start_final_match()
         except Exception as e:
             logger.error(f"Error in receive: {e}")
 
@@ -140,8 +137,8 @@ class TournamentConsumer(AsyncWebsocketConsumer):
         if not code or code == 'null':
             return Tournament.objects.create()
         tournament = Tournament.objects.get(code=code)
-        if not tournament or tournament.status != 'waiting':
-            raise Exception("Tournament not found or not in waiting state.")
+        if not tournament or tournament.status == 'completed':
+            raise Exception("Tournament not found or completed.")
         return tournament
 
     async def _initialize_tournament(self, code):
@@ -152,9 +149,9 @@ class TournamentConsumer(AsyncWebsocketConsumer):
     @database_sync_to_async
     def is_user_in_tournament(self, username):
         try:
-            tournament = Tournament.objects.filter(players__contains=[username], status='waiting').first()
+            tournament = Tournament.objects.filter(Q(players__contains=[username]) & (Q(status='waiting') | Q(status='active'))).latest('created_at')
             if tournament:
-                match = TournamentMatch.objects.filter(Q(tournament=tournament) & (Q(player1=username) | Q(player2=username))).first()
+                match = TournamentMatch.objects.filter(Q(tournament=tournament) & (Q(player1=username) | Q(player2=username))).latest('created_at')
                 self.current_match = match.id
                 return tournament
         except Exception as e:
@@ -168,8 +165,8 @@ class TournamentConsumer(AsyncWebsocketConsumer):
                 tournament = Tournament.objects.select_for_update().get(id=tournament_id)
                 if username not in tournament.players:
                     tournament.players.append(username)
-                    if (len(tournament.players) == 4):
-                        tournament.status = 'active'
+                    # if (len(tournament.players) == 4):
+                    #     tournament.status = 'active'
                     self.tournament = tournament
                     tournament.save()
 
@@ -180,7 +177,7 @@ class TournamentConsumer(AsyncWebsocketConsumer):
     def remove_player_from_tournament(self, username):
         try:
             with transaction.atomic():
-                tournament = Tournament.objects.select_for_update().filter(players__contains=[username], status='waiting').first()
+                tournament = Tournament.objects.filter(Q(players__contains=[username]) & (Q(status='waiting') | Q(status='active'))).latest('created_at')
                 if tournament:
                     tournament.players = [player for player in tournament.players if player != username]
                     self.tournament = tournament
@@ -226,25 +223,52 @@ class TournamentConsumer(AsyncWebsocketConsumer):
         return matches
 
     @database_sync_to_async
-    def handle_player_ready_sync(self, data):
+    def handle_player_ready_sync(self):
         try:
-            match = TournamentMatch.objects.get(id=self.current_match)
-            if match.player1 == self.username:
-                match.player1_ready = True
-            elif match.player2 == self.username:
-                match.player2_ready = True
-
-            match.save()
-            return match.player1_ready and match.player2_ready
+            logger.warning(f"user: {self.username} current_match: {self.current_match}")
+            tournament = Tournament.objects.get(id=self.tournament.id)
+            if len(tournament.players) == 4:
+                tournament.status = 'active'
+                tournament.save()
+                return True
+            return False
         except Exception as e:
             logger.error(f"Error handling player ready: {e}")
             return False
 
-    async def handle_player_ready(self, data):
-        both_ready = await self.handle_player_ready_sync(data)
-        logger.warning(f"both_ready: {both_ready}")
-        if both_ready:
-            await self.match_start()
+    async def handle_player_ready(self):
+        all_ready = await self.handle_player_ready_sync()
+        logger.warning(f"all_ready: {all_ready}")
+        if all_ready:
+            await self.channel_layer.group_send(
+                self.tournament_group_name,
+                {
+                    "type": "match_start",
+                    "players": self.tournament.players,
+                }
+            )
+            await self.channel_layer.group_send(
+                self.tournament_group_name,
+                {
+                    "type": "players_ready",
+                    "players": self.tournament.players,
+                }
+            )
+
+    async def start_final_match(self):
+        try:
+            tournament = await self.is_user_in_tournament(self.username)
+            if tournament:
+                final_match, _ = TournamentMatch.objects.get(tournament=tournament, round=2, position=1)
+                if final_match.player1 and final_match.player2:
+                    await self.channel_layer.group_send(
+                        self.tournament_group_name,
+                        {
+                            "type": "match_start",
+                        }
+                    )
+        except Exception as e:
+            logger.error(f"Error starting final match: {e}")        
 
     @database_sync_to_async
     def handle_match_result(self, data):
@@ -256,10 +280,7 @@ class TournamentConsumer(AsyncWebsocketConsumer):
             match.winner = winner
             match.save()
 
-            next_round = match.round + 1
-            next_position = match.position // 2
-
-            next_match, _ = TournamentMatch.objects.get_or_create(tournament=match.tournament, round=next_round, position=next_position)
+            next_match, _ = TournamentMatch.objects.get(tournament=match.tournament, round=2, position=1)
 
             if match.position % 2 == 0:
                 next_match.player1 = winner
@@ -287,7 +308,7 @@ class TournamentConsumer(AsyncWebsocketConsumer):
                         "position": match.position,
                         "player1": match.player1,
                         "player2": match.player2,
-                        "winner": match.winner
+                        "winner": match.winner,
                     } for match in matches
                 ]
             }
@@ -295,19 +316,33 @@ class TournamentConsumer(AsyncWebsocketConsumer):
             logger.error(f"Error fetching tournament state: {e}")
             return {"matches": []}
 
+    @database_sync_to_async
+    def is_player_ready(self, username, match_id):
+        try:
+            match = TournamentMatch.objects.get(id=match_id)
+            if match.player1 == username:
+                return match.player1_ready
+            elif match.player2 == username:
+                return match.player2_ready
+            return False
+        except TournamentMatch.DoesNotExist:
+            return False
+
+    # Utility && message handlers
+    async def players_ready(self, event):
+        await self.send(text_data=json.dumps({"type": "players_ready", "players": event["players"], "tournamentMatch_id": self.current_match}))
+
     async def tournament_update(self, event):
         await self.send(text_data=json.dumps({"type": "tournament_update", "matches": event["matches"]}))
-
-    # Utility Functions
 
     async def send_error_message(self, error_type, code, message=None):
         logger.warning(f"{error_type}: {message}")
         await self.send(text_data=json.dumps({'type': error_type, 'message': message}))
         await self.close(code=code)
 
-    async def match_start(self):
+    async def match_start(self, event=None):
         logger.warning("Match start")
-        await self.send(text_data=json.dumps({"type": "match_start"}))
+        await self.send(text_data=json.dumps({"type": "match_start", "match_id": self.current_match}))
 
     def _parse_query_params(self):
         query_string = self.scope['query_string'].decode()
@@ -328,10 +363,13 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
         self.username = None
         self.invite_code = None
         self.is_ready = False
+        self.match_id = None
+        self.send_score_task = None
         await self.accept()
         query_params = parse_qs(self.scope['query_string'].decode())
         token = query_params.get('token', [None])[0]
         self.invite_code = query_params.get('invite', [None])[0]
+        self.match_id = query_params.get('match_id', [None])[0]
         try:
             payload = jwt.decode(token, settings.SECRET_KEY, algorithms=['HS256'])
             self.username = payload.get('username')
@@ -341,21 +379,31 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
             if self.username in disconnected_users:
                 user_data = disconnected_users.pop(self.username)
                 user_data['task'].cancel()
-                
+                # what if user havent got matchmade yet
                 await self.send(text_data=json.dumps({
                     'type': 'match_found',
                     'player_id': user_data['player_id'],
-                    'score': user_data['score'],
+                    'scoreP1': user_data['score'].get('player1'),
+                    'scoreP2': user_data['score'].get('player2'),
                     'names': user_data['names']
                 }))
+                if not self.send_score_task:
+                    self.send_score_task = asyncio.create_task(self.send_scores_periodically())
             user_channels[self.username] = self
             
+            # im sorry to whoever tries to read this
             if self.invite_code:
-                if self.invite_code in matchmaking_pool:
-                    opponent = matchmaking_pool.pop(self.invite_code)
+                if self.invite_code in pools:
+                    opponent = pools.pop(self.invite_code)
                     await self.match_users(self.username, opponent)
                 else:
-                    matchmaking_pool[self.invite_code] = self.username
+                    pools[self.invite_code] = self.username
+            elif self.match_id:
+                if self.match_id in pools:
+                    opponent = pools.pop(self.match_id)
+                    await self.match_users(self.username, opponent)
+                else:
+                    pools[self.match_id] = self.username
             else:
                 if self.username not in matchmaking_pool and self.username not in matched_users:
                     matchmaking_pool.append(self.username)
@@ -375,7 +423,7 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
                 matchmaking_pool.pop(self.invite_code, None)
             elif self.username in matchmaking_pool:
                 matchmaking_pool.remove(self.username)
-            await self.channel_layer.group_discard("matchmaking_pool", self.channel_name)
+            # await self.channel_layer.group_discard("matchmaking_pool", self.channel_name)
             
             if self.username in matched_users:
                 scoreP1, scoreP2, isPlayer1 = await self.get_latest_match_scores()
@@ -409,6 +457,8 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
                     }
                 )
             await self.update_game_result(username, opponent, scoreP1, scoreP2, winner=opponent)
+        if self.send_score_task:
+            self.send_score_task.cancel()
 
     async def receive(self, text_data):
         data = json.loads(text_data)
@@ -486,6 +536,9 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
         player1, player2 = self.username, matched_users[self.username]
         scoreP1, scoreP2 = data.get('scoreP1'), data.get('scoreP2')
         await self.update_game_result(player1, player2, scoreP1, scoreP2, winner)
+        
+        if self.match_id:
+            await self.update_tournament_match(self.match_id, winner, player1, player2)
 
     async def match_users(self, user1=None, user2=None):
         if user1 and user2:
@@ -516,6 +569,40 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
                 'names': {'player1': user1, 'player2': user2}
             }
         )
+        if not self.send_score_task:
+            self.send_score_task = asyncio.create_task(self.send_scores_periodically())
+
+    async def send_scores_periodically(self):
+        while True:
+            await asyncio.sleep(2)
+            scoreP1, scoreP2, isPlayer1 = await self.get_latest_match_scores()
+            await self.channel_layer.send(
+                user_channels[self.username].channel_name,
+                {
+                    'type': 'match_found',
+                    'player_id': isPlayer1 and '1' or '2',
+                    'scoreP1': scoreP1,
+                    'scoreP2': scoreP2
+                }
+            )
+            # await self.channel_layer.send(
+            #     user_channels[matched_users[self.username]].channel_name,
+            #     {
+            #         'type': 'match_found',
+            #         'player_id': isPlayer1 and '2' or '1',
+            #         'scoreP1': scoreP1,
+            #         'scoreP2': scoreP2
+            #     }
+            # )
+
+    # @database_sync_to_async
+    # def get_latest_match_scores(self, user1, user2):
+    #     try:
+    #         match = Match.objects.filter(
+    #             Q(username1=user1, username2=user2) | Q(username1=user2, username2=user1)).latest('datetime')
+    #         return match.scoreP1, match.scoreP2
+    #     except Match.DoesNotExist:
+    #         return 0, 0
 
     @database_sync_to_async
     def create_game(self, username1, username2):
@@ -569,6 +656,23 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
         matched_users.pop(username1)
         matched_users.pop(username2)
 
+    @database_sync_to_async
+    def update_tournament_match(self, match_id, winner, player1, player2):
+        try:
+            match = TournamentMatch.objects.get(id=match_id)
+            match.winner = player1 if winner == 'player1' else player2
+            match.save()
+
+            next_match, _ = TournamentMatch.objects.get_or_create(tournament=match.tournament, round=2, position=1)
+
+            if match.position % 2 == 0:
+                next_match.player1 = match.winner
+            else:
+                next_match.player2 = match.winner
+            next_match.save()
+        except Exception as e:
+            logger.error(f"Error updating tournament match: {e}")
+
     async def send_error_message(self, error_type, code, message=None):
         logger.warning(f"{error_type}: {message}")
         await self.send(text_data=json.dumps({
@@ -583,11 +687,20 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
         await self.send(text_data=json.dumps({
             'type': 'match_found',
             'player_id': player_id,
-            'names': names
+            'names': names,
+            'scoreP1': event.get('scoreP1'),
+            'scoreP2': event.get('scoreP2')
         }))
     
     async def player_ready(self, event):
         await self.send(text_data=json.dumps({'type': 'player_ready'}))
+    
+    async def score_update(self, event):
+        await self.send(text_data=json.dumps({
+            'type': 'score_update',
+            'scoreP1': event['scoreP1'],
+            'scoreP2': event['scoreP2']
+        }))
 
     async def game_event(self, event):
         game_event = event['event']

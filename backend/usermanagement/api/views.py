@@ -1,56 +1,62 @@
-from django.shortcuts import redirect, get_object_or_404
-from django.db import models
-from django.db.models import Q
-from django.http import HttpResponse, HttpResponseRedirect
-from .models import User, TwoFactorAuthAttempt
-from .serializers import Get_Token_serial, RegistrationSerial, UserSerial, LogoutSerial, UserProfileSerializer
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.response import Response
-from rest_framework_simplejwt.views import TokenObtainPairView
-from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
-from rest_framework import generics
-from rest_framework.permissions import AllowAny, IsAuthenticated
-from rest_framework import status, views, viewsets
-from rest_framework.decorators import action
-from django.contrib.auth import authenticate, get_user_model
+from django.shortcuts import redirect, get_object_or_404 # type: ignore
+from django.db import models # type: ignore
+from django.db.models import Q # type: ignore
+from django.http import HttpResponse, HttpResponseRedirect # type: ignore
+from .models import User, TwoFactorAuthAttempt, FriendRequest, FriendList
+from .serializers import Get_Token_serial, RegistrationSerial, UserSerial, LogoutSerial, UserProfileSerializer, FriendRequestSerializer, FriendListSerializer
+from rest_framework.decorators import api_view, permission_classes # type: ignore
+from rest_framework.response import Response # type: ignore
+from rest_framework_simplejwt.views import TokenObtainPairView # type: ignore
+from rest_framework_simplejwt.tokens import RefreshToken, AccessToken # type: ignore
+from rest_framework import generics # type: ignore
+from rest_framework.permissions import AllowAny, IsAuthenticated # type: ignore
+from rest_framework import status, views, viewsets # type: ignore
+from rest_framework.decorators import action # type: ignore
+from django.contrib.auth import authenticate, get_user_model # type: ignore
 # For Google Login/registring api
-from allauth.socialaccount.providers.google.views import GoogleOAuth2Adapter
-from allauth.socialaccount.providers.oauth2.client import OAuth2Client
-from dj_rest_auth.registration.views import SocialLoginView
+from allauth.socialaccount.providers.google.views import GoogleOAuth2Adapter # type: ignore
+from allauth.socialaccount.providers.oauth2.client import OAuth2Client # type: ignore
+from dj_rest_auth.registration.views import SocialLoginView # type: ignore
 import os
-from django.conf import settings
+from django.conf import settings # type: ignore
 import uuid
-from allauth.socialaccount.adapter import DefaultSocialAccountAdapter
-from django.views import View
-from django.views.decorators.csrf import csrf_exempt
-from django.http import JsonResponse
+from allauth.socialaccount.adapter import DefaultSocialAccountAdapter # type: ignore
+from django.views import View # type: ignore
+from django.views.decorators.csrf import csrf_exempt # type: ignore
+from django.http import JsonResponse # type: ignore
 import requests
-from rest_framework.views import APIView
-from django.utils.encoding import force_bytes, force_str
-from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
-from .token_reset_passwordd import account_activation_token
-from django.core.mail import send_mail, EmailMessage
+from rest_framework.views import APIView # type: ignore
+from django.utils.encoding import force_bytes, force_str # type: ignore
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode # type: ignore
+from .token_reset_passwordd import account_activation_token # type: ignore
+from django.core.mail import send_mail, EmailMessage # type: ignore
 import urllib.request
-from django.core.exceptions import ValidationError
-from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError # type: ignore
+from django.contrib.auth.password_validation import validate_password # type: ignore
 
-from django.utils.decorators import method_decorator
-from django.http import JsonResponse
+from django.utils.decorators import method_decorator # type: ignore
+from django.http import JsonResponse # type: ignore
 import json
 
-from django_otp.plugins.otp_totp.models import TOTPDevice
-import pyotp
-import qrcode
-import qrcode.image.svg
+from django_otp.plugins.otp_totp.models import TOTPDevice # type: ignore
+import pyotp # type: ignore
+import qrcode # type: ignore
+import qrcode.image.svg # type: ignore
 from io import BytesIO
 import base64
-from rest_framework_simplejwt.authentication import JWTAuthentication
+from rest_framework_simplejwt.authentication import JWTAuthentication # type: ignore
 from datetime import datetime
 import time
-from django.contrib.auth.hashers import check_password, make_password
+from django.contrib.auth.hashers import check_password, make_password # type: ignore
 import random
 import string
-
+from rest_framework import viewsets, status # type: ignore
+from rest_framework.decorators import action # type: ignore
+from rest_framework.response import Response # type: ignore
+from rest_framework.permissions import IsAuthenticated # type: ignore
+from django.shortcuts import get_object_or_404 # type: ignore
+# from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync # type: ignore
 
 CLIENT_ID = os.environ.get('CLIENT_ID')
 CLIENT_SECRET = os.environ.get('CLIENT_SECRET')
@@ -101,6 +107,10 @@ class Get_MyTokenObtainPairView(TokenObtainPairView):
             # 2FA not enabled, proceed with normal login
             pass
 
+        # Set user as online before generating tokens
+        user.is_online = True
+        user.save(update_fields=['is_online'])
+        
         # Generate tokens only if 2FA verification passed or not required
         response = super().post(request)
         token = response.data.get('access')
@@ -228,175 +238,212 @@ class GoogleLoginView(SocialLoginView):
     
 def generate_temp_password(length=12):
     """Generate a secure temporary password"""
-    characters = string.ascii_letters + string.digits + "!@#$%^&*()"
+    characters = string.ascii_letters + string.digits + "!@"
     return ''.join(random.choice(characters) for i in range(length))
+
+
+import logging
+logger = logging.getLogger(__name__)
 
 # Creating Google login CallBack views
 class GoogleLoginCallback(APIView):
     def get(self, request):
-        # user = super().get(request)
-        code = request.GET.get("code")
-        if code is None:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-        print("code are: ", code)
-        token_url  = "https://oauth2.googleapis.com/token"
-        token_data = {
-            "code"          : code,
-            "client_id"     : GCLIENT_ID,
-            "client_secret" : GCLIENT_SECRET,
-            "redirect_uri"  : "http://localhost:8001/api/v2/auth/googlelogin/callback/",
-            "grant_type"    : "authorization_code"
-        }
-        token_response = requests.post(token_url, data = token_data)
-        token_JSON = token_response.json()
-        # if not ('access_token')
-        getInfo = requests.get("https://www.googleapis.com/oauth2/v2/userinfo", params = {'access_token': token_JSON["access_token"]}) # Getting Token To Extraction User Data
-        print (token_JSON)
-        email = getInfo.json()["email"]
-        username = getInfo.json()['email'].split('@')[0]
-        #telechargit imaghe dyal google
-        urllib.request.urlretrieve(getInfo.json()['picture'], "./media/" + username + ".jpg")
-        # Here i want to getting info from database or create if dosent exist
-
-        # Generating Random Password
-        tmp_password = generate_temp_password()
-
         try:
-            user = User.objects.get(email=email)
-            if not user.password:
-                user.password = make_password(tmp_password)
-                user.save()
+            logger.debug("I am heeeererererererer121000000000")
+            # user = super().get(request)
+            code = request.GET.get("code")
+            if code is None:
+                return Response(status=status.HTTP_400_BAD_REQUEST)
+            logger.debug("I am heeeererererererer1210000000054540")
+            print("code are: ", code)
+            token_url  = "https://oauth2.googleapis.com/token"
+            logger.debug("I am heeeererererererer12100000000545445454545450")
+            token_data = {
+                "code"          : code,
+                "client_id"     : GCLIENT_ID,
+                "client_secret" : GCLIENT_SECRET,
+                "redirect_uri"  : "http://localhost:8001/api/v2/auth/googlelogin/callback/",
+                "grant_type"    : "authorization_code"
+            }
+            logger.debug("I am heeeererererererer")
+            # error = request.GET.get("error")
+            # if error:
+            #     error_url_redirect = (f"http://localhost:5173/google-callback?error={error}")
+            #     response = redirect(error_url_redirect)
+
+            #     return response
+
+            token_response = requests.post(token_url, data = token_data)
+            token_JSON = token_response.json()
+            # if not ('access_token')
+            getInfo = requests.get("https://www.googleapis.com/oauth2/v2/userinfo", params = {'access_token': token_JSON["access_token"]}) # Getting Token To Extraction User Data
+            print (token_JSON)
+            email = getInfo.json()["email"]
+            username = getInfo.json()['email'].split('@')[0]
+            #telechargit imaghe dyal google
+            urllib.request.urlretrieve(getInfo.json()['picture'], "./media/" + username + ".jpg")
+            # Here i want to getting info from database or create if dosent exist
+
+            # Generating Random Password
+            tmp_password = generate_temp_password()
+
+            logger.debug("I am heeeererererererer121000")
+            try:
+                user = User.objects.get(email=email)
+                if not user.password:
+                    user.password = make_password(tmp_password)
+                    user.save()
+                    is_password_need = True
+                else:
+                    is_password_need = False
+            except User.DoesNotExist:
+                user = User.objects.create(
+                    fullname=getInfo.json()['name'],
+                    username=username,
+                    email=email,
+                    password=make_password(tmp_password),
+                    img="./" + username + ".jpg"
+                )
                 is_password_need = True
-            else:
-                is_password_need = False
-        except User.DoesNotExist:
-            user = User.objects.create(
-                fullname=getInfo.json()['name'],
-                username=username,
-                email=email,
-                password=make_password(tmp_password),
-                img="./" + username + ".jpg"
+                user.save()
+            
+            logger.debug("I am heeeererererererer121")
+
+            # Set user as online before generating tokens
+            user.is_online = True
+            user.save(update_fields=['is_online'])
+            #create Token for This user using JWT "we use RefreshToken because it automaticly create both refresh_token and access_token"
+            #we didn't use AccessToken because it automaticly create just access_token"
+            # acces_token = Get_Token_serial.get_token(user)
+            refresh = Get_Token_serial.get_token(user)
+            access_token = str(refresh.access_token)
+            refresh_token = str(refresh)
+            
+            url_redirect = (f"http://localhost:5173/google-callback"
+                            f"?access_token={access_token}"
+                            f"&is_password_need={is_password_need}")
+
+            if is_password_need:
+                url_redirect += f"&tmp_password={tmp_password}"
+
+
+            response = redirect(url_redirect)
+            # Set cookies for ggoole API
+            response.set_cookie(
+                key='access_token',
+                value=access_token,
+                httponly=True,
+                secure=False,  # Set to True if using HTTPS
+                samesite='Lax'
             )
-            is_password_need = True
-            user.save()
-        
-        #create Token for This user using JWT "we use RefreshToken because it automaticly create both refresh_token and access_token"
-        #we didn't use AccessToken because it automaticly create just access_token"
-        # acces_token = Get_Token_serial.get_token(user)
-        refresh = Get_Token_serial.get_token(user)
-        access_token = str(refresh.access_token)
-        refresh_token = str(refresh)
-        
-        url_redirect = (f"http://localhost:5173/google-callback"
-                        f"?access_token={access_token}"
-                        f"&is_password_need={is_password_need}")
+            response.set_cookie(
+                key='refresh_token',
+                value=refresh_token,
+                httponly=True,
+                secure=False,  # Set to True if using HTTPS
+                samesite='Lax'
+            )
 
-        if is_password_need:
-            url_redirect += f"&tmp_password={tmp_password}"
+            return response
+            # return redirect(f"http://localhost:5173/google-callback?access_token={acces_token}")
+        except (TypeError, ValueError, User.DoesNotExist):
+            return Response({'error': 'Error login'}, status=500)
 
-
-        response = redirect(url_redirect)
-        # Set cookies for ggoole API
-        response.set_cookie(
-            key='access_token',
-            value=access_token,
-            httponly=True,
-            secure=False,  # Set to True if using HTTPS
-            samesite='Lax'
-        )
-        response.set_cookie(
-            key='refresh_token',
-            value=refresh_token,
-            httponly=True,
-            secure=False,  # Set to True if using HTTPS
-            samesite='Lax'
-        )
-
-        return response
-        # return redirect(f"http://localhost:5173/google-callback?access_token={acces_token}")
 
 
 class Login42Auth(APIView):
     def get(self, request):
-        code = request.GET.get('code')
-        if code is None:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-        # Sending request to 42 API to Get Token
-        get_Token_url = "https://api.intra.42.fr/oauth/token"
-        # this is Requarments data should to get Token from 42 API
-        Token_data = {
-            'code'          : code,
-            "client_id"     : CLIENT_ID,
-            "client_secret" : CLIENT_SECRET,
-            "redirect_uri"  : "http://localhost:8001/api/42login/callback/",
-            "grant_type"    : "authorization_code"
-        }
-        # Sendding Now Request to 42 API to getting return the Access_Token
-        request_token = requests.post(get_Token_url, data = Token_data)
-        token_json = request_token.json()
-        # print (token_json)
-        # extracting information From Token Now Hnaya
-        getInfoUser = requests.get("https://api.intra.42.fr/v2/me", headers={'Authorization': f'Bearer {token_json["access_token"]}'})
-        # print("heeeere", getInfoUser.json().get('email'))
-        username = getInfoUser.json().get('login')
-        email = getInfoUser.json().get('email')
-        
-        #telechargit imaghe dyal intra
-        urllib.request.urlretrieve(getInfoUser.json().get('image')['link'], "./media/" + username + ".jpg")
-        
-
-        # Creating Random Password for user logged using 42API
-        tmp_password = generate_temp_password()
         try:
-            user = User.objects.get(email=email)
-            if not user.password:
-                user.password = make_password(tmp_password)
-                user.save()
+            code = request.GET.get('code')
+            if code is None:
+                return Response(status=status.HTTP_400_BAD_REQUEST)
+            # Sending request to 42 API to Get Token
+            get_Token_url = "https://api.intra.42.fr/oauth/token"
+            # this is Requarments data should to get Token from 42 API
+            Token_data = {
+                'code'          : code,
+                "client_id"     : CLIENT_ID,
+                "client_secret" : CLIENT_SECRET,
+                "redirect_uri"  : "http://localhost:8001/api/42login/callback/",
+                "grant_type"    : "authorization_code"
+            }
+            # Sendding Now Request to 42 API to getting return the Access_Token
+            request_token = requests.post(get_Token_url, data = Token_data)
+            token_json = request_token.json()
+            # print (token_json)
+            # extracting information From Token Now Hnaya
+            getInfoUser = requests.get("https://api.intra.42.fr/v2/me", headers={'Authorization': f'Bearer {token_json["access_token"]}'})
+            # print("heeeere", getInfoUser.json().get('email'))
+            username = getInfoUser.json().get('login')
+            email = getInfoUser.json().get('email')
+            
+            #telechargit imaghe dyal intra
+            urllib.request.urlretrieve(getInfoUser.json().get('image')['link'], "./media/" + username + ".jpg")
+            
+
+            # Creating Random Password for user logged using 42API
+            tmp_password = generate_temp_password()
+            try:
+                user = User.objects.get(email=email)
+                if not user.password:
+                    user.password = make_password(tmp_password)
+                    user.save()
+                    is_password_need = True
+                else:
+                    is_password_need = False
+            except User.DoesNotExist:
+                user = User.objects.create(
+                    fullname=getInfoUser.json().get('displayname'),
+                    username=username,
+                    password=make_password(tmp_password),
+                    email=email,
+                    img="./" + username + ".jpg"
+                )
                 is_password_need = True
-            else:
-                is_password_need = False
-        except User.DoesNotExist:
-            user = User.objects.create(
-                fullname=getInfoUser.json().get('displayname'),
-                username=username,
-                password=make_password(tmp_password),
-                email=email,
-                img="./" + username + ".jpg"
+                user.save()
+
+            # Set user as online before generating tokens
+            user.is_online = True
+            user.save(update_fields=['is_online'])
+            # now sending access token to Front
+                    # Generate tokens
+            refresh = Get_Token_serial.get_token(user)
+            access_token = str(refresh.access_token)
+            refresh_token = str(refresh)
+
+            url_redirect = (f"http://localhost:5173/42intra-callback" 
+                                f"?access_token={access_token}"
+                                f"&is_password_need={is_password_need}")
+
+            if is_password_need:
+                url_redirect += f"&tmp_password={tmp_password}"
+            
+            response = redirect(url_redirect)
+            # Set cookies
+            response.set_cookie(
+                key='access_token',
+                value=access_token,
+                httponly=True,
+                secure=False,  # Set to True if using HTTPS
+                samesite='Lax'
             )
-            # user.save()
-            is_password_need = True
+            response.set_cookie(
+                key='refresh_token',
+                value=refresh_token,
+                httponly=True,
+                secure=False,  # Set to True if using HTTPS
+                samesite='Lax'
+            )
 
-        # now sending access token to Front
-                # Generate tokens
-        refresh = Get_Token_serial.get_token(user)
-        access_token = str(refresh.access_token)
-        refresh_token = str(refresh)
+            return response
+        except (TypeError, ValueError, User.DoesNotExist):
+            error = str(access_denied)
 
-        url_redirect = (f"http://localhost:5173/42intra-callback" 
-                            f"?access_token={access_token}"
-                            f"&is_password_need={is_password_need}")
+            error_url_redirect = (f"http://localhost:5173/42intra-callback" 
+                    f"?error={error}")
+            response = redirect(error_url_redirect)
 
-        if is_password_need:
-            url_redirect += f"&tmp_password={tmp_password}"
-        
-        response = redirect(url_redirect)
-        # Set cookies
-        response.set_cookie(
-            key='access_token',
-            value=access_token,
-            httponly=True,
-            secure=False,  # Set to True if using HTTPS
-            samesite='Lax'
-        )
-        response.set_cookie(
-            key='refresh_token',
-            value=refresh_token,
-            httponly=True,
-            secure=False,  # Set to True if using HTTPS
-            samesite='Lax'
-        )
-
-        return response
+            return response
 
 
 class SetPasswordForApi(APIView):
@@ -529,35 +576,78 @@ class   Confirm_reset_Password(View):
         response["Access-Control-Allow-Headers"] = "Content-Type, X-Requested-With"
         return response
 
+# class LogoutViews(APIView):
+#     permission_classes = [IsAuthenticated]
+
+#     def post(self, request):
+#         print ("ahyya Hanyaa1")
+#         try:
+#             # Set user offline first
+#             request.user.is_online = False
+#             request.user.save(update_fields=['is_online'])
+        
+#             refresh_token = request.data.get('refresh')
+#             print ("not here 1")
+#             if not refresh_token:
+#                 return Response(
+#                     {'error': 'Refresh token is required'}, 
+#                     status=status.HTTP_400_BAD_REQUEST
+#                 )
+#             print ("ahyya Hanyaa2")
+#             token = RefreshToken(refresh_token)
+#             print ("ahyya Hanyaa23")
+#             token.blacklist()
+#             print ("ahyya Hanyaa24")
+
+#             return Response(
+#                 {'message': 'Successfully logged out'}, 
+#                 status=status.HTTP_200_OK
+#             )
+#         except TokenError as e: # type: ignore
+#             print ("ahyya Hanyaa12")
+#             return Response(
+#                 {'error': 'Invalid token'}, 
+#                 status=status.HTTP_400_BAD_REQUEST
+#             )
+
 class LogoutViews(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        print ("ahyya Hanyaa1")
         try:
-            refresh_token = request.data.get('refresh')
-            print ("not here 1")
-            if not refresh_token:
-                return Response(
-                    {'error': 'Refresh token is required'}, 
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-            print ("ahyya Hanyaa2")
-            token = RefreshToken(refresh_token)
-            print ("ahyya Hanyaa23")
-            token.blacklist()
-            print ("ahyya Hanyaa24")
+            # Set user offline
+            User.objects.filter(id=request.user.id).update(is_online=False)
+            
+            refresh_token = request.COOKIES.get('refresh_token')
+            if refresh_token:
+                # Create RefreshToken instance and blacklist it
+                try:
+                    token = RefreshToken(refresh_token)
+                    token.blacklist()
+                except Exception as e:
+                    print(f"Error blacklisting token: {str(e)}")
+                    # Continue with logout even if blacklisting fails
 
-            return Response(
+            # Create response and delete cookies
+            response = Response(
                 {'message': 'Successfully logged out'}, 
                 status=status.HTTP_200_OK
             )
-        except TokenError as e:
-            print ("ahyya Hanyaa12")
-            return Response(
-                {'error': 'Invalid token'}, 
+            response.delete_cookie('access_token')
+            response.delete_cookie('refresh_token')
+
+            return response
+            
+        except Exception as e:
+            print(f"Logout error: {str(e)}")
+            # Still try to delete cookies even if there's an error
+            response = Response(
+                {'error': str(e)}, 
                 status=status.HTTP_400_BAD_REQUEST
             )
+            response.delete_cookie('access_token')
+            response.delete_cookie('refresh_token')
+            return response
 
 class UserProfileApi(APIView):
     def get(self, request, username):
@@ -576,17 +666,17 @@ class UserInfoApi(APIView):
 
     def get(self, request, username):
         try:
-            logger.info(f"Getting user data for {username}")
+            logger.info(f"Getting user data for {username}") # type: ignore
             user = User.objects.get(username=username)
             serializer = UserSerial(user)
             return Response(serializer.data)
         except User.DoesNotExist:
-            logger.error(f"User {username} does not exist")
+            logger.error(f"User {username} does not exist") # type: ignore
             return Response({"error": "User does not exist"}, status=404)
     
     def patch(self, request, username):
         try:
-            logger.info(f"Updating user data for {username}")
+            logger.info(f"Updating user data for {username}") # type: ignore
             user = User.objects.get(username=username)
             #allowed Fields to update from Game App
             game_fields = {
@@ -609,12 +699,12 @@ class UserInfoApi(APIView):
 
             if serializer.is_valid():
                 serializer.save()
-                logger.info(f"User data updated for {username}")
+                logger.info(f"User data updated for {username}") # type: ignore
                 return Response(serializer.data)
-            logger.error(f"Error updating user data for {username}")
+            logger.error(f"Error updating user data for {username}") # type: ignore
             return Response(serializer.errors, status=400)
         except Exception as e:
-            logger.error(f"Error updating user data for {username}")
+            logger.error(f"Error updating user data for {username}") # type: ignore
             return Response({"error": "Somthing Wrong in updating data"}, status=400)
 
 
@@ -938,8 +1028,147 @@ class ChangePasswordView(APIView):
             return Response({'error': 'An error occurred'})
 
 
-#sending Profil info if exemple https://localhost:5173/profil/<username>
-# class Profil(APIView):
-#     permission_classes = [IsAuthenticated]
+class FriendRequestListCreateView(generics.ListCreateAPIView):
+    serializer_class = FriendRequestSerializer
+    permission_classes = [IsAuthenticated]
 
-#     def post(self, request):
+    def get_queryset(self):
+        # Include both pending and accepted requests in the list
+        return FriendRequest.objects.filter(
+            (models.Q(sender=self.request.user) | models.Q(receiver=self.request.user))
+        ).select_related('sender', 'receiver')
+
+    def create(self, request, *args, **kwargs):
+        try:
+            receiver_username = request.data.get('receiver')
+            if not receiver_username:
+                return Response(
+                    {'detail': 'Receiver username is required'}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            try:
+                receiver = User.objects.get(username=receiver_username)
+            except User.DoesNotExist:
+                return Response(
+                    {'detail': f'User {receiver_username} not found'}, 
+                    status=status.HTTP_404_NOT_FOUND
+                )
+
+            # Check for any existing requests (both directions)
+            existing_request = FriendRequest.objects.filter(
+                (models.Q(sender=request.user, receiver=receiver) |
+                 models.Q(sender=receiver, receiver=request.user)),
+                status='pending'
+            ).first()
+
+            if existing_request:
+                return Response(
+                    {'detail': 'Friend request already exists'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # Check if they're already friends
+            if FriendList.objects.filter(
+                user=request.user,
+                friends=receiver
+            ).exists():
+                return Response(
+                    {'detail': 'Already friends'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            friend_request = FriendRequest.objects.create(
+                sender=request.user,
+                receiver=receiver,
+                status='pending'
+            )
+
+            serializer = self.get_serializer(friend_request)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+        except Exception as e:
+            print("Error:", str(e))  # Debug log
+            return Response(
+                {'detail': 'An error occurred while processing your request'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+class FriendRequestDetailView(generics.RetrieveAPIView):
+    serializer_class = FriendRequestSerializer
+    permission_classes = [IsAuthenticated]
+    queryset = FriendRequest.objects.all()
+
+class FriendRequestAcceptView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, pk):
+        friend_request = get_object_or_404(FriendRequest, pk=pk)
+        
+        if friend_request.receiver != request.user:
+            return Response(
+                {'detail': 'Not authorized'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        friend_request.status = FriendRequest.ACCEPTED
+        friend_request.save()
+
+        # Add to friend lists
+        sender_friend_list, _ = FriendList.objects.get_or_create(user=friend_request.sender)
+        receiver_friend_list, _ = FriendList.objects.get_or_create(user=friend_request.receiver)
+        
+        sender_friend_list.friends.add(friend_request.receiver)
+        receiver_friend_list.friends.add(friend_request.sender)
+
+        return Response({'status': 'friend request accepted'})
+
+class FriendRequestRejectView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, pk):
+        friend_request = get_object_or_404(FriendRequest, pk=pk)
+        if friend_request.receiver != request.user:
+            return Response(
+                {'detail': 'Not authorized'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        friend_request.status = FriendRequest.REJECTED
+        friend_request.save()
+        return Response({'status': 'friend request rejected'})
+
+class FriendRequestCancelView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, pk):
+        friend_request = get_object_or_404(FriendRequest, pk=pk)
+        if friend_request.sender != request.user:
+            return Response(
+                {'detail': 'Not authorized'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        friend_request.delete()
+        return Response({'status': 'friend request cancelled'})
+
+class FriendListView(generics.ListAPIView):
+    serializer_class = FriendListSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return FriendList.objects.filter(user=self.request.user)
+
+class RemoveFriendView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        friend_request = get_object_or_404(FriendRequest)
+        friend = get_object_or_404(User, username=request.data.get('username'))
+        friend_list = get_object_or_404(FriendList, user=request.user)
+        friend_list.friends.remove(friend)
+        
+        # Remove from friend's list as well
+        friend_friend_list = get_object_or_404(FriendList, user=friend)
+        friend_friend_list.friends.remove(request.user)
+        friend_request.delete()
+        
+        return Response({'status': 'friend removed'})

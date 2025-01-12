@@ -2,6 +2,7 @@ import Sidebar from './sidebar'
 import Navbar from './navbar'
 import { Outlet } from 'react-router-dom'
 import { useSidebarContext } from '../hooks/useSidebar'
+import  FriendRequestHandler  from '../pages/UserProfil/Components/FriendRequestHandler';
 
 const Layout = () => {
 
@@ -12,6 +13,9 @@ const Layout = () => {
           <Navbar/>
           <Sidebar/>
           <main className="flex items-center justify-center flex-col text-white content-grid max-h-screen overflow-scroll w-full h-full">
+          <div className="absolute top-4 right-4 z-50">
+            <FriendRequestHandler />
+          </div>
             <Outlet/>
           </main>
       </div>

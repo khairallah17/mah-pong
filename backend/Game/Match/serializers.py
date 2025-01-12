@@ -1,4 +1,4 @@
-from rest_framework import serializers
+from rest_framework import serializers # type: ignore
 from .models import Tournament, Match
 
 class TournamentSerializer(serializers.ModelSerializer):
@@ -31,7 +31,6 @@ class MatchSerializer(serializers.ModelSerializer):
 
     def get_score_player2(self, obj):
         return obj.scoreP2
-    
     def get_result(self, obj):
         if obj.winner == self.context['player']:
             return 'win'
