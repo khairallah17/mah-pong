@@ -26,7 +26,6 @@ const Chat = ({ roomName }) => {
     const [hand, setHand] = useState(false);
 
     useEffect(() => {
-
         loadUsers();
     }, []);
 
@@ -195,7 +194,7 @@ const Chat = ({ roomName }) => {
     const friends = [];
     for (let i = 0; i < 20; i++) {
         friends.push(
-            <div className="bg-purple-800 p-2 rounded-lg flex gap-2"> {/* friend*/}
+            <div className="hover:bg-blue-950 p-2 rounded-lg flex gap-2"> {/* friend*/}
                 <div className="h-12 w-12 rounded-full overflow-hidden border border-purple-950"> {/* friend img*/}
                     <img src="img.webp" alt="photo"/>
                 </div>
@@ -239,9 +238,9 @@ const Chat = ({ roomName }) => {
             <div className="absolute bg-black h-full w-full opacity-50 z-[-1]"></div>
 
             {/* User List Section */}
-            <div className="md:w-[320px] my-[20px] ml-[20px] border-[3px] border-blue-950 bg-gradient-to-t  from-black/25 to-black/50  abg-opacity-30 rounded-l-3xl  flex flex-col gap-10 py-2 md:py-0">
+            <div className="md:w-[320px] my-[20px] ml-[20px] border-[3px] border-black bg-gradient-to-t  from-black/25 to-black/50  abg-opacity-30 rounded-l-3xl  flex flex-col gap-10 py-2 md:py-0">
                 <div className="md:flex hidden flex-col gap-2 pt-4 px-4">
-                    <h1 className="font-bold text-white text-xl">Messages</h1>
+                    <h1 className="font-bold text-white text-xl pl-1">Messages</h1>
                     <div className="flex gap-2 items-center bg-white py-1 px-3 rounded-full">
                         <IoSearchOutline className=" text-black text-2xl"/>
                         <input type="text" placeholder="Search" className="rounded-lg p-1 px-3 w-full outline-none "/>
@@ -249,12 +248,38 @@ const Chat = ({ roomName }) => {
                 </div>
 
                 {/* Dynamic User List */}
-                <div className="flex flex-col  gap-2 overflow-y-auto px-4">
+                <div className="flex flex-col gap-2 overflow-y-auto px-4"> {/* User list */}
+                    {users.map((user) => {
+                        const lastMessage = messages
+                            .filter(msg => msg.sender === user.id || msg.receiver === user.id)
+                            .slice(-1)[0]?.message || "No messages yet";
+
+                        return (
+                            <div key={user.id}
+                                onClick={() => handleUserSelect(user.id)}
+                                className={`hover:bg-blue-950 p-2 rounded-lg flex gap-2 cursor-pointer user ${selectedUserId === user.id ? "selected" : ""}`}>
+                                {/* User Profile Image */}
+                                <div className="h-12 w-12 rounded-full overflow-hidden border border-purple-950">
+                                    <img src={user.profile_image || "default-profile-img.webp"} alt="profile"/>
+                                </div>
+
+                                {/* User Information */}
+                                <div className="md:flex flex-col hidden">
+                                    <p className="font-semibold">{user.username}</p>
+                                    <p className="text-sm text-gray-300">{lastMessage}</p>
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+
+                {/* <div className="flex flex-col  gap-2 overflow-y-auto px-4">
+                    {friends}
                     {users.map((user) => (
                         <div key={user.id}
                              onClick={() => handleUserSelect(user.id)}
-                             className={`bg-purple-800 p-2 rounded-lg flex gap-2 cursor-pointer user ${selectedUserId === user.id ? "selected" : ""}`}>
-                            <div className="h-12 w-12 rounded-full overflow-hidden">
+                             className={`hover:bg-blue-950 p-2 rounded-lg flex gap-2 cursor-pointer user ${selectedUserId === user.id ? "selected" : ""}`}>
+                            <div className="h-12 w-12 rounded-full overflow-hidden border border-purple-950">
                                 <img src="img.webp" alt="profile"/>
                             </div>
                             <div className="md:flex flex-col hidden">
@@ -263,12 +288,12 @@ const Chat = ({ roomName }) => {
                             </div>
                         </div>
                     ))}
-                </div>
+                </div> */}
             </div>
 
             {/* Chat Section */}
-            <div className="grow my-[20px] flex justify-between  rounded-r-[30px] mr-[20px]   border-[3px] border-l-0 border-blue-950 flex-col gap-5">
-                <div className="border-blue-950 bg-gradient-to-l  from-black/15 to-black/50  abg-opacity-30 bg-opacity-25 p-4 flex h-[100px] rounded-tr-[27px] items-center justify-between">
+            <div className="grow my-[20px] flex justify-between  rounded-r-[30px] mr-[20px]   border-[3px] border-l-0 border-black flex-col gap-5">
+                <div className="border-black bg-gradient-to-l  from-black/15 to-black/50  abg-opacity-30 bg-opacity-25 p-4 flex h-[100px] rounded-tr-[27px] items-center justify-between">
                     <div className="flex gap-2 ml-[15px]">
                         <div className="h-16 w-16 rounded-full overflow-hidden">
                             <img src="img.webp" alt="profile"/>
@@ -295,7 +320,7 @@ const Chat = ({ roomName }) => {
                 <div className=""> {/* send msg footer*/}
                     <div className="px-4 pb-4  "> {/* sending msg*/}
                         <div className="flex h-[45px] gap-2 items-center bg-black py-1 px-3 rounded-full">
-                            <MdEmojiEmotions className="text-2xl cursor-pointer text-blue-700"/>
+                            <MdEmojiEmotions className="text-3xl cursor-pointer hover:text-yellow-400 text-blue-700"/>
                             {/* <MdEmojiEmotions className="text-2xl text-blue-700"/> */}
                             <input  type="text" 
                                value={newMessage} 
@@ -303,13 +328,13 @@ const Chat = ({ roomName }) => {
                                onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
                                placeholder="Type your message here..." 
                                className="w-full  focus:outline-none bg-transparent text-white focus-none"/>
-                                <RiSendPlaneFill onClick={handleSendMessage} className="text-2xl cursor-pointer hover:text-red-500 text-blue-700"/>  
+                                <RiSendPlaneFill onClick={handleSendMessage} className="text-3xl cursor-pointer hover:text-white text-blue-700"/>  
                         </div>
                     </div>
                 </div>
             </div>
             <div className={` my-[20px] mr-[20px]   w-[400px]  xl:flex ${hand ? "flex" : "hidden"} `}>
-                <div className="flex flex-col gap-14  w-full pt-9 px-2 border-[3px] border-blue-950 rounded-[30px]"> {/* User details*/}
+                <div className="flex flex-col gap-14  w-full pt-9 px-2 border-[3px] border-black rounded-[30px]"> {/* User details*/}
                     <h1 className="font-bold text-3xl text-white text-center">Details</h1>
                     <div className="flex flex-col items-center gap-3">
                         <div className=" h-28 w-28 rounded-full overflow-hidden border-4 border-green-700 place-items-center">
