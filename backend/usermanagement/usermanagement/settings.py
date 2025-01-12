@@ -80,7 +80,7 @@ MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'allauth.account.middleware.AccountMiddleware',
-    'api.middleware.UserActivityMiddleware'
+    # 'api.middleware.UserActivityMiddleware'
 ]
 
 # Where allow Communication Django With React

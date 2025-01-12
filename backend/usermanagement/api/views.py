@@ -290,6 +290,10 @@ class GoogleLoginCallback(APIView):
             is_password_need = True
             user.save()
         
+
+        # Set user as online before generating tokens
+        user.is_online = True
+        user.save(update_fields=['is_online'])
         #create Token for This user using JWT "we use RefreshToken because it automaticly create both refresh_token and access_token"
         #we didn't use AccessToken because it automaticly create just access_token"
         # acces_token = Get_Token_serial.get_token(user)
@@ -376,6 +380,9 @@ class Login42Auth(APIView):
             # user.save()
             is_password_need = True
 
+        # Set user as online before generating tokens
+        user.is_online = True
+        user.save(update_fields=['is_online'])
         # now sending access token to Front
                 # Generate tokens
         refresh = Get_Token_serial.get_token(user)
