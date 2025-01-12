@@ -147,13 +147,13 @@ const Games = () => {
           path: "/dashboard/tournament"
         },
         {
-          title: "3D Tournament",
-          description: "Join elite 3D tournament competitions.",
+          title: "Tournament local",
+          description: "Join elite local tournament competitions.",
           accentColor: "border-orange-500",
           buttonColor: "bg-gradient-to-r from-orange-600 to-orange-400",
           image: "/play-Tournaments.jpg",
           icon: Trophy,
-          path: "/dashboard/tournament"
+          path: "/dashboard/tournament/local"
         }
       ]
     }
