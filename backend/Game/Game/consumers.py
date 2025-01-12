@@ -524,7 +524,7 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
             if match.username1 == self.username:
                 return match.scoreP1, match.scoreP2, True
             else:
-                return match.scoreP2, match.scoreP1, False
+                return match.scoreP1, match.scoreP2, False
         except Match.DoesNotExist:
             return 0, 0, True
 
@@ -533,8 +533,10 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
         opponent = matched_users[self.username]
         match = Match.objects.filter(
             Q(username1=self.username, username2=opponent) | Q(username1=opponent, username2=self.username)).latest('datetime')
-        match.scoreP1 = scoreP1
-        match.scoreP2 = scoreP2
+        if match.scoreP1 < scoreP1:
+            match.scoreP1 = scoreP1
+        if match.scoreP2 < scoreP2:
+            match.scoreP2 = scoreP2
         match.save()
 
     async def handle_game_over(self, data):
@@ -704,6 +706,7 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
     async def score_update(self, event):
         await self.send(text_data=json.dumps({
             'type': 'score_update',
+            'player_id': event['player_id'],
             'scoreP1': event['scoreP1'],
             'scoreP2': event['scoreP2']
         }))
@@ -723,3 +726,110 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
             'scoreP1': scoreP1,
             'scoreP2': scoreP2
         }))
+
+class Pvp2dConsumer(AsyncWebsocketConsumer):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.username = None
+        self.invite_code = None
+        self.match_id = None
+        self.send_score_task = None
+        self.matched_users = {}
+        self.matchmaking_pool = []
+        self.pools = {}
+        self.game_states = {}
+
+    async def connect(self):
+        await self.accept()
+        query_params = parse_qs(self.scope['query_string'].decode())
+        token = query_params.get('token', [None])[0]
+        self.invite_code = query_params.get('invite', [None])[0]
+        self.match_id = query_params.get('match_id', [None])[0]
+        try:
+            payload = jwt.decode(token, settings.SECRET_KEY, algorithms=['HS256'])
+            self.username = payload.get('username')
+            if not self.username:
+                raise jwt.InvalidTokenError("Username not found in token")
+            
+            if self.username in disconnected_users:
+                user_data = disconnected_users.pop(self.username)
+                user_data['task'].cancel()
+                await self.send(text_data=json.dumps({
+                    'type': 'match_found',
+                    'player_id': user_data['player_id'],
+                    'scoreP1': user_data['score'].get('player1'),
+                    'scoreP2': user_data['score'].get('player2'),
+                    'names': user_data['names']
+                }))
+            user_channels[self.username] = self
+            if self.invite_code:
+                if self.invite_code in self.pools:
+                    opponent = self.pools.pop(self.invite_code)
+                    await self.match_users(self.username, opponent)
+                else:
+                    self.pools[self.invite_code] = self.username
+            elif self.match_id:
+                if self.match_id in self.pools:
+                    opponent = self.pools.pop(self.match_id)
+                    await self.match_users(self.username, opponent)
+                else:
+                    self.pools[self.match_id] = self.username
+            else:
+                if self.username not in self.matchmaking_pool and self.username not in self.matched_users:
+                    self.matchmaking_pool.append(self.username)
+                    # await self.channel_layer.group_add("matchmaking_pool", self.channel_name)
+            
+            if len(self.matchmaking_pool) >= 2:
+                await self.match_users()
+        except jwt.ExpiredSignatureError:
+            await self.send_error_message('token_expired', 4001)
+        except jwt.InvalidTokenError as e:
+            await self.send_error_message('invalid_token', 4002, str(e))
+
+    async def match_users(self, user1=None, user2=None):
+        if user1 and user2:
+            self.matched_users[user1] = user2
+            self.matched_users[user2] = user1
+        else:
+            user1 = self.matchmaking_pool.pop(0)
+            user2 = self.matchmaking_pool.pop(0)
+            self.matched_users[user1] = user2
+            self.matched_users[user2] = user1
+
+        await self.create_game(user1, user2)
+
+        await self.channel_layer.send(
+            user_channels[user1].channel_name,
+            {
+                'type': 'match_found',
+                'player_id': '1',
+                'names': {'player1': user1, 'player2': user2}
+            }
+        )
+        logger.warning(f"Match found for {user1} and {user2}")
+        await self.channel_layer.send(
+            user_channels[user2].channel_name,
+            {
+                'type': 'match_found',
+                'player_id': '2',
+                'names': {'player1': user1, 'player2': user2}
+            }
+        )
+        if not self.send_score_task:
+            self.send_score_task = asyncio.create_task(self.send_gamestate_periodically())
+
+    @database_sync_to_async
+    def create_game(self, username1, username2):
+        Match.objects.create(
+            username1=username1,
+            username2=username2,
+            scoreP1=0,
+            scoreP2=0,
+            winner=None
+        )
+        self.game_states[username1] = self.init_gamestate()
+
+    def init_gamestate(self):
+        return {
+            
+        }

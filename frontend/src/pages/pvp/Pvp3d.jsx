@@ -25,7 +25,7 @@ function Pve3d() {
     const [{ username1, username2 }, setUsernames] = useState({ username1: '', username2: '' });
     const winnerRef = useRef(null);
     const GRAVITY = -0.0012;
-    const INITIAL_VELOCITY = new THREE.Vector3(0.005, 0.01, 0.025);
+    const INITIAL_VELOCITY = new THREE.Vector3(0, 0.01, 0.025);
     const TABLE_DIMENSIONS = { width: 1.45, length: 2.6 };
     const isPlayer1Ref = useRef(isPlayer1);
     const initBallPos = new THREE.Vector3(0, 1, 0);
@@ -67,7 +67,7 @@ function Pve3d() {
                     setOpponentReady(true);
                 } else if (message.type === 'game_event') {
                     if (message.event === 'restart') restartGame(new THREE.Vector3(0, 1, 0));
-                    else updateScene(message.event, message.position, message.spin);
+                    else updateScene(message.event, message.position);
                 } else if (message.type === 'game_state') {
                     //gameStateRef.current = message.game_state;
                     //setGameState(message.game_state);
@@ -113,12 +113,29 @@ function Pve3d() {
     };
 
 
-    const updateScene = (event, position, spin) => {
+    const updateScene = (event, position) => {
+        if (event === 'opponent_disconnected') {
+            const popup = document.createElement('div');
+            popup.id = 'disconnected-popup';
+            popup.style.position = 'fixed';
+            popup.style.top = '50%';
+            popup.style.left = '50%';
+            popup.style.transform = 'translate(-50%, -50%)';
+            popup.style.padding = '20px';
+            popup.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
+            popup.style.color = 'white';
+            popup.style.fontSize = '20px';
+            popup.style.zIndex = '1000';
+            popup.innerText = 'You won because your opponent disconnected.';
+            document.body.appendChild(popup);
+
+            setTimeout(() => {
+                document.body.removeChild(popup);
+                Navigate('/dashboard');
+            }, 3000);
+        }
         if (event === 'player_move') {
             paddle2Ref.current.position.set(position.x, position.y, position.z);
-        }
-        else if (event === 'spin') {
-            paddlePositionDiffRef.current?.set(spin.x, spin.y, spin.z);
         }
         // animatePaddleRotation(paddle1Ref.current, paddle2Ref.current);
     };
@@ -162,8 +179,6 @@ function Pve3d() {
     useEffect(() => {
         if (!rendererRef.current && isMatched) {
             const gameContainer = gameContainerRef.current;
-
-            let waitforpaddle2 = false;
 
             // Scene Setup
             const scene = new THREE.Scene();
@@ -449,7 +464,7 @@ function Pve3d() {
                 } else if (ball.position.z < -1.5) {
                     // Player 2 scores
                     setScores(prevScores => {
-                        const newScores = { score1: prevScores.score1, score2: prevScores.score2 + 1};
+                        const newScores = { score1: prevScores.score1, score2: prevScores.score2 + 1 };
                         if (newScores.score2 >= 10) {
                             if (isPlayer1) {
                                 wsRef.current.send(JSON.stringify({
@@ -525,8 +540,6 @@ function Pve3d() {
 
             function handleTableCollision(ballBox, tableBox) {
                 paddlePositionDiff.set(0, 0, 0);
-                waitforpaddle2 = false;
-
                 // Move the ball out of the intersection
                 while (ballBox.intersectsBox(tableBox)) {
                     ball.position.y += 0.01;
@@ -542,32 +555,28 @@ function Pve3d() {
                 else
                     lastIntersectionPosition = paddle1.position.clone();
 
-                if (!waitforpaddle2) {
-                    console.log('hit');
-                    const relativePosition = ball.position.clone().sub(table.position);
-                    velocity.z = -mapRange(relativePosition.z, { min: -1.5, max: 1.5 }, { min: -0.08, max: 0.08 });
-                    velocity.y = 0.018;
-                    velocity.x = -mapRange(relativePosition.x, { min: -TABLE_DIMENSIONS.width / 2, max: TABLE_DIMENSIONS.width / 2 }, { min: -0.039, max: 0.039 });
+                console.log('hit');
+                const relativePosition = ball.position.clone().sub(table.position);
+                velocity.z = -mapRange(relativePosition.z, { min: -1.5, max: 1.5 }, { min: -0.08, max: 0.08 });
+                velocity.y = 0.018;
+                velocity.x = -mapRange(relativePosition.x, { min: -TABLE_DIMENSIONS.width / 2, max: TABLE_DIMENSIONS.width / 2 }, { min: -0.04, max: 0.04 });
 
-                    //animatePaddle1();
+                //animatePaddle1();
 
-                    if (paddle1.rotation.y < 2.66 && paddle1.rotation.y > 0.52) {
-                        collisionAnimation(paddle1);
-                    }
-                    velocity.y *= 0.8;
-                    velocity.z *= 0.8;
-                    velocity.x *= 0.8;
+                if (paddle1.rotation.y < 2.66 && paddle1.rotation.y > 0.52) {
+                    collisionAnimation(paddle1);
                 }
-                waitforpaddle2 = true;
+                velocity.y *= 0.8;
+                velocity.z *= 0.8;
+                velocity.x *= 0.8;
             }
 
             function handlePaddle2Collision(ballBox, paddleBox) {
-                waitforpaddle2 = false;
 
                 const relativePosition = ball.position.clone().sub(table.position);
                 velocity.z = -mapRange(relativePosition.z, { min: -1.5, max: 1.5 }, { min: -0.08, max: 0.08 });
                 velocity.y = 0.018;
-                velocity.x = -mapRange(relativePosition.x, { min: -TABLE_DIMENSIONS.width / 2, max: TABLE_DIMENSIONS.width / 2 }, { min: -0.039, max: 0.039 });
+                velocity.x = -mapRange(relativePosition.x, { min: -TABLE_DIMENSIONS.width / 2, max: TABLE_DIMENSIONS.width / 2 }, { min: -0.04, max: 0.04 });
 
                 // if (velocity.x > 0.35) {
                 //     velocity.x = -1 + Math.random() * (velocity.x - (-1));
@@ -585,7 +594,6 @@ function Pve3d() {
             }
 
             function handleGridCollision(ballBox, gridBox) {
-                waitforpaddle2 = false;
 
                 if (ballBox.getCenter(new THREE.Vector3()).y <= gridBox.max.y) {
                     while (ballBox.intersectsBox(gridBox)) {

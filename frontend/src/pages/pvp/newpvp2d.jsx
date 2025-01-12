@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, useContext } from 'react';
 import GameSettingsButton from '../../components/pvp/Customize2d'; 
 import GameScore from '../../components/pvp/GameScore';
 import { ColorContext } from '../../context/ColorContext';
+import { Navigate } from 'react-router-dom';
 
 export default function Pve2d() {
   // Default single-player scoreboard
@@ -18,6 +19,11 @@ export default function Pve2d() {
   const tableRef = useRef(null);
   const tableAddonsRef = useRef(null);
   const isPausedRef = useRef(true);
+  const wsRef = useRef(null);
+  let token = localStorage.getItem('authtoken');
+  const accessToken = JSON.parse(token).access;
+  const [inviteCode, setInviteCode] = useState(new URLSearchParams(window.location.search).get('invite'));
+  const [matchId, setMatchId] = useState(new URLSearchParams(window.location.search).get('match_id'));
 
   // Color context
   const { tableMainColor, tableSecondaryColor, paddlesColor } = useContext(ColorContext);
@@ -109,6 +115,32 @@ export default function Pve2d() {
       renderer.dispose();
     };
   }, []);
+
+  // WebSocket connection
+  useEffect(() => {
+    // Connect to WebSocket
+    if (token && !wsRef.current) {
+      const wsUrl = `ws://localhost:8000/ws/pvp2d/?token=${accessToken}${inviteCode ? `&invite=${inviteCode}` : ''}${matchId ? `&match_id=${matchId}` : ''}`;
+      wsRef.current = new WebSocket(wsUrl);
+      wsRef.current.onopen = () => {
+        console.log('WebSocket connection established');
+      };
+      wsRef.current.onmessage = (event) => {
+        const message = JSON.parse(event.data);
+        console.log('WebSocket message:', message);
+      };
+      wsRef.current.onclose = () => {
+        console.log('WebSocket connection closed');
+      };
+      wsRef.current.onerror = (e) => console.error('WebSocket error:', e);
+    }
+    return () => {
+      if (wsRef.current) {
+        wsRef.current.close();
+        wsRef.current = null;
+      }
+    };
+  }, [token, inviteCode, matchId]);
 
   // Color watchers
   useEffect(() => {

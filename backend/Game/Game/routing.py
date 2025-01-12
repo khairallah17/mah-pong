@@ -5,6 +5,7 @@ from . import consumers
 websocket_urlpatterns = [
 	path('ws/matchmaking/', consumers.MatchmakingConsumer.as_asgi()),
     path('ws/tournament/', consumers.TournamentConsumer.as_asgi()),
+    path('ws/pvp2d/', consumers.Pvp2dConsumer.as_asgi()),
     # path('ws/notifications/', consumers.notificationsConsumer.as_asgi()),
 ]
 

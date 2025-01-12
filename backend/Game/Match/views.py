@@ -1,10 +1,11 @@
-from django.shortcuts import render # type: ignore
-from rest_framework.views import APIView # type: ignore
-from rest_framework.response import Response # type: ignore
-from rest_framework import generics, status # type: ignore
-from django.db.models import Q # type: ignore
-from .models import Tournament, Match
-from .serializers import TournamentSerializer, MatchSerializer, PlayerStatsSerializer
+from django.shortcuts import render
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import generics, status
+from django.db.models import Q
+from .models import Tournament, Match, AchievementAssignment
+from .serializers import TournamentSerializer, MatchSerializer, PlayerStatsSerializer, AchievementAssignmentSerializer
+import requests
 
 class TournamentList(generics.ListCreateAPIView):
     queryset = Tournament.objects.all()
@@ -13,8 +14,6 @@ class TournamentList(generics.ListCreateAPIView):
 class PlayerMatchHistory(APIView):
     def get(self, request, username=None):
         matches = Match.objects.filter(Q(username1=username) | Q(username2=username))
-        if not matches.exists():
-            return Response({'error': 'No matches found for this player'}, status=status.HTTP_404_NOT_FOUND)
         serializer = MatchSerializer(matches, many=True, context={'player': username})
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -46,3 +45,24 @@ class PlayerStats(APIView):
         
         serializer = PlayerStatsSerializer(data)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+class UserAchievements(APIView):
+    def get(self, request, username=None):
+        if not username:
+            return Response({'error': 'Username is required'}, status=status.HTTP_400_BAD_REQUEST)
+        user_data = self.get_user_data(username)
+        if not user_data:
+            return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+        user_id = user_data['id']
+        achievements = AchievementAssignment.objects.filter(user_id=user_id)
+        serializer = AchievementAssignmentSerializer(achievements, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def get_user_data(self, username):
+        try:
+            response = requests.get(f'http://usermanagement:8000/api/users/{username}/')
+            if response.status_code == 200:
+                return response.json()
+        except requests.RequestException as e:
+            print(f"Error fetching user data: {e}")
+        return None

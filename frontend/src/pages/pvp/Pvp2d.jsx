@@ -16,7 +16,7 @@ function Pvp2d() {
     let keyPressed = false;
     const [isPlayer1, setIsPlayer1] = useState(true);
     let ballDirection = new THREE.Vector3(1, 0, 1);
-    const PADDLE_SPEED = 0.05;
+    const PADDLE_SPEED = 0.03;
     const intervalIdRef = useRef(null);
     const rendererRef = useRef(null);
     const cameraRef = useRef(null);
@@ -466,7 +466,7 @@ function Pvp2d() {
 
             setTimeout(() => {
                 document.body.removeChild(popup);
-                Navigate('/dashboard');
+                window.location.href = '/dashboard';
             }, 3000);
         }
         if (isPausedRef.current && document.visibilityState === 'visible' && event !== 'game_over' && event !== 'score_update') {
@@ -588,7 +588,7 @@ function Pvp2d() {
                             onClick={() => window.location.reload()}
                             className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
                         >
-                            Restart Game 
+                            Play Again
                         </button>
                     )}
                     {matchId && (

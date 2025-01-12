@@ -9,10 +9,12 @@ import Pve3d from './pages/pve/Pve3d';
 import Pvp2d from './pages/pvp/Pvp2d';
 import Pve2d from './pages/pve/Pve2d';
 import Pvp3d from './pages/pvp/Pvp3d';
+import Local2d from "./pages/local/Local2d";
 import Profile from './pages/Profile.jsx'
 import Profil from './pages/Profil.jsx'
 import Tournament from './pages/tournament/Tournament'
 import TournamentHome from './pages/tournament/tournamentHome';
+import LocalTournament from './pages/tournament/LocalTournament';
 import Chat from "./pages/chat.jsx";
 import Game from "./pages/game.jsx";
 import Settings from "./pages/settings.jsx";
@@ -52,6 +54,7 @@ function App() {
                       <Route path="pvp3d" element={<Pvp3d />} />
                       <Route path="pvp2d" element={<ColorProvider><Pvp2d /></ColorProvider>} />
                       <Route path="pve2d" element={<ColorProvider><Pve2d /></ColorProvider>} />
+                      <Route path="local2d" element={ <ColorProvider><Local2d /></ColorProvider> } />
                     </Route>
                     
                     <Route path="profil/:username" element={<Profil />} />
@@ -59,6 +62,7 @@ function App() {
                     <Route path='tournament'>
                       <Route index element={<TournamentHome/>}/>
                       <Route path='live' element={<Tournament/>}/>
+                      <Route path='local' element={<LocalTournament/>}/>
                     </Route>
 
                     <Route path="security" element={<SecurityPage />} />
