@@ -1,3 +1,4 @@
+import { useParams } from 'react-router-dom';
 import React, { useState, useEffect, useRef } from 'react';
 import {
   Chart as ChartJS,
@@ -24,16 +25,20 @@ ChartJS.register(
   Filler
 );
 
-export const WeeklyChart = () => {
+export const WeeklyChart = (user) => {
   const [matchData, setMatchData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const chartRef = useRef(null);
+  // const token = JSON.parse(localStorage.getItem('authtoken')).access;
+  const username = user.user
+
 
   useEffect(() => {
     const fetchMatchData = async () => {
       try {
-        const username = 'z';
+        // const username = 'z';
+        console.log("username is", username)
         const response = await fetch(`http://localhost:8000/api/match-history/${username}/`);
         if (!response.ok) throw new Error('Failed to fetch match data');
         const data = await response.json();

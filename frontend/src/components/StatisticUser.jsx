@@ -2,6 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Gamepad2, Trophy, Activity, BarChart2, XCircle } from 'lucide-react';
 import { StatCard } from './StatisticCards';
 import { WeeklyChart } from './WeklyChart';  // Make sure the path and filename match exactly
+import { useParams } from 'react-router-dom';
+import { jwtDecode } from "jwt-decode"
+
+
 
 export const Statistics = () => {
   const [stats, setStats] = useState([
@@ -13,12 +17,22 @@ export const Statistics = () => {
   ]);
   const [weeklyPerformance, setWeeklyPerformance] = useState([0, 0, 0, 0, 0, 0, 0]);
   const [loading, setLoading] = useState(true);
+  // let username = useParams()
+  const token = JSON.parse(localStorage.getItem('authtoken')).access;
+  // if (username == null)
+  const username = jwtDecode(token).username
+  // console.log("username", username)
 
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const username = 'a'; // Replace with actual username
-        const response = await fetch(`http://localhost:8000/api/player-stats/${username}/`);
+        // const username = 'a'; // Replace with actual username
+        const response = await fetch(`http://localhost:8000/api/player-stats/${username}/`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+        },});
         const data = await response.json();
 
         const totalGames = data.wins + data.losses;
@@ -79,7 +93,7 @@ export const Statistics = () => {
           <StatCard key={i} {...stat} />
         ))}
       </div>
-      <WeeklyChart percentages={weeklyPerformance} loading={loading} />
+      <WeeklyChart user={username} percentages={weeklyPerformance} loading={loading} />
     </div>
   );
 };

@@ -1,15 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { Activity } from 'lucide-react';
 import axios from 'axios';
+import { jwtDecode } from "jwt-decode"
+
 
 export const MatchHistory = () => {
   const [matches, setMatches] = useState([]);
   const [loading, setLoading] = useState(true);
+  const token = JSON.parse(localStorage.getItem('authtoken')).access;
+  const username = jwtDecode(token).username
 
   useEffect(() => {
     const fetchMatches = async () => {
+      
       try {
-        const username = "a"; // Replace with actual username
+        // const username = "a"; // Replace with actual username
         const response = await fetch(`http://localhost:8000/api/match-history/${username}/`);
         const data = await response.json();
         console.log('Received matches data:', data);
@@ -57,7 +62,7 @@ export const MatchHistory = () => {
                 </div>
                 <div>
                   <div className="font-medium">Match #{match.id}</div>
-                  <div className="text-sm text-gray-400">vs {match.opponent}</div>
+                  <div className="text-sm text-gray-400">{match.player} vs {match.opponent}</div>
                 </div>
               </div>
               <div className="text-right">
