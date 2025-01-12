@@ -19,7 +19,8 @@ import Settings from "./pages/settings.jsx";
 import { ColorProvider } from "./context/ColorContext.jsx";
 
 import VerifyPsdEmail from "./pages/VerifyPsdEmail.jsx";
-import ResetPassowrd from "./pages/ResetPassword"
+import ResetPassword from "./pages/ResetPassword.jsx";
+// import ResetPassowrd from "./pages/ResetPassword"
 
 import Layout from './components/layout';
 
@@ -37,7 +38,8 @@ function App() {
               
               <Route path="/" element={<HomePage />} />
               <Route path="/login" element={<Authentication />} />
-              <Route path="/reset-password" element={<VerifyPsdEmail />} />
+              <Route path="/verify-email" element={<VerifyPsdEmail />} />
+              <Route path="password-reset/confirm" element={<ResetPassword />} />
 
               <Route element={<ProtectRouter />}>
                 <Route element={<Layout/>}>
