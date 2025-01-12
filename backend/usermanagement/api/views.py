@@ -107,6 +107,10 @@ class Get_MyTokenObtainPairView(TokenObtainPairView):
             # 2FA not enabled, proceed with normal login
             pass
 
+        # Set user as online before generating tokens
+        user.is_online = True
+        user.save(update_fields=['is_online'])
+        
         # Generate tokens only if 2FA verification passed or not required
         response = super().post(request)
         token = response.data.get('access')
@@ -535,35 +539,78 @@ class   Confirm_reset_Password(View):
         response["Access-Control-Allow-Headers"] = "Content-Type, X-Requested-With"
         return response
 
+# class LogoutViews(APIView):
+#     permission_classes = [IsAuthenticated]
+
+#     def post(self, request):
+#         print ("ahyya Hanyaa1")
+#         try:
+#             # Set user offline first
+#             request.user.is_online = False
+#             request.user.save(update_fields=['is_online'])
+        
+#             refresh_token = request.data.get('refresh')
+#             print ("not here 1")
+#             if not refresh_token:
+#                 return Response(
+#                     {'error': 'Refresh token is required'}, 
+#                     status=status.HTTP_400_BAD_REQUEST
+#                 )
+#             print ("ahyya Hanyaa2")
+#             token = RefreshToken(refresh_token)
+#             print ("ahyya Hanyaa23")
+#             token.blacklist()
+#             print ("ahyya Hanyaa24")
+
+#             return Response(
+#                 {'message': 'Successfully logged out'}, 
+#                 status=status.HTTP_200_OK
+#             )
+#         except TokenError as e: # type: ignore
+#             print ("ahyya Hanyaa12")
+#             return Response(
+#                 {'error': 'Invalid token'}, 
+#                 status=status.HTTP_400_BAD_REQUEST
+#             )
+
 class LogoutViews(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        print ("ahyya Hanyaa1")
         try:
-            refresh_token = request.data.get('refresh')
-            print ("not here 1")
-            if not refresh_token:
-                return Response(
-                    {'error': 'Refresh token is required'}, 
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-            print ("ahyya Hanyaa2")
-            token = RefreshToken(refresh_token)
-            print ("ahyya Hanyaa23")
-            token.blacklist()
-            print ("ahyya Hanyaa24")
+            # Set user offline
+            User.objects.filter(id=request.user.id).update(is_online=False)
+            
+            refresh_token = request.COOKIES.get('refresh_token')
+            if refresh_token:
+                # Create RefreshToken instance and blacklist it
+                try:
+                    token = RefreshToken(refresh_token)
+                    token.blacklist()
+                except Exception as e:
+                    print(f"Error blacklisting token: {str(e)}")
+                    # Continue with logout even if blacklisting fails
 
-            return Response(
+            # Create response and delete cookies
+            response = Response(
                 {'message': 'Successfully logged out'}, 
                 status=status.HTTP_200_OK
             )
-        except TokenError as e: # type: ignore
-            print ("ahyya Hanyaa12")
-            return Response(
-                {'error': 'Invalid token'}, 
+            response.delete_cookie('access_token')
+            response.delete_cookie('refresh_token')
+
+            return response
+            
+        except Exception as e:
+            print(f"Logout error: {str(e)}")
+            # Still try to delete cookies even if there's an error
+            response = Response(
+                {'error': str(e)}, 
                 status=status.HTTP_400_BAD_REQUEST
             )
+            response.delete_cookie('access_token')
+            response.delete_cookie('refresh_token')
+            return response
 
 class UserProfileApi(APIView):
     def get(self, request, username):

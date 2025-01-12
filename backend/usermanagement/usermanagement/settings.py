@@ -63,6 +63,7 @@ INSTALLED_APPS = [
     'dj_rest_auth',
     "django_otp",
     "django_otp.plugins.otp_totp",
+    "rest_framework_simplejwt.token_blacklist",
 
 ]
 
@@ -79,6 +80,7 @@ MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'allauth.account.middleware.AccountMiddleware',
+    'api.middleware.UserActivityMiddleware'
 ]
 
 # Where allow Communication Django With React

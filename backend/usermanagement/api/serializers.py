@@ -17,7 +17,7 @@ class   UserSerial(serializers.ModelSerializer):
     class   Meta:
         model = User
         fields = ['id', 'username', 'email', 'fullname', 'nblose', 'nbwin', 
-                 'score', 'img', 'avatar', 'two_factor_enabled', 'last_login_2fa']
+                 'score', 'img', 'avatar', 'is_online', 'two_factor_enabled', 'last_login_2fa']
         read_only_fields = ['two_factor_enabled', 'last_login_2fa']
 
 class   Get_Token_serial(TokenObtainPairSerializer):
@@ -83,11 +83,15 @@ class ProfilSerializer(serializers.ModelSerializer):
 
 class UserProfileSerializer(serializers.ModelSerializer):
     profil = ProfilSerializer()
+    # is_online = serializers.SerializerMethodField()
     
     class Meta:
         model = User
         fields = ['id', 'fullname', 'username', 'email', 'nblose', 
-                 'nbwin', 'score', 'img', 'avatar', 'profil']
+                 'nbwin', 'score', 'img', 'avatar', 'profil', 'is_online']
+        
+    # def get_is_online(self, obj):
+    #     return obj.is_online
 
 # Friend Request Serializer
 class FriendRequestSerializer(serializers.ModelSerializer):

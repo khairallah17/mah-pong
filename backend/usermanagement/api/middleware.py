@@ -1,11 +1,11 @@
 from django.utils import timezone
-from .models import User
 
-class UpdateLastActivityMiddleware:
+class UserActivityMiddleware:
     def __init__(self, get_response):
         self.get_response = get_response
 
     def __call__(self, request):
         if request.user.is_authenticated:
-            User.objects.filter(id=request.user.id).update(last_activity=timezone.now())
+            request.user.last_activity = timezone.now()
+            request.user.save(update_fields=['last_activity'])
         return self.get_response(request)

@@ -24,6 +24,9 @@ class User(AbstractUser):
         default='./pic1.jpeg'
     )
     
+    is_online = models.BooleanField(default=False)
+    # last_activity = models.DateTimeField(default=timezone.now)
+    
     def get_random_image():
         list_avatars = os.listdir(path = './media/avatar')
 
@@ -33,6 +36,12 @@ class User(AbstractUser):
         upload_to='./',
         default=get_random_image
     )
+    
+    # @property
+    # def is_online(self):
+    #     # Consider user online if active in last 5 minutes
+    #     now = timezone.now()
+    #     return (now - self.last_activity).total_seconds() < 300  # 5 minutes
     
     # Add these new fields for 2FA
     two_factor_enabled = models.BooleanField(default=False)

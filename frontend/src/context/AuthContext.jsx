@@ -180,52 +180,53 @@ export const AuthProvider = ({ children }) => {
 
     }
     
-    const logoutUsers = async () => {
+    // const logoutUsers = async () => {
 
-        try {
-            const authData = localStorage.getItem('authtoken');
-            if (!authData) {
-                throw new Error('No auth token found');
-            }
+    //     try {
+    //         const authData = localStorage.getItem('authtoken');
+    //         if (!authData) {
+    //             throw new Error('No auth token found');
+    //         }
     
-            const tokens = JSON.parse(authData);
-            const logouturl = "http://localhost:8001/api/logout/";
-            console.log("here are the problem");
-            const response = await fetch(logouturl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    // Add Authorization header with access token
-                    'Authorization': `Bearer ${tokens.access}`
-                },
-                body: JSON.stringify({
-                    refresh: tokens.refresh  // Send refresh token in body
-                })
-            });
+    //         const tokens = JSON.parse(authData);
+    //         const logouturl = "http://localhost:8001/api/logout/";
+    //         console.log("here are the problem");
+    //         const response = await fetch(logouturl, {
+    //             method: 'POST',
+    //             headers: {
+    //                 'Content-Type': 'application/json',
+    //                 // Add Authorization header with access token
+    //                 'Authorization': `Bearer ${tokens.access}`
+    //             },
+    //             body: JSON.stringify({
+    //                 refresh: tokens.refresh  // Send refresh token in body
+    //             })
+    //         });
     
     
     
-        } catch (error) {
+    //     } catch (error) {
             
-        } finally {
-            setAuthToken(null);
-            setUser(null);
-            localStorage.removeItem("authtoken");
+    //     } finally {
+    //         setAuthToken(null);
+    //         setUser(null);
+    //         localStorage.removeItem("authtoken");
     
-            navigation("/login");
-            toast.success("Successfully logged out", {
-                position: "top-right",
-                autoClose: 5000,
-                hideProgressBar: false,
-                closeOnClick: false,
-                pauseOnHover: true,
-                draggable: true,
-                progress: undefined,
-                theme: "dark",
-                transition: Bounce,
-            });
-        }
-    };
+    //         navigation("/login");
+    //         toast.success("Successfully logged out", {
+    //             position: "top-right",
+    //             autoClose: 5000,
+    //             hideProgressBar: false,
+    //             closeOnClick: false,
+    //             pauseOnHover: true,
+    //             draggable: true,
+    //             progress: undefined,
+    //             theme: "dark",
+    //             transition: Bounce,
+    //         });
+    //     }
+    // };
+
 
 
 
@@ -369,6 +370,71 @@ export const AuthProvider = ({ children }) => {
             }
         }
     }, [location.search, navigate, setAuthToken, setUser]);
+
+
+    const logoutUsers = async () => {
+        try {
+            const authData = localStorage.getItem('authtoken');
+            if (!authData) {
+                console.log('No auth token found');
+                throw new Error('No auth token found');
+            }
+    
+            const token = JSON.parse(authData).access;
+            const logouturl = "http://localhost:8001/api/logout/";
+            console.log("Attempting logout...");
+    
+            const response = await fetch(logouturl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                // No need to send refresh token in body as it's in cookies
+                credentials: 'include' // Important: This ensures cookies are sent
+            });
+    
+            const data = await response.json();
+            
+            if (!response.ok) {
+                throw new Error(data.error || 'Logout failed');
+            }
+    
+            console.log("Logout successful");
+    
+        } catch (error) {
+            console.error('Logout error:', error);
+            toast.error(error.message, {
+                position: "top-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: false,
+                pauseOnHover: true,
+                draggable: true,
+                progress: undefined,
+                theme: "dark",
+                transition: Bounce,
+            });
+        } finally {
+            // Clean up
+            setAuthToken(null);
+            setUser(null);
+            localStorage.removeItem("authtoken");
+            navigation("/login");
+            
+            toast.success("Successfully logged out", {
+                position: "top-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: false,
+                pauseOnHover: true,
+                draggable: true,
+                progress: undefined,
+                theme: "dark",
+                transition: Bounce,
+            });
+        }
+    };
     
     // Helper function to handle password setup
     const handlePasswordSetup = async (token, tmp_password) => {
