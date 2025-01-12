@@ -108,7 +108,7 @@ export const AuthProvider = ({ children }) => {
                 });
                 
             } else {
-                toast.error("Invalid credentials or 2FA code", {
+                toast.error("Failed to logged in", {
                     position: "top-right",
                     autoClose: 5000,
                     hideProgressBar: false,
@@ -149,7 +149,7 @@ export const AuthProvider = ({ children }) => {
 
         if (response.status === 201)
         {
-
+            navigation("/login");
             toast.success('you have successfully Registred', {
                 position: "top-right",
                 autoClose: 5000,
@@ -161,10 +161,10 @@ export const AuthProvider = ({ children }) => {
                 theme: "dark",
                 transition: Bounce,
             });
+
         } 
         else 
         {
-
             toast.error('There is some error in Your registration', {
                 position: "top-right",
                 autoClose: 5000,
@@ -179,54 +179,6 @@ export const AuthProvider = ({ children }) => {
         }
 
     }
-    
-    // const logoutUsers = async () => {
-
-    //     try {
-    //         const authData = localStorage.getItem('authtoken');
-    //         if (!authData) {
-    //             throw new Error('No auth token found');
-    //         }
-    
-    //         const tokens = JSON.parse(authData);
-    //         const logouturl = "http://localhost:8001/api/logout/";
-    //         console.log("here are the problem");
-    //         const response = await fetch(logouturl, {
-    //             method: 'POST',
-    //             headers: {
-    //                 'Content-Type': 'application/json',
-    //                 // Add Authorization header with access token
-    //                 'Authorization': `Bearer ${tokens.access}`
-    //             },
-    //             body: JSON.stringify({
-    //                 refresh: tokens.refresh  // Send refresh token in body
-    //             })
-    //         });
-    
-    
-    
-    //     } catch (error) {
-            
-    //     } finally {
-    //         setAuthToken(null);
-    //         setUser(null);
-    //         localStorage.removeItem("authtoken");
-    
-    //         navigation("/login");
-    //         toast.success("Successfully logged out", {
-    //             position: "top-right",
-    //             autoClose: 5000,
-    //             hideProgressBar: false,
-    //             closeOnClick: false,
-    //             pauseOnHover: true,
-    //             draggable: true,
-    //             progress: undefined,
-    //             theme: "dark",
-    //             transition: Bounce,
-    //         });
-    //     }
-    // };
-
 
 
 
@@ -252,7 +204,7 @@ export const AuthProvider = ({ children }) => {
         const tmp_password = searchParams.get('tmp_password');
         const is_password_need = searchParams.get('is_password_need');
         const error = searchParams.get('error');
-    
+        
         if (error) {
             console.error('Google login error:', error);
             Swal.fire({
@@ -266,6 +218,7 @@ export const AuthProvider = ({ children }) => {
             navigate('/login');
             return;
         }
+
     
         if (token) {
             try {
@@ -369,6 +322,17 @@ export const AuthProvider = ({ children }) => {
                 navigate('/login');
             }
         }
+        else{
+            Swal.fire({
+                position: "top-end",
+                icon: "error",
+                title: "Failed to process login",
+                showConfirmButton: true,
+                timerProgressBar: true,
+                timer: 3000
+            });
+            navigate('/login');
+        }
     }, [location.search, navigate, setAuthToken, setUser]);
 
 
@@ -445,7 +409,7 @@ export const AuthProvider = ({ children }) => {
                 <input type="password" id="confirmPassword" class="swal2-input" placeholder="Confirm Password">
             `,
             focusConfirm: false,
-            showCancelButton: true,
+            showCancelButton: false,
             preConfirm: () => {
                 const password = document.getElementById('password').value;
                 const confirmPassword = document.getElementById('confirmPassword').value;

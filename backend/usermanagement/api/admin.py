@@ -3,15 +3,14 @@ from api.models import User, Profil, FriendRequest, FriendList
 
 class Admin_Users(admin.ModelAdmin):
     list_display = ('id', 'fullname', 'username', 'email', 'nblose', 'nbwin', 'score', 'is_online')
-    search_fields = ('username', 'email', 'fullname')
+
 
 class Admin_Profil(admin.ModelAdmin):
     list_display = ('user', 'is_verified')
-    search_fields = ('user__username', 'user__email')
+
 
 class FriendRequestAdmin(admin.ModelAdmin):
     list_display = ('id', 'sender', 'receiver', 'status', 'created_at')
-    list_filter = ('status', 'created_at')
     search_fields = ('sender__username', 'receiver__username')
 
 class FriendListAdmin(admin.ModelAdmin):
