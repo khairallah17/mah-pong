@@ -8,9 +8,6 @@ import { IoSearchOutline } from "react-icons/io5";
 import React, { useState, useEffect, useRef } from "react";
 import axios from 'axios';
 
-
-
-
 const ChatComponent = ({ roomName }) => {
     const [users, setUsers] = useState([]);
     const [messages, setMessages] = useState([]);
@@ -23,44 +20,42 @@ const ChatComponent = ({ roomName }) => {
     const socketRef = useRef(null);
 
     useEffect(() => {
-
         loadUsers();
     }, []);
 
     useEffect(() => {
         if (selectedUserId !== null) {
             loadConversation(selectedUserId);
-            // initializeWebSocket(selectedUserId);
+            initializeWebSocket(selectedUserId);
         }
     }, [selectedUserId]);
 
     const loadUsers = async () => {
         try {
-            const response = await axios.get("http://localhost:8000/chat/api/users/", {
+            const response = await axios.get("http://localhost:8003/chat/api/users/", {
                 headers: {
-                    Authorization: `Bearer ${localStorage.getItem('access_token')}`
+                    Authorization: `Bearer ${JSON.parse(localStorage.getItem('authtoken')).access}`
                 },
                 withCredentials: true
             });
+            console.log(response.data);
             setUsers(response.data);
         } catch (error) {
             console.error("Error loading users:", error);
-            alert("Failed to load users");
         }
-        console.log("heeeer",localStorage.getItem('access_token'));
     };
 
     const loadConversation = async (userId) => {  // Fixed userId casing
         setLoading(true);
         try {
-            const response = await axios.get(`http://localhost:8000/chat/api/conversation/${parseInt(userId, 10)}/`, {
-                // headers: {
-                //     // Authorization: `Bearer ${localStorage.getItem('access_token')}`
-                // },
-                // withCredentials: true
+            const response = await axios.get(`http://localhost:8003/chat/api/conversation/${userId}/`, {
+                headers: {
+                    Authorization: `Bearer ${JSON.parse(localStorage.getItem('authtoken')).access}`
+                },
+                withCredentials: true
             });
             console.log(response.data)
-            setMessages(response.data);
+            setMessages(response.data.messages);
         } catch (error) {
             // console.error("Error loading conversation:", error);
             // alert("Failed to load messages");
@@ -69,26 +64,26 @@ const ChatComponent = ({ roomName }) => {
         }
     };
 
-    // const initializeWebSocket = (userId) => {
-    //     if (socketRef.current) {
-    //         socketRef.current.close();  
-    //     }
+    const initializeWebSocket = (userId) => {
+        if (socketRef.current) {
+            socketRef.current.close();  
+        }
 
-    //     const chatSocket = new WebSocket(`ws://localhost:8000/ws/chat/${parseInt(userId, 10)}/`);
+        const chatSocket = new WebSocket(`ws://localhost:8003/ws/chat/?user_id=${userId}&token=${JSON.parse(localStorage.getItem('authtoken')).access}`);
 
-    //     socketRef.current = chatSocket;
+        socketRef.current = chatSocket;
 
-    //     chatSocket.onmessage = (e) => {
-    //         const data = JSON.parse(e.data);
-    //         if (data.type === "chat_message") {
-    //             setMessages((prev) => [...prev, data]);
-    //         }
-    //     };
+        chatSocket.onmessage = (e) => {
+            const data = JSON.parse(e.data);
+            if (data.type === "chat_message") {
+                setMessages((prev) => [...prev, data]);
+            }
+        };
 
-    //     chatSocket.onclose = () => {
-    //         console.error("Chat socket closed unexpectedly");
-    //     };
-    // };
+        chatSocket.onclose = () => {
+            console.error("Chat socket closed unexpectedly");
+        };
+    };
 
     const handleUserSelect = (userId) => {
         setSelectedUserId(userId);
@@ -115,7 +110,7 @@ const ChatComponent = ({ roomName }) => {
 //     // Fetch Users List
 
 //     useEffect(() => {
-//         axios.get("http://localhost:8000/chat/api/users/")
+//         axios.get("http://localhost:8003/chat/api/users/")
 //             .then((response) => {
 //                 console.log(response.data);
 //                 if (Array.isArray(response.data)) {
@@ -133,7 +128,7 @@ const ChatComponent = ({ roomName }) => {
 //     const loadConversation = (user) => {
 //         setSelectedUser(user);
 //         console.log("here == ", user.id)
-//         axios.get(`http://localhost:8000/chat/api/conversation/${user.id}/`)
+//         axios.get(`http://localhost:8003/chat/api/conversation/${user.id}/`)
 //             .then((response) => setMessages(response.data))
 //         .catch((error) => console.error("Error fetching messages:", error));
         
@@ -172,7 +167,7 @@ const ChatComponent = ({ roomName }) => {
 //             socket.send(JSON.stringify({ message }));
 
 //             // Post message to Django backend to save in the database
-//             axios.post("http://localhost:8000/chat/api/send-message/", newMessage)
+//             axios.post("http://localhost:8003/chat/api/send-message/", newMessage)
 //                 .then((response) => {
                     
 //                     //Update chat with the new message

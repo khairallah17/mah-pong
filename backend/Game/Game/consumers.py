@@ -44,12 +44,17 @@ class TournamentConsumer(AsyncWebsocketConsumer):
                 logger.warning(f"tournament: {self.tournament} not reconnected")
                 cache.set(f"user_reconnect_{self.username}", True)
             else:
-                self.tournament = await self.self.is_user_in_tournament(self.username)
+                self.tournament = await self.is_user_in_tournament(self.username)
+                if tournament_code and tournament_code != self.tournament.code:
+                    await self.send(text_data=json.dumps({'type': 'already_in_tournament'}))
+                    return
                 logger.warning(f"tournament: {self.tournament} reconnected")
 
             if self.tournament:
                 self.tournament_group_name = f"tournament_{self.tournament.id}"
-                await self.channel_layer.group_add(self.tournament_group_name, self.channel_name)
+                if not await self.is_eliminated():
+                    logger.warning(f"adding to group: {self.tournament_group_name}")
+                    await self.channel_layer.group_add(self.tournament_group_name, self.channel_name)
                 await self.send_tournament_state(self.tournament)
                 await self.handle_player_ready()
                 if self.tournament.status == 'active':
@@ -265,6 +270,7 @@ class TournamentConsumer(AsyncWebsocketConsumer):
                         self.tournament_group_name,
                         {
                             "type": "match_start",
+                            "players": [final_match.player1, final_match.player2],
                         }
                     )
         except Exception as e:
@@ -282,7 +288,7 @@ class TournamentConsumer(AsyncWebsocketConsumer):
 
             next_match, _ = TournamentMatch.objects.get(tournament=match.tournament, round=2, position=1)
 
-            if match.position % 2 == 0:
+            if match.position % 2 != 0:
                 next_match.player1 = winner
             else:
                 next_match.player2 = winner
@@ -317,14 +323,14 @@ class TournamentConsumer(AsyncWebsocketConsumer):
             return {"matches": []}
 
     @database_sync_to_async
-    def is_player_ready(self, username, match_id):
+    def is_eliminated(self):
         try:
-            match = TournamentMatch.objects.get(id=match_id)
-            if match.player1 == username:
-                return match.player1_ready
-            elif match.player2 == username:
-                return match.player2_ready
-            return False
+            latest_match = TournamentMatch.objects.filter(
+                Q(tournament=self.tournament) & (Q(player1=self.username) | Q(player2=self.username))
+            ).latest('created_at')
+            if not latest_match.winner:
+                return False
+            return latest_match.winner != self.username
         except TournamentMatch.DoesNotExist:
             return False
 
@@ -624,7 +630,7 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
                 wins += 1
             else:
                 losses += 1
-        k = 400 # K-factor for elo change sensitivity
+        k = 200 # K-factor for elo change sensitivity
         win_rate = wins / total_matches
         normalized_win_rate = win_rate - 0.5
         rating_change = k * normalized_win_rate * (total_matches ** 0.5)

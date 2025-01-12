@@ -1,3 +1,5 @@
+import requests
+from django.conf import settings
 from django.shortcuts import render # type: ignore
 from rest_framework.views import APIView # type: ignore
 from rest_framework.decorators import api_view, permission_classes, authentication_classes # type: ignore
@@ -11,16 +13,60 @@ from rest_framework.authentication import SessionAuthentication, TokenAuthentica
 from django.db.models import Q # type: ignore
 from django.contrib.auth.models import AnonymousUser # type: ignore
 from django.shortcuts import get_object_or_404  # type: ignore
+import logging
+import jwt
 
-# logger = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 
 class ApiUsers(APIView):
+
     def get(self, request):
-        users = User.objects.all()
-        serializer = UserSerializer(users, many=True)
-        return Response(serializer.data)
+        try:
+            auth_header = request.headers.get('Authorization')
+            if not auth_header:
+                return Response({"error": "Authorization header missing"}, status=400)
+
+            token = auth_header.split(' ')[1]
+
+            # logger.warning(f"Token: {token}")
+            # logger.warning(f"UserManagement Service URL: {settings.USERMANAGEMENT_SERVICE_URL}")
+
+            response = requests.get(
+                f"{settings.USERMANAGEMENT_SERVICE_URL}/api/friends/",
+                headers={"Authorization": f"Bearer {token}"}
+            )
+            response.raise_for_status()
+            users_data = response.json()
+            # logger.warning(f"Users: {users_data}")
+
+            # Store users in the Chat service's database
+            for user_data in users_data:
+                for friend in user_data['friends']:
+                    User.objects.update_or_create(
+                        id=friend['id'],
+                        defaults={
+                            'username': friend['username'],
+                            'fullname': friend.get('fullname', ''),\
+                            'email': friend['email'],
+                            'img': friend.get('img', 'profile_pics/default.jpg')
+                        }
+                    )
+
+            # Serialize and return the users
+            # serializer = UserSerializer(User.objects.all(), many=True)
+            #User.objects.create_or_update(curent_userdata)
+            return Response(user_data.get('friends', []))
+        except requests.ConnectionError as e:
+            logger.error(f"ConnectionError: {e}")
+            return Response({"error": "Failed to connect to UserManagement service"}, status=500)
+        except requests.RequestException as e:
+            logger.error(f"RequestException: {e}")
+            return Response({"error": str(e)}, status=500)
+        except Exception as e:
+            logger.error(f"Exception: {e}")
+            return Response({"error": str(e)}, status=500)
 
 
 # @api_view(['GET'])
@@ -50,13 +96,30 @@ def user_list(self, request):
 # @permission_classes([IsAuthenticated])
 def get_conversation(request, id):
     try:
+        auth_header = request.headers.get('Authorization')
+        if not auth_header:
+            return Response({"error": "Authorization header missing"}, status=400)
+        token = auth_header.split(' ')[1]
+        # logger.warning(f"Token: {token}")
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=['HS256'])
+        # logger.warning(f"Payload: {payload}")
+        username = payload.get('username')
+        # logger.warning(f"Username: {username}")
+        if not username:
+            raise jwt.InvalidTokenError("Username not found in token.")
+        user = User.objects.get(username=username)
+        # logger.warning(f"Request user: {user} user2 id: {id} username: {username} token: {token}")
         conversation = Conversation.objects.filter(
-            (Q(user1=request.user) & Q(user2_id=id)) |
-            (Q(user2=request.user) & Q(user1_id=id))
+            (Q(user1=user) & Q(user2_id=id)) |
+            (Q(user2=user) & Q(user1_id=id))
         ).first()
 
         if not conversation:
-            return Response({'error': 'No conversation found between these users.'}, status=404)
+            conversation = Conversation.objects.create(
+                name="New Conversation",
+                user1=user,
+                user2=User.objects.get(id=id)
+            )
 
         # Serialize the conversation along with messages
         serializer = ConversationSerializer(conversation)
@@ -113,7 +176,7 @@ def send_message(request):
         sender = User.objects.get(id=sender_id)
         receiver = User.objects.get(id=receiver_id)
     except User.DoesNotExist:
-        return Response({"error": "User not foound"}, status=404)
+        return Response({"error": "User not found"}, status=404)
 
     message = Message.objects.create(
         sender=sender,
@@ -128,4 +191,4 @@ def send_message(request):
         "timestamp": message.timestamp
     })
 # class ConversationView(ApiView):
-#     pass 
+#     pass
