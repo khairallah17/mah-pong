@@ -414,6 +414,7 @@ export const AuthProvider = ({ children }) => {
                 const password = document.getElementById('password').value;
                 const confirmPassword = document.getElementById('confirmPassword').value;
                 
+                console.log("isss===> ", password, confirmPassword)
                 if (!password || !confirmPassword) {
                     Swal.showValidationMessage('Please fill in both password fields');
                     return false;
@@ -435,6 +436,8 @@ export const AuthProvider = ({ children }) => {
     
         if (passwordData) {
             try {
+                console.log("isss===> before response ", passwordData.password, tmp_password)
+                console.log("Token===> before response ", token)
                 const response = await fetch('http://localhost:8001/api/api-set-password/', {
                     method: 'POST',
                     headers: {
@@ -472,6 +475,7 @@ export const AuthProvider = ({ children }) => {
                         completeLogin(token);
                     });
                 } else {
+                    console.log(response.json());
                     throw new Error('Failed to set password');
                 }
             } catch (error) {
@@ -486,6 +490,9 @@ export const AuthProvider = ({ children }) => {
                 });
                 navigate('/login');
             }
+        }
+        else{
+            handlePasswordSetup();
         }
     };
     

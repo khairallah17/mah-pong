@@ -290,9 +290,8 @@ class GoogleLoginCallback(APIView):
             logger.debug("I am heeeererererererer121000")
             try:
                 user = User.objects.get(email=email)
+                # valid_password = check_password(tmp_password, user.password)
                 if not user.password:
-                    user.password = make_password(tmp_password)
-                    user.save()
                     is_password_need = True
                 else:
                     is_password_need = False
@@ -301,7 +300,7 @@ class GoogleLoginCallback(APIView):
                     fullname=getInfo.json()['name'],
                     username=username,
                     email=email,
-                    password=make_password(tmp_password),
+                    # password=make_password(tmp_password),
                     img="./" + username + ".jpg"
                 )
                 is_password_need = True
@@ -349,6 +348,10 @@ class GoogleLoginCallback(APIView):
         except (TypeError, ValueError, User.DoesNotExist):
             return Response({'error': 'Error login'}, status=500)
 
+import logging
+
+# Get an instance of a logger
+logger = logging.getLogger(__name__)
 
 
 class Login42Auth(APIView):
@@ -385,9 +388,9 @@ class Login42Auth(APIView):
             tmp_password = generate_temp_password()
             try:
                 user = User.objects.get(email=email)
+                valid_password = check_password(tmp_password, user.password)
+                logger.error(valid_password)
                 if not user.password:
-                    user.password = make_password(tmp_password)
-                    user.save()
                     is_password_need = True
                 else:
                     is_password_need = False
@@ -395,7 +398,6 @@ class Login42Auth(APIView):
                 user = User.objects.create(
                     fullname=getInfoUser.json().get('displayname'),
                     username=username,
-                    password=make_password(tmp_password),
                     email=email,
                     img="./" + username + ".jpg"
                 )
@@ -458,13 +460,15 @@ class SetPasswordForApi(APIView):
                 status=400
             )
         
-        if tmp_password and not user.check_password(tmp_password): #checking if the tmp_password are setted to user before entring new password
-            return Response(
-                {'error': 'Temporary Password are Invalid'},
-                status=400
-            )
+        # if tmp_password: #and not user.check_password(tmp_password): #checking if the tmp_password are setted to user before entring new password
+        #     return Response(
+        #         {'error': 'Temporary Password are Invalid'},
+        #         status=400
+        #     )
         user.password = make_password(new_password)
         user.save()
+        logger.error("valid_password")
+
         return Response({'message': 'Password set successfully'})
 
 
