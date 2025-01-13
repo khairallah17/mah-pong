@@ -425,8 +425,8 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
     async def disconnect(self, close_code):
         if self.username:
             user_channels.pop(self.username, None)
-            if self.invite_code and self.invite_code in matchmaking_pool:
-                matchmaking_pool.pop(self.invite_code, None)
+            if self.invite_code and self.invite_code in pools:
+                pools.pop(self.invite_code, None)
             elif self.username in matchmaking_pool:
                 matchmaking_pool.remove(self.username)
             # await self.channel_layer.group_discard("matchmaking_pool", self.channel_name)
@@ -733,8 +733,10 @@ class Pvp2dConsumer(AsyncWebsocketConsumer):
         self.username = None
         self.invite_code = None
         self.match_id = None
-        self.send_score_task = None
+        self.send_gamestate_task = None
+        self.user_channels = {}
         self.matched_users = {}
+        self.disconnected_users = {}
         self.matchmaking_pool = []
         self.pools = {}
         self.game_states = {}
@@ -761,7 +763,7 @@ class Pvp2dConsumer(AsyncWebsocketConsumer):
                     'scoreP2': user_data['score'].get('player2'),
                     'names': user_data['names']
                 }))
-            user_channels[self.username] = self
+            self.user_channels[self.username] = self
             if self.invite_code:
                 if self.invite_code in self.pools:
                     opponent = self.pools.pop(self.invite_code)
@@ -799,7 +801,7 @@ class Pvp2dConsumer(AsyncWebsocketConsumer):
         await self.create_game(user1, user2)
 
         await self.channel_layer.send(
-            user_channels[user1].channel_name,
+            self.user_channels[user1].channel_name,
             {
                 'type': 'match_found',
                 'player_id': '1',
@@ -808,15 +810,15 @@ class Pvp2dConsumer(AsyncWebsocketConsumer):
         )
         logger.warning(f"Match found for {user1} and {user2}")
         await self.channel_layer.send(
-            user_channels[user2].channel_name,
+            self.user_channels[user2].channel_name,
             {
                 'type': 'match_found',
                 'player_id': '2',
                 'names': {'player1': user1, 'player2': user2}
             }
         )
-        if not self.send_score_task:
-            self.send_score_task = asyncio.create_task(self.send_gamestate_periodically())
+        if not self.send_gamestate_task:
+            self.send_gamestate_task = asyncio.create_task(self.send_gamestate_periodically())
 
     @database_sync_to_async
     def create_game(self, username1, username2):
@@ -828,8 +830,122 @@ class Pvp2dConsumer(AsyncWebsocketConsumer):
             winner=None
         )
         self.game_states[username1] = self.init_gamestate()
+        self.game_states[username2] = self.game_states[username1]
+
+    def update_ball_position(self, game_state):
+        game_state['ball_x'] += game_state['ball_direction_x'] * 0.015
+        game_state['ball_z'] += game_state['ball_direction_z'] * 0.015
+
+        # Handle collisions with paddles and walls
+        self.handle_collisions(game_state)
+
+    def handle_collisions(self, game_state):
+        # Reverse the ball direction if it hits the walls
+        if game_state['ball_z'] < -1.5 or game_state['ball_z'] > 1.5:
+            game_state['ball_direction_z'] *= -1
+
+        # Reverse the ball direction if it hits the paddles
+        if (game_state['ball_x'] < -2.5 and abs(game_state['ball_z'] - game_state['paddle1_z']) < 0.5) or \
+           (game_state['ball_x'] > 2.5 and abs(game_state['ball_z'] - game_state['paddle2_z']) < 0.5):
+            game_state['ball_direction_x'] *= -1
+
+        # Reset the ball if it goes past the paddles (goal scored)
+        if game_state['ball_x'] < -2.56 or game_state['ball_x'] > 2.56:
+            game_state['ball_x'] = 0
+            game_state['ball_z'] = 0
+            game_state['ball_direction_x'] *= -1
+            game_state['score1' if game_state['ball_x'] > 0 else 'score2'] += 1
+            game_state['is_paused'] = True
+
+
+    async def send_game_state(self, username):
+        game_state = self.game_states[username]
+        await self.channel_layer.send(self.user_channels[username], {
+            'type': 'game_state',
+            'game_state': game_state
+        })
+
+    async def send_gamestate_periodically(self):
+        while self.username in self.matched_users:
+            await asyncio.sleep(0.060)  # Adjust the interval
+            if self.username in game_states:
+                self.update_ball_position(game_states[self.username])
+                await self.send_game_state(self.username)
+                opponent = self.matched_users.get(self.username)
+                if opponent:
+                    await self.send_game_state(opponent)
+
+    async def update_ball_position_periodically(self):
+        while self.username in self.matched_users:
+            if self.username in self.game_states:
+                self.update_ball_position(self.game_states[self.username])
+            await asyncio.sleep(0.060)  # Adjust the interval
 
     def init_gamestate(self):
         return {
-            
+            'is_paused': True,
+            'paddle1_z': 0,
+            'paddle2_z': 0,
+            'ball_x': 0,
+            'ball_z': 0,
+            'ball_direction_x': 1,
+            'ball_direction_z': 1,
+            'scoreP1': 0,
+            'scoreP2': 0,
         }
+    
+    async def disconnect(self, close_code):
+        if self.username:
+            self.user_channels.pop(self.username, None)
+            if self.invite_code and self.invite_code in self.pools:
+                self.pools.pop(self.invite_code, None)
+            elif self.username in self.matchmaking_pool:
+                self.matchmaking_pool.remove(self.username)
+            # await self.channel_layer.group_discard("matchmaking_pool", self.channel_name)
+            
+            if self.username in self.matched_users:
+                countdown_task = asyncio.create_task(self.start_reconnect_countdown(self.username))
+                disconnected_users[self.username] = {
+                    'task': countdown_task,
+                    'game_state': self.game_states[self.username],
+                }
+
+    # handle new connection
+    # handle 2 disconnections at the same time if (opponent in disconnected_users)
+    # if 2 users disconnect the countdown should be stopped
+    async def start_reconnect_countdown(self, username):
+        start_time = asyncio.get_event_loop().time()
+        opponent = self.matched_users[username]
+        while opponent not in self.disconnected_users and asyncio.get_event_loop().time() - start_time < 15:
+            await asyncio.sleep(1)
+        if username in self.disconnected_users:
+            self.disconnected_users.pop(username)
+            if opponent not in self.disconnected_users:
+                await self.channel_layer.send(
+                    self.user_channels[opponent].channel_name,
+                    {
+                        'type': 'game_event',
+                        'event': 'opponent_disconnected',
+                        'message': 'You won because your opponent disconnected.'
+                    }
+                )
+            await self.update_game_result(game_states[username], winner=opponent)
+        if self.send_gamestate_task:
+            self.send_gamestate_task.cancel()
+
+    @database_sync_to_async
+    def update_game_result(self, gamestate, winner):
+        username1, username2, scoreP1, scoreP2 = gamestate['player1'], gamestate['player2'], gamestate['scoreP1'], gamestate['scoreP2']
+        match = Match.objects.filter(Q(username1=username1, username2=username2) | Q(username1=username2, username2=username1)).latest('datetime')
+        try:
+            previous_match = Match.objects.filter(Q(username1=username1, username2=username2) | Q(username1=username2, username2=username1)).exclude(id=match.id).latest('datetime')
+        except Match.DoesNotExist:
+            previous_match = None
+        match.ratingP1 = self.calculate_elo(username1, "player1", previous_match)
+        match.ratingP2 = self.calculate_elo(username2, "player2", previous_match)
+        match.scoreP1 = scoreP1
+        match.scoreP2 = scoreP2
+        match.winner = username1 if winner == 'player1' else username2
+        match.save()
+        matched_users.pop(username1)
+        matched_users.pop(username2)
