@@ -809,26 +809,28 @@ class Pvp2dConsumer(AsyncWebsocketConsumer):
         pvp2d_game_states[user1] = shared_game_state
         pvp2d_game_states[user2] = shared_game_state
 
-        await self.channel_layer.send(
-            pvp2d_user_channels[user1].channel_name,
-            {
-                'type': 'match_found',
-                'player_id': '1',
-                'names': {'player1': user1, 'player2': user2},
-                'game_state': shared_game_state
-            }
-        )
-        await self.channel_layer.send(
-            pvp2d_user_channels[user2].channel_name,
-            {
-                'type': 'match_found',
-                'player_id': '2',
-                'names': {'player1': user1, 'player2': user2},
-                'game_state': shared_game_state
-            }
-        )
+        if user1 in pvp2d_user_channels:
+            await self.channel_layer.send(
+                pvp2d_user_channels[user1].channel_name,
+                {
+                    'type': 'match_found',
+                    'player_id': '1',
+                    'names': {'player1': user1, 'player2': user2},
+                    'game_state': shared_game_state
+                }
+            )
+        if user2 in pvp2d_user_channels:
+            await self.channel_layer.send(
+                pvp2d_user_channels[user2].channel_name,
+                {
+                    'type': 'match_found',
+                    'player_id': '2',
+                    'names': {'player1': user1, 'player2': user2},
+                    'game_state': shared_game_state
+                }
+            )
         if not self.send_gamestate_task:
-            self.send_gamestate_task = asyncio.create_task(self.send_gamestate_periodically())
+            self.send_gamestate_task = asyncio.create_task(self.send_gamestate_periodically(user1, user2))
 
     @database_sync_to_async
     def create_game(self, username1, username2):
@@ -843,6 +845,8 @@ class Pvp2dConsumer(AsyncWebsocketConsumer):
         pvp2d_game_states[username2] = pvp2d_game_states[username1]
 
     def update_ball_position(self, game_state):
+        if game_state['is_paused']:
+            return
         game_state['ball_x'] += game_state['ball_direction_x'] * 0.08
         game_state['ball_z'] += game_state['ball_direction_z'] * 0.08
 
@@ -866,29 +870,36 @@ class Pvp2dConsumer(AsyncWebsocketConsumer):
             game_state['ball_direction_z'] = 1
             if game_state['ball_x'] < 0:
                 game_state['scoreP2'] += 1
+                logger.warning("Goal scored by player 2")
             else:
                 game_state['scoreP1'] += 1
+                logger.warning("Goal scored by player 1")
             game_state['is_paused'] = True
 
 
-    async def send_game_state(self):
-        game_state = pvp2d_game_states[self.username]
-        opponent = pvp2d_matched_users[self.username]
-        await self.channel_layer.send(pvp2d_user_channels[self.username].channel_name, {
-            'type': 'game_state',
-            'game_state': game_state
-        })
-        await self.channel_layer.send(pvp2d_user_channels[opponent].channel_name, {
-            'type': 'game_state',
-            'game_state': game_state
-        })
+    async def send_game_state(self, user1, user2):
+        if user1 in pvp2d_game_states:
+            game_state = pvp2d_game_states[user1]
+        elif user2 in pvp2d_game_states:
+            game_state = pvp2d_game_states[user2]
+        if user1 in pvp2d_user_channels:
+            await self.channel_layer.send(pvp2d_user_channels[user1].channel_name, {
+                'type': 'game_state',
+                'game_state': game_state
+            })
+        if user2 in pvp2d_user_channels:
+            await self.channel_layer.send(pvp2d_user_channels[user2].channel_name, {
+                'type': 'game_state',
+                'game_state': game_state
+            })
 
-    async def send_gamestate_periodically(self):
-        while self.username in pvp2d_matched_users:
+    async def send_gamestate_periodically(self, user1, user2):
+        while user1 in pvp2d_matched_users or user2 in pvp2d_matched_users:
+            #finish
             await asyncio.sleep(0.060)  # Adjust the interval
             if self.username in pvp2d_game_states:
                 self.update_ball_position(pvp2d_game_states[self.username])
-                await self.send_game_state()
+                await self.send_game_state(user1, user2)
 
     def init_gamestate(self):
         return {
@@ -904,13 +915,7 @@ class Pvp2dConsumer(AsyncWebsocketConsumer):
         }
     
     async def disconnect(self, close_code):
-        if self.username:
-            if self.invite_code and self.invite_code in pvp2d_pools:
-                pvp2d_pools.pop(self.invite_code, None)
-            elif self.username in pvp2d_matchmaking_pool:
-                pvp2d_matchmaking_pool.remove(self.username)
-            # await self.channel_layer.group_discard("matchmaking_pool", self.channel_name)
-            
+        if self.username:            
             if self.username in pvp2d_matched_users:
                 countdown_task = asyncio.create_task(self.start_reconnect_countdown(self.username))
                 pvp2d_disconnected_users[self.username] = {
@@ -953,16 +958,17 @@ class Pvp2dConsumer(AsyncWebsocketConsumer):
             previous_match = Match.objects.filter(Q(username1=username1, username2=username2) | Q(username1=username2, username2=username1)).exclude(id=match.id).latest('datetime')
         except Match.DoesNotExist:
             previous_match = None
-        match.ratingP1 = self.calculate_elo(username1, "player1", previous_match)
-        match.ratingP2 = self.calculate_elo(username2, "player2", previous_match)
+        match.winner = username1 if winner == 'player1' else username2
+        match.save()
+        match.ratingP1 = self.calculate_elo(username1, previous_match)
+        match.ratingP2 = self.calculate_elo(username2, previous_match)
         match.scoreP1 = scoreP1
         match.scoreP2 = scoreP2
-        match.winner = username1 if winner == 'player1' else username2
         match.save()
         pvp2d_matched_users.pop(username1)
         pvp2d_matched_users.pop(username2)
     
-    def calculate_elo(self, username, player, previous_match):
+    def calculate_elo(self, username, previous_match):
         matches = Match.objects.filter(Q(username1=username) | Q(username2=username))
         total_matches = matches.count()
         wins = 0
@@ -976,17 +982,16 @@ class Pvp2dConsumer(AsyncWebsocketConsumer):
         win_rate = wins / total_matches
         normalized_win_rate = win_rate - 0.5
         rating_change = k * normalized_win_rate * (total_matches ** 0.5)
-        if previous_match and player == "player1":
-            if previous_match.winner == username:
-                return previous_match.ratingP1 + rating_change
-            else:
-                return previous_match.ratingP1 - rating_change
-        elif previous_match and player == "player2":
-            if previous_match.winner == username:
-                return previous_match.ratingP2 + rating_change
-            else:
-                return previous_match.ratingP2 - rating_change
-        return 1000
+        if not previous_match:
+            base_rate = 1000
+        elif previous_match.username1 == username:
+            base_rate = previous_match.ratingP1
+        elif previous_match.username2 == username:
+            base_rate = previous_match.ratingP2
+        if match.winner == username:
+            return base_rate + rating_change
+        else:
+            return base_rate - rating_change
     
     async def receive(self, text_data):
         data = json.loads(text_data)
@@ -1053,7 +1058,7 @@ class Pvp2dConsumer(AsyncWebsocketConsumer):
     async def opponent_disconnected(self, event):
         await self.send(text_data=json.dumps({
             'type': 'opponent_disconnected',
-            'message': event['message']
+            'message': event['event']
         }))
 
 #frontend has to receive:

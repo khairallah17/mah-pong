@@ -10,6 +10,8 @@ export default function NewPvp2d() {
   // Default single-player scoreboard
   const [{ score1, score2 }, setScores] = useState({ score1: 0, score2: 0 });
   const [winner, setWinner] = useState(null);
+  const [countdown, setCountdown] = useState(null);
+  const countdownRef = useRef(false);
 
   const cameraRef = useRef(null);
   const rendererRef = useRef(null);
@@ -131,17 +133,29 @@ export default function NewPvp2d() {
       wsRef.current.onopen = () => {
         console.log('WebSocket connection established');
       };
-      wsRef.current.onmessage = (event) => {
+      wsRef.current.onmessage = async (event) => {
         const message = JSON.parse(event.data);
         console.log('WebSocket message:', message);
+        if (message.type === 'token_expired') {
+        console.log('Token expired, refreshing...');
+        const newToken = await refreshToken();
+        if (newToken) {
+          localStorage.setItem('authtoken', JSON.stringify(newToken));
+          wsManagerInstance.close();
+          wsManagerInstance.setUrl('ws://localhost:8002/ws/notifications/?token=' + newToken?.access);
+          wsManagerInstance.connect(handleMessage);
+          console.log('WebSocket connection established with new token');
+        } else {
+          localStorage.removeItem('authtoken');
+          window.location.href = '/login';
+        }
+      }
         if (message.type === 'match_found') {
           setNames({ player1: message.player1, player2: message.player2 });
           setIsMatched(true);
           setIsPlayer1(message.player_id === '1');
-          isPlayer1Ref.current = message.player_id === '1'; // Update the ref
-          setTimeout(() => {
-            wsRef.current.send(JSON.stringify({ type: 'game_event', event: 'start' }));
-          }, 3000);
+          isPlayer1Ref.current = message.player_id === '1';
+          startCountdown();
         } else if (message.type === 'game_state') {
           setGameState(message.game_state);
         } else if (message.type === 'opponent_disconnected') {
@@ -154,6 +168,26 @@ export default function NewPvp2d() {
       };
       wsRef.current.onerror = (e) => console.error('WebSocket error:', e);
     }
+
+    const refreshToken = async () => {
+      let refreshtokenUrl = "http://localhost:8001/api/token/refresh/"
+      try {
+        const response = await fetch(refreshtokenUrl, {
+          method: 'POST',
+          credentials: 'include'
+        });
+        if (response.ok) {
+          const data = await response.json();
+          return data;
+        } else {
+          return null;
+        }
+      } catch (error) {
+        console.error('Failed to refresh token:', error);
+        return null;
+      }
+    };
+
     return () => {
       if (wsRef.current) {
         wsRef.current.close();
@@ -172,19 +206,32 @@ export default function NewPvp2d() {
       ballRef.current.position.set(gameState.ball_x, 0.1, gameState.ball_z);
       if (gameState.is_paused) {
         if (gameState.scoreP1 >= 5 || gameState.scoreP2 >= 5) {
-          winnerRef.current = gameState.scoreP1 >= 5 ? names.player1 : names.player2;
+          winnerRef.current = gameState.scoreP1 >= 5 ? 'Player 1' : 'Player 2';
           setWinner(winnerRef.current);
           wsRef.current.send(JSON.stringify({ type: 'game_event', event: 'end' }));
-        } else {
-          setTimeout(() => {
-            wsRef.current.send(JSON.stringify({ type: 'game_event', event: 'start' }));
-            console.log('start sent');
-          }, 3000);
+        } else if (!countdownRef.current) {
+          startCountdown();
         }
         setScores({ score1: gameState.scoreP1, score2: gameState.scoreP2 });
       }
     }
   }, [gameState]);
+
+  const startCountdown = () => {
+    countdownRef.current = true;
+    setCountdown(3);
+    const countdownInterval = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev === 1) {
+          clearInterval(countdownInterval);
+          wsRef.current.send(JSON.stringify({ type: 'game_event', event: 'start' }));
+          countdownRef.current = false;
+          return null;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  };
 
   // Color watchers
   useEffect(() => {
@@ -209,7 +256,7 @@ export default function NewPvp2d() {
     if (!keyPressed && (event.key === 'ArrowUp' || event.key === 'ArrowDown')) {
       keyPressed = true;
       const moveDirection = event.key === 'ArrowUp' ? -1 : 1;
-      const PADDLE_SPEED = 0.07;
+      const PADDLE_SPEED = 0.1;
       const intervalId = setInterval(() => {
         if (winnerRef.current || (gameState && gameState.is_paused)) return;
         const paddleRef = isPlayer1Ref.current ? paddle1Ref : paddle2Ref; // Use the correct paddle ref
@@ -346,7 +393,7 @@ export default function NewPvp2d() {
             onClick={() => window.location.reload()}
             className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
           >
-            Restart Game
+            Play Again
           </button>
         </div>
       )}
@@ -354,16 +401,21 @@ export default function NewPvp2d() {
         <div id="game-container">
           <GameScore
             player1={{
-              username: names.player1,
+              username: 'You',
               avatar: '/player1.png?height=40&width=40',
               score: score1
             }}
             player2={{
-              username: names.player2,
+              username: 'Computer',
               avatar: '/player2.png?height=40&width=40',
               score: score2
             }}
           />
+        </div>
+      )}
+      {countdown !== null && (
+        <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-gray-900/95 p-8 rounded-lg text-center">
+          <h2 className="text-2xl font-bold text-white mb-4">{countdown}</h2>
         </div>
       )}
     </>
