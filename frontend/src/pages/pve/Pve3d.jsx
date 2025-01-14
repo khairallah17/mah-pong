@@ -24,6 +24,7 @@ function Pve3d() {
     const TABLE_DIMENSIONS = { width: 1.45, length: 2.6 };
     const initBallPos = new THREE.Vector3(0, 1, 0);
     let waitforpaddle2 = false;
+    let lastHitByPlayer1 = true;
 
     useEffect(() => {
         if (!rendererRef.current) {
@@ -289,7 +290,32 @@ function Pve3d() {
                         return newScores;
                     });
                 } else if (ball.position.y < 0.2) {
-                    restartGame();
+                    // Out of bounds
+                    if (lastHitByPlayer1) {
+                        setScores(prevScores => {
+                            const newScores = { score1: prevScores.score1, score2: prevScores.score2 + 1 };
+                            if (newScores.score2 >= 10) {
+                                winnerRef.current = 'Player 2'
+                                isPausedRef.current = true;
+                                setShowPopup(true);
+                            } else {
+                                restartGame();
+                            }
+                            return newScores;
+                        });
+                    } else {
+                        setScores(prevScores => {
+                            const newScores = { score1: prevScores.score1 + 1, score2: prevScores.score2 };
+                            if (newScores.score1 >= 10) {
+                                winnerRef.current = 'Player 1'
+                                isPausedRef.current = true;
+                                setShowPopup(true);
+                            } else {
+                                restartGame();
+                            }
+                            return newScores;
+                        });
+                    }
                 }
 
                 if (ballBox.intersectsBox(paddle1Box)) {
@@ -315,7 +341,7 @@ function Pve3d() {
                     firstIntersectionPosition = null;
                     lastIntersectionPosition = null;
                 }
-                velocity.x -= paddlePositionDiffRef.current.x / 200;
+                velocity.x -= paddlePositionDiffRef.current.x / 500;
                 velocity.z -= paddlePositionDiffRef.current.z / 500;
             }
 
@@ -331,6 +357,7 @@ function Pve3d() {
             }
 
             function handlePaddle1Collision(ballBox, paddleBox) {
+                lastHitByPlayer1 = true;
                 if (firstIntersectionPosition === null)
                     firstIntersectionPosition = paddle1.position.clone();
                 else
@@ -340,7 +367,7 @@ function Pve3d() {
                     console.log('hit');
                     const relativePosition = ball.position.clone().sub(table.position);
                     velocity.z = -mapRange(relativePosition.z, { min: -1.5, max: 1.5 }, { min: -0.04, max: 0.04 });
-                    velocity.y = 0.017;
+                    velocity.y = mapRange(relativePosition.z, { min: -1.5, max: 1.5 }, { min: 0.015, max: 0.019 });
                     velocity.x = -mapRange(relativePosition.x, { min: -TABLE_DIMENSIONS.width / 2, max: TABLE_DIMENSIONS.width / 2 }, { min: -0.02, max: 0.02 });
 
                     //animatePaddle1();
@@ -355,10 +382,11 @@ function Pve3d() {
                 waitforpaddle2 = true;
             }
             function handlePaddle2Collision(ballBox, paddleBox) {
+                lastHitByPlayer1 = false;
                 waitforpaddle2 = false;
                 const relativePosition = ball.position.clone().sub(table.position);
                 velocity.z = -mapRange(relativePosition.z, { min: -1.5, max: 1.5 }, { min: -0.04, max: 0.04 });
-                velocity.y = 0.017;
+                velocity.y = mapRange(relativePosition.z, { min: -1.5, max: 1.5 }, { min: 0.015, max: 0.019 });
                 velocity.x = -mapRange(relativePosition.x, { min: -TABLE_DIMENSIONS.width / 2, max: TABLE_DIMENSIONS.width / 2 }, { min: -0.02, max: 0.02 });
 
                 if (paddle1.rotation.y < 2.66 && paddle1.rotation.y > 0.52) {
@@ -372,11 +400,11 @@ function Pve3d() {
             function collisionAnimation(paddle) {
                 gsap.to(paddle.rotation, {
                     y: paddle.rotation.y / 100,
-                    duration: 0.1,
+                    duration: 0.5,
                     onComplete: () => {
                         gsap.to(paddle.rotation, {
                             y: paddle.rotation.y * 100,
-                            duration: 0.3
+                            duration: 0.2
                         });
                     }
                 });
@@ -462,11 +490,7 @@ function Pve3d() {
                         textAlign: 'center'
                     }}>
                         <h2>{winnerRef.current} Wins!</h2>
-                        <button onClick={() => {
-                            setScores({ score1: 0, score2: 0 });
-                            winnerRef.current = null;
-                            restartGame();
-                        }}>Play Again</button>
+                        <button onClick={() => window.location.reload()}>Play Again</button>
                         <button onClick={() => window.location.href = '/Dashboard'}>Quit</button>
                     </div>
                 )}
