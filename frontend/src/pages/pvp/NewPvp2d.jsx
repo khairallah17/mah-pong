@@ -6,7 +6,7 @@ import GameScore from '../../components/pvp/GameScore';
 import { ColorContext } from '../../context/ColorContext';
 import { Navigate } from 'react-router-dom';
 
-export default function Pve2d() {
+export default function NewPvp2d() {
   // Default single-player scoreboard
   const [{ score1, score2 }, setScores] = useState({ score1: 0, score2: 0 });
   const [winner, setWinner] = useState(null);
@@ -24,6 +24,12 @@ export default function Pve2d() {
   const accessToken = JSON.parse(token).access;
   const [inviteCode, setInviteCode] = useState(new URLSearchParams(window.location.search).get('invite'));
   const [matchId, setMatchId] = useState(new URLSearchParams(window.location.search).get('match_id'));
+  const [isMatched, setIsMatched] = useState(false);
+  const [isPlayer1, setIsPlayer1] = useState(true);
+  const [gameState, setGameState] = useState(null);
+  const [names, setNames] = useState({ player1: 'You', player2: 'Opponent' });
+  const winnerRef = useRef(null);
+  const isPlayer1Ref = useRef(true);
 
   // Color context
   const { tableMainColor, tableSecondaryColor, paddlesColor } = useContext(ColorContext);
@@ -94,10 +100,10 @@ export default function Pve2d() {
     const animate = () => {
       requestAnimationFrame(animate);
 
-      if (!isPausedRef.current) {
-        ball.position.add(ballDirection.clone().multiplyScalar(0.05));
-        handleCollisions(ball, paddle1, paddle2);
-      }
+      // if (!isPausedRef.current) {
+      //   ball.position.add(ballDirection.clone().multiplyScalar(0.015));
+      //   handleCollisions(ball, paddle1, paddle2);
+      // }
 
       controls.update();
       renderer.render(scene, camera);
@@ -114,7 +120,7 @@ export default function Pve2d() {
       }
       renderer.dispose();
     };
-  }, []);
+  }, [isMatched]);
 
   // WebSocket connection
   useEffect(() => {
@@ -128,6 +134,20 @@ export default function Pve2d() {
       wsRef.current.onmessage = (event) => {
         const message = JSON.parse(event.data);
         console.log('WebSocket message:', message);
+        if (message.type === 'match_found') {
+          setNames({ player1: message.player1, player2: message.player2 });
+          setIsMatched(true);
+          setIsPlayer1(message.player_id === '1');
+          isPlayer1Ref.current = message.player_id === '1'; // Update the ref
+          setTimeout(() => {
+            wsRef.current.send(JSON.stringify({ type: 'game_event', event: 'start' }));
+          }, 3000);
+        } else if (message.type === 'game_state') {
+          setGameState(message.game_state);
+        } else if (message.type === 'opponent_disconnected') {
+          alert('You won because your opponent disconnected.');
+          window.location.href = '/dashboard';
+        }
       };
       wsRef.current.onclose = () => {
         console.log('WebSocket connection closed');
@@ -141,6 +161,30 @@ export default function Pve2d() {
       }
     };
   }, [token, inviteCode, matchId]);
+
+  useEffect(() => {
+    if (gameState) {
+      // Update paddle and ball positions based on gameState
+      isPausedRef.current = gameState.is_paused;
+      ballDirection.set(gameState.ball_direction_x, 0, gameState.ball_direction_z);
+      paddle1Ref.current.position.z = gameState.paddle1_z;
+      paddle2Ref.current.position.z = gameState.paddle2_z;
+      ballRef.current.position.set(gameState.ball_x, 0.1, gameState.ball_z);
+      if (gameState.is_paused) {
+        if (gameState.scoreP1 >= 5 || gameState.scoreP2 >= 5) {
+          winnerRef.current = gameState.scoreP1 >= 5 ? names.player1 : names.player2;
+          setWinner(winnerRef.current);
+          wsRef.current.send(JSON.stringify({ type: 'game_event', event: 'end' }));
+        } else {
+          setTimeout(() => {
+            wsRef.current.send(JSON.stringify({ type: 'game_event', event: 'start' }));
+            console.log('start sent');
+          }, 3000);
+        }
+        setScores({ score1: gameState.scoreP1, score2: gameState.scoreP2 });
+      }
+    }
+  }, [gameState]);
 
   // Color watchers
   useEffect(() => {
@@ -160,106 +204,38 @@ export default function Pve2d() {
     }
   }, [tableMainColor, tableSecondaryColor, paddlesColor]);
 
-  // Handle collisions
-  function handleCollisions(ball, paddle1, paddle2) {
-    const paddle1Box = new THREE.Box3().setFromObject(paddle1);
-    const paddle2Box = new THREE.Box3().setFromObject(paddle2);
-    const ballSphere = new THREE.Sphere(ball.position, ball.geometry.parameters.radius);
-
-    // Left paddle bounce
-    if (paddle1Box.intersectsSphere(ballSphere)) {
-      const paddleCenter = new THREE.Vector3();
-      paddle1Box.getCenter(paddleCenter);
-      ballDirection.z = (ballSphere.center.z - paddleCenter.z) * 1.5;
-      ballDirection.x *= -1;
-      ball.position.x += 0.05;
-    }
-
-    // Right paddle bounce (AI)
-    if (paddle2Box.intersectsSphere(ballSphere)) {
-      const paddleCenter = new THREE.Vector3();
-      paddle2Box.getCenter(paddleCenter);
-      ballDirection.z = (ballSphere.center.z - paddleCenter.z) * 1.5;
-      ballDirection.x *= -1;
-      ball.position.x -= 0.05;
-    }
-
-    // Goals
-    const goalLeft = new THREE.Box3(new THREE.Vector3(-3, -1, -1.5), new THREE.Vector3(-2.5, 1, 1.5));
-    const goalRight = new THREE.Box3(new THREE.Vector3(2.5, -1, -1.5), new THREE.Vector3(3, 1, 1.5));
-
-    if (goalLeft.intersectsSphere(ballSphere)) {
-      // Right side (computer) scores
-      isPausedRef.current = true;
-      setScores(prev => {
-        const updated = { score1: prev.score1, score2: prev.score2 + 1 };
-        if (updated.score2 >= 10) {
-          setWinner('Computer');
-        }
-        return updated;
-      });
-      restartGame(ball);
-    }
-
-    if (goalRight.intersectsSphere(ballSphere)) {
-      // Left side (player) scores
-      isPausedRef.current = true;
-      setScores(prev => {
-        const updated = { score1: prev.score1 + 1, score2: prev.score2 };
-        if (updated.score1 >= 10) {
-          setWinner('You');
-        }
-        return updated;
-      });
-      restartGame(ball);
-    }
-
-    // Bounce off top/bottom edges
-    if (ball.position.z < -1.5 || ball.position.z > 1.5) {
-      ballDirection.z *= -1;
-    }
-
-    // AI logic: follow the ball
-    const aiSpeed = 0.01;
-    const diff = ball.position.z - paddle2.position.z;
-    paddle2.position.z += Math.sign(diff) * Math.min(Math.abs(diff), aiSpeed);
-  }
-
-  // Restart the ball & paddles
-  function restartGame(ball) {
-    ball.position.set(0, 0.1, 0);
-    paddle1Ref.current.position.set(-2.5, 0.1, 0);
-    paddle2Ref.current.position.set(2.5, 0.1, 0);
-    ballDirection.set(1, 0, 1);
-  }
-
-  // Key handling
   let keyPressed = false;
   function onDocumentKeyDown(event) {
     if (!keyPressed && (event.key === 'ArrowUp' || event.key === 'ArrowDown')) {
       keyPressed = true;
       const moveDirection = event.key === 'ArrowUp' ? -1 : 1;
-      const PADDLE_SPEED = 0.1;
+      const PADDLE_SPEED = 0.07;
       const intervalId = setInterval(() => {
-        if (winner) return; // Stop if there's a winner
-        isPausedRef.current = false;
-        const paddle1Geometry = paddle1Ref.current.geometry;
+        if (winnerRef.current || (gameState && gameState.is_paused)) return;
+        const paddleRef = isPlayer1Ref.current ? paddle1Ref : paddle2Ref; // Use the correct paddle ref
+        const paddleGeometry = paddleRef.current.geometry;
         const tableGeometry = tableRef.current.geometry;
-        const newPosition = paddle1Ref.current.position.z + moveDirection * PADDLE_SPEED;
-        const halfPaddleWidth = paddle1Geometry.parameters.depth / 2;
+        const newPosition = paddleRef.current.position.z + moveDirection * PADDLE_SPEED;
+        const halfPaddleWidth = paddleGeometry.parameters.depth / 2;
         const tableLimit = tableRef.current.position.z + tableGeometry.parameters.depth / 2;
         if (Math.abs(newPosition) + Math.abs(halfPaddleWidth) <= tableLimit) {
-          paddle1Ref.current.position.z = newPosition;
+          paddleRef.current.position.z = newPosition;
+          wsRef.current.send(JSON.stringify({
+            type: 'game_event',
+            event: 'player_move',
+            player_id: isPlayer1Ref.current ? '1' : '2', // Use the ref
+            position: newPosition
+          }));
         }
       }, 30);
-      paddle1Ref.current.userData.intervalId = intervalId;
+      (isPlayer1Ref.current ? paddle1Ref : paddle2Ref).current.userData.intervalId = intervalId;
     }
   }
 
   function onDocumentKeyUp(event) {
     if ((event.key === 'ArrowUp' || event.key === 'ArrowDown') && keyPressed) {
       keyPressed = false;
-      clearInterval(paddle1Ref.current.userData.intervalId);
+      clearInterval((isPlayer1Ref.current ? paddle1Ref : paddle2Ref).current.userData.intervalId);
     }
   }
 
@@ -358,6 +334,11 @@ export default function Pve2d() {
   return (
     <>
       <GameSettingsButton />
+      {!isMatched && (
+        <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-white text-2xl">
+          <h1>Waiting for an opponent...</h1>
+        </div>
+      )}
       {winner && (
         <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-gray-900/95 p-8 rounded-lg text-center">
           <h2 className="text-2xl font-bold text-white mb-4">{winner} Wins!</h2>
@@ -369,20 +350,22 @@ export default function Pve2d() {
           </button>
         </div>
       )}
-      <div id="game-container">
-        <GameScore
-          player1={{
-            username: 'You',
-            avatar: '/player1.png?height=40&width=40',
-            score: score1
-          }}
-          player2={{
-            username: 'Computer',
-            avatar: '/player2.png?height=40&width=40',
-            score: score2
-          }}
-        />
-      </div>
+      {isMatched && (
+        <div id="game-container">
+          <GameScore
+            player1={{
+              username: names.player1,
+              avatar: '/player1.png?height=40&width=40',
+              score: score1
+            }}
+            player2={{
+              username: names.player2,
+              avatar: '/player2.png?height=40&width=40',
+              score: score2
+            }}
+          />
+        </div>
+      )}
     </>
   );
 }

@@ -1,36 +1,40 @@
-import React, { useContext, useState, useEffect} from "react";
+import React, { useContext, useState, useEffect } from "react";
 import { WebSocketContext } from "../websockets/WebSocketProvider";
+import { jwtDecode } from "jwt-decode";
 
 const NotificationDisplay = () => {
   const { notifications: wsNotifications, wsManager } = useContext(WebSocketContext);
-  const [alerts, setAlerts] = useState(-1);
+  const [alerts, setAlerts] = useState(0);
   const [notifications, setNotifications] = useState([]);
-  // old notifications that are not read should still be considered new
-  // old notifications that are read should be considered old
-  // new notifications that are read should be considered old
+  const [isOpen, setIsOpen] = useState(false);
+
   useEffect(() => {
     const fetchNotifications = async () => {
       try {
-        const response = await fetch("http://localhost:8002/api/notifications");
+        const accessToken = JSON.parse(localStorage.getItem("authtoken")).access;
+        const { username } = jwtDecode(accessToken);
+        const response = await fetch(`http://localhost:8002/api/notifications/${username}/`);
         const data = await response.json();
-        const oldNotifications = data.filter((notification) => notification.read);
-        // console.log("oldNotifications", oldNotifications);
-        // console.log("data", data);
-        const combinedNotifications = [...oldNotifications, ...wsNotifications];
-        setNotifications(combinedNotifications);
+        const unreadNotifications = data.filter(notification => !notification.read);
+        setNotifications(data);
+        setAlerts(unreadNotifications.length);
       } catch (error) {
         console.error(error);
       }
     };
 
     fetchNotifications();
-    setAlerts(alerts + 1);
+  }, []);
+
+  useEffect(() => {
+    if (wsNotifications.length > 0) {
+      setNotifications(prevNotifications => [...wsNotifications, ...prevNotifications]);
+      setAlerts(prevAlerts => prevAlerts + wsNotifications.length);
+    }
   }, [wsNotifications]);
 
-  const [isOpen, setIsOpen] = useState(false);
-
   const toggleNotifications = () => {
-    if (!isOpen){
+    if (!isOpen) {
       wsManager.sendMessage("Notifications viewed");
       setAlerts(0);
     }
@@ -58,7 +62,7 @@ const NotificationDisplay = () => {
             d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
           />
         </svg>
-        {notifications.length > 0 && (
+        {alerts > 0 && (
           <span className="absolute mb-28 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-red-100 transform translate-x-1/2 -translate-y-1/2 bg-red-600 rounded-full">
             {alerts}
           </span>

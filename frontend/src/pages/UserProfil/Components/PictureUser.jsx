@@ -215,6 +215,9 @@ const PictureUser = () => {
         message: `${currentUser} sent you a friend request`,
         to_user: username
       }));
+      //do like this
+      //wsManager?.sendMessage(`${currentUser} sent you a friend request`, [username]);
+      //dont forget to make cancel request show and work properly with new msg
     } catch (err) {
       console.error('Error sending friend request:', err);
       setError(err.message);
