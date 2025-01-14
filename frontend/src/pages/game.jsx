@@ -1,21 +1,22 @@
-import React, { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { useSidebarContext } from '../hooks/useSidebar'
-import { Gamepad2, Users, Trophy, ChevronLeft, ChevronRight } from 'lucide-react'
+// Games.jsx
+import React, { useEffect, useState } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { useSidebarContext } from '../hooks/useSidebar';
+import { Gamepad2, Users, Trophy, ChevronLeft, ChevronRight } from 'lucide-react';
 
 const GameCard = ({ title, description, accentColor, buttonColor, image, icon: Icon, path }) => {
-  const [isHovered, setIsHovered] = useState(false)
-  const navigate = useNavigate()
+  const [isHovered, setIsHovered] = useState(false);
+  const navigate = useNavigate();
 
   const handleClick = () => {
-    navigate(path)
-  }
+    navigate(path);
+  };
 
   return (
     <div
       className={`
         relative p-6 rounded-xl border-2 ${accentColor}
-        bg-gradient-to-br from-sky-900 to-from-sky-800
+        bg-gradient-to-br from-sky-900 to-sky-800
         flex flex-col items-center
         transition-all duration-300 ease-in-out
         transform ${isHovered ? 'scale-105' : ''}
@@ -31,7 +32,7 @@ const GameCard = ({ title, description, accentColor, buttonColor, image, icon: I
         absolute -top-5 left-1/2 transform -translate-x-1/2
         w-12 h-12 rounded-full ${buttonColor}
         flex items-center justify-center
-        border-4 border-from-sky-800
+        border-4 border-sky-800
         shadow-lg
       `}>
         <Icon className="w-6 h-6 text-white" />
@@ -46,14 +47,14 @@ const GameCard = ({ title, description, accentColor, buttonColor, image, icon: I
       <h3 className="text-2xl font-bold text-white mb-3 text-center uppercase tracking-wide">
         {title}
       </h3>
-      <p className="text-from-sky-300 text-center mb-6 text-sm leading-relaxed">
+      <p className="text-sky-300 text-center mb-6 text-sm leading-relaxed">
         {description}
       </p>
       <button
         className={`
           ${buttonColor} text-white px-8 py-3 rounded-full
           transition-all duration-300
-          hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-from-sky-800 focus:ring-${accentColor}
+          hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-sky-800
           uppercase font-bold tracking-wide text-sm
           shadow-lg hover:shadow-xl
           transform hover:-translate-y-0.5
@@ -62,8 +63,8 @@ const GameCard = ({ title, description, accentColor, buttonColor, image, icon: I
         PLAY NOW
       </button>
     </div>
-  )
-}
+  );
+};
 
 const GameSlide = ({ title, cards }) => (
   <div className="min-w-full px-4">
@@ -76,17 +77,22 @@ const GameSlide = ({ title, cards }) => (
       ))}
     </div>
   </div>
-)
+);
 
 const Games = () => {
-  const { setActiveLink } = useSidebarContext()
-  const [currentSlide, setCurrentSlide] = useState(0)
-
+  const { setActiveLink } = useSidebarContext();
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const location = useLocation();
+  
   useEffect(() => {
-    setActiveLink("game")
-  }, [])
+    setActiveLink("game");
+    
+    // Set initial slide based on navigation state
+    if (location.state?.initialSlide !== undefined) {
+      setCurrentSlide(location.state.initialSlide);
+    }
+  }, [location.state?.initialSlide, setActiveLink]);
 
-  // ... (slides array remains the same)
   const slides = [
     {
       title: "2D Games",
@@ -138,8 +144,8 @@ const Games = () => {
       title: "Tournaments",
       cards: [
         {
-          title: "2D Tournament",
-          description: "Compete in classic 2D tournament brackets.",
+          title: "Online Tournament",
+          description: "Compete in classic Online tournament brackets.",
           accentColor: "border-yellow-500",
           buttonColor: "bg-gradient-to-r from-yellow-600 to-yellow-400",
           image: "/play-Tournaments.jpg",
@@ -147,8 +153,8 @@ const Games = () => {
           path: "/dashboard/tournament"
         },
         {
-          title: "Tournament local",
-          description: "Join elite local tournament competitions.",
+          title: "Local Tournament",
+          description: "Join elite Local tournament competitions.",
           accentColor: "border-orange-500",
           buttonColor: "bg-gradient-to-r from-orange-600 to-orange-400",
           image: "/play-Tournaments.jpg",
@@ -157,15 +163,15 @@ const Games = () => {
         }
       ]
     }
-  ]
+  ];
 
   const nextSlide = () => {
-    setCurrentSlide((prev) => (prev + 1) % slides.length)
-  }
+    setCurrentSlide((prev) => (prev + 1) % slides.length);
+  };
 
   const prevSlide = () => {
-    setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length)
-  }
+    setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length);
+  };
 
   return (
     <div className="max-w-[1400px] mx-auto">
@@ -173,7 +179,7 @@ const Games = () => {
         <h2 className="text-4xl font-bold text-white mb-12 text-center uppercase tracking-wide">
           Select Your Battleground
         </h2>
-        
+
         <div className="relative">
           <div className="overflow-hidden">
             <div 
@@ -214,7 +220,7 @@ const Games = () => {
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default Games
+export default Games;

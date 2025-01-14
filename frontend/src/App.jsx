@@ -21,6 +21,7 @@ import { ColorProvider } from "./context/ColorContext.jsx";
 import VerifyPsdEmail from "./pages/VerifyPsdEmail.jsx";
 import ResetPassword from "./pages/ResetPassword.jsx";
 // import ResetPassowrd from "./pages/ResetPassword"
+import SearchPage from "./pages/SearchPage.jsx";
 
 import Layout from './components/layout';
 
@@ -65,6 +66,7 @@ function App() {
 
                     <Route path="security" element={<SecurityPage />} />
                     <Route path="edit-profil" element={<Profile />} />
+                    <Route path="SearchPage" element={<SearchPage />} />
 
                   </Route>
                   

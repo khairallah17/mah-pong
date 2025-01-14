@@ -1,3 +1,4 @@
+// GameModes.jsx
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Trophy, Gamepad2, Swords, Users, Clock, Star } from 'lucide-react';
@@ -10,7 +11,8 @@ export const GameModes = () => {
     {
       id: '3d-mode',
       title: '3D Mode',
-      path: '/dashboard/game/pve3d',
+      path: '/dashboard/game',
+      slideIndex: 1, // Index for 3D Games slide
       icon: <Swords className="w-6 h-6" />,
       description: 'Play in a 3D environment: Remote or AI',
       color: 'from-cyan-400 to-blue-500',
@@ -23,7 +25,8 @@ export const GameModes = () => {
     {
       id: '2d-mode',
       title: '2D Mode',
-      path: '/dashboard/game/pve2d',
+      path: '/dashboard/game',
+      slideIndex: 0, // Index for 2D Games slide
       icon: <Gamepad2 className="w-6 h-6" />,
       description: 'Play in a 2D environment: Remote or AI',
       color: 'from-teal-400 to-green-500',
@@ -36,7 +39,8 @@ export const GameModes = () => {
     {
       id: 'tournament',
       title: 'Tournament',
-      path: '/dashboard/tournament',
+      path: '/dashboard/game',
+      slideIndex: 2, // Index for Tournament slide
       icon: <Trophy className="w-6 h-6" />,
       description: 'Join competitive tournaments',
       color: 'from-violet-400 to-purple-500',
@@ -49,9 +53,9 @@ export const GameModes = () => {
   ];
 
   const handleStartGame = () => {
-    const selectedPath = gameModes.find(mode => mode.id === selectedMode)?.path;
-    if (selectedPath) {
-      navigate(selectedPath);
+    const selectedGame = gameModes.find(mode => mode.id === selectedMode);
+    if (selectedGame) {
+      navigate(selectedGame.path, { state: { initialSlide: selectedGame.slideIndex } });
     }
   };
 

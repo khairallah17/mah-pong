@@ -189,7 +189,6 @@ export default function Profile() {
   };
 
   useEffect(() => {
-    setActiveLink("profile")
     fetchProfile();
   }, []);
 
@@ -243,14 +242,14 @@ export default function Profile() {
   // }, [profileData])
 
   return (
-    <div className="w-full max-w-6xl mx-auto p-8 space-y-8 bg-black/50 rounded-xl border border-gray-800 backdrop-blur-sm">
+    <div className="w-full max-w-6xl mx-auto p-8 space-y-8 shadow-2xl shadow-black rounded-xl border border-gray-800 backdrop-blur-sm">
       <h2 className="text-2xl font-inter text-white mb-6 zen-dots">Account</h2>
       <div className="flex flex-col md:flex-row justify-between items-center gap-8">
         <div className="flex flex-col md:flex-row items-center gap-4">
           <div className="w-24 h-24 bg-blue-800 rounded-full border-2 border-white/40 flex items-center justify-center text-white text-2xl font-inter">
             {profileData.profile_image ? (
               <img 
-                src={`http://localhost:8001/` + profileData.profile_image} 
+                src={`http://localhost:8001/` + profileData.profile_image}
                 alt="Profile" 
                 className="w-full h-full rounded-full object-cover"
               />
