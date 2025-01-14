@@ -4,11 +4,26 @@ import { useEffect, useRef, useState, useContext } from 'react';
 import GameSettingsButton from '../../components/pvp/Customize2d'; 
 import GameScore from '../../components/pvp/GameScore';
 import { ColorContext } from '../../context/ColorContext';
+import { useNavigate, useLocation } from 'react-router-dom';
 
-export default function Pve2d() {
+export default function Local2d() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const queryParams = new URLSearchParams(location.search);
+  const matchId = queryParams.get('match_id');
+  const player1 = queryParams.get('player1');
+  const player2 = queryParams.get('player2');
+  const [winner, setWinner] = useState('');
+
+  const handleWinnerSelection = (winner) => {
+    setWinner(winner);
+    setTimeout(() => {
+      navigate(`/dashboard/tournament/local?winner=${winner}&match_id=${matchId}`);
+    }, 0);
+  };
+
   // Default single-player scoreboard
   const [{ score1, score2 }, setScores] = useState({ score1: 0, score2: 0 });
-  const [winner, setWinner] = useState(null);
 
   const cameraRef = useRef(null);
   const rendererRef = useRef(null);
@@ -89,7 +104,7 @@ export default function Pve2d() {
       requestAnimationFrame(animate);
 
       if (!isPausedRef.current) {
-        ball.position.add(ballDirection.clone().multiplyScalar(0.05));
+        ball.position.add(ballDirection.clone().multiplyScalar(0.03));
         handleCollisions(ball, paddle1, paddle2);
       }
 
@@ -99,7 +114,7 @@ export default function Pve2d() {
     animate();
 
     return () => {
-      document.body.style.overflow = 'auto';
+      document.body.style.overflow = 'auto'; // Re-enable scrolling
       document.removeEventListener('keydown', onDocumentKeyDown);
       document.removeEventListener('keyup', onDocumentKeyUp);
       window.removeEventListener('resize', onWindowResize);
@@ -143,7 +158,7 @@ export default function Pve2d() {
       ball.position.x += 0.05;
     }
 
-    // Right paddle bounce (AI)
+    // Right paddle bounce
     if (paddle2Box.intersectsSphere(ballSphere)) {
       const paddleCenter = new THREE.Vector3();
       paddle2Box.getCenter(paddleCenter);
@@ -162,7 +177,8 @@ export default function Pve2d() {
       setScores(prev => {
         const updated = { score1: prev.score1, score2: prev.score2 + 1 };
         if (updated.score2 >= 10) {
-          setWinner('Computer');
+          setWinner(player2);
+          handleWinnerSelection(player2);
         }
         return updated;
       });
@@ -175,7 +191,8 @@ export default function Pve2d() {
       setScores(prev => {
         const updated = { score1: prev.score1 + 1, score2: prev.score2 };
         if (updated.score1 >= 10) {
-          setWinner('You');
+          setWinner(player1);
+          handleWinnerSelection(player1);
         }
         return updated;
       });
@@ -186,11 +203,6 @@ export default function Pve2d() {
     if (ball.position.z < -1.5 || ball.position.z > 1.5) {
       ballDirection.z *= -1;
     }
-
-    // AI logic: follow the ball
-    const aiSpeed = 0.01;
-    const diff = ball.position.z - paddle2.position.z;
-    paddle2.position.z += Math.sign(diff) * Math.min(Math.abs(diff), aiSpeed);
   }
 
   // Restart the ball & paddles
@@ -202,31 +214,32 @@ export default function Pve2d() {
   }
 
   // Key handling
-  let keyPressed = false;
+  let keyPressed = { ArrowUp: false, ArrowDown: false, KeyW: false, KeyS: false };
   function onDocumentKeyDown(event) {
-    if (!keyPressed && (event.key === 'ArrowUp' || event.key === 'ArrowDown')) {
-      keyPressed = true;
-      const moveDirection = event.key === 'ArrowUp' ? -1 : 1;
+    if (!keyPressed[event.code] && (event.code === 'ArrowUp' || event.code === 'ArrowDown' || event.code === 'KeyW' || event.code === 'KeyS')) {
+      keyPressed[event.code] = true;
+      const moveDirection = event.code === 'ArrowUp' || event.code === 'KeyW' ? -1 : 1;
       const PADDLE_SPEED = 0.1;
       const intervalId = setInterval(() => {
         if (winner) return; // Stop if there's a winner
         isPausedRef.current = false;
-        const paddle1Geometry = paddle1Ref.current.geometry;
+        const paddleRef = event.code === 'ArrowUp' || event.code === 'ArrowDown' ? paddle1Ref : paddle2Ref;
+        const paddleGeometry = paddleRef.current.geometry;
         const tableGeometry = tableRef.current.geometry;
-        const newPosition = paddle1Ref.current.position.z + moveDirection * PADDLE_SPEED;
-        const halfPaddleWidth = paddle1Geometry.parameters.depth / 2;
+        const newPosition = paddleRef.current.position.z + moveDirection * PADDLE_SPEED;
+        const halfPaddleWidth = paddleGeometry.parameters.depth / 2;
         const tableLimit = tableRef.current.position.z + tableGeometry.parameters.depth / 2;
         if (Math.abs(newPosition) + Math.abs(halfPaddleWidth) <= tableLimit) {
-          paddle1Ref.current.position.z = newPosition;
+          paddleRef.current.position.z = newPosition;
         }
       }, 30);
-      paddle1Ref.current.userData.intervalId = intervalId;
+      paddleRef.current.userData.intervalId = intervalId;
     }
   }
 
   function onDocumentKeyUp(event) {
-    if ((event.key === 'ArrowUp' || event.key === 'ArrowDown') && keyPressed) {
-      keyPressed = false;
+    if ((event.code === 'ArrowUp' || event.code === 'ArrowDown' || event.code === 'KeyW' || event.code === 'KeyS') && keyPressed[event.code]) {
+      keyPressed[event.code] = false;
       clearInterval(paddle1Ref.current.userData.intervalId);
     }
   }
@@ -340,12 +353,12 @@ export default function Pve2d() {
       <div id="game-container">
         <GameScore
           player1={{
-            username: 'You',
+            username: player1,
             avatar: '/player1.png?height=40&width=40',
             score: score1
           }}
           player2={{
-            username: 'Computer',
+            username: player2,
             avatar: '/player2.png?height=40&width=40',
             score: score2
           }}

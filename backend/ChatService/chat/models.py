@@ -3,10 +3,9 @@ import uuid
 from django.contrib.auth.models import AbstractUser # type: ignore
 
 class CustomUser(AbstractUser): 
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     fullname = models.CharField(max_length=250)
-    username = models.CharField(max_length=50, unique=True)
     email = models.EmailField(unique=True)
+    score = models.IntegerField(default=0)
     img = models.ImageField(
         upload_to='profile_pics/',  # Store images in a profile_pics/ directory
         default='profile_pics/default.jpg'

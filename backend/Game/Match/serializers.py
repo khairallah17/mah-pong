@@ -1,5 +1,5 @@
 from rest_framework import serializers # type: ignore
-from .models import Tournament, Match
+from .models import Tournament, Match, Achievement, AchievementAssignment
 
 class TournamentSerializer(serializers.ModelSerializer):
     class Meta:
@@ -44,3 +44,15 @@ class PlayerStatsSerializer(serializers.Serializer):
     wins = serializers.IntegerField()
     losses = serializers.IntegerField()
     elo = serializers.IntegerField()
+
+class AchievementSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Achievement
+        fields = ['name', 'description']
+
+class AchievementAssignmentSerializer(serializers.ModelSerializer):
+    achievement = AchievementSerializer()
+
+    class Meta:
+        model = AchievementAssignment
+        fields = ['achievement', 'assigned_at']
