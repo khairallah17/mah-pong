@@ -1,48 +1,214 @@
-import { useSidebarContext } from '../hooks/useSidebar'
-import { Search, X, Menu } from 'lucide-react'
-import NotificationDisplay from '../components/NotificationDisplay'
-import { jwtDecode } from 'jwt-decode';
-import DefaultAvatar from '../assets/khr.jpg'
+import React, { useState, useEffect, useRef } from 'react';
+import { useSidebarContext } from '../hooks/useSidebar';
+import { Search, X, Menu, Bell } from 'lucide-react';
+import DefaultAvatar from '../assets/khr.jpg';
+import Notification from './NotificationDisplay';
 
 const Navbar = () => {
+  const [user, setUser] = useState({ 
+    username: '', 
+    email: '', 
+    fullname: '', 
+    avatar: '', 
+    img: '' 
+  });
+  const { toggleSidebar, open } = useSidebarContext();
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [showResults, setShowResults] = useState(false);
+  const searchRef = useRef(null);
 
-    const accessToken = JSON.parse(localStorage.getItem('authtoken')).access;
-    const { username, email } = jwtDecode(accessToken);
-    const { toggleSidebar, open } = useSidebarContext()    
+  useEffect(() => {
+    const fetchUserData = async () => {
+      const authToken = localStorage.getItem('authtoken');
+      if (authToken) {
+        try {
+          const response = await fetch('http://localhost:8001/api/edit-profile/', {
+            headers: {
+              'Authorization': `Bearer ${JSON.parse(authToken).access}`
+            }
+          });
+          if (response.ok) {
+            const userData = await response.json();
+            setUser({
+              username: userData.username,
+              email: userData.email,
+              fullname: userData.fullname,
+              avatar: userData.avatar,
+              img: userData.img
+            });
+          }
+        } catch (error) {
+          console.error('Error fetching user data:', error);
+        }
+      }
+    };
 
-    console.log("OPEN ==> ", open)
+    fetchUserData();
+  }, []);
 
-    
-    return (
-        <div className='navbar-grid text-white flex items-center w-full px-6 bg-black bg-opacity-45'>
-            <div className='w-[176px] md:min-w-[176px] flex items-center gap-2'>
-                <button onClick={toggleSidebar}>
-                    {
-                        open ? <X size={24} /> : <Menu size={24} />
-                    }
-                </button>
-                <p className="uppercase text-white font-bold">LOGO</p>
-            </div>
+  const searchFriends = async (query) => {
+    if (!query.trim()) {
+      setSearchResults([]);
+      return;
+    }
 
-            <div className='flex items-center justify-between gap-10 w-full'>
-                <div className='flex items-center gap-2'>
-                    <Search className='text-gray-500' size={16}/>
-                    <input type="search" name='search' className='w-full outline-none bg-transparent text-gray-500 text-xs' placeholder='Search For a Player' />
-                </div>
-                <div className='items-center gap-3 flex'>
-                    <NotificationDisplay />
-                    <div className='md:flex hidden gap-3 items-center'>
-                        <div className='w-24 max-w-24'>
-                            <p className=''>{username}</p>
-                            <p className='text-gray-500 text-sm'>{email}</p>
-                        </div>
-                        <img src={DefaultAvatar} className='w-12 h-12 rounded-full object-cover' alt="" />
-                    </div>
-                </div>
-            </div>
+    setIsLoading(true);
+    const authToken = localStorage.getItem('authtoken');
 
+    try {
+      const response = await fetch(`http://localhost:8001/api/friends/?search=${query}`, {
+        headers: {
+          'Authorization': `Bearer ${JSON.parse(authToken).access}`
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        // Extract friends array from the response
+        const friendsList = data[0]?.friends || [];
+        // Filter the friends list based on the search query
+        const filteredFriends = friendsList.filter(friend => 
+          friend.fullname.toLowerCase().includes(query.toLowerCase()) ||
+          friend.username.toLowerCase().includes(query.toLowerCase()) ||
+          friend.email.toLowerCase().includes(query.toLowerCase())
+        );
+        setSearchResults(filteredFriends);
+      }
+    } catch (error) {
+      console.error('Error searching friends:', error);
+      setSearchResults([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleUserClick = (username) => {
+    window.location.href = `http://localhost:5173/dashboard/profil/${username}`;
+  };
+
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      searchFriends(searchQuery);
+    }, 300);
+
+    return () => clearTimeout(timeoutId);
+  }, [searchQuery]);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (searchRef.current && !searchRef.current.contains(event.target)) {
+        setShowResults(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  return (
+    <nav className="fixed top-0 left-0 right-0 z-50 h-16 backdrop-blur-sm border-b border-white/10">
+      <div className="h-full px-6 flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <button
+            onClick={toggleSidebar}
+            className="p-1.5 rounded-md text-white/80 hover:text-white hover:bg-white/10 focus:outline-none"
+            aria-label={open ? "Close sidebar" : "Open sidebar"}
+          >
+            {open ? <X size={20} /> : <Menu size={20} />}
+          </button>
+          <span className="text-white font-semibold">Logo</span>
         </div>
-    )
-}
 
-export default Navbar
+        <div className="flex-1 max-w-2xl mx-4" ref={searchRef}>
+          <div className="relative">
+            <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+              <Search className="h-4 w-4 text-white/50" />
+            </div>
+            <input
+              type="search"
+              placeholder="Search friends..."
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setShowResults(true);
+              }}
+              onFocus={() => setShowResults(true)}
+              className="w-full h-9 pl-10 pr-4 rounded-full bg-white/10 text-sm text-white placeholder-white/50 border-none focus:outline-none focus:ring-2 focus:ring-white/20"
+            />
+            
+            {showResults && (
+              <div className="absolute w-full mt-2 bg-gray-800 rounded-lg shadow-lg max-h-96 overflow-y-auto">
+                {isLoading ? (
+                  <div className="p-4 text-white text-center">Searching...</div>
+                ) : searchResults.length > 0 ? (
+                  <div>
+                    {searchResults.map((friend) => (
+                      <div
+                        key={friend.id}
+                        className="flex items-center gap-3 p-3 hover:bg-gray-700 cursor-pointer"
+                        onClick={() => {
+                          setShowResults(false);
+                          setSearchQuery('');
+                          handleUserClick(friend.username);
+                        }}
+                      >
+                        <img
+                          src={friend.img || friend.avatar}
+                          alt={friend.username}
+                          className="h-10 w-10 rounded-full object-cover"
+                          onError={(e) => {
+                            e.target.src = DefaultAvatar;
+                          }}
+                        />
+                        <div>
+                          <div className="text-sm font-medium text-white">
+                            {friend.fullname || friend.username}
+                          </div>
+                          <div className="text-xs text-white/60">
+                            {friend.email}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : searchQuery.trim() !== '' && (
+                  <div className="p-4 text-white text-center">No results found</div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="flex items-center gap-4">
+          <button 
+            className="p-4 rounded-md text-white/80 hover:text-white hover:bg-white/10 focus:outline-none"
+            aria-label="Notifications"
+          >
+            <Notification className="h-5 w-5" />
+          </button>
+          
+          <div className="flex items-center gap-3">
+            <div className="hidden md:block text-right">
+              <div className="text-sm font-medium text-white">{user.fullname}</div>
+              <div className="text-xs text-white/60">{user.email}</div>
+            </div>
+            <img
+              src={user.img ? `http://localhost:8001${user.img}` : DefaultAvatar}
+              alt={`${user.fullname}'s avatar`}
+              className="h-12 w-12 rounded-full object-cover ring-2 ring-white/20"
+              onError={(e) => {
+                e.target.src = DefaultAvatar;
+              }}
+            />
+          </div>
+        </div>
+      </div>
+    </nav>
+  );
+};
+
+export default Navbar;
+
