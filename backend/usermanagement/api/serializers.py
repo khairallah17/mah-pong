@@ -16,8 +16,7 @@ class   UserSerial(serializers.ModelSerializer):
     
     class   Meta:
         model = User
-        fields = ['id', 'username', 'email', 'fullname', 'nblose', 'nbwin', 
-                 'score', 'img', 'avatar', 'is_online', 'two_factor_enabled', 'last_login_2fa']
+        fields = ['id', 'username', 'email', 'fullname', 'img', 'avatar', 'is_online', 'two_factor_enabled', 'last_login_2fa']
         read_only_fields = ['two_factor_enabled', 'last_login_2fa']
 
 class   Get_Token_serial(TokenObtainPairSerializer):
@@ -87,8 +86,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = User
-        fields = ['id', 'fullname', 'username', 'email', 'nblose', 
-                 'nbwin', 'score', 'img', 'avatar', 'profil', 'is_online']
+        fields = ['id', 'fullname', 'username', 'email', 'img', 'avatar', 'profil', 'is_online']
         
     # def get_is_online(self, obj):
     #     return obj.is_online

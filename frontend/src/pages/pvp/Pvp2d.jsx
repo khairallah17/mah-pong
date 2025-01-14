@@ -15,8 +15,9 @@ function Pvp2d() {
     const [isMatched, setIsMatched] = useState(false);
     let keyPressed = false;
     const [isPlayer1, setIsPlayer1] = useState(true);
+    const isPlayer1Ref = useRef(true);
     let ballDirection = new THREE.Vector3(1, 0, 1);
-    const PADDLE_SPEED = 0.05;
+    const PADDLE_SPEED = 0.03;
     const intervalIdRef = useRef(null);
     const rendererRef = useRef(null);
     const cameraRef = useRef(null);
@@ -61,7 +62,7 @@ function Pvp2d() {
                 }
                 if (message.type === 'match_found') {
                     if (message.scoreP1 !== undefined && message.scoreP2 !== undefined && message.scoreP1 !== null && message.scoreP2 !== null)
-                        setScores({ score1: isPlayer1? message.scoreP1 : message.scoreP2, score2: isPlayer1? message.scoreP2 : message.scoreP1 });
+                        setScores({ score1: isPlayer1Ref.current ? message.scoreP1 : message.scoreP2, score2: isPlayer1Ref.current ? message.scoreP2 : message.scoreP1 });
                     console.log("message: ", message);
                     if (message.names && message.names.player1 && message.names.player2) {
                         console.log("usernames: ", message.names.player1, message.names.player2);
@@ -69,8 +70,9 @@ function Pvp2d() {
                     }
                     if (message.player_id === '2')
                         setIsPlayer1(false);
+                    isPlayer1Ref.current = message.player_id === '1'; // Update the ref
                     setIsMatched(true);
-                    console.log("match found with player_id: ", message.player_id, "isPlayer1: ", isPlayer1);
+                    console.log("match found with player_id: ", message.player_id, "isPlayer1: ", isPlayer1Ref.current);
                 } else if (message.type === 'game_event') {
                     updateScene(message.event);
                 }
@@ -438,7 +440,7 @@ function Pvp2d() {
                         wsRef.current.send(JSON.stringify({
                             type: 'game_event',
                             event: moveDirection === -1 ? 'player_move_up' : 'player_move_down',
-                            player_id: isPlayer1 ? 1 : 2,
+                            player_id: isPlayer1Ref.current ? 1 : 2, // Use the ref
                         }));
                         isPausedRef.current = false;
                         paddle1Ref.current.position.z = newPosition;
@@ -466,7 +468,7 @@ function Pvp2d() {
 
             setTimeout(() => {
                 document.body.removeChild(popup);
-                Navigate('/dashboard');
+                window.location.href = '/dashboard';
             }, 3000);
         }
         if (isPausedRef.current && document.visibilityState === 'visible' && event !== 'game_over' && event !== 'score_update') {
@@ -588,7 +590,7 @@ function Pvp2d() {
                             onClick={() => window.location.reload()}
                             className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
                         >
-                            Restart Game 
+                            Play Again
                         </button>
                     )}
                     {matchId && (

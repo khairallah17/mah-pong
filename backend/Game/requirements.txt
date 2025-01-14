@@ -9,3 +9,4 @@ channels_redis==4.0.0
 django-redis
 pyjwt
 psycopg2-binary
+requests

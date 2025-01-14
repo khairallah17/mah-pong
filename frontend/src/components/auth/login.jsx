@@ -113,7 +113,7 @@ const LoginForm = ({setSwap}) => {
                     <FcGoogle size={24}/>
                     <p className="text-slate-600 font-semibold text-lg">Continue with google</p>
                 </button>
-                <button onClick={Intra42Login} className="bg-black w-full flex items-center justify-center gap-4 rounded-lg py-2">
+                <button  onClick={Intra42Login} className="bg-black w-full flex items-center justify-center gap-4 rounded-lg py-2">
                     <Si42 size={24} color="white" />
                     <p className="text-white font-semibold text-lg">Continue with 42</p>
                 </button>

@@ -20,5 +20,5 @@ from app.views import NotificationList
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api/notifications', NotificationList.as_view(), name='notification-list'),
+    path('api/notifications/<str:user>/', NotificationList.as_view(), name='notification-list'),
 ]
