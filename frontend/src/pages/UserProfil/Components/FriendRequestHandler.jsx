@@ -1,81 +1,3 @@
-// import React, { useEffect, useContext } from 'react';
-// import { WebSocketContext } from './WebSocketContext';
-// import { jwtDecode } from "jwt-decode";
-
-// const FriendRequestHandler = () => {
-//   const { notifications, wsManager } = useContext(WebSocketContext);
-//   const token = JSON.parse(localStorage.getItem('authtoken')).access;
-//   const currentUser = jwtDecode(token).username;
-
-//   const handleAccept = async (requestId) => {
-//     try {
-//       const response = await fetch(`http://localhost:8001/friend-requests/${requestId}/accept/`, {
-//         method: 'POST',
-//         headers: {
-//           'Authorization': `Bearer ${token}`
-//         }
-//       });
-      
-//       if (response.ok) {
-//         // Send notification to sender
-//         wsManager?.sendMessage(JSON.stringify({
-//           type: 'friend_request_accepted',
-//           message: `${currentUser} accepted your friend request`
-//         }));
-//       }
-//     } catch (err) {
-//       console.error('Error accepting friend request:', err);
-//     }
-//   };
-
-//   const handleReject = async (requestId) => {
-//     try {
-//       await fetch(`http://localhost:8001/friend-requests/${requestId}/reject/`, {
-//         method: 'POST',
-//         headers: {
-//           'Authorization': `Bearer ${token}`
-//         }
-//       });
-//     } catch (err) {
-//       console.error('Error rejecting friend request:', err);
-//     }
-//   };
-
-//   const renderFriendRequest = (notification) => {
-//     if (notification.type === 'friend_request') {
-//       return (
-//         <div key={notification.id} className="fixed top-4 right-4 z-50 bg-navy-800 p-4 rounded-lg shadow-lg">
-//           <p className="text-white mb-2">{notification.message}</p>
-//           <div className="flex space-x-2">
-//             <button
-//               onClick={() => handleAccept(notification.request_id)}
-//               className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
-//             >
-//               Accept
-//             </button>
-//             <button
-//               onClick={() => handleReject(notification.request_id)}
-//               className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
-//             >
-//               Reject
-//             </button>
-//           </div>
-//         </div>
-//       );
-//     }
-//     return null;
-//   };
-
-//   return (
-//     <>
-//       {notifications.map(notification => renderFriendRequest(notification))}
-//     </>
-//   );
-// };
-
-// export default FriendRequestHandler;
-
-
 import React, { useContext } from 'react';
 import { WebSocketContext } from '../../../websockets/WebSocketProvider.jsx';
 import { jwtDecode } from "jwt-decode";
@@ -110,21 +32,21 @@ const FriendRequestHandler = () => {
 
   const handleReject = async (requestId, senderUsername) => {
     try {
-      const response = await fetch(`http://localhost:8001/api/friend-requests/${requestId}/reject/`, {
+      await fetch(`http://localhost:8001/api/friend-requests/${requestId}/reject/`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
-      if (response.ok) {
-        // Send notification to sender
-        wsManager?.sendMessage(`${currentUser} sent you a friend request`, [senderUsername]);
-        // wsManager?.sendMessage(JSON.stringify({
-        //   type: 'friend_request_accepted',
-        //   message: `${currentUser} accepted your friend request`,
-        //   to_user: senderUsername
-        // }));
-      }
+      // if (response.ok) {
+      //   // Send notification to sender
+      //   wsManager?.sendMessage(`${currentUser} sent you a friend request`, [senderUsername]);
+      //   // wsManager?.sendMessage(JSON.stringify({
+      //   //   type: 'friend_request_accepted',
+      //   //   message: `${currentUser} accepted your friend request`,
+      //   //   to_user: senderUsername
+      //   // }));
+      // }
     } catch (err) {
       console.error('Error rejecting friend request:', err);
     }
