@@ -51,7 +51,8 @@ export const AuthProvider = ({ children }) => {
 
             const data = await response.json();
 
-            if (response.status === 401) {
+            if (!response.ok) {
+                console.log("Error: ", data);
                 toast.error("you don't have an account you should to register", {
                     position: "top-right",
                     autoClose: 5000,
@@ -149,7 +150,6 @@ export const AuthProvider = ({ children }) => {
 
         if (response.status === 201)
         {
-            navigation("/login");
             toast.success('you have successfully Registred', {
                 position: "top-right",
                 autoClose: 5000,
@@ -161,10 +161,13 @@ export const AuthProvider = ({ children }) => {
                 theme: "dark",
                 transition: Bounce,
             });
-
+            // navigation("/login");
+            
         } 
         else 
         {
+            const data = await response.json();
+            console.log("Error:  ", data);
             toast.error('There is some error in Your registration', {
                 position: "top-right",
                 autoClose: 5000,

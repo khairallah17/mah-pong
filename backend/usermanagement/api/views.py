@@ -678,51 +678,51 @@ class UserProfileApi(APIView):
             return Response({"error": str(e)}, status=400)
 
 # Make Comminication Between Game App and Usermanagment App using API
-class UserInfoApi(APIView):
-    # permission_classes = [IsAuthenticated]
+# class UserInfoApi(APIView):
+    # # permission_classes = [IsAuthenticated]
 
-    def get(self, request, username):
-        try:
-            logger.info(f"Getting user data for {username}") # type: ignore
-            user = User.objects.get(username=username)
-            serializer = UserSerial(user)
-            return Response(serializer.data)
-        except User.DoesNotExist:
-            logger.error(f"User {username} does not exist") # type: ignore
-            return Response({"error": "User does not exist"}, status=404)
+    # def get(self, request, username):
+    #     try:
+    #         logger.info(f"Getting user data for {username}") # type: ignore
+    #         user = User.objects.get(username=username)
+    #         serializer = UserSerial(user)
+    #         return Response(serializer.data)
+    #     except User.DoesNotExist:
+    #         logger.error(f"User {username} does not exist") # type: ignore
+    #         return Response({"error": "User does not exist"}, status=404)
     
-    def patch(self, request, username):
-        try:
-            logger.info(f"Updating user data for {username}") # type: ignore
-            user = User.objects.get(username=username)
-            #allowed Fields to update from Game App
-            game_fields = {
-                'nblose',
-                'nbwin', 
-                'score',
-            }
+    # def patch(self, request, username):
+    #     try:
+    #         logger.info(f"Updating user data for {username}") # type: ignore
+    #         user = User.objects.get(username=username)
+    #         #allowed Fields to update from Game App
+    #         game_fields = {
+    #             'nblose',
+    #             'nbwin', 
+    #             'score',
+    #         }
 
-            data = {}
+    #         data = {}
 
-            for key, value in request.data.items():
-                if key in game_fields:
-                    if key in ['nblose', 'nbwin']:
-                        current_value = getattr(user, key, 0)
-                        data[key] = current_value + value
-                    else:
-                        data[key] = value
-            serializer = UserSerial(request.user, data=data, partial=True) # partial=True kay3ni update just what field allowed  "game_fields = {'nblose','nbwin', 'score'}" 
-            # if partial=False it will always update all fieled in UserSerial all those "fields = ['id', 'username', 'email', 'fullname', 'nblose', 'nbwin', 'score', 'img', 'avatar', 'two_factor_enabled', 'last_login_2fa']" every time
+    #         for key, value in request.data.items():
+    #             if key in game_fields:
+    #                 if key in ['nblose', 'nbwin']:
+    #                     current_value = getattr(user, key, 0)
+    #                     data[key] = current_value + value
+    #                 else:
+    #                     data[key] = value
+    #         serializer = UserSerial(request.user, data=data, partial=True) # partial=True kay3ni update just what field allowed  "game_fields = {'nblose','nbwin', 'score'}" 
+    #         # if partial=False it will always update all fieled in UserSerial all those "fields = ['id', 'username', 'email', 'fullname', 'nblose', 'nbwin', 'score', 'img', 'avatar', 'two_factor_enabled', 'last_login_2fa']" every time
 
-            if serializer.is_valid():
-                serializer.save()
-                logger.info(f"User data updated for {username}") # type: ignore
-                return Response(serializer.data)
-            logger.error(f"Error updating user data for {username}") # type: ignore
-            return Response(serializer.errors, status=400)
-        except Exception as e:
-            logger.error(f"Error updating user data for {username}") # type: ignore
-            return Response({"error": "Somthing Wrong in updating data"}, status=400)
+    #         if serializer.is_valid():
+    #             serializer.save()
+    #             logger.info(f"User data updated for {username}") # type: ignore
+    #             return Response(serializer.data)
+    #         logger.error(f"Error updating user data for {username}") # type: ignore
+    #         return Response(serializer.errors, status=400)
+    #     except Exception as e:
+    #         logger.error(f"Error updating user data for {username}") # type: ignore
+    #         return Response({"error": "Somthing Wrong in updating data"}, status=400)
 
 
 def viewallrouting(request):
