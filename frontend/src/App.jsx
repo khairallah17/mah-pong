@@ -26,9 +26,10 @@ import Layout from './components/layout';
 
 import Providers from './providers/providers.jsx';
 import NotFound from "./pages/404.jsx";
+// import { useOnlineStatus } from "./hooks/useOnlineStatus.jsx"
 
 function App() {
-
+  // useOnlineStatus();
 
   return (
     <Router>

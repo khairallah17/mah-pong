@@ -96,25 +96,35 @@ const FriendRequestHandler = () => {
       
       if (response.ok) {
         // Send notification to sender
-        wsManager?.sendMessage(JSON.stringify({
-          type: 'friend_request_accepted',
-          message: `${currentUser} accepted your friend request`,
-          to_user: senderUsername
-        }));
+        wsManager?.sendMessage(`${currentUser} sent you a friend request`, [senderUsername]);
+        // wsManager?.sendMessage(JSON.stringify({
+        //   type: 'friend_request_accepted',
+        //   message: `${currentUser} accepted your friend request`,
+        //   to_user: senderUsername
+        // }));
       }
     } catch (err) {
       console.error('Error accepting friend request:', err);
     }
   };
 
-  const handleReject = async (requestId) => {
+  const handleReject = async (requestId, senderUsername) => {
     try {
-      await fetch(`http://localhost:8001/api/friend-requests/${requestId}/reject/`, {
+      const response = await fetch(`http://localhost:8001/api/friend-requests/${requestId}/reject/`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
+      if (response.ok) {
+        // Send notification to sender
+        wsManager?.sendMessage(`${currentUser} sent you a friend request`, [senderUsername]);
+        // wsManager?.sendMessage(JSON.stringify({
+        //   type: 'friend_request_accepted',
+        //   message: `${currentUser} accepted your friend request`,
+        //   to_user: senderUsername
+        // }));
+      }
     } catch (err) {
       console.error('Error rejecting friend request:', err);
     }
