@@ -42,17 +42,17 @@ services:
       - chat-network
 
   frontend:
-      container_name: frontend
-      build: 
-        context: "./frontend"
-        dockerfile: Dockerfile
-      ports:
-        - "5173:5173"
-      env_file:
-        - .env
-      volumes:
-        - front_vm:/app
-        - /app/node_modules
+    container_name: frontend
+    build: 
+      context: "./frontend"
+      dockerfile: Dockerfile
+    ports:
+      - "5173:5173"
+    env_file:
+      - .env
+    volumes:
+      - front_vm:/app
+      - /app/node_modules
     
   notifications:
     container_name: notifications

@@ -1,4 +1,4 @@
-from django.urls import path # type: ignore
+from django.urls import path
 from .consumers import ChatConsumer
 
 websocket_urlpatterns = [

@@ -1,4 +1,4 @@
-from django.contrib import admin # type: ignore
+from django.contrib import admin
 from .models import Message, CustomUser , Conversation
 
 # Register CustomUser with a dedicated admin configuration

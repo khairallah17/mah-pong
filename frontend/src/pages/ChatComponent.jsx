@@ -24,6 +24,7 @@ const Chat = ({ roomName }) => {
     const [hand, setHand] = useState(false);
     const accessToken = JSON.parse(localStorage.getItem('authtoken')).access;
     const { username, fullname } = jwtDecode(accessToken);
+    const messagesEndRef = useRef(null);
 
     useEffect(() => {
         loadUsers();
@@ -35,6 +36,10 @@ const Chat = ({ roomName }) => {
             initializeWebSocket(selectedUserId);
         }
     }, [selectedUserId]);
+
+    useEffect(() => {
+        scrollToBottom();
+    }, [messages]);
 
     const loadUsers = async () => {
         try {
@@ -106,50 +111,16 @@ const Chat = ({ roomName }) => {
         }
     };
 
-    const friends = [];
-    for (let i = 0; i < 20; i++) {
-        friends.push(
-            <div className="hover:bg-blue-950 p-2 rounded-lg flex gap-2"> {/* friend*/}
-                <div className="h-12 w-12 rounded-full overflow-hidden border border-purple-950"> {/* friend img*/}
-                    <img src="img.webp" alt="photo"/>
-                </div>
-                <div className="md:flex flex-col justify-center hidden"> {/* frined info*/}
-                    <p className="font-semibold">hamza salam</p>
-                    <p className="text-sm">wa fen abro!</p>
-                </div>
-                <div className="md:flex place-self-end gap-1 justify-end grow text-right hidden">
-                    <p className="text-xs">time</p>
-                </div>
-            </div>
-        )
-    }
-    const chats = [];
-    for (let i = 0; i < 20; i++) {
-        chats.push(
-            <div className="grow flex flex-col gap-2"> {/* conversation*/}
-                <div className="bg-purple-600 p-2 rounded-2xl px-3 w-fit max-w-[60%] flex flex-col break-all">
-                    <p className="">Hello</p>
-                    <div className="flex place-self-end justify-end gap-1 items-center">
-                        <p className="text-xs">time</p>
-                        <IoCheckmarkDoneOutline className="text-sm"/>
-                    </div>
-                </div>
-                <div className="bg-purple-600 p-2 rounded-2xl px-3 w-fit max-w-[60%] place-self-end flex flex-col break-all">
-                    <p className="">checking the messages</p>
-                    <div className="flex place-self-end justify-end gap-1 items-center">
-                        <p className="text-xs">time</p>
-                        <IoCheckmarkDoneOutline className="text-sm"/>
-                    </div>
-                </div>
-            </div>
-        )
-    }
+    const scrollToBottom = () => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    };
+
     const handel = () => {
         setHand(!hand);
     }
 
     return (
-        <div  className="flex h-full text-[#FFFFFF50] bg-[#10104F] w-full relative">
+        <div className="flex h-full text-[#FFFFFF50] bg-[#10104F] w-full relative">
             <div className="absolute bg-black h-full w-full opacity-50 z-[-1]"></div>
 
             {/* User List Section */}
@@ -167,7 +138,7 @@ const Chat = ({ roomName }) => {
                     {users.map((user) => {
                         const lastMessage = messages
                             .filter(msg => msg.sender === user.id || msg.receiver === user.id)
-                            .slice(-1)[0]?.message || "No messages yet";
+                            .slice(-1)[0]?.content || "No messages yet";
 
                         return (
                             <div key={user.id}
@@ -208,10 +179,11 @@ const Chat = ({ roomName }) => {
 
                 <div className="overflow-auto px-4 gap-2 flex flex-col">
                     {messages.map((msg, index) => (
-                        <div key={index} className={`p-2 rounded-2xl ${msg.sender === 1 ? 'place-self-end bg-blue-600' : 'bg-gray-700'}`}>
-                            <p>{msg.message}</p>
+                        <div key={index} className={`p-2 rounded-2xl ${msg.sender === username ? 'place-self-end bg-blue-600' : 'bg-gray-700'}`}>
+                            <p>{msg.content}</p>
                         </div>
                     ))}
+                    <div ref={messagesEndRef} />
                 </div>
 
                 {/* Message Input */}
@@ -219,7 +191,6 @@ const Chat = ({ roomName }) => {
                     <div className="px-4 pb-4  "> {/* sending msg*/}
                         <div className="flex h-[45px] gap-2 items-center bg-black py-1 px-3 rounded-full">
                             <MdEmojiEmotions className="text-3xl cursor-pointer hover:text-yellow-400 text-blue-700"/>
-                            {/* <MdEmojiEmotions className="text-2xl text-blue-700"/> */}
                             <input  type="text" 
                                value={newMessage} 
                                onChange={(e) => setNewMessage(e.target.value)} 
@@ -239,12 +210,11 @@ const Chat = ({ roomName }) => {
                             <img src="img.webp" alt="photo" />
                         </div>
                         <div className="flex flex-col items-center gap-1">
-                            <p className="font-semibold text-2xl">{fullname}</p> {/* Fallname */}
+                            <p className="font-semibold text-2xl">{fullname}</p> {/* Fullname */}
                             <p className="font-semibold text-xl">{username}</p> {/* Username */}
                         </div>
                     </div>
-                    {/*< div className="flex flex-col border-t-2 rounded-full px-32 items-center"></div> */}
-                    <div className="flex gap-8 justify-center items-center"> {/* challange/ block*/}
+                    <div className="flex gap-8 justify-center items-center"> {/* challenge/ block*/}
                         <button className="h-16 w-32 border-[6px] border-blue-900 flex items-center justify-center hover:bg-blue-900 rounded-3xl  font-bold"><PiGameControllerFill className="text-[45px]"/> </button>
                         <button className="h-16 w-32 border-4 flex items-center justify-center rounded-3xl hover:bg-red-600 font-bold"><CgBlock className="text-[45px]"/></button>
                     </div>     

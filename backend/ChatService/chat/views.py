@@ -1,5 +1,5 @@
 import requests
-from django.conf import settings # type: ignore
+from django.conf import settings
 from django.shortcuts import render # type: ignore
 from rest_framework.views import APIView # type: ignore
 from rest_framework.decorators import api_view, permission_classes, authentication_classes # type: ignore
@@ -29,9 +29,13 @@ class ApiUsers(APIView):
                 return Response({"error": "Authorization header missing"}, status=400)
 
             token = auth_header.split(' ')[1]
+            payload = jwt.decode(token, settings.SECRET_KEY, algorithms=['HS256'])
+            username = payload.get('username')
+            email = payload.get('email')
+            fullname = payload.get('fullname')
 
-            # logger.warning(f"Token: {token}")
-            # logger.warning(f"UserManagement Service URL: {settings.USERMANAGEMENT_SERVICE_URL}")
+            if not username:
+                raise jwt.InvalidTokenError("Username not found in token.")
 
             response = requests.get(
                 f"{settings.USERMANAGEMENT_SERVICE_URL}/api/friends/",
@@ -39,7 +43,6 @@ class ApiUsers(APIView):
             )
             response.raise_for_status()
             users_data = response.json()
-            # logger.warning(f"Users: {users_data}")
 
             # Store users in the Chat service's database
             for user_data in users_data:
@@ -48,15 +51,21 @@ class ApiUsers(APIView):
                         id=friend['id'],
                         defaults={
                             'username': friend['username'],
-                            'fullname': friend.get('fullname', ''),\
+                            'fullname': friend.get('fullname', ''),
                             'email': friend['email'],
                             'img': friend.get('img', 'profile_pics/default.jpg')
                         }
                     )
 
-            # Serialize and return the users
-            # serializer = UserSerializer(User.objects.all(), many=True)
-            #User.objects.create_or_update(curent_userdata)
+            # Update or create the current user
+            User.objects.update_or_create(
+                username=username,
+                defaults={
+                    'email': email,
+                    'fullname': fullname
+                }
+            )
+
             return Response(user_data.get('friends', []))
         except requests.ConnectionError as e:
             logger.error(f"ConnectionError: {e}")

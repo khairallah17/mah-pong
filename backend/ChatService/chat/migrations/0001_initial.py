@@ -1,4 +1,4 @@
-from django.db import migrations, models # type: ignore
+from django.db import migrations, models
 import uuid
 
 class Migration(migrations.Migration):
