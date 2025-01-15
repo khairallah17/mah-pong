@@ -1,5 +1,5 @@
 import requests
-from django.conf import settings
+from django.conf import settings # type: ignore
 from django.shortcuts import render # type: ignore
 from rest_framework.views import APIView # type: ignore
 from rest_framework.decorators import api_view, permission_classes, authentication_classes # type: ignore

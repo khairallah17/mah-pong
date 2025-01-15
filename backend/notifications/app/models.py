@@ -1,4 +1,4 @@
-from django.db import models
+from django.db import models # type: ignore
 
 class Notification(models.Model):
     message = models.CharField(max_length=255)

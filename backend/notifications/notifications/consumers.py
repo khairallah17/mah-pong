@@ -1,13 +1,13 @@
 import asyncio
-from channels.generic.websocket import AsyncWebsocketConsumer
+from channels.generic.websocket import AsyncWebsocketConsumer # type: ignore
 import json
 import logging
 import jwt
-from django.conf import settings
-from channels.db import database_sync_to_async
+from django.conf import settings # type: ignore
+from channels.db import database_sync_to_async # type: ignore
 from app.models import Notification
 from urllib.parse import parse_qs
-from django.core.cache import cache
+from django.core.cache import cache # type: ignore
 
 notif_user_channels = {}
 logger = logging.getLogger(__name__)

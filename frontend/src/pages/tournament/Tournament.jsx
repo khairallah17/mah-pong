@@ -22,6 +22,7 @@ export default function Tournament() {
 
   const [loadingQuit, setLoadingQuit] = useState(false);
   const [wrongTournament, setWrongTournament] = useState(false);
+  const [eliminated, setEliminated] = useState(false);
   const token = localStorage.getItem('authtoken');
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
@@ -53,6 +54,7 @@ export default function Tournament() {
           console.log('Tournament updated:', message.matches);
         } else if (message.type === 'match_start') {
           console.log('Match started:', message.tournamentMatch_id);
+          navigate(`/dashboard/game/newpvp2d?match_id=${message.tournamentMatch_id}`);
         } else if (message.type === 'tournament_code') {
           setTournamentCode(message.code);
         } else if (message.type === 'players_ready') {
@@ -60,12 +62,14 @@ export default function Tournament() {
           wsManager.sendMessage('players_ready', message.players);
           //wsManager implement broadcastmsg and selfmsg (here we should use selfmsg)
           //make this received only once
-          navigate(`/dashboard/game/pvp2d?match_id=${message.tournamentMatch_id}`);
+          //navigate(`/dashboard/game/newpvp2d?match_id=${message.tournamentMatch_id}`);
         }
         else if (message.type === 'already_in_tournament') {
           console.log('Already in tournament');
           setWrongTournament(true);
         }
+        else if (message.type === 'eliminated')
+          setEliminated(true);
       };
 
       wsRef.current.onclose = () => console.log('WebSocket connection closed');
@@ -119,14 +123,6 @@ export default function Tournament() {
   return (
     <div className="w-full h-full justify-between flex flex-col bg-[#1a1464] p-8 pt-24">
       <div className="mx-auto w-full">
-        {wrongTournament && (
-          <button
-            onClick={() => window.location.href = '/dashboard/tournament/live'}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors mt-4"
-          >
-            Back to Tournament
-          </button>
-        )}
         {/* Tournament Title */}
         <div className="text-center mb-12">
           <h1 className="text-6xl font-bold text-white tracking-wider zen-dots" style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.3)' }}>
@@ -222,6 +218,44 @@ export default function Tournament() {
           Tournament Code: {tournamentCode}
         </div>
       </div>
+
+      {/* Popup for already in tournament */}
+      {wrongTournament && (
+        <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-gray-900/95 p-8 rounded-lg text-center">
+          <h2 className="text-2xl font-bold text-white mb-4">You are already in a tournament!</h2>
+          <button
+            onClick={() => navigate('/dashboard')}
+            className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+          >
+            Go to Dashboard
+          </button>
+        </div>
+      )}
+
+      {/* Popup for eliminated */}
+      {eliminated && (
+        <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-gray-900/95 p-8 rounded-lg text-center">
+          <h2 className="text-2xl font-bold text-white mb-4">You have been eliminated from the tournament!</h2>
+          <button
+            onClick={() => navigate('/dashboard')}
+            className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+          >
+            Go to Dashboard
+          </button>
+        </div>
+      )}
+
+      {matches.length > 0 && matches[matches.length - 1].winner && (
+        <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-gray-900/95 p-8 rounded-lg text-center z-50">
+          <h2 className="text-2xl font-bold text-white mb-4">Congratulations { matches[matches.length - 1].winner}! You are the champion!</h2>
+          <button
+            onClick={() => navigate('/dashboard')}
+            className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+          >
+            Go to Dashboard
+          </button>
+        </div>
+      )}
     </div>
   )
 }

@@ -7,7 +7,7 @@ For more information on this file, see
 https://docs.djangoproject.com/en/4.2/howto/deployment/asgi/
 """
 import os
-from django.core.asgi import get_asgi_application
+from django.core.asgi import get_asgi_application # type: ignore
 from channels.routing import ProtocolTypeRouter, URLRouter # type: ignore
 from channels.sessions import SessionMiddlewareStack # type: ignore
 from chat.routing import websocket_urlpatterns

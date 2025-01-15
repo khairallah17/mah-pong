@@ -9,7 +9,6 @@ import { CgBlock } from "react-icons/cg";
 import { PiGameControllerFill } from "react-icons/pi";
 import React, { useState, useEffect, useRef } from "react";
 import axios from 'axios';
-import { jwtDecode } from "jwt-decode";
 
 const Chat = ({ roomName }) => {
     const [users, setUsers] = useState([]);
@@ -22,8 +21,6 @@ const Chat = ({ roomName }) => {
     const [loading, setLoading] = useState(false);
     const socketRef = useRef(null);
     const [hand, setHand] = useState(false);
-    const accessToken = JSON.parse(localStorage.getItem('authtoken')).access;
-    const { username, fullname } = jwtDecode(accessToken);
 
     useEffect(() => {
         loadUsers();
@@ -40,7 +37,7 @@ const Chat = ({ roomName }) => {
         try {
             const response = await axios.get("http://localhost:8003/chat/api/users/", {
                 headers: {
-                    Authorization: `Bearer ${accessToken}`
+                    Authorization: `Bearer ${JSON.parse(localStorage.getItem('authtoken')).access}`
                 },
                 withCredentials: true
             });
@@ -56,7 +53,7 @@ const Chat = ({ roomName }) => {
         try {
             const response = await axios.get(`http://localhost:8003/chat/api/conversation/${userId}/`, {
                 headers: {
-                    Authorization: `Bearer ${accessToken}`
+                    Authorization: `Bearer ${JSON.parse(localStorage.getItem('authtoken')).access}`
                 },
                 withCredentials: true
             });
@@ -74,7 +71,7 @@ const Chat = ({ roomName }) => {
             socketRef.current.close();  
         }
 
-        const chatSocket = new WebSocket(`ws://localhost:8003/ws/chat/?user_id=${userId}&token=${accessToken}`);
+        const chatSocket = new WebSocket(`ws://localhost:8003/ws/chat/?user_id=${userId}&token=${JSON.parse(localStorage.getItem('authtoken')).access}`);
 
         socketRef.current = chatSocket;
 
@@ -239,8 +236,8 @@ const Chat = ({ roomName }) => {
                             <img src="img.webp" alt="photo" />
                         </div>
                         <div className="flex flex-col items-center gap-1">
-                            <p className="font-semibold text-2xl">{fullname}</p> {/* Fallname */}
-                            <p className="font-semibold text-xl">{username}</p> {/* Username */}
+                            <p className="font-semibold text-2xl">hamza salam</p> {/* Fallname */}
+                            <p className="font-semibold text-xl">sirius</p> {/* Username */}
                         </div>
                     </div>
                     {/*< div className="flex flex-col border-t-2 rounded-full px-32 items-center"></div> */}

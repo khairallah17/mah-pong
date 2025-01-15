@@ -1,11 +1,11 @@
 import json
-from channels.generic.websocket import AsyncWebsocketConsumer
-from channels.db import database_sync_to_async
+from channels.generic.websocket import AsyncWebsocketConsumer # type: ignore
+from channels.db import database_sync_to_async # type: ignore
 from .models import Message, Conversation, CustomUser as User
 from urllib.parse import parse_qs
-from django.db.models import Q 
+from django.db.models import Q  # type: ignore
 import jwt
-from django.conf import settings
+from django.conf import settings # type: ignore
 import logging
 
 logger = logging.getLogger(__name__)

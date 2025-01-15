@@ -388,14 +388,24 @@ export default function NewPvp2d() {
       )}
       {winner && (
         <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-gray-900/95 p-8 rounded-lg text-center">
-          <h2 className="text-2xl font-bold text-white mb-4">{winner} Wins!</h2>
-          <button
-            onClick={() => window.location.reload()}
-            className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
-          >
-            Play Again
-          </button>
-        </div>
+        <h2 className="text-2xl font-bold text-white mb-4">{winner} Wins!</h2>
+        {!matchId && (
+            <button
+                onClick={() => window.location.reload()}
+                className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+            >
+                Play Again
+            </button>
+        )}
+        {matchId && (
+            <button
+                onClick={() => window.location.href = '/dashboard/tournament/live'}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors mt-4"
+            >
+                Back to Tournament
+            </button>
+        )}
+    </div>
       )}
       {isMatched && (
         <div id="game-container">
