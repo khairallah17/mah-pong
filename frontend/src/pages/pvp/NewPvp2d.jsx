@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { useEffect, useRef, useState, useContext } from 'react';
-import GameSettingsButton from '../../components/pvp/Customize2d'; 
+import GameSettingsButton from '../../components/pvp/Customize2d';
 import GameScore from '../../components/pvp/GameScore';
 import { ColorContext } from '../../context/ColorContext';
 import { Navigate } from 'react-router-dom';
@@ -102,10 +102,10 @@ export default function NewPvp2d() {
     const animate = () => {
       requestAnimationFrame(animate);
 
-      // if (!isPausedRef.current) {
-      //   ball.position.add(ballDirection.clone().multiplyScalar(0.015));
-      //   handleCollisions(ball, paddle1, paddle2);
-      // }
+      if (!isPausedRef.current) {
+        ball.position.add(ballDirection.clone().multiplyScalar(0.01));
+        handleCollisions(ball, paddle1, paddle2);
+      }
 
       controls.update();
       renderer.render(scene, camera);
@@ -137,19 +137,19 @@ export default function NewPvp2d() {
         const message = JSON.parse(event.data);
         console.log('WebSocket message:', message);
         if (message.type === 'token_expired') {
-        console.log('Token expired, refreshing...');
-        const newToken = await refreshToken();
-        if (newToken) {
-          localStorage.setItem('authtoken', JSON.stringify(newToken));
-          wsManagerInstance.close();
-          wsManagerInstance.setUrl('ws://localhost:8002/ws/notifications/?token=' + newToken?.access);
-          wsManagerInstance.connect(handleMessage);
-          console.log('WebSocket connection established with new token');
-        } else {
-          localStorage.removeItem('authtoken');
-          window.location.href = '/login';
+          console.log('Token expired, refreshing...');
+          const newToken = await refreshToken();
+          if (newToken) {
+            localStorage.setItem('authtoken', JSON.stringify(newToken));
+            wsManagerInstance.close();
+            wsManagerInstance.setUrl('ws://localhost:8002/ws/notifications/?token=' + newToken?.access);
+            wsManagerInstance.connect(handleMessage);
+            console.log('WebSocket connection established with new token');
+          } else {
+            localStorage.removeItem('authtoken');
+            window.location.href = '/login';
+          }
         }
-      }
         if (message.type === 'match_found') {
           setNames({ player1: message.player1, player2: message.player2 });
           setIsMatched(true);
@@ -295,6 +295,34 @@ export default function NewPvp2d() {
     }
   }
 
+  function handleCollisions(ball, paddle1, paddle2) {
+    const paddle1Box = new THREE.Box3().setFromObject(paddle1);
+    const paddle2Box = new THREE.Box3().setFromObject(paddle2);
+    const ballSphere = new THREE.Sphere(ball.position, ball.geometry.parameters.radius);
+
+    // Left paddle bounce
+    if (paddle1Box.intersectsSphere(ballSphere)) {
+      const paddleCenter = new THREE.Vector3();
+      paddle1Box.getCenter(paddleCenter);
+      ballDirection.z = (ballSphere.center.z - paddleCenter.z) * 1.5;
+      ballDirection.x *= -1;
+      // ball.position.x += 0.05;
+    }
+
+    // Right paddle bounce
+    if (paddle2Box.intersectsSphere(ballSphere)) {
+      const paddleCenter = new THREE.Vector3();
+      paddle2Box.getCenter(paddleCenter);
+      ballDirection.z = (ballSphere.center.z - paddleCenter.z) * 1.5;
+      ballDirection.x *= -1;
+      ball.position.x -= 0.05;
+    }
+
+    // Top and bottom wall bounce
+    if (ball.position.z < -1.5 || ball.position.z > 1.5) {
+      ballDirection.z *= -1;
+    }
+  }
   // Create objects
   function createSpaceBackground(scene) {
     const starsGeometry = new THREE.BufferGeometry();
@@ -388,24 +416,24 @@ export default function NewPvp2d() {
       )}
       {winner && (
         <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-gray-900/95 p-8 rounded-lg text-center">
-        <h2 className="text-2xl font-bold text-white mb-4">{winner} Wins!</h2>
-        {!matchId && (
+          <h2 className="text-2xl font-bold text-white mb-4">{winner} Wins!</h2>
+          {!matchId && (
             <button
-                onClick={() => window.location.reload()}
-                className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+              onClick={() => window.location.reload()}
+              className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
             >
-                Play Again
+              Play Again
             </button>
-        )}
-        {matchId && (
+          )}
+          {matchId && (
             <button
-                onClick={() => window.location.href = '/dashboard/tournament/live'}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors mt-4"
+              onClick={() => window.location.href = '/dashboard/tournament/live'}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors mt-4"
             >
-                Back to Tournament
+              Back to Tournament
             </button>
-        )}
-    </div>
+          )}
+        </div>
       )}
       {isMatched && (
         <div id="game-container">

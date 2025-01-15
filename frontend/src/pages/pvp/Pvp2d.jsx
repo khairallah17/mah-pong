@@ -179,7 +179,7 @@ function Pvp2d() {
                     return;
                 }
                 requestAnimationFrame(animate);
-                ball.position.add(ballDirection.clone().multiplyScalar(0.02));
+                ball.position.add(ballDirection.clone().multiplyScalar(0.01));
 
                 const paddle1Box = new THREE.Box3().setFromObject(paddle1);
                 const paddle2Box = new THREE.Box3().setFromObject(paddle2);

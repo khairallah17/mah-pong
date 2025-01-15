@@ -21,6 +21,7 @@ present_players = {}
 disconnected_users = {}
 TABLE_LIMIT = 1.5
 PADDLE_WIDTH = 1
+BALL_SPEED = 0.1
 
 class TournamentConsumer(AsyncWebsocketConsumer):
     def __init__(self, *args, **kwargs):
@@ -284,7 +285,7 @@ class TournamentConsumer(AsyncWebsocketConsumer):
             if match.round == 1:
                 next_match, _ = TournamentMatch.objects.get(tournament=match.tournament, round=2, position=1)
 
-                if match.position % 2 != 0:
+                if match.position % 2 == 0:
                     next_match.player1 = winner
                 else:
                     next_match.player2 = winner
@@ -379,6 +380,7 @@ pvp2d_user_channels = {}
 pvp2d_matched_users = {}
 pvp2d_game_states = {}
 pvp2d_disconnected_users = {}
+pvp2d_send_gamestate_tasks = {}
 
 class Pvp2dConsumer(AsyncWebsocketConsumer):
     def __init__(self, *args, **kwargs):
@@ -386,7 +388,6 @@ class Pvp2dConsumer(AsyncWebsocketConsumer):
         self.username = None
         self.invite_code = None
         self.match_id = None
-        self.send_gamestate_task = None
         self.player_id = None
 
     async def connect(self):
@@ -474,8 +475,10 @@ class Pvp2dConsumer(AsyncWebsocketConsumer):
                     'game_state': shared_game_state
                 }
             )
-        if not self.send_gamestate_task:
-            self.send_gamestate_task = asyncio.create_task(self.send_gamestate_periodically(user1, user2))
+        if user1 not in pvp2d_send_gamestate_tasks and user2 not in pvp2d_send_gamestate_tasks:
+            task = asyncio.create_task(self.send_gamestate_periodically(user1, user2))
+            pvp2d_send_gamestate_tasks[user1] = task
+            pvp2d_send_gamestate_tasks[user2] = task
 
     @database_sync_to_async
     def create_game(self, username1, username2):
@@ -492,8 +495,8 @@ class Pvp2dConsumer(AsyncWebsocketConsumer):
     def update_ball_position(self, game_state):
         if game_state['is_paused']:
             return
-        game_state['ball_x'] += game_state['ball_direction_x'] * 0.08
-        game_state['ball_z'] += game_state['ball_direction_z'] * 0.08
+        game_state['ball_x'] += game_state['ball_direction_x'] * BALL_SPEED
+        game_state['ball_z'] += game_state['ball_direction_z'] * BALL_SPEED
 
         self.handle_collisions(game_state)
 
@@ -503,9 +506,13 @@ class Pvp2dConsumer(AsyncWebsocketConsumer):
             game_state['ball_direction_z'] *= -1
 
         # paddles collision
-        if (game_state['ball_x'] < -2.5 and abs(game_state['ball_z'] - game_state['paddle1_z']) < 0.5) or \
-           (game_state['ball_x'] > 2.5 and abs(game_state['ball_z'] - game_state['paddle2_z']) < 0.5):
+        if (game_state['ball_x'] < -2.5 and abs(game_state['ball_z'] - game_state['paddle1_z']) < 0.5) :
             game_state['ball_direction_x'] *= -1
+            game_state['ball_direction_z'] = (game_state['ball_z'] - game_state['paddle1_z']) * 1.5
+        
+        if (game_state['ball_x'] > 2.5 and abs(game_state['ball_z'] - game_state['paddle2_z']) < 0.5):
+            game_state['ball_direction_x'] *= -1
+            game_state['ball_direction_z'] = (game_state['ball_z'] - game_state['paddle2_z']) * 1.5
 
         # goal scored
         if game_state['ball_x'] < -2.6 or game_state['ball_x'] > 2.6:
@@ -588,7 +595,12 @@ class Pvp2dConsumer(AsyncWebsocketConsumer):
                 pvp2d_disconnected_users.pop(opponent)
             await self.update_game_result(pvp2d_game_states[username], winner=opponent)
         logger.warning("Cancelling task")
-        self.send_gamestate_task.cancel()
+        if username in pvp2d_send_gamestate_tasks:
+            pvp2d_send_gamestate_tasks[username].cancel()
+            pvp2d_send_gamestate_tasks.pop(username)
+        if opponent in pvp2d_send_gamestate_tasks:
+            pvp2d_send_gamestate_tasks[opponent].cancel()
+            pvp2d_send_gamestate_tasks.pop(opponent)
 
     def update_tournament_match(self, match_id, winner, player1, player2):
         try:
@@ -693,7 +705,13 @@ class Pvp2dConsumer(AsyncWebsocketConsumer):
         game_state = pvp2d_game_states[self.username]
         await self.update_game_result(game_state)
         logger.warning("Cancelling task")
-        self.send_gamestate_task.cancel()
+        if self.username in pvp2d_send_gamestate_tasks:
+            pvp2d_send_gamestate_tasks[self.username].cancel()
+            pvp2d_send_gamestate_tasks.pop(self.username)
+        opponent = pvp2d_matched_users.get(self.username)
+        if opponent in pvp2d_send_gamestate_tasks:
+            pvp2d_send_gamestate_tasks[opponent].cancel()
+            pvp2d_send_gamestate_tasks.pop(opponent)
 
     async def send_error_message(self, error_type, code, message=None):
         logger.warning(f"{error_type}: {message}")
