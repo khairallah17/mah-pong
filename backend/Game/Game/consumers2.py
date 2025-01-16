@@ -44,7 +44,6 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
             if self.username in disconnected_users:
                 user_data = disconnected_users.pop(self.username)
                 user_data['task'].cancel()
-                # what if user havent got matchmade yet
                 await self.send(text_data=json.dumps({
                     'type': 'match_found',
                     'player_id': user_data['player_id'],

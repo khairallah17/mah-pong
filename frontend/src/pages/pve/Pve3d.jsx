@@ -490,8 +490,24 @@ function Pve3d() {
                         textAlign: 'center'
                     }}>
                         <h2>{winnerRef.current} Wins!</h2>
-                        <button onClick={() => window.location.reload()}>Play Again</button>
-                        <button onClick={() => window.location.href = '/Dashboard'}>Quit</button>
+                        <button style={{
+                            margin: '10px',
+                            padding: '10px 20px',
+                            backgroundColor: '#4CAF50',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '5px',
+                            cursor: 'pointer'
+                        }} onClick={() => window.location.reload()}>Play Again</button>
+                        <button style={{
+                            margin: '10px',
+                            padding: '10px 20px',
+                            backgroundColor: '#f44336',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '5px',
+                            cursor: 'pointer'
+                        }} onClick={() => window.location.href = '/Dashboard'}>Quit</button>
                     </div>
                 )}
             </div>

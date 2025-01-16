@@ -427,7 +427,6 @@ class Pvp2dConsumer(AsyncWebsocketConsumer):
             else:
                 if self.username not in pvp2d_matchmaking_pool and self.username not in pvp2d_matched_users:
                     pvp2d_matchmaking_pool.append(self.username)
-                    logger.warning(f"Matchmaking pool: {pvp2d_matchmaking_pool}")
                     # await self.channel_layer.group_add("matchmaking_pool", self.channel_name)
             
             if len(pvp2d_matchmaking_pool) >= 2:
@@ -594,11 +593,12 @@ class Pvp2dConsumer(AsyncWebsocketConsumer):
             else:
                 pvp2d_disconnected_users.pop(opponent)
             await self.update_game_result(pvp2d_game_states[username], winner=opponent)
-        logger.warning("Cancelling task")
         if username in pvp2d_send_gamestate_tasks:
+            logger.warning(f"Cancelling task for {username}")
             pvp2d_send_gamestate_tasks[username].cancel()
             pvp2d_send_gamestate_tasks.pop(username)
         if opponent in pvp2d_send_gamestate_tasks:
+            logger.warning(f"Cancelling task for {opponent}")
             pvp2d_send_gamestate_tasks[opponent].cancel()
             pvp2d_send_gamestate_tasks.pop(opponent)
 
@@ -696,7 +696,6 @@ class Pvp2dConsumer(AsyncWebsocketConsumer):
             game_state['paddle2_z'] = position
     
     async def handle_start(self):
-        logger.warning("starting")
         game_state = pvp2d_game_states[self.username]
         game_state['is_paused'] = False
     
@@ -704,12 +703,13 @@ class Pvp2dConsumer(AsyncWebsocketConsumer):
         logger.warning("ending")
         game_state = pvp2d_game_states[self.username]
         await self.update_game_result(game_state)
-        logger.warning("Cancelling task")
         if self.username in pvp2d_send_gamestate_tasks:
+            logger.warning(f"Cancelling task for {self.username}")
             pvp2d_send_gamestate_tasks[self.username].cancel()
             pvp2d_send_gamestate_tasks.pop(self.username)
         opponent = pvp2d_matched_users.get(self.username)
         if opponent in pvp2d_send_gamestate_tasks:
+            logger.warning(f"Cancelling task for {opponent}")
             pvp2d_send_gamestate_tasks[opponent].cancel()
             pvp2d_send_gamestate_tasks.pop(opponent)
 
