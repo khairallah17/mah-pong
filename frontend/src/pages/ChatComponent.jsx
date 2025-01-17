@@ -65,7 +65,7 @@ const Chat = ({ roomName }) => {
                 },
                 withCredentials: true
             });
-            console.log(response.data)
+            console.log("all data",response.data)
             setMessages(response.data.messages);
         } catch (error) {
             console.error("Error loading conversation:", error);
@@ -146,12 +146,12 @@ const Chat = ({ roomName }) => {
                                 className={`hover:bg-blue-950 p-2 rounded-lg flex gap-2 cursor-pointer user ${selectedUserId === user.id ? "selected" : ""}`}>
                                 {/* User Profile Image */}
                                 <div className="h-12 w-12 rounded-full overflow-hidden border border-purple-950">
-                                    <img src={user.profile_image || "default-profile-img.webp"} alt="profile"/>
+                                    <img src={user.img || "default-profile-img.webp"} alt="profile"/>
                                 </div>
 
                                 {/* User Information */}
                                 <div className="md:flex flex-col hidden">
-                                    <p className="font-semibold">{user.username}</p>
+                                    <p className="font-semibold">{user.fullname}</p>
                                     <p className="text-sm text-gray-300">{lastMessage}</p>
                                 </div>
                             </div>
@@ -165,11 +165,11 @@ const Chat = ({ roomName }) => {
                 <div className="border-black bg-gradient-to-l  from-black/15 to-black/50  abg-opacity-30 bg-opacity-25 p-4 flex h-[100px] rounded-tr-[27px] items-center justify-between">
                     <div className="flex gap-2 ml-[15px]">
                         <div className="h-16 w-16 rounded-full overflow-hidden">
-                            <img src="img.webp" alt="profile"/>
+                            <img src={users.find(user => user.id === selectedUserId)?.avatar} alt="profile"/>
                         </div>
                         <div className="ml-3 justify-center flex flex-col text-lg">
                             <p className="font-semibold">
-                                {selectedUserId ? users.find(user => user.id === selectedUserId)?.username : 'Select a user'}
+                                {selectedUserId ? users.find(user => user.id === selectedUserId)?.fullname : 'Select a user'}
                             </p>
                             <p className="text-green-600">Online</p> {/* changing online and offline*/}
                         </div>

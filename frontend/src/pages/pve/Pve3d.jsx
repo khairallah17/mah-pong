@@ -388,6 +388,13 @@ function Pve3d() {
                 velocity.z = -mapRange(relativePosition.z, { min: -1.5, max: 1.5 }, { min: -0.04, max: 0.04 });
                 velocity.y = mapRange(relativePosition.z, { min: -1.5, max: 1.5 }, { min: 0.015, max: 0.019 });
                 velocity.x = -mapRange(relativePosition.x, { min: -TABLE_DIMENSIONS.width / 2, max: TABLE_DIMENSIONS.width / 2 }, { min: -0.02, max: 0.02 });
+                // if (velocity.x > 0.35) {
+                //     velocity.x = -1 + Math.random() * (velocity.x - (-1));
+                // } else if (velocity.x < -0.35) {
+                //     velocity.x = velocity.x + Math.random() * (1 - velocity.x);
+                // } else {
+                //     velocity.x = Math.random() * 2 - 1;
+                // }
 
                 if (paddle1.rotation.y < 2.66 && paddle1.rotation.y > 0.52) {
                     collisionAnimation(paddle2);

@@ -30,6 +30,7 @@ function Pve3d() {
     const isPlayer1Ref = useRef(isPlayer1);
     const initBallPos = new THREE.Vector3(0, 1, 0);
     let token = localStorage.getItem('authtoken');
+    let paddleWidth = 0;
 
     useEffect(() => {
         isPlayer1Ref.current = isPlayer1;
@@ -212,6 +213,7 @@ function Pve3d() {
                     paddle1.position.set(0, 1, 1);
                     paddle2.position.set(0, 1, -1);
                 }
+                
                 const tablebox = new THREE.Box3().setFromObject(table);
                 console.log(tablebox.min.z, tablebox.max.z);
                 addLights(scene);
@@ -424,6 +426,8 @@ function Pve3d() {
                 const tableBox = new THREE.Box3().setFromObject(table);
                 const gridBox = new THREE.Box3().setFromObject(grid).expandByScalar(0.01);
 
+                paddleWidth = paddle1Box.max.x - paddle1Box.min.x;
+
                 if (ballBox.intersectsBox(tableBox)) {
                     handleTableCollision(ballBox, tableBox);
                 }
@@ -562,8 +566,11 @@ function Pve3d() {
                 velocity.x = -mapRange(relativePosition.x, { min: -TABLE_DIMENSIONS.width / 2, max: TABLE_DIMENSIONS.width / 2 }, { min: -0.04, max: 0.04 });
 
                 //animatePaddle1();
-
-                if (paddle1.rotation.y < 2.66 && paddle1.rotation.y > 0.52) {
+                if (velocity.x < 0.015 || velocity.x > -0.015) {
+                    const relative1 = paddle1.position.clone().sub(ball.position);
+                    velocity.x = -mapRange(relative1.x, { min: -paddleWidth / 2, max: paddleWidth / 2 }, { min: -0.02, max: 0.02 });
+                }
+                if (paddle1.rotation.y < 2.66 && paddle1.rotation.y > 0.52 || paddle2.rotation.y < 2.66 && paddle2.rotation.y > 0.52) {
                     collisionAnimation(paddle1);
                 }
                 velocity.y *= 0.8;
@@ -578,14 +585,11 @@ function Pve3d() {
                 velocity.y = 0.018;
                 velocity.x = -mapRange(relativePosition.x, { min: -TABLE_DIMENSIONS.width / 2, max: TABLE_DIMENSIONS.width / 2 }, { min: -0.04, max: 0.04 });
 
-                // if (velocity.x > 0.35) {
-                //     velocity.x = -1 + Math.random() * (velocity.x - (-1));
-                // } else if (velocity.x < -0.35) {
-                //     velocity.x = velocity.x + Math.random() * (1 - velocity.x);
-                // } else {
-                //     velocity.x = Math.random() * 2 - 1;
-                // }
-                if (paddle1.rotation.y < 2.66 && paddle1.rotation.y > 0.52) {
+                if (velocity.x < 0.015 || velocity.x > -0.015) {
+                    const relative2 = paddle2.position.clone().sub(ball.position);
+                    velocity.x = -mapRange(relative2.x, { min: -paddleWidth / 2, max: paddleWidth / 2 }, { min: -0.02, max: 0.02 });
+                }
+                if (paddle2.rotation.y < 2.66 && paddle2.rotation.y > 0.52 || paddle1.rotation.y < -0.52 && paddle1.rotation.y > -2.66) {
                     collisionAnimation(paddle2);
                 }
                 velocity.y *= 0.8;

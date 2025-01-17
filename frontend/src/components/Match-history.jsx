@@ -17,7 +17,6 @@ export const MatchHistory = () => {
         // const username = "a"; // Replace with actual username
         const response = await fetch(`http://localhost:8000/api/match-history/${username}/`);
         const data = await response.json();
-        console.log('Received matches data:', data);
         setMatches(data);
         setLoading(false);
       } catch (error) {

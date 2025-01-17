@@ -29,13 +29,16 @@ const NotificationDisplay = () => {
   useEffect(() => {
     if (wsNotifications.length > 0) {
       setNotifications(prevNotifications => [...wsNotifications, ...prevNotifications]);
-      setAlerts(prevAlerts => prevAlerts + wsNotifications.length);
+      console.log("wsNotifications", wsNotifications);
+      // increment alerts by the number of new notifications
+      setAlerts(prevAlerts => prevAlerts + 1);
     }
   }, [wsNotifications]);
 
   const toggleNotifications = () => {
     if (!isOpen) {
       wsManager.sendMessage("Notifications viewed");
+      // reset Notif as viewed
       setAlerts(0);
     }
     setIsOpen(!isOpen);

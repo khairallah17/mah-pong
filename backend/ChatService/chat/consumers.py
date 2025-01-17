@@ -13,10 +13,11 @@ logger = logging.getLogger(__name__)
 class ChatConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         query_params = self._parse_query_params()
-        self.user_id = query_params.get('user_id', [None])[0]
+        # self.user_id = query_params.get('user_id', [None])[0]
         token = query_params.get('token', [None])[0]
         self.username = self._decode_token(token)
-        self.room_group_name = f"chat_{self.user_id}"
+        self.user = await self.get_user(username=self.username)
+        self.room_group_name = f"chat_{self.user.id}"
 
         # Join the chat group
         await self.channel_layer.group_add(
@@ -34,8 +35,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     async def receive(self, text_data):
         data = json.loads(text_data)
-        sender = await self.get_user(self.username)
+        sender = await self.get_user(username=self.username)
         receiver_id = data['user_id']
+        receiver = await self.get_user(user_id=receiver_id)
         content = data['message']
 
         # Ensure conversation exists between sender and receiver
@@ -49,14 +51,27 @@ class ChatConsumer(AsyncWebsocketConsumer):
             f"chat_{receiver_id}",
             {
                 'type': 'chat_message',
-                'message': content,
-                'username': sender.username
+                'content': content,
+                'sender': sender.username,
+                'receiver': receiver.username
+            }
+        )
+        await self.channel_layer.group_send(
+            f"chat_{sender.id}",
+            {
+                'type': 'chat_message',
+                'content': content,
+                'sender': sender.username,
+                'receiver': receiver.username
             }
         )
 
     @database_sync_to_async
-    def get_user(self, username):
-        return User.objects.get(username=username)
+    def get_user(self, username=None, user_id=None):
+        if username:
+            return User.objects.get(username=username)
+        elif user_id:
+            return User.objects.get(id=user_id)
 
     @database_sync_to_async
     def get_or_create_conversation(self, sender, receiver_id):
@@ -84,14 +99,16 @@ class ChatConsumer(AsyncWebsocketConsumer):
         )
 
     async def chat_message(self, event):
-        message = event["message"]
-        username = event["username"]
+        content = event["content"]
+        sender = event["sender"]
+        receiver = event["receiver"]
 
         # Send the message to WebSocket
         await self.send(text_data=json.dumps({
             'type': 'chat_message',
-            'message': message,
-            'username': username
+            'content': content,
+            'sender': sender,
+            'receiver': receiver
         }))
         
     # utils
@@ -106,3 +123,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
             raise jwt.InvalidTokenError("Username not found in token.")
         return username
 
+    @database_sync_to_async
+    def get_user_id(self):
+        return User.objects.get(username=self.username).id

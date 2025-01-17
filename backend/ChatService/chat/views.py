@@ -66,6 +66,7 @@ class ApiUsers(APIView):
                 }
             )
 
+
             return Response(user_data.get('friends', []))
         except requests.ConnectionError as e:
             logger.error(f"ConnectionError: {e}")
@@ -109,15 +110,11 @@ def get_conversation(request, id):
         if not auth_header:
             return Response({"error": "Authorization header missing"}, status=400)
         token = auth_header.split(' ')[1]
-        # logger.warning(f"Token: {token}")
         payload = jwt.decode(token, settings.SECRET_KEY, algorithms=['HS256'])
-        # logger.warning(f"Payload: {payload}")
         username = payload.get('username')
-        # logger.warning(f"Username: {username}")
         if not username:
             raise jwt.InvalidTokenError("Username not found in token.")
         user = User.objects.get(username=username)
-        # logger.warning(f"Request user: {user} user2 id: {id} username: {username} token: {token}")
         conversation = Conversation.objects.filter(
             (Q(user1=user) & Q(user2_id=id)) |
             (Q(user2=user) & Q(user1_id=id))
@@ -132,9 +129,10 @@ def get_conversation(request, id):
 
         # Serialize the conversation along with messages
         serializer = ConversationSerializer(conversation)
+        
         return Response(serializer.data)
     except Exception as e:
-        return Response({'error': str(e)}, status=500)
+        return Response({'error': str(e)}, status=401)
     # try:
     #     # Ensure the user is authenticated
     #     if not request.user.is_authenticated:
