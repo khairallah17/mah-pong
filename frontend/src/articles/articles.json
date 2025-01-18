@@ -4,7 +4,7 @@
         "totalArticles": 3,
         "dateCompiled": "2025-01-18",
         "subject": "Ping Pong Gaming History and Development",
-        "compiler": "Claude"
+        "compiler": "ft_transcendence"
       },
       "articles": [
         {
@@ -30,7 +30,7 @@
                 "online ping pong community"
               ],
               "dateCreated": "2025-01-18",
-              "author": "Claude"
+              "author": "ft_transcendence"
             },
             "content": {
               "introduction": {
@@ -112,7 +112,7 @@
                 "online table tennis practice"
               ],
               "dateCreated": "2025-01-18",
-              "author": "Claude"
+              "author": "ft_transcendence"
             },
             "content": {
               "introduction": {
@@ -237,7 +237,7 @@
                 "early video games"
               ],
               "dateCreated": "2025-01-18",
-              "author": "Claude",
+              "author": "ft_transcendence",
               "historicalDate": "1972-11-29",
               "subject": "Gaming History"
             },
