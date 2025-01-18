@@ -15,8 +15,9 @@ const NotificationDisplay = () => {
         const { username } = jwtDecode(accessToken);
         const response = await fetch(`http://localhost:8002/api/notifications/${username}/`);
         const data = await response.json();
-        const unreadNotifications = data.filter(notification => !notification.read);
-        setNotifications(data);
+        const sortedData = data.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+        const unreadNotifications = sortedData.filter(notification => !notification.read);
+        setNotifications(sortedData);
         setAlerts(unreadNotifications.length);
       } catch (error) {
         console.error(error);
@@ -28,7 +29,8 @@ const NotificationDisplay = () => {
 
   useEffect(() => {
     if (wsNotifications.length > 0) {
-      setNotifications(prevNotifications => [...wsNotifications, ...prevNotifications]);
+      const reversedWsNotifications = [...wsNotifications].reverse();
+      setNotifications(prevNotifications => [...reversedWsNotifications, ...prevNotifications]);
       console.log("wsNotifications", wsNotifications);
       // increment alerts by the number of new notifications
       setAlerts(prevAlerts => prevAlerts + 1);

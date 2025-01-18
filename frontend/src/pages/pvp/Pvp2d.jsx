@@ -104,7 +104,6 @@ export default function Pvp2d() {
 
       if (!isPausedRef.current) {
         ball.position.add(ballDirectionRef.current.clone().multiplyScalar(0.01));
-        console.log(ballDirectionRef.current);
         // handleCollisions(ball, paddle1, paddle2);
       }
 

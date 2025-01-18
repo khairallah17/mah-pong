@@ -95,23 +95,21 @@ function Pve3d() {
     const refreshToken = async () => {
         let refreshtokenUrl = "http://localhost:8001/api/token/refresh/"
         try {
-            const response = await fetch(refreshtokenUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ refresh: JSON.parse(token).refresh })
-            });
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
+          const response = await fetch(refreshtokenUrl, {
+            method: 'POST',
+            credentials: 'include'
+          });
+          if (response.ok) {
             const data = await response.json();
-            console.log('New access token:', data.access);
-            return data.access;
+            return data;
+          } else {
+            return null;
+          }
         } catch (error) {
-            console.error('Error refreshing token:', error);
+          console.error('Failed to refresh token:', error);
+          return null;
         }
-    };
+      };
 
 
     const updateScene = (event, position) => {

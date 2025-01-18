@@ -104,19 +104,17 @@ export default function Tournament() {
     try {
       const response = await fetch(refreshtokenUrl, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ refresh: JSON.parse(token).refresh })
+        credentials: 'include'
       });
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
+      if (response.ok) {
+        const data = await response.json();
+        return data;
+      } else {
+        return null;
       }
-      const data = await response.json();
-      console.log('New access token:', data.access);
-      return data;
     } catch (error) {
-      console.error('Error refreshing token:', error);
+      console.error('Failed to refresh token:', error);
+      return null;
     }
   };
 
