@@ -1192,19 +1192,25 @@ class RemoveFriendView(APIView):
         return Response({'status': 'friend removed'})
     
     
+#Faking Realtime Online status
+class UserOnlineView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        try:
+            request.user.is_online = True
+            request.user.save(update_fields=['is_online'])
+            return Response({'status': 'online'})
+        except Exception as e:
+            return Response({'error': str(e)}, status=400)
+
 class UserOfflineView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
         try:
-            # Set user offline and save
             request.user.is_online = False
             request.user.save(update_fields=['is_online'])
-            
-            return Response({
-                'message': 'User status updated to offline'
-            }, status=status.HTTP_200_OK)
+            return Response({'status': 'offline'})
         except Exception as e:
-            return Response({
-                'error': str(e)
-            }, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': str(e)}, status=400)

@@ -34,5 +34,6 @@ urlpatterns = [
     path('friend-requests/<uuid:pk>/cancel/', views.FriendRequestCancelView.as_view(), name='friend-request-cancel'),
     path('friends/', views.FriendListView.as_view(), name='friend-list'),
     path('friends/remove/', views.RemoveFriendView.as_view(), name='friend-remove'),
+    path('user-online/', views.UserOnlineView.as_view(), name='user-online'),
     path('user-offline/', views.UserOfflineView.as_view(), name='user-offline'),
 ]
