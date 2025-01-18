@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useSidebarContext } from '../hooks/useSidebar';
-import { Search, X, Menu, Bell } from 'lucide-react';
+import { Search, X, Menu, Bell, UserPlus } from 'lucide-react';
 import DefaultAvatar from '../assets/khr.jpg';
 import Notification from './NotificationDisplay';
 
@@ -13,7 +13,6 @@ const Navbar = () => {
     img: '' 
   });
   const { toggleSidebar, open } = useSidebarContext();
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -32,6 +31,7 @@ const Navbar = () => {
           });
           if (response.ok) {
             const userData = await response.json();
+            console.log('User data:', userData);
             setUser({
               username: userData.username,
               email: userData.email,
@@ -49,7 +49,7 @@ const Navbar = () => {
     fetchUserData();
   }, []);
 
-  const searchFriends = async (query) => {
+  const searchUsers = async (query) => {
     if (!query.trim()) {
       setSearchResults([]);
       return;
@@ -57,28 +57,35 @@ const Navbar = () => {
 
     setIsLoading(true);
     const authToken = localStorage.getItem('authtoken');
+    const token = JSON.parse(authToken).access;
 
     try {
-      const response = await fetch(`http://localhost:8001/api/friends/?search=${query}`, {
-        headers: {
-          'Authorization': `Bearer ${JSON.parse(authToken).access}`
-        }
+      // First, get the list of friends to filter them out
+      const friendsResponse = await fetch(`http://localhost:8001/api/friends/`, {
+        headers: { 'Authorization': `Bearer ${token}` }
       });
+      const friendsData = await friendsResponse.json();
+      const friendsList = friendsData[0]?.friends || [];
+      const friendUsernames = new Set(friendsList.map(friend => friend.username));
 
-      if (response.ok) {
-        const data = await response.json();
-        // Extract friends array from the response
-        const friendsList = data[0]?.friends || [];
-        // Filter the friends list based on the search query
-        const filteredFriends = friendsList.filter(friend => 
-          friend.fullname.toLowerCase().includes(query.toLowerCase()) ||
-          friend.username.toLowerCase().includes(query.toLowerCase()) ||
-          friend.email.toLowerCase().includes(query.toLowerCase())
-        );
-        setSearchResults(filteredFriends);
-      }
+      // Then, fetch all users
+      const allUsersResponse = await fetch(`http://localhost:8001/api/allusers/?search=${query}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const allUsersData = await allUsersResponse.json();
+
+      // Filter out friends and current user from the results
+      const filteredUsers = allUsersData.filter(searchedUser => 
+        !friendUsernames.has(searchedUser.username) && 
+        searchedUser.username !== user.username &&
+        (searchedUser.fullname?.toLowerCase().includes(query.toLowerCase()) ||
+         searchedUser.username.toLowerCase().includes(query.toLowerCase()) ||
+         searchedUser.email?.toLowerCase().includes(query.toLowerCase()))
+      );
+
+      setSearchResults(filteredUsers);
     } catch (error) {
-      console.error('Error searching friends:', error);
+      console.error('Error searching users:', error);
       setSearchResults([]);
     } finally {
       setIsLoading(false);
@@ -91,7 +98,7 @@ const Navbar = () => {
 
   useEffect(() => {
     const timeoutId = setTimeout(() => {
-      searchFriends(searchQuery);
+      searchUsers(searchQuery);
     }, 300);
 
     return () => clearTimeout(timeoutId);
@@ -129,7 +136,7 @@ const Navbar = () => {
             </div>
             <input
               type="search"
-              placeholder="Search friends..."
+              placeholder="Search users..."
               value={searchQuery}
               onChange={(e) => {
                 setSearchQuery(e.target.value);
@@ -139,43 +146,44 @@ const Navbar = () => {
               className="w-full h-9 pl-10 pr-4 rounded-full bg-white/10 text-sm text-white placeholder-white/50 border-none focus:outline-none focus:ring-2 focus:ring-white/20"
             />
             
-            {showResults && (
+            {showResults && searchQuery && (
               <div className="absolute w-full mt-2 bg-gray-800 rounded-lg shadow-lg max-h-96 overflow-y-auto">
                 {isLoading ? (
                   <div className="p-4 text-white text-center">Searching...</div>
                 ) : searchResults.length > 0 ? (
                   <div>
-                    {searchResults.map((friend) => (
+                    {searchResults.map((searchedUser) => (
                       <div
-                        key={friend.id}
+                        key={searchedUser.id}
                         className="flex items-center gap-3 p-3 hover:bg-gray-700 cursor-pointer"
                         onClick={() => {
                           setShowResults(false);
                           setSearchQuery('');
-                          handleUserClick(friend.username);
+                          handleUserClick(searchedUser.username);
                         }}
                       >
                         <img
-                          src={friend.img || friend.avatar}
-                          alt={friend.username}
+                          src={"http://localhost:8001/" + searchedUser.img || searchedUser.avatar || DefaultAvatar}
+                          alt={searchedUser.username}
                           className="h-10 w-10 rounded-full object-cover"
                           onError={(e) => {
                             e.target.src = DefaultAvatar;
                           }}
                         />
-                        <div>
+                        <div className="flex-1">
                           <div className="text-sm font-medium text-white">
-                            {friend.fullname || friend.username}
+                            {searchedUser.fullname || searchedUser.username}
                           </div>
                           <div className="text-xs text-white/60">
-                            {friend.email}
+                            {searchedUser.email}
                           </div>
                         </div>
+                        <UserPlus className="h-5 w-5 text-white/60 hover:text-white" />
                       </div>
                     ))}
                   </div>
-                ) : searchQuery.trim() !== '' && (
-                  <div className="p-4 text-white text-center">No results found</div>
+                ) : (
+                  <div className="p-4 text-white text-center">No users found</div>
                 )}
               </div>
             )}
@@ -196,7 +204,7 @@ const Navbar = () => {
               <div className="text-xs text-white/60">{user.email}</div>
             </div>
             <img
-              src={user.img ? `http://localhost:8001${user.img}` : DefaultAvatar}
+              src={user.img ? `http://localhost:8001/${user.img}` : DefaultAvatar}
               alt={`${user.fullname}'s avatar`}
               className="h-12 w-12 rounded-full object-cover ring-2 ring-white/20"
               onError={(e) => {
@@ -211,4 +219,3 @@ const Navbar = () => {
 };
 
 export default Navbar;
-
