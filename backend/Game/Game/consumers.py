@@ -405,6 +405,7 @@ class Pvp2dConsumer(AsyncWebsocketConsumer):
             if self.username in pvp2d_disconnected_users:
                 user_data = pvp2d_disconnected_users.pop(self.username)
                 user_data['task'].cancel()
+                logger.warning(f"Cancelled countdown task for {self.username}")
                 await self.send(text_data=json.dumps({
                     'type': 'match_found',
                     'player_id': user_data['player_id'],
@@ -476,6 +477,7 @@ class Pvp2dConsumer(AsyncWebsocketConsumer):
             )
         if user1 not in pvp2d_send_gamestate_tasks and user2 not in pvp2d_send_gamestate_tasks:
             task = asyncio.create_task(self.send_gamestate_periodically(user1, user2))
+            logger.warning(f"Starting gamestate task")
             pvp2d_send_gamestate_tasks[user1] = task
             pvp2d_send_gamestate_tasks[user2] = task
 
@@ -543,12 +545,15 @@ class Pvp2dConsumer(AsyncWebsocketConsumer):
             })
 
     async def send_gamestate_periodically(self, user1, user2):
-        while user1 in pvp2d_matched_users or user2 in pvp2d_matched_users:
-            #finish
-            await asyncio.sleep(0.060)  # Adjust the interval
-            if self.username in pvp2d_game_states:
-                self.update_ball_position(pvp2d_game_states[self.username])
-                await self.send_game_state(user1, user2)
+        try:
+            while user1 in pvp2d_matched_users or user2 in pvp2d_matched_users:
+                await asyncio.sleep(0.060)
+                if self.username in pvp2d_game_states:
+                    self.update_ball_position(pvp2d_game_states[self.username])
+                    await self.send_game_state(user1, user2)
+        except asyncio.CancelledError:
+            logger.warning(f"Task for {self.username} was cancelled")
+            raise
 
     def init_gamestate(self):
         return {
@@ -567,6 +572,7 @@ class Pvp2dConsumer(AsyncWebsocketConsumer):
         if self.username:            
             if self.username in pvp2d_matched_users:
                 countdown_task = asyncio.create_task(self.start_reconnect_countdown(self.username))
+                logger.warning(f"Starting countdown task for {self.username}")
                 pvp2d_disconnected_users[self.username] = {
                     'task': countdown_task,
                     'player_id': self.player_id,
@@ -701,8 +707,6 @@ class Pvp2dConsumer(AsyncWebsocketConsumer):
     
     async def handle_end(self):
         logger.warning("ending")
-        game_state = pvp2d_game_states[self.username]
-        await self.update_game_result(game_state)
         if self.username in pvp2d_send_gamestate_tasks:
             logger.warning(f"Cancelling task for {self.username}")
             pvp2d_send_gamestate_tasks[self.username].cancel()
@@ -712,6 +716,8 @@ class Pvp2dConsumer(AsyncWebsocketConsumer):
             logger.warning(f"Cancelling task for {opponent}")
             pvp2d_send_gamestate_tasks[opponent].cancel()
             pvp2d_send_gamestate_tasks.pop(opponent)
+        game_state = pvp2d_game_states[self.username]
+        await self.update_game_result(game_state)
 
     async def send_error_message(self, error_type, code, message=None):
         logger.warning(f"{error_type}: {message}")
