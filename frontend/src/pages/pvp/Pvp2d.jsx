@@ -32,6 +32,7 @@ export default function Pvp2d() {
   const [names, setNames] = useState({ player1: 'You', player2: 'Opponent' });
   const winnerRef = useRef(null);
   const isPlayer1Ref = useRef(true);
+  const [processingResults, setProcessingResults] = useState(false);
 
   // Color context
   const { tableMainColor, tableSecondaryColor, paddlesColor } = useContext(ColorContext);
@@ -161,6 +162,9 @@ export default function Pvp2d() {
         } else if (message.type === 'opponent_disconnected') {
           alert('You won because your opponent disconnected.');
           window.location.href = '/dashboard';
+        } else if (message.type === 'game_end') {
+          setProcessingResults(false);
+          setWinner(winnerRef.current);
         }
       };
       wsRef.current.onclose = () => {
@@ -201,14 +205,16 @@ export default function Pvp2d() {
       // Update paddle and ball positions based on gameState
       isPausedRef.current = gameState.is_paused;
       ballDirectionRef.current.set(gameState.ball_direction_x, 0, gameState.ball_direction_z);
-      paddle1Ref.current.position.z = gameState.paddle1_z;
-      paddle2Ref.current.position.z = gameState.paddle2_z;
+      if (isPlayer1Ref.current)
+        paddle2Ref.current.position.z = gameState.paddle2_z;
+      else
+        paddle1Ref.current.position.z = gameState.paddle1_z;
       ballRef.current.position.set(gameState.ball_x, 0.1, gameState.ball_z);
       if (gameState.is_paused) {
         if (gameState.scoreP1 >= 5 || gameState.scoreP2 >= 5) {
           winnerRef.current = gameState.scoreP1 >= 5 ? 'Player 1' : 'Player 2';
-          setWinner(winnerRef.current);
           wsRef.current.send(JSON.stringify({ type: 'game_event', event: 'end' }));
+          setProcessingResults(true);
         } else if (!countdownRef.current) {
           startCountdown();
         }
@@ -427,6 +433,12 @@ export default function Pvp2d() {
       {countdown !== null && (
         <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-gray-900/95 p-8 rounded-lg text-center">
           <h2 className="text-2xl font-bold text-white mb-4">{countdown}</h2>
+        </div>
+      )}
+      {processingResults && (
+        <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-gray-900/95 p-8 rounded-lg text-center">
+          <h2 className="text-2xl font-bold text-white mb-4">Processing game results...</h2>
+          <div className="loader border-t-white border-2 border-solid rounded-full w-8 h-8 animate-spin mx-auto"></div>
         </div>
       )}
     </>

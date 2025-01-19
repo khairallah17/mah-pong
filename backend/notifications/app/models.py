@@ -6,6 +6,7 @@ class Notification(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     read = models.BooleanField(default=False)
     user = models.CharField(max_length=20, blank=True, null=True)
+    link = models.CharField(max_length=255, blank=True, null=True)
 
     def save(self, *args, **kwargs):
         if self.user:

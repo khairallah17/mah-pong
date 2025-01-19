@@ -81,7 +81,14 @@ const NotificationDisplay = () => {
               <ul className="divide-y divide-gray-200 max-h-96 overflow-y-auto">
                 {notifications.map((notification, index) => (
                   <li key={index} className="px-4 py-3 hover:bg-gray-50">
-                    <p className="text-sm text-gray-800">{notification.message}</p>
+                    <a
+                      href={notification.link || '#'}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm text-gray-800"
+                    >
+                      {notification.message}
+                    </a>
                   </li>
                 ))}
               </ul>
