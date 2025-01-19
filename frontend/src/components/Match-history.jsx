@@ -7,7 +7,7 @@ export const MatchHistory = () => {
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const matchesPerPage = 8;
+  const matchesPerPage = 6;
 
   const token = JSON.parse(localStorage.getItem('authtoken')).access;
   const username = jwtDecode(token).username;
@@ -26,7 +26,7 @@ export const MatchHistory = () => {
         // Calculate start and end index for current page
         const startIndex = (currentPage - 1) * matchesPerPage;
         const endIndex = startIndex + matchesPerPage;
-        
+
         // Slice the matches array for current page
         const paginatedMatches = allMatches.slice(startIndex, endIndex);
         setMatches(paginatedMatches);
