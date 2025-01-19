@@ -19,7 +19,7 @@ export const UserSearchService = {
       });
 
       // Log the response for debugging
-      console.log('API Response:', response.data);
+      // console.log('API Response:', response.data);
 
       if (Array.isArray(response.data)) {
         // If searchTerm is provided, filter results
