@@ -192,7 +192,7 @@ const Navbar = () => {
 
         <div className="flex items-center gap-4">
           <button 
-            className="p-4 rounded-md text-white/80 hover:text-white hover:bg-white/10 focus:outline-none"
+            className="rounded-md  hover:bg-white/10 "
             aria-label="Notifications"
           >
             <Notification className="h-5 w-5" />

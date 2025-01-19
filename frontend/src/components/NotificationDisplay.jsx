@@ -18,7 +18,6 @@ const NotificationDisplay = () => {
         const { username } = jwtDecode(accessToken);
         const response = await fetch(`http://localhost:8002/api/notifications/${username}/`);
         const data = await response.json();
-        console.log("data", data);
         const sortedData = data.sort((a, b) => 
           new Date(b.created_at) - new Date(a.created_at)
         );
@@ -89,7 +88,7 @@ const NotificationDisplay = () => {
       };
     } else if (message.includes("sent you a friend request")) {
       return {
-        icon: <UserPlus className="w-14 h-4 text-blue-500" />,
+        icon: <UserPlus className="w-4 h-4 text-blue-500" />,
         bgColor: "bg-blue-50",
         borderColor: "border-l-blue-500"
       };
@@ -113,9 +112,10 @@ const NotificationDisplay = () => {
 
   return (
     <div className="z-50 relative">
+      {/* Notification Button */}
       <button
         onClick={toggleNotifications}
-        className="p-2 rounded-full hover:bg-blue-950 focus:ring-2 focus:ring-blue-950 relative transition-colors duration-200"
+        className="p-2 rounded-full hover:bg-blue-950 relative transition-colors duration-200"
         aria-label="Notifications"
       >
         <svg
@@ -139,19 +139,31 @@ const NotificationDisplay = () => {
         )}
       </button>
 
+      {/* Notification Panel */}
       {isOpen && (
         <>
+          {/* Overlay */}
           <div 
-            className="fixed inset-0" 
+            className="fixed inset-0 bg-black bg-opacity-30 z-10" 
             onClick={() => setIsOpen(false)}
           />
-          <div className="absolute right-0 mt-2 w-[calc(100vw-2rem)] sm:w-80 md:w-96 bg-white rounded-lg shadow-xl overflow-hidden z-20 border border-gray-200 max-h-[80vh] md:max-h-[32rem]">
-            <div className="bg-white flex flex-col h-full">
-              <div className="px-4 py-3 border-b border-gray-200">
+          
+          {/* Notification Container */}
+          <div className="fixed top-16 right-2 left-2 md:absolute md:right-0 md:left-auto md:top-full md:mt-2 max-h-[80vh] w-auto md:w-96 bg-white rounded-lg shadow-xl z-20 border border-gray-200">
+            <div className="flex flex-col h-full max-h-[80vh]">
+              {/* Header */}
+              <div className="px-4 py-3 border-b border-gray-200 flex justify-between items-center sticky top-0 bg-white z-10">
                 <h3 className="text-lg font-semibold text-gray-800">Notifications</h3>
+                <button 
+                  onClick={() => setIsOpen(false)}
+                  className="p-1 hover:bg-gray-100 rounded-full"
+                >
+                  <X className="w-5 h-5 text-gray-500" />
+                </button>
               </div>
               
-              <div className="divide-y divide-gray-200 overflow-y-auto flex-grow">
+              {/* Notifications List */}
+              <div className="overflow-y-auto flex-1 divide-y divide-gray-200 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-50">
                 {notifications.length > 0 ? (
                   notifications.map((notification, index) => {
                     const style = getNotificationStyle(notification.message);
@@ -159,22 +171,22 @@ const NotificationDisplay = () => {
                       <div
                         key={notification.id || index}
                         onClick={() => handleNotificationClick(notification)}
-                        className={`px-3 sm:px-4 py-3 hover:bg-gray-50 cursor-pointer transition-all duration-200 border-l-4 ${style.bgColor} ${style.borderColor}`}
+                        className={`px-4 py-3 hover:bg-gray-50 cursor-pointer transition-all duration-200 border-l-4 ${style.bgColor} ${style.borderColor}`}
                       >
-                        <div className="flex items-start space-x-2 sm:space-x-3">
+                        <div className="flex items-start space-x-3">
                           {notification.sender_image ? (
                             <img
                               src={notification.sender_image}
                               alt="User"
-                              className="w-8 h-8 sm:w-10 sm:h-10 rounded-full object-cover ring-2 ring-gray-100 flex-shrink-0"
+                              className="w-10 h-10 rounded-full object-cover ring-2 ring-gray-100 flex-shrink-0"
                             />
                           ) : (
-                            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0">
-                              <UserCircle className="w-6 h-6 sm:w-8 sm:h-8 text-gray-400" />
+                            <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0">
+                              <UserCircle className="w-8 h-8 text-gray-400" />
                             </div>
                           )}
                           <div className="flex-1 min-w-0">
-                            <div className="flex items-center space-x-2">
+                            <div className="flex items-center justify-between">
                               <p className="text-sm break-words">
                                 {renderNotificationContent(notification.message)}
                               </p>
@@ -185,7 +197,7 @@ const NotificationDisplay = () => {
                             </p>
                           </div>
                           {!notification.read && (
-                            <span className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0 animate-pulse" />
+                            <span className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0 animate-pulse" />
                           )}
                         </div>
                       </div>
