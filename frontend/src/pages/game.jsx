@@ -212,7 +212,7 @@ const Games = () => {
             <button
               key={index}
               onClick={() => setCurrentSlide(index)}
-              className={`w-3 h-3 rounded-full transition-colors duration-300 ${
+              className={`w-6 h-3 rounded-full transition-colors duration-300 ${
                 currentSlide === index ? 'bg-white scale-125' : 'bg-white/30'
               }`}
             />
