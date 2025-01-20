@@ -31,7 +31,9 @@ export const WeeklyChart = ({ user }) => {
   const chartRef = useRef(null);
 
   // Validate username
+  console.log("user", user);
   const username = user?.trim() || '';
+  console.log("username", username);
 
   useEffect(() => {
     const fetchMatchData = async () => {

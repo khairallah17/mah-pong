@@ -43,12 +43,13 @@ export const PlayerList = () => {
                   },
                 }
               );
+              
               if (statsResponse.ok) {
                 const statsData = await statsResponse.json();
                 return {
                   ...friend,
-                  nbwin: statsData.wins || 0,
-                  nblose: statsData.losses || 0
+                  nbwin: statsData.nbwin || 0,
+                  nblose: statsData.nblose || 0
                 };
               }
               return friend;

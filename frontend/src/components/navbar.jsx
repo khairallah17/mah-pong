@@ -198,7 +198,8 @@ const Navbar = () => {
             <img
               src={user.img ? `http://localhost:8001/${user.img}` : DefaultAvatar}
               alt={`${user.fullname}'s avatar`}
-              className="h-12 w-12 rounded-full object-cover ring-2 ring-white/20"
+              className="h-12 w-12 rounded-full object-cover ring-2 ring-white/20 cursor-pointer"
+              onClick={() => window.location.href = `http://localhost:5173/dashboard/profil/${user.username}`}
               onError={(e) => {
                 e.target.src = DefaultAvatar;
               }}

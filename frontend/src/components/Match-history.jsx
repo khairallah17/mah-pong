@@ -26,7 +26,7 @@ export const MatchHistory = () => {
         // Calculate start and end index for current page
         const startIndex = (currentPage - 1) * matchesPerPage;
         const endIndex = startIndex + matchesPerPage;
-
+        
         // Slice the matches array for current page
         const paginatedMatches = allMatches.slice(startIndex, endIndex);
         setMatches(paginatedMatches);

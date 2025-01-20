@@ -2,98 +2,103 @@ import React, { useState, useEffect, useContext } from 'react';
 import { useParams } from 'react-router-dom';
 import { jwtDecode } from "jwt-decode";
 import { WebSocketContext } from '../../../websockets/WebSocketProvider.jsx';
+import { Shield, Gamepad2, UserPlus, UserMinus, UserX, Check, X, Loader2 } from 'lucide-react';
 
 const PictureUser = () => {
   const [profil, setProfil] = useState(null);
+  const [playerStats, setPlayerStats] = useState(null);
   const [requests, setRequests] = useState([]);
   const [error, setError] = useState(null);
   const [pendingRequest, setPendingRequest] = useState(null);
   const [friendStatus, setFriendStatus] = useState('none');
+  const [isLoading, setIsLoading] = useState(true);
   const { username } = useParams();
-  const token = JSON.parse(localStorage.getItem('authtoken')).access;
-  const currentUser = jwtDecode(token).username;
+  const token = JSON.parse(localStorage.getItem('authtoken'))?.access;
+  const currentUser = token ? jwtDecode(token).username : null;
   const { wsManager } = useContext(WebSocketContext);
 
   const checkFriendStatus = async () => {
     try {
-        // Check friend requests
-        const response = await fetch(`http://localhost:8001/api/friend-requests/`, {
-            headers: {
-                'Authorization': `Bearer ${token}`
-            }
-        });
-        
-        if (!response.ok) {
-            throw new Error('Failed to fetch friend requests');
+      // First request - friend requests
+      const requestsResponse = await fetch(`http://localhost:8001/api/friend-requests/`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
         }
+      });
+      
+      if (!requestsResponse.ok) {
+        throw new Error('Failed to fetch friend requests');
+      }
 
-        const requests = await response.json();
-        setRequests(requests);
-        // Check for any pending or accepted requests between the users
-        const existingRequest = requests.find(request => 
-            (request.sender_username === currentUser && request.receiver_username === username) ||
-            (request.sender_username === username && request.receiver_username === currentUser)
-        );
+      const requestsData = await requestsResponse.json();
+      setRequests(requestsData);
+      
+      const existingRequest = requestsData.find(request => 
+        (request.sender_username === currentUser && request.receiver_username === username) ||
+        (request.sender_username === username && request.receiver_username === currentUser)
+      );
 
-        if (existingRequest) {
-          setPendingRequest(existingRequest);
-          if (existingRequest.status === 'pending') {
-              setFriendStatus('pending');
-              return;
-          } else if (existingRequest.status === 'accepted') {
-            console.log('hna l9a existging request o dar friend')
-              setFriendStatus('friends');
-              return;
-          }
-          // setFriendStatus()
+      if (existingRequest) {
+        setPendingRequest(existingRequest);
+        setFriendStatus(existingRequest.status === 'pending' ? 'pending' : 'friends');
+        return;
+      }
+
+      // Second request - friends list
+      const friendsResponse = await fetch(`http://localhost:8001/api/friends/`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
         }
+      });
 
-        // If no request exists, check friends list
-        const friendsResponse = await fetch(`http://localhost:8001/api/friends/`, {
-            headers: {
-                'Authorization': `Bearer ${token}`
-            }
-        });
+      if (!friendsResponse.ok) {
+        throw new Error('Failed to fetch friends list');
+      }
 
-        if (!friendsResponse.ok) {
-            throw new Error('Failed to fetch friends list');
-        }
-
-        const friendsData = await friendsResponse.json();
-        const isFriend = friendsData.friends?.some(friend => friend.username === username);
-        console.log('hna l9a jiha ta7taniya wach is friend:', isFriend)
-
-        setFriendStatus(isFriend ? 'friends' : 'none');
+      const friendsData = await friendsResponse.json();
+      setFriendStatus(friendsData.friends?.some(friend => friend.username === username) ? 'friends' : 'none');
     } catch (err) {
-        console.error('Error checking friend status:', err);
-        setFriendStatus('none');
+      console.error('Error checking friend status:', err);
+      setFriendStatus('none');
     }
   };
 
-  // useEffect(() => {
-  //   console.log(friendStatus, 'status changge')
-  // }, [friendStatus])
-
   useEffect(() => {
-    const fetchProfil = async () => {
+    const fetchAllData = async () => {
+      setIsLoading(true);
       try {
-        const response = await fetch(`http://localhost:8001/api/user-profile/${username}/`);
-        if (!response.ok) {
+        // Fetch profile data
+        const profileResponse = await fetch(`http://localhost:8001/api/user-profile/${username}/`);
+        if (!profileResponse.ok) {
           throw new Error('Profile not found');
         }
-        const data = await response.json();
-        setProfil(data);
-        await checkFriendStatus();
+        const profileData = await profileResponse.json();
+        
+        // Fetch player stats
+        const statsResponse = await fetch(`http://localhost:8000/api/player-stats/${username}/`);
+        if (!statsResponse.ok) {
+          throw new Error('Stats not found');
+        }
+        const statsData = await statsResponse.json();
+        
+        // Combine the data
+        setProfil(profileData);
+        setPlayerStats(statsData);
+        
+        if (token) {
+          await checkFriendStatus();
+        }
       } catch (err) {
         setError(err.message);
+      } finally {
+        setIsLoading(false);
       }
     };
 
-    if (username && token) {
-      fetchProfil();
+    if (username) {
+      fetchAllData();
     }
   }, [username, token]);
-
 
   const handleFriendRequest = async () => {
     try {
@@ -115,87 +120,22 @@ const PictureUser = () => {
       setPendingRequest(newRequest);
       setFriendStatus('pending');
       wsManager?.sendMessage(`${currentUser} sent you a friend request`, [username]);
-      // wsManager?.sendMessage(JSON.stringify({
-      //   type: 'friend_request',
-      //   message: `${currentUser} sent you a friend request`,
-      //   to_user: username
-      // }));
     } catch (err) {
       console.error('Error:', err);
       setError(err.message);
     }
   };
 
-  // const handleRemoveFriend = async () => {
-  //   try {
-  //     const response = await fetch('http://localhost:8001/api/friends/remove/', {
-  //       method: 'POST',
-  //       headers: {
-  //         'Content-Type': 'application/json',
-  //         'Authorization': `Bearer ${token}`
-  //       },
-  //       body: JSON.stringify({ username })
-  //     });
-
-  //     if (!response.ok) {
-  //       throw new Error('Failed to remove friend');
-  //     }
-
-  //     setFriendStatus('none');
-  //   } catch (err) {
-  //     console.error('Error removing friend:', err);
-  //     setError(err.message);
-  //   }
-  // };
-
-  // const renderFriendButton = () => {
-  //   if (currentUser === profil?.username) {
-  //     return null;
-  //   }
-
-  //   switch (friendStatus) {
-  //     case 'none':
-  //       return (
-  //         <button 
-  //           onClick={handleFriendRequest}
-  //           className="w-[317px] h-[60px] bg-gray-800 text-white py-3 rounded-xl hover:bg-gray-700 transition-colors"
-  //         >
-  //           Add Friend
-  //         </button>
-  //       );
-  //     case 'pending':
-  //       return (
-  //         <button 
-  //           disabled
-  //           className="w-[317px] h-[60px] bg-gray-600 text-white py-3 rounded-xl cursor-not-allowed"
-  //         >
-  //           Request Pending
-  //         </button>
-  //       );
-  //     case 'friends':
-  //       return (
-  //         <button 
-  //           onClick={handleRemoveFriend}
-  //           className="w-[317px] h-[60px] bg-red-800 text-white py-3 rounded-xl hover:bg-red-700 transition-colors"
-  //         >
-  //           Remove Friend
-  //         </button>
-  //       );
-  //     default:
-  //       return null;
-  //   }
-  // };
   const handleAcceptRequest = async () => {
     try {
-      // First get the pending request ID
-      const response = await fetch(`http://localhost:8001/api/friend-requests/`, {
+      const requestsResponse = await fetch(`http://localhost:8001/api/friend-requests/`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
-      const requests = await response.json();
+      const requestsData = await requestsResponse.json();
       
-      const pendingRequest = requests.find(request => 
+      const pendingRequest = requestsData.find(request => 
         request.sender_username === username && 
         request.receiver_username === currentUser &&
         request.status === 'pending'
@@ -205,7 +145,6 @@ const PictureUser = () => {
         throw new Error('Friend request not found');
       }
 
-      // Accept the request
       const acceptResponse = await fetch(`http://localhost:8001/api/friend-requests/${pendingRequest.id}/accept/`, {
         method: 'POST',
         headers: {
@@ -219,11 +158,6 @@ const PictureUser = () => {
 
       setFriendStatus('friends');
       wsManager?.sendMessage(`${currentUser} accepted your friend request`, [username]);
-      // wsManager?.sendMessage(JSON.stringify({
-      //   type: 'friend_request_accepted',
-      //   message: `${currentUser} accepted your friend request`,
-      //   to_user: username
-      // }));
     } catch (err) {
       console.error('Error accepting friend request:', err);
       setError(err.message);
@@ -232,14 +166,14 @@ const PictureUser = () => {
 
   const handleRejectRequest = async () => {
     try {
-      const response = await fetch(`http://localhost:8001/api/friend-requests/`, {
+      const requestsResponse = await fetch(`http://localhost:8001/api/friend-requests/`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
-      const requests = await response.json();
+      const requestsData = await requestsResponse.json();
       
-      const pendingRequest = requests.find(request => 
+      const pendingRequest = requestsData.find(request => 
         request.sender_username === username && 
         request.receiver_username === currentUser &&
         request.status === 'pending'
@@ -261,7 +195,7 @@ const PictureUser = () => {
       }
 
       setFriendStatus('none');
-      wsManager.sendMessage(`${currentUser} Reject your friend request`, [username]);
+      wsManager?.sendMessage(`${currentUser} rejected your friend request`, [username]);
     } catch (err) {
       console.error('Error rejecting friend request:', err);
       setError(err.message);
@@ -270,14 +204,14 @@ const PictureUser = () => {
 
   const handleCancelRequest = async () => {
     try {
-      const response = await fetch(`http://localhost:8001/api/friend-requests/`, {
+      const requestsResponse = await fetch(`http://localhost:8001/api/friend-requests/`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
-      const requests = await response.json();
+      const requestsData = await requestsResponse.json();
       
-      const pendingRequest = requests.find(request => 
+      const pendingRequest = requestsData.find(request => 
         request.sender_username === currentUser && 
         request.receiver_username === username &&
         request.status === 'pending'
@@ -321,105 +255,37 @@ const PictureUser = () => {
       }
 
       setFriendStatus('none');
-      console.log()
     } catch (err) {
       console.error('Error removing friend:', err);
       setError(err.message);
     }
   };
-  const renderActionButtons = () => {
-    if (currentUser === profil?.username) {
-      return (
-        <>
-          <button className="w-[317px] h-[60px] bg-gray-800 text-white py-3 rounded-xl hover:bg-gray-700 transition-colors">
-            Edit Profile
-          </button>
-          <button className="w-[317px] h-[60px] bg-gray-800 text-white py-3 rounded-xl hover:bg-gray-700 transition-colors">
-            Invite Game
-          </button>
-        </>
-      );
-    }
 
-    const friendButtons = (() => {
-      switch (friendStatus) {
-        case 'none':
-          return (
-            <button 
-              onClick={handleFriendRequest}
-              className="w-[317px] h-[60px] bg-gray-800 text-white py-3 rounded-xl hover:bg-gray-700 transition-colors"
-            >
-              Add Friend
-            </button>
-          );
-        case 'pending':
-          return pendingRequest?.sender_username === currentUser ? (
-            <button 
-              onClick={handleCancelRequest}
-              className="w-[317px] h-[60px] bg-gray-600 text-white py-3 rounded-xl hover:bg-gray-500 transition-colors"
-            >
-              Cancel Request
-            </button>
-          ) : (
-            <div className="space-y-2">
-              <button 
-                onClick={handleAcceptRequest}
-                className="w-[317px] h-[60px] bg-green-600 text-white py-3 rounded-xl hover:bg-green-700 transition-colors"
-              >
-                Accept Request
-              </button>
-              <button 
-                onClick={handleRejectRequest}
-                className="w-[317px] h-[60px] bg-red-600 text-white py-3 rounded-xl hover:bg-red-700 transition-colors"
-              >
-                Reject Request
-              </button>
-            </div>
-          );
-        case 'friends':
-          return (
-            <button 
-              onClick={handleRemoveFriend}
-              className="w-[317px] h-[60px] bg-red-800 text-white py-3 rounded-xl hover:bg-red-700 transition-colors"
-            >
-              Remove Friend
-            </button>
-          );
-        default:
-          return null;
-      }
-    })();
-
+  if (error) {
     return (
-      <>
-        {friendButtons}
-        <button className="w-[317px] h-[60px] bg-gray-800 text-white py-3 rounded-xl hover:bg-gray-700 transition-colors">
-          Invite Game
-        </button>
-      </>
+      <div className="rounded-xl bg-red-500/10 p-6 text-center">
+        <p className="text-red-400">{error}</p>
+      </div>
     );
-  };
+  }
 
-  // Your existing JSX render code...
-  // if (error) return (
-  //   <div className="flex items-center justify-center h-screen text-red-500">
-  //     Error: {error}
-  //   </div>
-  // );
-  
-  // if (!profil) return (
-  //   <div className="flex items-center justify-center h-screen text-white">
-  //     Loading...
-  //   </div>
-  // );
-  
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center p-6">
+        <Loader2 className="w-8 h-8 text-indigo-400 animate-spin" />
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-navy-900 flex flex-col items-right pt-12">
-      <div className="max-w-md bg-navy-800 rounded-3xl p-16 space-y-6">
-        {/* Avatar Section */}
-        <div className="flex flex-col w-[317px] rounded-lg bg-gradient-to-t items-center space-y-4">
+    <div className="space-y-6">
+      {/* Profile Header */}
+      <div className="relative group">
+        <div className="h-32 w-full bg-gradient-to-r from-indigo-600 to-purple-600 rounded-t-xl"></div>
+        
+        <div className="absolute -bottom-16 left-1/2 transform -translate-x-1/2">
           <div className="relative">
-            <div className="w-[260px] h-[260px] rounded-full bg-purple-500 overflow-hidden border-2 border-white">
+            <div className="w-32 h-32 rounded-full ring-4 ring-navy-800 bg-navy-700 overflow-hidden">
               <img 
                 src={`http://localhost:8001${profil?.img}`}
                 alt="Profile"
@@ -427,44 +293,118 @@ const PictureUser = () => {
               />
             </div>
             {profil?.is_online && (
-            <div className="absolute top-0 right-0 bg-green-500 text-white text-xs px-2 py-1 rounded-full">
-              Online
-            </div>
-            )}
-            {profil?.profil?.is_verified && (
-              <div className="absolute bottom-0 right-0 bg-white-500 p-1 rounded-full">
-                <svg xmlns="http://www.w3.org/2000/svg" className="w-8 h-6 text-black" fill="#3B82F6" viewBox="0 0 24 24">
-                  <path d="M12 2C6.47715 2 2 6.47715 2 12C2 12.7284 2.08161 13.4374 2.23594 14.1154C2.46719 15.1468 2.87657 16.1103 3.43198 16.9679C4.93013 19.3065 7.29939 20.9334 10.0639 21.6434C10.6902 21.8113 11.3378 21.9133 12 21.9133C12.6622 21.9133 13.3098 21.8113 13.9361 21.6434C16.7006 20.9334 19.0699 19.3065 20.568 16.9679C21.1234 16.1103 21.5328 15.1468 21.7641 14.1154C21.9184 13.4374 22 12.7284 22 12C22 6.47715 17.5228 2 12 2ZM16.7071 10.7071L11.7071 15.7071C11.3166 16.0976 10.6834 16.0976 10.2929 15.7071L7.29289 12.7071C6.90237 12.3166 6.90237 11.6834 7.29289 11.2929C7.68342 10.9024 8.31658 10.9024 8.70711 11.2929L11 13.5858L15.2929 9.29289C15.6834 8.90237 16.3166 8.90237 16.7071 9.29289C17.0976 9.68342 17.0976 10.3166 16.7071 10.7071Z" />
-                </svg>
+              <div className="absolute bottom-2 right-2">
+                <div className="w-4 h-4 bg-green-500 rounded-full ring-2 ring-navy-800"></div>
               </div>
             )}
           </div>
-          <div className="text-center space-y-1">
-            <h2 className="text-white text-xl font-semibold">{profil?.fullname}</h2>
-            <p className="text-gray-400 text-sm">{profil?.username}</p>
+        </div>
+      </div>
+
+      {/* Profile Info */}
+      <div className="pt-16 text-center space-y-4">
+        <div className="space-y-1">
+          <div className="flex items-center justify-center gap-2">
+            <h2 className="text-2xl font-bold text-white">{profil?.fullname}</h2>
+            {profil?.profil?.is_verified && (
+              <Shield className="w-5 h-5 text-blue-500" />
+            )}
+          </div>
+          <p className="text-gray-400">@{profil?.username}</p>
+        </div>
+
+        {/* Updated Stats Grid with Player Stats */}
+        <div className="grid grid-cols-3 gap-4 px-4">
+          <div className="bg-navy-700/50 rounded-lg p-3">
+            <div className="text-lg font-bold text-white">
+              {playerStats ? playerStats.wins + playerStats.losses : 0}
+            </div>
+            <div className="text-xs text-gray-400">Games</div>
+          </div>
+          <div className="bg-navy-700/50 rounded-lg p-3">
+            <div className="text-lg font-bold text-white">
+              {playerStats ? playerStats.wins : 0}
+            </div>
+            <div className="text-xs text-gray-400">Wins</div>
+          </div>
+          <div className="bg-navy-700/50 rounded-lg p-3">
+            <div className="text-lg font-bold text-white">
+              {playerStats ? playerStats.losses : 0}
+            </div>
+            <div className="text-xs text-gray-400">Losses</div>
           </div>
         </div>
 
         {/* Action Buttons */}
-        <div className="space-y-3">
-          {/* {currentUser === profil?.username ? (
-            <>
-              <button className="w-[317px] h-[60px] bg-gray-800 text-white py-3 rounded-xl hover:bg-gray-700 transition-colors">
+        <div className="space-y-3 px-4">
+          {currentUser === profil?.username ? (
+            <div className="space-y-2">
+              <button className="w-full py-2.5 px-4 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-lg flex items-center justify-center gap-2 transition-all">
+                <Shield className="w-4 h-4" />
                 Edit Profile
               </button>
-              <button className="w-[317px] h-[60px] bg-gray-800 text-white py-3 rounded-xl hover:bg-gray-700 transition-colors">
-                Invite Game
+              <button className="w-full py-2.5 px-4 bg-navy-700 hover:bg-navy-600 text-white rounded-lg flex items-center justify-center gap-2 transition-all">
+                <Gamepad2 className="w-4 h-4" />
+                Play Game
               </button>
-            </>
+            </div>
           ) : (
-            <>
-              {renderFriendButton()}
-              <button className="w-[317px] h-[60px] bg-gray-800 text-white py-3 rounded-xl hover:bg-gray-700 transition-colors">
-                Invite Game
+            <div className="space-y-2">
+              {friendStatus === 'none' && (
+                <button 
+                  onClick={handleFriendRequest}
+                  className="w-full py-2.5 px-4 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-lg flex items-center justify-center gap-2 transition-all"
+                >
+                  <UserPlus className="w-4 h-4" />
+                  Add Friend
+                </button>
+              )}
+              
+              {friendStatus === 'pending' && pendingRequest?.sender_username === currentUser && (
+                <button 
+                  onClick={handleCancelRequest}
+                  className="w-full py-2.5 px-4 bg-gray-600 hover:bg-gray-700 text-white rounded-lg flex items-center justify-center gap-2 transition-all"
+                >
+                  <UserX className="w-4 h-4" />
+                  Cancel Request
+                </button>
+              )}
+              
+              {friendStatus === 'pending' && pendingRequest?.sender_username !== currentUser && (
+                <div className="space-y-2">
+                  <button 
+                    onClick={handleAcceptRequest}
+                    className="w-full py-2.5 px-4 bg-green-600 hover:bg-green-700 text-white rounded-lg flex items-center justify-center gap-2 transition-all"
+                  >
+                    <Check className="w-4 h-4" />
+                    Accept Request
+                  </button>
+                  <button 
+                    onClick={handleRejectRequest}
+                    className="w-full py-2.5 px-4 bg-red-600 hover:bg-red-700 text-white rounded-lg flex items-center justify-center gap-2 transition-all"
+                  >
+                    <X className="w-4 h-4" />
+                    Reject Request
+                  </button>
+                </div>
+              )}
+              
+              {friendStatus === 'friends' && (
+                <button 
+                  onClick={handleRemoveFriend}
+                  className="w-full py-2.5 px-4 bg-red-600 hover:bg-red-700 text-white rounded-lg flex items-center justify-center gap-2 transition-all"
+                >
+                  <UserMinus className="w-4 h-4" />
+                  Remove Friend
+                </button>
+              )}
+              
+              <button className="w-full py-2.5 px-4 bg-navy-700 hover:bg-navy-600 text-white rounded-lg flex items-center justify-center gap-2 transition-all">
+                <Gamepad2 className="w-4 h-4" />
+                Invite to Game
               </button>
-            </>
-          )} */}
-          {renderActionButtons()}
+            </div>
+          )}
         </div>
       </div>
     </div>
