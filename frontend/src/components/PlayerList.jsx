@@ -12,24 +12,58 @@ export const PlayerList = () => {
   
   const { t } = useTranslation();
   useEffect(() => {
-    const fetchFriends = async () => {
+    const fetchFriendsWithStats = async () => {
       try {
-        const response = await fetch("http://localhost:8001/api/friends/", 
-          {
-            credentials: "include",
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-              "Authorization": "Bearer " + JSON.parse(localStorage.getItem("authtoken"))?.access,
-            },
-          }
-        );
-        if (!response.ok) {
+        // Fetch friends list
+        const friendsResponse = await fetch("http://localhost:8001/api/friends/", {
+          credentials: "include",
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer " + JSON.parse(localStorage.getItem("authtoken"))?.access,
+          },
+        });
+
+        if (!friendsResponse.ok) {
           throw new Error('Failed to fetch friends list');
         }
-        const data = await response.json();
-        const friendsList = data[0]?.friends || [];
-        setFriends(friendsList);
+
+        const friendsData = await friendsResponse.json();
+        const friendsList = friendsData[0]?.friends || [];
+
+        // Fetch stats for each friend
+        const token = JSON.parse(localStorage.getItem("authtoken"))?.access;
+        const friendsWithStats = await Promise.all(
+          friendsList.map(async (friend) => {
+            try {
+              const statsResponse = await fetch(
+                `http://localhost:8000/api/player-stats/${friend.username}/`,
+                {
+                  method: 'GET',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                  },
+                }
+              );
+              
+              if (statsResponse.ok) {
+                const statsData = await statsResponse.json();
+                return {
+                  ...friend,
+                  nbwin: statsData.nbwin || 0,
+                  nblose: statsData.nblose || 0
+                };
+              }
+              return friend;
+            } catch (err) {
+              console.error(`Error fetching stats for ${friend.username}:`, err);
+              return friend;
+            }
+          })
+        );
+
+        setFriends(friendsWithStats);
         setError(null);
       } catch (err) {
         console.error('Error fetching friends:', err);
@@ -39,8 +73,8 @@ export const PlayerList = () => {
       }
     };
 
-    fetchFriends();
-    const interval = setInterval(fetchFriends, 30000);
+    fetchFriendsWithStats();
+    const interval = setInterval(fetchFriendsWithStats, 30000);
     return () => clearInterval(interval);
   }, []);
 
@@ -190,4 +224,3 @@ export const PlayerList = () => {
 };
 
 export default PlayerList;
-

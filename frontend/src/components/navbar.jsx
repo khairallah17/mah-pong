@@ -1,10 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useSidebarContext } from '../hooks/useSidebar';
-import { Search, X, Menu, Bell, UserPlus } from 'lucide-react';
+import { Search, X, Menu, UserPlus } from 'lucide-react';
 import DefaultAvatar from '../assets/khr.jpg';
-import Notification from './NotificationDisplay';
+import NotificationDisplay from './NotificationDisplay';
 import ButtonLng from "../components/ButtonLng";
-
 
 const Navbar = () => {
   const [user, setUser] = useState({ 
@@ -33,7 +32,6 @@ const Navbar = () => {
           });
           if (response.ok) {
             const userData = await response.json();
-            console.log('User data:', userData);
             setUser({
               username: userData.username,
               email: userData.email,
@@ -62,7 +60,6 @@ const Navbar = () => {
     const token = JSON.parse(authToken).access;
 
     try {
-      // First, get the list of friends to filter them out
       const friendsResponse = await fetch(`http://localhost:8001/api/friends/`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -70,13 +67,11 @@ const Navbar = () => {
       const friendsList = friendsData[0]?.friends || [];
       const friendUsernames = new Set(friendsList.map(friend => friend.username));
 
-      // Then, fetch all users
       const allUsersResponse = await fetch(`http://localhost:8001/api/allusers/?search=${query}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const allUsersData = await allUsersResponse.json();
 
-      // Filter out friends and current user from the results
       const filteredUsers = allUsersData.filter(searchedUser => 
         !friendUsernames.has(searchedUser.username) && 
         searchedUser.username !== user.username &&
@@ -121,13 +116,14 @@ const Navbar = () => {
     <nav className="fixed top-0 left-0 right-0 z-50 h-16 backdrop-blur-sm border-b border-white/10">
       <div className="h-full px-6 flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <button
+          <div
             onClick={toggleSidebar}
-            className="p-1.5 rounded-md text-white/80 hover:text-white hover:bg-white/10 focus:outline-none"
+            className="p-1.5 rounded-md text-white/80 hover:text-white hover:bg-white/10 focus:outline-none cursor-pointer"
+            role="button"
             aria-label={open ? "Close sidebar" : "Open sidebar"}
           >
             {open ? <X size={20} /> : <Menu size={20} />}
-          </button>
+          </div>
           <span className="text-white font-semibold">Logo</span>
         </div>
 
@@ -165,7 +161,7 @@ const Navbar = () => {
                         }}
                       >
                         <img
-                          src={"http://localhost:8001/" + searchedUser.img || searchedUser.avatar || DefaultAvatar}
+                          src={`http://localhost:8001/${searchedUser.img}` || searchedUser.avatar || DefaultAvatar}
                           alt={searchedUser.username}
                           className="h-10 w-10 rounded-full object-cover"
                           onError={(e) => {
@@ -194,12 +190,7 @@ const Navbar = () => {
 
         <div className="flex items-center gap-4">
           <ButtonLng />
-          <button 
-            className="p-4 rounded-md text-white/80 hover:text-white hover:bg-white/10 focus:outline-none"
-            aria-label="Notifications"
-          >
-            <Notification className="h-5 w-5" />
-          </button>
+          <NotificationDisplay />
           
           <div className="flex items-center gap-3">
             <div className="hidden md:block text-right">
@@ -209,7 +200,8 @@ const Navbar = () => {
             <img
               src={user.img ? `http://localhost:8001/${user.img}` : DefaultAvatar}
               alt={`${user.fullname}'s avatar`}
-              className="h-12 w-12 rounded-full object-cover ring-2 ring-white/20"
+              className="h-12 w-12 rounded-full object-cover ring-2 ring-white/20 cursor-pointer"
+              onClick={() => window.location.href = `http://localhost:5173/dashboard/profil/${user.username}`}
               onError={(e) => {
                 e.target.src = DefaultAvatar;
               }}

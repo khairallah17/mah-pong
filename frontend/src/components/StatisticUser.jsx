@@ -1,11 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Gamepad2, Trophy, Activity, BarChart2, XCircle } from 'lucide-react';
 import { StatCard } from './StatisticCards';
-import { WeeklyChart } from './WeklyChart';  // Make sure the path and filename match exactly
+import { WeeklyChart } from './WeklyChart';
 import { useParams } from 'react-router-dom';
-import { jwtDecode } from "jwt-decode"
-
-
+import { jwtDecode } from "jwt-decode";
 
 export const Statistics = () => {
   const [stats, setStats] = useState([
@@ -17,27 +15,26 @@ export const Statistics = () => {
   ]);
   const [weeklyPerformance, setWeeklyPerformance] = useState([0, 0, 0, 0, 0, 0, 0]);
   const [loading, setLoading] = useState(true);
-  // let username = useParams()
+  
+  const params = useParams();
   const token = JSON.parse(localStorage.getItem('authtoken')).access;
-  // if (username == null)
-  const username = jwtDecode(token).username
-  // console.log("username", username)
+  const currentUser = jwtDecode(token).username;
+  const username = params.username || currentUser;
 
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        // const username = 'a'; // Replace with actual username
         const response = await fetch(`http://localhost:8000/api/player-stats/${username}/`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`
-        },});
+          }
+        });
         const data = await response.json();
-
         const totalGames = data.wins + data.losses;
         const winRate = totalGames > 0 ? Math.round((data.wins / totalGames) * 100) : 0;
-
+        
         setStats([
           {
             label: 'Total Games',
@@ -70,7 +67,7 @@ export const Statistics = () => {
             color: 'from-red-500 to-red-600'
           }
         ]);
-
+        
         const todayPerformance = winRate;
         const weeklyStats = [0, 0, 0, 0, 0, 0, todayPerformance];
         setWeeklyPerformance(weeklyStats);
@@ -84,7 +81,7 @@ export const Statistics = () => {
     fetchStats();
     const interval = setInterval(fetchStats, 10000);
     return () => clearInterval(interval);
-  }, []);
+  }, [username, token]);
 
   return (
     <div className="space-y-6">
