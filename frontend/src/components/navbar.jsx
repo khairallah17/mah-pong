@@ -3,6 +3,8 @@ import { useSidebarContext } from '../hooks/useSidebar';
 import { Search, X, Menu, Bell, UserPlus } from 'lucide-react';
 import DefaultAvatar from '../assets/khr.jpg';
 import Notification from './NotificationDisplay';
+import ButtonLng from "../components/ButtonLng";
+
 
 const Navbar = () => {
   const [user, setUser] = useState({ 
@@ -191,6 +193,7 @@ const Navbar = () => {
         </div>
 
         <div className="flex items-center gap-4">
+          <ButtonLng />
           <button 
             className="p-4 rounded-md text-white/80 hover:text-white hover:bg-white/10 focus:outline-none"
             aria-label="Notifications"

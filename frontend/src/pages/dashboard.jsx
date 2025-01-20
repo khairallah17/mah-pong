@@ -4,11 +4,14 @@ import { MatchHistory } from '../components/Match-history';
 import { Statistics } from '../components/StatisticUser';
 import { Achievements } from '../components/AchievementBadgeProps';
 import  PlayerList  from '../components/PlayerList';
+import '../i18n';
+import { useTranslation } from 'react-i18next';
 
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState('matches');
   const [selectedMode, setSelectedMode] = useState(null);
-    
+  const { t } = useTranslation();
+  
   useEffect( () =>{
     const fetchstats = async () => {
     const response = await fetch("http://localhost:8000/api/player-stats/alemsafi");
@@ -74,10 +77,10 @@ const Dashboard = () => {
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent">
                 <div className="absolute bottom-24 left-8 p-6">
                   <h1 className="text-2xl lg:text-4xl font-bold mb-2 bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent">
-                    Ping Pong Pro League
+                    {t('Ping Pong Pro League')}
                   </h1>
                   <p className="text-gray-300 max-w-xl">
-                    Enter the arena, challenge players worldwide, and become the ultimate champion
+                    {t('Enter the arena, challenge players worldwide, and become the ultimate champion')}
                   </p>
                 </div>
               </div>
@@ -92,7 +95,7 @@ const Dashboard = () => {
         <div className="grid lg:grid-cols-3 gap-4 lg:gap-6">
           <div className="lg:col-span-2 bg-black/50 rounded-xl border border-gray-800 p-4 backdrop-blur-sm">
             <div className="flex items-center gap-4 mb-6">
-              {['matches', 'statistics', 'achievements'].map((tab) => (
+              {[t('matches'), t('statistics'), t('achievements')].map((tab) => (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}

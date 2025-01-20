@@ -29,7 +29,7 @@ function ButtonLng() {
     <select 
       value={currentLang}
       onChange={handleLanguageChange}
-      className="px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+      className="px-3 py-2 border border-black bg-[#C5C5C5] rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
     >
       {languages.map(({ code, flag, label }) => (
         <option key={code} value={code}>

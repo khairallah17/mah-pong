@@ -8,9 +8,12 @@ import { MdOutlineArrowOutward } from "react-icons/md";
 import { CiWarning } from "react-icons/ci";
 
 import { useForm } from "react-hook-form"
+import '../../i18n';
+import { useTranslation } from 'react-i18next';
+import ButtonLng from "../../components/ButtonLng";
 
 const SignupForm = ({setSwap}) => {
-
+    const { t } = useTranslation();
     const { registerUsers, GoogleLogin, Intra42Login } = useContext(AuthContext)
 
     const {
@@ -45,7 +48,7 @@ const SignupForm = ({setSwap}) => {
     return (
         <div className='h-full flex flex-col justify-center items-center gap-8 '>
             <h3 className="zen-dots text-5xl w-3/4 self-center">
-                Register
+                {t('Register')}
             </h3>
             <form className="flex flex-col gap-10 w-3/4 self-center" onSubmit={handleSubmit(onSubmit)}>
 
@@ -53,11 +56,11 @@ const SignupForm = ({setSwap}) => {
                     <div className='w-full'>
                         <input
                             className="w-full bg-transparent border-b-2 focus:border-white duration-200 border-white/50 placeholder:text-white placeholder:text-opacity-50 placeholder:font-semibold py-2 focus:outline-none"
-                            placeholder="FULLNAME"
+                            placeholder={t('FULLNAME')}
                             type="text"
                             name="fullname"
                             {
-                            ...register("fullname",{required: "You must specify a fullname"})
+                            ...register("fullname",{required: t('You must specify a fullname')})
                             }
                         />
                         {
@@ -71,11 +74,11 @@ const SignupForm = ({setSwap}) => {
                     <div className='w-full'>
                         <input
                             className="w-full bg-transparent border-b-2 focus:border-white duration-200 border-white/50 placeholder:text-white placeholder:text-opacity-50 placeholder:font-semibold py-2 focus:outline-none"
-                            placeholder="USERNAME"
+                            placeholder={t('USERNAME')}
                             type="text"
                             name="username"
                             {
-                            ...register("username",{required: "You must specify a username"})
+                            ...register("username",{required: t('You must specify a username')})
                             }
                         />
                         {
@@ -91,13 +94,13 @@ const SignupForm = ({setSwap}) => {
                 <div className="w-full">
                     <input
                         className="w-full bg-transparent border-b-2 focus:border-white duration-200 border-white/50 placeholder:text-white placeholder:text-opacity-50 placeholder:font-semibold py-2 focus:outline-none"
-                        placeholder="EMAIL"
+                        placeholder={t('EMAIL')}
                         type="email"
                         name="email"
                         {...register(
                         "email",
                         {
-                            required: "You must specify an email",
+                            required: t('You must specify an email'),
                         })}
                     />
                     {
@@ -112,16 +115,16 @@ const SignupForm = ({setSwap}) => {
                 <div className="w-full">
                     <input
                         className="w-full bg-transparent border-b-2 focus:border-white duration-200 border-white/50 placeholder:text-white placeholder:text-opacity-50 placeholder:font-semibold py-2 focus:outline-none"
-                        placeholder="PASSWORD"
+                        placeholder={t('PASSWORD')}
                         type="password"
                         name="password"
                         {...register(
                         "password",
                         {
-                            required: "You must specify a password",
+                            required: t('You must specify a password'),
                             minLength: {
                             value: 8,
-                            message: "Password must have at least 8 characters"
+                            message: t('Password must have at least 8 characters')
                             }
                         })}
                     />
@@ -137,13 +140,13 @@ const SignupForm = ({setSwap}) => {
                 <div className="w-full">
                     <input
                         className="w-full bg-transparent border-b-2 focus:border-white duration-200 border-white/50 placeholder:text-white placeholder:text-opacity-50 placeholder:font-semibold py-2 focus:outline-none"
-                        placeholder="CONFIRM PASSWORD"
+                        placeholder={t('CONFIRM PASSWORD')}
                         type="password"
                         name="confPassword"
                         {...register(
                         "confPassword",
                         {
-                            validate: value => value === password.current || "Passwords does not match"
+                            validate: value => value === password.current || t('Passwords does not match')
                         })}
                     />
                     {
@@ -156,14 +159,14 @@ const SignupForm = ({setSwap}) => {
                 </div>
 
                 <button type="submit" className="bg-black w-1/4 self-center rounded-lg py-2 font-bold text-2xl hover:bg-white hover:text-black">
-                SIGN UP
+                {t('SIGN UP')}
                 </button>
             </form>
 
             <div className="flex items-center gap-8 w-3/4 self-center">
 
             <div className="h-1 w-full bg-white text-opacity-50"></div>
-            <p>OR</p>
+            <p>{t("OR")}</p>
             <div className="h-1 w-full bg-white bg-opacity-50"></div>
 
             </div>
@@ -171,18 +174,21 @@ const SignupForm = ({setSwap}) => {
             <div className="space-y-4 w-3/4 self-center">
                 <button onClick={GoogleLogin} className="bg-white w-full flex items-center justify-center gap-4 rounded-lg py-2">
                     <FcGoogle size={24}/>
-                    <p className="text-slate-600 font-semibold text-lg">Continue with google</p>
+                    <p className="text-slate-600 font-semibold text-lg">{t('Continue with google')}</p>
                 </button>
                 <button onClick={Intra42Login} className="bg-black w-full flex items-center justify-center gap-4 rounded-lg py-2">
                     <Si42 size={24} color="white" />
-                    <p className="text-white font-semibold text-lg">Continue with 42</p>
+                    <p className="text-white font-semibold text-lg">{t("Continue with 42")}</p>
                 </button>
                 <div className="w-full flex items-center justify-between">
-                    <p className="uppercase">already have an account?</p>
+                    <p className="uppercase">{t('already have an account?')}</p>
                     <button onClick={setSwap} className="flex items-center gap-1 hover:underline">
-                        <p className="uppercase text-cyan-400">sign in</p>
+                        <p className="uppercase text-cyan-400">{t('SIGN IN')}</p>
                         <MdOutlineArrowOutward color='white' className='-rotate-90' />
                     </button>
+                </div>
+                <div className='w-full flex items-center justify-center'>
+                    <ButtonLng />
                 </div>
             </div>
             </div>

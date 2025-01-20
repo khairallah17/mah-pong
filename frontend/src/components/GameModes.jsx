@@ -2,51 +2,54 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Trophy, Gamepad2, Swords, Users, Clock, Star } from 'lucide-react';
+import '../i18n';
+import { useTranslation } from 'react-i18next';
 
 export const GameModes = () => {
+  const { t } = useTranslation();
   const [selectedMode, setSelectedMode] = useState(null);
   const navigate = useNavigate();
 
   const gameModes = [
     {
       id: '3d-mode',
-      title: '3D Mode',
+      title: t('3d mode'),
       path: '/dashboard/game',
       slideIndex: 1, // Index for 3D Games slide
       icon: <Swords className="w-6 h-6" />,
-      description: 'Play in a 3D environment: Remote or AI',
+      description: t('Play in a 3D environment: Remote or AI'),
       color: 'from-cyan-400 to-blue-500',
       stats: {
         players: '888',
-        difficulty: 'Medium',
+        difficulty: t('Medium'),
         xpMultiplier: '1.5x'
       }
     },
     {
       id: '2d-mode',
-      title: '2D Mode',
+      title: t('2d mode'),
       path: '/dashboard/game',
       slideIndex: 0, // Index for 2D Games slide
       icon: <Gamepad2 className="w-6 h-6" />,
-      description: 'Play in a 2D environment: Remote or AI',
+      description: t('Play in a 2D environment: Remote or AI'),
       color: 'from-teal-400 to-green-500',
       stats: {
         players: '777',
-        difficulty: 'Medium',
+        difficulty: t('Medium'),
         xpMultiplier: '1.25x'
       }
     },
     {
       id: 'tournament',
-      title: 'Tournament',
+      title: t('Tournament'),
       path: '/dashboard/game',
       slideIndex: 2, // Index for Tournament slide
       icon: <Trophy className="w-6 h-6" />,
-      description: 'Join competitive tournaments',
+      description: t('Join competitive tournaments'),
       color: 'from-violet-400 to-purple-500',
       stats: {
         players: '456',
-        difficulty: 'Expert',
+        difficulty: t('Expert'),
         xpMultiplier: '3x'
       }
     }
@@ -64,7 +67,7 @@ export const GameModes = () => {
       {/* Header Section */}
       <div className="mb-8 text-center">
         <h2 className="text-3xl font-bold bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">
-          Game Modes
+          {t('Game Modes')}
         </h2>
         <div className="mt-2 flex items-center justify-center gap-8">
           <div className="flex items-center gap-2">
@@ -73,7 +76,7 @@ export const GameModes = () => {
           </div>
           <div className="flex items-center gap-2">
             <Clock size={16} className="text-green-400" />
-            <span className="text-sm text-gray-400">Next Tournament: 2h 15m</span>
+            <span className="text-sm text-gray-400">{t('Next Tournament: 2h 15m')}</span>
           </div>
         </div>
       </div>
@@ -147,7 +150,7 @@ export const GameModes = () => {
               hover:scale-105 hover:shadow-lg
             `}
           >
-            Start Game
+            {t('Start Game')}
           </button>
         </div>
       )}

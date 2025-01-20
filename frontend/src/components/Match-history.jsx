@@ -2,9 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { Activity } from 'lucide-react';
 import axios from 'axios';
 import { jwtDecode } from "jwt-decode"
-
+import '../i18n';
+import { useTranslation } from 'react-i18next';
 
 export const MatchHistory = () => {
+  const { t } = useTranslation();
   const [matches, setMatches] = useState([]);
   const [loading, setLoading] = useState(true);
   const token = JSON.parse(localStorage.getItem('authtoken')).access;
@@ -60,7 +62,7 @@ export const MatchHistory = () => {
                   <Activity size={20} />
                 </div>
                 <div>
-                  <div className="font-medium">Match #{match.id}</div>
+                  <div className="font-medium">{t('Match #')}{match.id}</div>
                   <div className="text-sm text-gray-400">{match.player} vs {match.opponent}</div>
                 </div>
               </div>
@@ -73,7 +75,7 @@ export const MatchHistory = () => {
             </div>
           ))
         ) : (
-          <div className="text-center text-gray-400 py-8">No matches found</div>
+          <div className="text-center text-gray-400 py-8"> {t('No matches found')} </div>
         )
       )}
     </div>
