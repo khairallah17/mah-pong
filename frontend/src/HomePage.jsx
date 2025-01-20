@@ -4,6 +4,9 @@ import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Pagination } from 'swiper/modules';
 import 'swiper/css';
 import './App.css';
+import './i18n';
+import { useTranslation } from 'react-i18next';
+import ButtonLng from "./components/ButtonLng";
 
 import aub from './assets/aub.jpeg';
 import khr from './assets/khr.jpg';
@@ -103,6 +106,7 @@ const HomePage = () => {
   };
 
   const getFrameSource = (frame) => `/landingAnimation/${frame}.png`;
+  const { t } = useTranslation();
 
   return (
     <div className="homepage">
@@ -126,6 +130,7 @@ const HomePage = () => {
             >
               Play now
             </button>
+            <ButtonLng />
           </div>
         </nav>
       </header>
@@ -139,7 +144,7 @@ const HomePage = () => {
       <div className="headline" ref={headlineRef}>
         <div className="headline-content" >
           <h1>“Title - Headline”</h1>
-          <p style={{margin: "20px"}}>This section is about the game, what it is, what the goal is, and how to play it.</p>
+          <p style={{margin: "20px"}}>{t("This section is about the game, what it is, what the goal is, and how to play it.")}</p>
           <button style={{margin: "10px"}} onClick={() => navigate('/dashboard')}>Play now</button>
         </div>
         <img src={hdl} alt="Game" />
