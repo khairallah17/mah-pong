@@ -30,6 +30,7 @@ class ApiUsers(APIView):
 
             token = auth_header.split(' ')[1]
             payload = jwt.decode(token, settings.SECRET_KEY, algorithms=['HS256'])
+            user_id = payload.get('user_id')
             username = payload.get('username')
             email = payload.get('email')
             fullname = payload.get('fullname')
@@ -58,11 +59,12 @@ class ApiUsers(APIView):
                     )
 
             # Update or create the current user
-            User.objects.update_or_create(
-                username=username,
+            current_user = User.objects.get_or_create(
+                id=user_id,
                 defaults={
+                    'username': username,
                     'email': email,
-                    'fullname': fullname
+                    'fullname': fullname,
                 }
             )
 

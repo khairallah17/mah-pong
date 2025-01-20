@@ -1,11 +1,12 @@
 import React, { createContext, useEffect, useState } from "react";
 import WebSocketManager from "./WebSocketManager";
+import Cookies from 'js-cookie';
 
 export const WebSocketContext = createContext();
 
 export const WebSocketProvider = ({ children }) => {
   const [notifications, setNotifications] = useState([]);
-  const accessToken = JSON.parse(localStorage.getItem('authtoken'))?.access;
+  const accessToken = Cookies.get("access_token");
   const webSocketUrl = 'ws://localhost:8002/ws/notifications/?token=' + accessToken;
   const [wsManager, setWsManager] = useState(null);
 

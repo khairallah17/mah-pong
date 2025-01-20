@@ -54,12 +54,12 @@ export default function Tournament() {
           console.log('Tournament updated:', message.matches);
         } else if (message.type === 'match_start') {
           console.log('Match started:', message.tournamentMatch_id);
-          navigate(`/dashboard/game/newpvp2d?match_id=${message.tournamentMatch_id}`);
+          navigate(`/dashboard/game/pvp2d?match_id=${message.tournamentMatch_id}`);
         } else if (message.type === 'tournament_code') {
           setTournamentCode(message.code);
         } else if (message.type === 'players_ready') {
           console.log('Players ready:', message.players);
-          wsManager.sendMessage('players_ready', message.players);
+          wsManager.sendMessage('Tournament players Ready', message.players, "/dashboard/tournament/live");
           //wsManager implement broadcastmsg and selfmsg (here we should use selfmsg)
           //make this received only once
           //navigate(`/dashboard/game/newpvp2d?match_id=${message.tournamentMatch_id}`);
@@ -104,19 +104,17 @@ export default function Tournament() {
     try {
       const response = await fetch(refreshtokenUrl, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ refresh: JSON.parse(token).refresh })
+        credentials: 'include'
       });
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
+      if (response.ok) {
+        const data = await response.json();
+        return data;
+      } else {
+        return null;
       }
-      const data = await response.json();
-      console.log('New access token:', data.access);
-      return data;
     } catch (error) {
-      console.error('Error refreshing token:', error);
+      console.error('Failed to refresh token:', error);
+      return null;
     }
   };
 
@@ -247,12 +245,15 @@ export default function Tournament() {
 
       {matches.length > 0 && matches[matches.length - 1].winner && (
         <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-gray-900/95 p-8 rounded-lg text-center z-50">
-          <h2 className="text-2xl font-bold text-white mb-4">Congratulations { matches[matches.length - 1].winner}! You are the champion!</h2>
+          <h2 className="text-2xl font-bold text-white mb-4">Congratulations {matches[matches.length - 1].winner}! You are the champion!</h2>
           <button
-            onClick={() => navigate('/dashboard')}
+            onClick={() => {
+              wsRef.current.send(JSON.stringify({ type: 'tournament_complete' }));
+              navigate('/dashboard')
+            }}
             className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
           >
-            Go to Dashboard
+            Finish Tournament
           </button>
         </div>
       )}

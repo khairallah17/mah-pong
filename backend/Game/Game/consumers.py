@@ -9,7 +9,7 @@ from Match.models import Match, Tournament, TournamentMatch
 from django.db import transaction # type: ignore
 from urllib.parse import parse_qs
 from django.core.cache import cache # type: ignore
-from django.db.models import Q # type: ignore
+from django.db.models import Q, F # type: ignore
 
 logger = logging.getLogger(__name__)
 matchmaking_pool = []
@@ -109,6 +109,9 @@ class TournamentConsumer(AsyncWebsocketConsumer):
                 await self.schedule_remove_player()
             elif message_type == 'start_final_match':
                 await self.start_final_match()
+            elif message_type == 'tournament_complete':
+                cache.set(f"user_reconnect_{self.username}", False)
+                Tournament.objects.filter(id=self.tournament.id).update(status='completed')
         except Exception as e:
             logger.error(f"Error in receive: {e}")
 
@@ -231,13 +234,13 @@ class TournamentConsumer(AsyncWebsocketConsumer):
             logger.warning(f"user: {self.username} current_match: {self.current_match}")
             tournament = Tournament.objects.get(id=self.tournament.id)
             # get match with round 2 and position 1 in this tournament and see if it has 2 players
-            tournament_match = TournamentMatch.objects.get(tournament=tournament, round=2, position=1)
-            if not tournament_match.player1 or not tournament_match.player2:
+            final_match = TournamentMatch.objects.get(tournament=tournament, round=2, position=1)
+            if not final_match.player1 or not final_match.player2:
                 if len(present_players.get(self.tournament.id, [])) == 4:
                     tournament.status = 'active'
                     tournament.save()
                     return True
-            else:
+            elif not final_match.winner:
                 if len(present_players.get(self.tournament.id, [])) == 2:
                     return True
             return False
@@ -273,25 +276,25 @@ class TournamentConsumer(AsyncWebsocketConsumer):
         except Exception as e:
             logger.error(f"Error starting final match: {e}")        
 
-    @database_sync_to_async
-    def handle_match_result(self, data):
-        try:
-            match_id = data.get('match_id')
-            winner = data.get('winner')
-            match = TournamentMatch.objects.get(id=match_id)
+    # @database_sync_to_async
+    # def handle_match_result(self, data):
+    #     try:
+    #         match_id = data.get('match_id')
+    #         winner = data.get('winner')
+    #         match = TournamentMatch.objects.get(id=match_id)
 
-            match.winner = winner
-            match.save()
-            if match.round == 1:
-                next_match, _ = TournamentMatch.objects.get(tournament=match.tournament, round=2, position=1)
+    #         match.winner = winner
+    #         match.save()
+    #         if match.round == 1:
+    #             next_match, _ = TournamentMatch.objects.get(tournament=match.tournament, round=2, position=1)
 
-                if match.position % 2 == 0:
-                    next_match.player1 = winner
-                else:
-                    next_match.player2 = winner
-                next_match.save()
-        except Exception as e:
-            logger.error(f"Error handling match result: {e}")
+    #             if match.position % 2 == 0:
+    #                 next_match.player1 = winner
+    #             else:
+    #                 next_match.player2 = winner
+    #             next_match.save()
+    #     except Exception as e:
+    #         logger.error(f"Error handling match result: {e}")
 
     # Tournament State Management
 
@@ -405,6 +408,7 @@ class Pvp2dConsumer(AsyncWebsocketConsumer):
             if self.username in pvp2d_disconnected_users:
                 user_data = pvp2d_disconnected_users.pop(self.username)
                 user_data['task'].cancel()
+                logger.warning(f"Cancelled countdown task for {self.username}")
                 await self.send(text_data=json.dumps({
                     'type': 'match_found',
                     'player_id': user_data['player_id'],
@@ -476,6 +480,7 @@ class Pvp2dConsumer(AsyncWebsocketConsumer):
             )
         if user1 not in pvp2d_send_gamestate_tasks and user2 not in pvp2d_send_gamestate_tasks:
             task = asyncio.create_task(self.send_gamestate_periodically(user1, user2))
+            logger.warning(f"Starting gamestate task")
             pvp2d_send_gamestate_tasks[user1] = task
             pvp2d_send_gamestate_tasks[user2] = task
 
@@ -543,12 +548,15 @@ class Pvp2dConsumer(AsyncWebsocketConsumer):
             })
 
     async def send_gamestate_periodically(self, user1, user2):
-        while user1 in pvp2d_matched_users or user2 in pvp2d_matched_users:
-            #finish
-            await asyncio.sleep(0.060)  # Adjust the interval
-            if self.username in pvp2d_game_states:
-                self.update_ball_position(pvp2d_game_states[self.username])
-                await self.send_game_state(user1, user2)
+        try:
+            while user1 in pvp2d_matched_users or user2 in pvp2d_matched_users:
+                await asyncio.sleep(0.060)
+                if self.username in pvp2d_game_states:
+                    self.update_ball_position(pvp2d_game_states[self.username])
+                    await self.send_game_state(user1, user2)
+        except asyncio.CancelledError:
+            logger.warning(f"Task for {self.username} was cancelled")
+            raise
 
     def init_gamestate(self):
         return {
@@ -567,6 +575,7 @@ class Pvp2dConsumer(AsyncWebsocketConsumer):
         if self.username:            
             if self.username in pvp2d_matched_users:
                 countdown_task = asyncio.create_task(self.start_reconnect_countdown(self.username))
+                logger.warning(f"Starting countdown task for {self.username}")
                 pvp2d_disconnected_users[self.username] = {
                     'task': countdown_task,
                     'player_id': self.player_id,
@@ -609,7 +618,8 @@ class Pvp2dConsumer(AsyncWebsocketConsumer):
             match.save()
 
             next_match, _ = TournamentMatch.objects.get_or_create(tournament=match.tournament, round=2, position=1)
-
+            if next_match == match:
+                return
             if match.position % 2 == 0:
                 next_match.player1 = match.winner
             else:
@@ -622,51 +632,60 @@ class Pvp2dConsumer(AsyncWebsocketConsumer):
     def update_game_result(self, gamestate, winner=None):
         if self.username not in pvp2d_matched_users or pvp2d_matched_users[self.username] not in pvp2d_matched_users:
             return
-        username1, username2, scoreP1, scoreP2 = self.username, pvp2d_matched_users[self.username], gamestate['scoreP1'], gamestate['scoreP2']
+
+        username1, username2 = self.username, pvp2d_matched_users[self.username]
+        scoreP1, scoreP2 = gamestate['scoreP1'], gamestate['scoreP2']
         if not winner:
             winner = 'player1' if scoreP1 > scoreP2 else 'player2'
-        match = Match.objects.filter(Q(username1=username1, username2=username2) | Q(username1=username2, username2=username1)).latest('datetime')
+
         try:
-            previous_match = Match.objects.filter(Q(username1=username1, username2=username2) | Q(username1=username2, username2=username1)).exclude(id=match.id).latest('datetime')
+            match = Match.objects.filter(
+                Q(username1=username1, username2=username2) | Q(username1=username2, username2=username1)
+            ).latest('datetime')
+
+            match.winner = username1 if winner == 'player1' else username2
+            match.scoreP1 = scoreP1
+            match.scoreP2 = scoreP2
+            # Use simplified Elo calculation
+            match.ratingP1 = self.calculate_elo(username1)
+            match.ratingP2 = self.calculate_elo(username2)
+            match.save()
+
+            if self.match_id:
+                self.update_tournament_match(self.match_id, winner, username1, username2)
+
+            pvp2d_matched_users.pop(username1)
+            pvp2d_matched_users.pop(username2)
         except Match.DoesNotExist:
-            previous_match = None
-        match.winner = username1 if winner == 'player1' else username2
-        match.save()
-        match.ratingP1 = self.calculate_elo(username1, previous_match)
-        match.ratingP2 = self.calculate_elo(username2, previous_match)
-        match.scoreP1 = scoreP1
-        match.scoreP2 = scoreP2
-        match.save()
-        if self.match_id:
-            self.update_tournament_match(self.match_id, winner, username1, username2)
-        pvp2d_matched_users.pop(username1)
-        pvp2d_matched_users.pop(username2)
-    
-    def calculate_elo(self, username, previous_match):
+            logger.error(f"Match does not exist for users: {username1}, {username2}")
+        except Exception as e:
+            logger.error(f"Error updating game result: {e}")
+
+    def calculate_elo(self, username):
+        # Base rating: last match's rating or default
+        last_match = Match.objects.filter(Q(username1=username) | Q(username2=username)) \
+                                  .exclude(winner=None).latest('datetime')
+        base_rating = 1000
+        if last_match:
+            base_rating = last_match.ratingP1 if last_match.username1 == username else last_match.ratingP2
+
         matches = Match.objects.filter(Q(username1=username) | Q(username2=username))
         total_matches = matches.count()
-        wins = 0
-        losses = 0
-        for match in matches:
-            if match.winner == username:
-                wins += 1
-            else:
-                losses += 1
-        k = 200 # K-factor for elo change sensitivity
+        wins = matches.filter(winner=username).count()
+        if total_matches == 0:
+            return base_rating
+
+        k = 200
         win_rate = wins / total_matches
         normalized_win_rate = win_rate - 0.5
         rating_change = k * normalized_win_rate * (total_matches ** 0.5)
-        if not previous_match:
-            base_rate = 1000
-        elif previous_match.username1 == username:
-            base_rate = previous_match.ratingP1
-        elif previous_match.username2 == username:
-            base_rate = previous_match.ratingP2
-        if match.winner == username:
-            return base_rate + rating_change
+
+        # Assume this match is won if the last_match was won by this username, else reduce
+        if last_match and last_match.winner == username:
+            return base_rating + rating_change
         else:
-            return base_rate - rating_change
-    
+            return base_rating - rating_change
+
     async def receive(self, text_data):
         data = json.loads(text_data)
         message_type = data.get('type')
@@ -701,17 +720,18 @@ class Pvp2dConsumer(AsyncWebsocketConsumer):
     
     async def handle_end(self):
         logger.warning("ending")
-        game_state = pvp2d_game_states[self.username]
-        await self.update_game_result(game_state)
+        opponent = pvp2d_matched_users.get(self.username)
         if self.username in pvp2d_send_gamestate_tasks:
             logger.warning(f"Cancelling task for {self.username}")
             pvp2d_send_gamestate_tasks[self.username].cancel()
             pvp2d_send_gamestate_tasks.pop(self.username)
-        opponent = pvp2d_matched_users.get(self.username)
         if opponent in pvp2d_send_gamestate_tasks:
             logger.warning(f"Cancelling task for {opponent}")
             pvp2d_send_gamestate_tasks[opponent].cancel()
             pvp2d_send_gamestate_tasks.pop(opponent)
+        game_state = pvp2d_game_states[self.username]
+        await self.update_game_result(game_state)
+        await self.send(text_data=json.dumps({'type': 'game_end'}))
 
     async def send_error_message(self, error_type, code, message=None):
         logger.warning(f"{error_type}: {message}")

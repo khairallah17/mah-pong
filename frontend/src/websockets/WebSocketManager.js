@@ -43,9 +43,11 @@ class WebSocketManager {
         this.url = url;
     }
 
-    sendMessage(message, users) {
+    sendMessage(message, users, link) {
         if (this.websocket && this.websocket.readyState === WebSocket.OPEN) {
-            const payload = users ? { 'message': message, 'users': users } : {'message': message };
+            const payload = { message };
+            if (users) payload.users = users;
+            if (link) payload.link = link;
             this.websocket.send(JSON.stringify(payload));
         } else {
             console.warn("WebSocket is not open");

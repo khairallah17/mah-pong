@@ -18,7 +18,7 @@ const FriendRequestHandler = () => {
       
       if (response.ok) {
         // Send notification to sender
-        wsManager?.sendMessage(`${currentUser} sent you a friend request`, [senderUsername]);
+        wsManager?.sendMessage(`${currentUser} sent you a friend request`, [senderUsername], `/dashboard/profil/${currentUser}`);
         // wsManager?.sendMessage(JSON.stringify({
         //   type: 'friend_request_accepted',
         //   message: `${currentUser} accepted your friend request`,

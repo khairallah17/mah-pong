@@ -41,16 +41,18 @@ class notificationsConsumer(AsyncWebsocketConsumer):
         logger.warning(f"Data received: {data}")
         message = data.get("message", "")
         users = data.get("users", [])
+        link = data.get("link", "")
         logger.warning(f"users: {users}")
         logger.warning(f"user_channels: {notif_user_channels}")
         for user in users:
             logger.warning(f"User: {user}")
-            await self.create_notification(message, user)
+            await self.create_notification(message, user, link)
             if user in notif_user_channels:
                 logger.warning(f"Sending notification to user: {user}")
                 await self.channel_layer.send(notif_user_channels[user], {
                     "type": "notification",
-                    "message": message
+                    "message": message,
+                    "link": link
                 })
             else:
                 logger.warning(f"User {user} not found in notif_user_channels")
@@ -67,8 +69,8 @@ class notificationsConsumer(AsyncWebsocketConsumer):
         })
 
     @database_sync_to_async
-    def create_notification(self, message, user):
-        Notification.objects.create(message=message, user=user)
+    def create_notification(self, message, user, link):
+        Notification.objects.create(message=message, user=user, link=link)
         return True
     
     @database_sync_to_async
