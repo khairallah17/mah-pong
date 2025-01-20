@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Activity } from 'lucide-react';
 import axios from 'axios';
-import { jwtDecode } from "jwt-decode"
 import '../i18n';
 import { useTranslation } from 'react-i18next';
 import { Activity, ChevronLeft, ChevronRight } from 'lucide-react';
