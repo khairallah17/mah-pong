@@ -31,7 +31,9 @@ import Providers from './providers/providers.jsx';
 import NotFound from "./pages/404.jsx";
 import useOnlineStatus from "./hooks/useOnlineStatus.jsx"
 
+
 function App() {
+  // const { t } = useTranslation();
   useOnlineStatus();
 
   return (
@@ -39,7 +41,6 @@ function App() {
       <Providers>
 
             <Routes>
-              
               <Route path="/" element={<HomePage />} />
               <Route path="/login" element={<Authentication />} />
               <Route path="/verify-email" element={<VerifyPsdEmail />} />

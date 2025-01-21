@@ -242,7 +242,7 @@ export default function Security() {
   };
 
   return (
-    <div className="w-full bg-blue/50 rounded-xl border shadow-2xl shadow-black border-gray-800 overflow-hidden backdrop-blur-sm max-w-6xl mx-auto p-6 space-y-2">
+    <div className="w-full max-w-6xl mx-auto p-8 space-y-2 shadow-2xl shadow-black rounded-xl border border-gray-800 backdrop-blur-sm ">
       <h2 className="text-xl font-inter text-white">Security</h2>
       <p className="text-xl font-normal text-gray-500">Secure your account</p>
       <form onSubmit={handleUpdatePassword} className="space-y-6 pt-8 border-t border-white/80">

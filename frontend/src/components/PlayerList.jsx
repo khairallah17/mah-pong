@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Users, Search, Gamepad2, MessageCircle } from 'lucide-react';
+import '../i18n';
+import { useTranslation } from 'react-i18next';
 
 export const PlayerList = () => {
   const [friends, setFriends] = useState([]);
@@ -8,25 +10,60 @@ export const PlayerList = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [inviteCode, setInviteCode] = useState(null);
   
+  const { t } = useTranslation();
   useEffect(() => {
-    const fetchFriends = async () => {
+    const fetchFriendsWithStats = async () => {
       try {
-        const response = await fetch("http://localhost:8001/api/friends/", 
-          {
-            credentials: "include",
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-              "Authorization": "Bearer " + JSON.parse(localStorage.getItem("authtoken"))?.access,
-            },
-          }
-        );
-        if (!response.ok) {
+        // Fetch friends list
+        const friendsResponse = await fetch("http://localhost:8001/api/friends/", {
+          credentials: "include",
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer " + JSON.parse(localStorage.getItem("authtoken"))?.access,
+          },
+        });
+
+        if (!friendsResponse.ok) {
           throw new Error('Failed to fetch friends list');
         }
-        const data = await response.json();
-        const friendsList = data[0]?.friends || [];
-        setFriends(friendsList);
+
+        const friendsData = await friendsResponse.json();
+        const friendsList = friendsData[0]?.friends || [];
+
+        // Fetch stats for each friend
+        const token = JSON.parse(localStorage.getItem("authtoken"))?.access;
+        const friendsWithStats = await Promise.all(
+          friendsList.map(async (friend) => {
+            try {
+              const statsResponse = await fetch(
+                `http://localhost:8000/api/player-stats/${friend.username}/`,
+                {
+                  method: 'GET',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                  },
+                }
+              );
+              
+              if (statsResponse.ok) {
+                const statsData = await statsResponse.json();
+                return {
+                  ...friend,
+                  nbwin: statsData.nbwin || 0,
+                  nblose: statsData.nblose || 0
+                };
+              }
+              return friend;
+            } catch (err) {
+              console.error(`Error fetching stats for ${friend.username}:`, err);
+              return friend;
+            }
+          })
+        );
+
+        setFriends(friendsWithStats);
         setError(null);
       } catch (err) {
         console.error('Error fetching friends:', err);
@@ -36,8 +73,8 @@ export const PlayerList = () => {
       }
     };
 
-    fetchFriends();
-    const interval = setInterval(fetchFriends, 30000);
+    fetchFriendsWithStats();
+    const interval = setInterval(fetchFriendsWithStats, 30000);
     return () => clearInterval(interval);
   }, []);
 
@@ -75,7 +112,7 @@ export const PlayerList = () => {
     if (loading) {
       return (
         <div className="flex justify-center items-center py-8 text-blue-400">
-          Loading friends list...
+          {t('Loading friends list...')}
         </div>
       );
     }
@@ -91,7 +128,7 @@ export const PlayerList = () => {
     if (friends.length === 0) {
       return (
         <div className="flex justify-center items-center py-8 text-blue-400/60">
-          No friends found. Add some friends to get started!
+          {t('No friends found. Add some friends to get started!')}
         </div>
       );
     }
@@ -99,7 +136,7 @@ export const PlayerList = () => {
     if (filteredFriends.length === 0) {
       return (
         <div className="flex justify-center items-center py-8 text-blue-400/60">
-          No friends match your search.
+          {t('No friends match your search.')}
         </div>
       );
     }
@@ -122,7 +159,7 @@ export const PlayerList = () => {
                   {friend.fullname}
                 </div>
                 <div className="text-xs text-blue-300/60">
-                  Wins: {friend.nbwin || 0} | Losses: {friend.nblose || 0}
+                  {t('Wins')}: {friend.nbwin || 0} | {t('Losses')}: {friend.nblose || 0}
                 </div>
               </div>
             </div>
@@ -162,11 +199,11 @@ export const PlayerList = () => {
         <div className="flex items-center gap-2">
           <Users className="text-blue-400" />
           <h2 className="text-lg font-bold bg-gradient-to-r from-blue-400 to-purple-400 text-transparent bg-clip-text">
-            Friends List
+            {t('Friends List')}
           </h2>
         </div>
         <span className="bg-blue-500/10 text-blue-400 px-3 py-1 rounded-full border border-blue-500/20">
-          {friends.length} Friends
+          {friends.length} {t('Friends')}
         </span>
       </div>
       
@@ -176,7 +213,7 @@ export const PlayerList = () => {
           type="text"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Search friends..."
+          placeholder={t('Search friends...')}
           className="w-full bg-black/40 border border-blue-500/20 rounded-lg pl-10 pr-4 py-2 text-sm focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400/50 transition-all"
         />
       </div>
@@ -187,4 +224,3 @@ export const PlayerList = () => {
 };
 
 export default PlayerList;
-

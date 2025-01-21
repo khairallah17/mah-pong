@@ -13,6 +13,9 @@ import { useForm } from "react-hook-form"
 
 import { motion } from "framer-motion"
 import { toast } from 'react-toastify';
+import '../../i18n';
+import { useTranslation } from 'react-i18next';
+import ButtonLng from "../../components/ButtonLng";
 
 const LoginForm = ({setSwap}) => {
 
@@ -42,21 +45,23 @@ const LoginForm = ({setSwap}) => {
                 transition: Bounce,
             })
         }
+        
     }
+    const { t } = useTranslation();
     
     return (
         <div className='h-full flex flex-col justify-center items-center gap-8 '>
-            <h3 className="zen-dots text-5xl w-3/4 self-center">Login</h3>
+            <h3 className="zen-dots text-5xl w-3/4 self-center">{t('Login')}</h3>
             <form className="flex flex-col gap-10 w-3/4 self-center" onSubmit={handleSubmit(onSubmit)}>
 
                 <div className="w-full">
                     <input
                         className="w-full bg-transparent border-b-2 border-white/50 focus:border-white duration-200 placeholder:text-white placeholder:text-opacity-50 placeholder:font-semibold py-2 focus:outline-none"
-                        placeholder="EMAIL"
+                        placeholder={t('EMAIL')}
                         type="email"
                         name="email"
                         {
-                        ...register("email",{required: "You must specify an email"})
+                        ...register("email",{required: t('You must specify an email')})
                         }
                     />
                 {errors.email?.type &&
@@ -70,16 +75,16 @@ const LoginForm = ({setSwap}) => {
                 <div className="w-full space-y-2">
                     <input
                         className="w-full bg-transparent border-b-2 border-white/50 focus:border-white duration-200 placeholder:text-white placeholder:text-opacity-50 placeholder:font-semibold py-2 focus:outline-none"
-                        placeholder="PASSWORD"
+                        placeholder={t('PASSWORD')}
                         type="password"
                         name="password"
                         {...register(
                         "password",
                         {
-                            required: "You must specify a password",
+                            required: t('You must specify a password'),
                             minLength: {
                             value: 8,
-                            message: "Password must have at least 8 characters"
+                            message: t('Password must have at least 8 character')
                             }
                         })}
                     />
@@ -90,20 +95,16 @@ const LoginForm = ({setSwap}) => {
                             {errors.password?.message}
                         </span>
                     }
-                    <NavLink to="/reset-password" className='text-red-500 uppercase hover:underline'>
-                        forget password?
-                    </NavLink>
+                    <NavLink to="/reset-password" className='text-red-500 uppercase hover:underline'>{t('forget password?')}</NavLink>
                 </div>
 
-                <button type="submit" className="bg-black w-1/4 self-center rounded-lg py-2 font-bold text-2xl hover:bg-white hover:text-black">
-                SIGN IN
-                </button>
+                <button type="submit" className="bg-black w-1/4 self-center rounded-lg py-2 font-bold text-2xl hover:bg-white hover:text-black">{t('SIGN IN')}</button>
             </form>
 
             <div className="flex items-center gap-8 w-3/4 self-center">
 
                 <div className="h-1 w-full bg-white text-opacity-50"></div>
-                <p>OR</p>
+                <p>{t('OR')}</p>
                 <div className="h-1 w-full bg-white bg-opacity-50"></div>
 
             </div>
@@ -111,18 +112,21 @@ const LoginForm = ({setSwap}) => {
             <div className="space-y-4 w-3/4 self-center">
                 <button onClick={GoogleLogin} className="bg-white w-full flex items-center justify-center gap-4 rounded-lg py-2">
                     <FcGoogle size={24}/>
-                    <p className="text-slate-600 font-semibold text-lg">Continue with google</p>
+                    <p className="text-slate-600 font-semibold text-lg">{t('Continue with google')}</p>
                 </button>
                 <button  onClick={Intra42Login} className="bg-black w-full flex items-center justify-center gap-4 rounded-lg py-2">
                     <Si42 size={24} color="white" />
-                    <p className="text-white font-semibold text-lg">Continue with 42</p>
+                    <p className="text-white font-semibold text-lg">{t('Continue with 42')}</p>
                 </button>
                 <div className="w-full flex items-center justify-between">
-                    <p className="uppercase">don't have an account?</p>
-                    <button onClick={setSwap} className="flex items-center gap-1 hover:underline">
-                        <p className="uppercase text-cyan-400">sign up</p>
-                        <MdOutlineArrowOutward color='white' />
-                    </button>
+                    <p className="uppercase">{t('don\'t have an account?')}</p>
+                        <button onClick={setSwap} className="flex items-center gap-1 hover:underline">
+                            <p className="uppercase text-cyan-400">{t('sign up')}</p>
+                            <MdOutlineArrowOutward color='white' />
+                        </button>
+                </div>
+                <div className='w-full flex items-center justify-center'>
+                    <ButtonLng />
                 </div>
             </div>
         </div>
