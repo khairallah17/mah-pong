@@ -2,6 +2,8 @@ import { React, useState, useRef, useEffect, useContext } from 'react'
 import { Trophy } from 'lucide-react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { WebSocketContext } from '../../websockets/WebSocketProvider'
+import '../../i18n';
+import { useTranslation } from 'react-i18next';
 
 // class Match(models.Model):
 //   player1 = models.CharField(max_length=100)
@@ -11,12 +13,13 @@ import { WebSocketContext } from '../../websockets/WebSocketProvider'
 //   datetime = models.DateTimeField(auto_now_add=True)
 
 export default function Tournament() {
+  const { t } = useTranslation();
   const wsRef = useRef(null);
   const navigate = useNavigate();
   const { wsManager } = useContext(WebSocketContext);
   const [matches, setMatches] = useState([
-    { id: 1, round: 1, position: 1, player1: 'Player 1', player2: 'Player 2' },
-    { id: 2, round: 1, position: 2, player1: 'Player 3', player2: 'Player 4' },
+    { id: 1, round: 1, position: 1, player1: t('Player')+' 1', player2: t('Player')+' 2' },
+    { id: 2, round: 1, position: 2, player1: t('Player')+' 3', player2: t('Player')+' 4' },
     { id: 3, round: 2, position: 1 },
   ]);
 
@@ -124,7 +127,7 @@ export default function Tournament() {
         {/* Tournament Title */}
         <div className="text-center mb-12">
           <h1 className="text-6xl font-bold text-white tracking-wider zen-dots" style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.3)' }}>
-            TOURNAMENT
+            {t('TOURNAMENT')}
           </h1>
           <div className="w-48 h-1 bg-white mx-auto mt-2"></div>
         </div>
@@ -213,19 +216,19 @@ export default function Tournament() {
         </div>
         {/* tournament code */}
         <div className="text-white mt-4">
-          Tournament Code: {tournamentCode}
+          {t('Tournament Code:')} {tournamentCode}
         </div>
       </div>
 
       {/* Popup for already in tournament */}
       {wrongTournament && (
         <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-gray-900/95 p-8 rounded-lg text-center">
-          <h2 className="text-2xl font-bold text-white mb-4">You are already in a tournament!</h2>
+          <h2 className="text-2xl font-bold text-white mb-4">{t('You are already in a tournament!')}</h2>
           <button
             onClick={() => navigate('/dashboard')}
             className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
           >
-            Go to Dashboard
+            {t('Go to Dashboard')}
           </button>
         </div>
       )}
@@ -233,19 +236,19 @@ export default function Tournament() {
       {/* Popup for eliminated */}
       {eliminated && (
         <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-gray-900/95 p-8 rounded-lg text-center">
-          <h2 className="text-2xl font-bold text-white mb-4">You have been eliminated from the tournament!</h2>
+          <h2 className="text-2xl font-bold text-white mb-4">{t('You have been eliminated from the tournament!')}</h2>
           <button
             onClick={() => navigate('/dashboard')}
             className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
           >
-            Go to Dashboard
+            {t('Go to Dashboard')}
           </button>
         </div>
       )}
 
       {matches.length > 0 && matches[matches.length - 1].winner && (
         <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-gray-900/95 p-8 rounded-lg text-center z-50">
-          <h2 className="text-2xl font-bold text-white mb-4">Congratulations {matches[matches.length - 1].winner}! You are the champion!</h2>
+          <h2 className="text-2xl font-bold text-white mb-4">{t('Congratulations')} {matches[matches.length - 1].winner}! {t('You are the champion!')}</h2>
           <button
             onClick={() => {
               wsRef.current.send(JSON.stringify({ type: 'tournament_complete' }));
@@ -253,7 +256,7 @@ export default function Tournament() {
             }}
             className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
           >
-            Finish Tournament
+            {t('Finish Tournament')}
           </button>
         </div>
       )}

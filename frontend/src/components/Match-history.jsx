@@ -146,7 +146,7 @@ export const MatchHistory = () => {
               )}
             </>
           ) : (
-            <div className="text-center text-gray-400 py-8">No matches found</div>
+            <div className="text-center text-gray-400 py-8">{t('No matches found')}</div>
           )}
         </>
       )}

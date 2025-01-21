@@ -3,8 +3,11 @@ import { Eye, EyeOff } from 'lucide-react';
 import axios from 'axios';
 import Swal from 'sweetalert2';
 import { useSidebarContext } from '../hooks/useSidebar';
+import '../i18n';
+import { useTranslation } from 'react-i18next';
 
 export default function Security() {
+  const { t } = useTranslation();
   const [oldPassword, setOldPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
