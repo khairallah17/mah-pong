@@ -202,15 +202,16 @@ export default function Tournament() {
       </div>
 
       <div className="w-full flex items-end flex-col  bottom-4 right-4">
-        <div className="flex gap-4">
-          <button
-            onClick={handleQuit}
-            className="px-4 py-2 bg-red-500 text-white rounded-md flex items-center gap-2"
-            disabled={loadingQuit}
-          >
-            {loadingQuit ? <Spinner /> : 'Quit'}
-          </button>
-        </div>
+        {matches.length > 0 && matches[matches.length - 1].winner && (
+          <div className="flex gap-4">
+            <button
+              onClick={handleQuit}
+              className="px-4 py-2 bg-red-500 text-white rounded-md flex items-center gap-2"
+              disabled={loadingQuit}
+            >
+              {loadingQuit ? <Spinner /> : 'Quit'}
+            </button>
+          </div>)}
         {/* tournament code */}
         <div className="text-white mt-4">
           Tournament Code: {tournamentCode}

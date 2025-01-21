@@ -234,13 +234,13 @@ class TournamentConsumer(AsyncWebsocketConsumer):
             logger.warning(f"user: {self.username} current_match: {self.current_match}")
             tournament = Tournament.objects.get(id=self.tournament.id)
             # get match with round 2 and position 1 in this tournament and see if it has 2 players
-            final_match = TournamentMatch.objects.get(tournament=tournament, round=2, position=1)
-            if not final_match.player1 or not final_match.player2:
+            tournament_match = TournamentMatch.objects.get(tournament=tournament, round=2, position=1)
+            if not tournament_match.player1 or not tournament_match.player2:
                 if len(present_players.get(self.tournament.id, [])) == 4:
                     tournament.status = 'active'
                     tournament.save()
                     return True
-            elif not final_match.winner:
+            else:
                 if len(present_players.get(self.tournament.id, [])) == 2:
                     return True
             return False
@@ -664,7 +664,7 @@ class Pvp2dConsumer(AsyncWebsocketConsumer):
     def calculate_elo(self, username):
         # Base rating: last match's rating or default
         last_match = Match.objects.filter(Q(username1=username) | Q(username2=username)) \
-                                  .exclude(winner=None).latest('datetime')
+                                  .exclude(winner=None).order_by('-datetime').first()
         base_rating = 1000
         if last_match:
             base_rating = last_match.ratingP1 if last_match.username1 == username else last_match.ratingP2

@@ -9,6 +9,8 @@ export default function Pve2d() {
   // Default single-player scoreboard
   const [{ score1, score2 }, setScores] = useState({ score1: 0, score2: 0 });
   const [winner, setWinner] = useState(null);
+  const [countdown, setCountdown] = useState(null);
+  const countdownRef = useRef(false);
 
   const cameraRef = useRef(null);
   const rendererRef = useRef(null);
@@ -18,12 +20,15 @@ export default function Pve2d() {
   const tableRef = useRef(null);
   const tableAddonsRef = useRef(null);
   const isPausedRef = useRef(true);
+  const collisionsRef = useRef(0);
 
   // Color context
   const { tableMainColor, tableSecondaryColor, paddlesColor } = useContext(ColorContext);
 
   // Vector controlling ball motion
   let ballDirection = new THREE.Vector3(1, 0, 1);
+
+  const aiInterval = useRef(null);
 
   useEffect(() => {
     document.body.style.overflow = 'hidden'; // Disable scrolling
@@ -87,16 +92,58 @@ export default function Pve2d() {
     // Animation
     const animate = () => {
       requestAnimationFrame(animate);
-
+      if (winner) {
+        return;
+      }
       if (!isPausedRef.current) {
-        ball.position.add(ballDirection.clone().multiplyScalar(0.05));
+        ball.position.add(ballDirection.clone().multiplyScalar(0.02));
         handleCollisions(ball, paddle1, paddle2);
       }
-
       controls.update();
       renderer.render(scene, camera);
     };
     animate();
+
+    function onAIKeyDown(direction) {
+      // Similar logic to onDocumentKeyDown, but for paddle2
+      if (!paddle2Ref.current.userData.keyPressed && (direction === 'up' || direction === 'down')) {
+        paddle2Ref.current.userData.keyPressed = true;
+        const moveDirection = direction === 'up' ? -1 : 1;
+        const PADDLE_SPEED = 0.1;
+        const intervalId = setInterval(() => {
+          if (winner) return; // Stop if there's a winner
+          const paddle2Geometry = paddle2Ref.current.geometry;
+          const tableGeometry = tableRef.current.geometry;
+          const newPosition = paddle2Ref.current.position.z + moveDirection * PADDLE_SPEED;
+          const halfPaddleWidth = paddle2Geometry.parameters.depth / 2;
+          const tableLimit = tableRef.current.position.z + tableGeometry.parameters.depth / 2;
+          if (Math.abs(newPosition) + Math.abs(halfPaddleWidth) <= tableLimit) {
+            paddle2Ref.current.position.z = newPosition;
+          }
+        }, 30);
+        paddle2Ref.current.userData.intervalId = intervalId;
+      }
+    }
+
+    function onAIKeyUp(direction) {
+      // Similar logic to onDocumentKeyUp, but for paddle2
+      if ((direction === 'up' || direction === 'down') && paddle2Ref.current.userData.keyPressed) {
+        paddle2Ref.current.userData.keyPressed = false;
+        clearInterval(paddle2Ref.current.userData.intervalId);
+      }
+    }
+
+    aiInterval.current = setInterval(() => {
+      const errorFactor = 1;
+      const distanceToPaddle2 = paddle2Ref.current.position.x - ball.position.x;
+      const timeToPaddle2 = distanceToPaddle2 / (ballDirection.x || 0.00001);
+      const predictedPosition = ball.position.z + ballDirection.z * timeToPaddle2 + (Math.random() - 0.5) * errorFactor; // Predict ball position
+      const moveDirection = predictedPosition > paddle2Ref.current.position.z ? 'down' : 'up';
+      onAIKeyDown(moveDirection);
+      setTimeout(() => onAIKeyUp(moveDirection), 200);
+    }, 1000);
+
+    startCountdown();
 
     return () => {
       document.body.style.overflow = 'auto';
@@ -107,6 +154,7 @@ export default function Pve2d() {
         gameContainer.removeChild(renderer.domElement);
       }
       renderer.dispose();
+      clearInterval(aiInterval.current);
     };
   }, []);
 
@@ -141,6 +189,7 @@ export default function Pve2d() {
       ballDirection.z = (ballSphere.center.z - paddleCenter.z) * 1.5;
       ballDirection.x *= -1;
       ball.position.x += 0.05;
+      ballDirection.setLength(ballDirection.length() * 1.02);
     }
 
     // Right paddle bounce (AI)
@@ -150,6 +199,7 @@ export default function Pve2d() {
       ballDirection.z = (ballSphere.center.z - paddleCenter.z) * 1.5;
       ballDirection.x *= -1;
       ball.position.x -= 0.05;
+      ballDirection.setLength(ballDirection.length() * 1.02);
     }
 
     // Goals
@@ -161,7 +211,7 @@ export default function Pve2d() {
       isPausedRef.current = true;
       setScores(prev => {
         const updated = { score1: prev.score1, score2: prev.score2 + 1 };
-        if (updated.score2 >= 10) {
+        if (updated.score2 >= 5) {
           setWinner('Computer');
         }
         return updated;
@@ -174,7 +224,7 @@ export default function Pve2d() {
       isPausedRef.current = true;
       setScores(prev => {
         const updated = { score1: prev.score1 + 1, score2: prev.score2 };
-        if (updated.score1 >= 10) {
+        if (updated.score1 >= 5) {
           setWinner('You');
         }
         return updated;
@@ -186,11 +236,6 @@ export default function Pve2d() {
     if (ball.position.z < -1.5 || ball.position.z > 1.5) {
       ballDirection.z *= -1;
     }
-
-    // AI logic: follow the ball
-    const aiSpeed = 0.01;
-    const diff = ball.position.z - paddle2.position.z;
-    paddle2.position.z += Math.sign(diff) * Math.min(Math.abs(diff), aiSpeed);
   }
 
   // Restart the ball & paddles
@@ -199,6 +244,7 @@ export default function Pve2d() {
     paddle1Ref.current.position.set(-2.5, 0.1, 0);
     paddle2Ref.current.position.set(2.5, 0.1, 0);
     ballDirection.set(1, 0, 1);
+    startCountdown();
   }
 
   // Key handling
@@ -210,7 +256,6 @@ export default function Pve2d() {
       const PADDLE_SPEED = 0.1;
       const intervalId = setInterval(() => {
         if (winner) return; // Stop if there's a winner
-        isPausedRef.current = false;
         const paddle1Geometry = paddle1Ref.current.geometry;
         const tableGeometry = tableRef.current.geometry;
         const newPosition = paddle1Ref.current.position.z + moveDirection * PADDLE_SPEED;
@@ -323,6 +368,23 @@ export default function Pve2d() {
     return light;
   }
 
+  function startCountdown() {
+    if (countdownRef.current) return;
+    countdownRef.current = true;
+    setCountdown(3);
+    const countdownInterval = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev === 1) {
+          clearInterval(countdownInterval);
+          isPausedRef.current = false;
+          countdownRef.current = false;
+          return null;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  }
+
   return (
     <>
       <GameSettingsButton />
@@ -333,8 +395,13 @@ export default function Pve2d() {
             onClick={() => window.location.reload()}
             className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
           >
-            Restart Game
+            Play Again
           </button>
+        </div>
+      )}
+      {countdown !== null && (
+        <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-gray-900/95 p-8 rounded-lg text-center">
+          <h2 className="text-2xl font-bold text-white mb-4">{countdown}</h2>
         </div>
       )}
       <div id="game-container">

@@ -83,8 +83,6 @@ const NotificationDisplay = () => {
                   <li key={index} className="px-4 py-3 hover:bg-gray-50">
                     <a
                       href={notification.link || '#'}
-                      target="_blank"
-                      rel="noopener noreferrer"
                       className="text-sm text-gray-800"
                     >
                       {notification.message}
