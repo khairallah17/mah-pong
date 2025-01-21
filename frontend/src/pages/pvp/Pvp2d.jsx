@@ -35,11 +35,10 @@ export default function Pvp2d() {
   const [processingResults, setProcessingResults] = useState(false);
   const [opponentDisconnected, setOpponentDisconnected] = useState(false);
 
-  // Color context
   const { tableMainColor, tableSecondaryColor, paddlesColor } = useContext(ColorContext);
 
-  // Vector controlling ball motion
   const ballDirectionRef = useRef(new THREE.Vector3(1, 0, 1));
+  const ballSpeedRef = useRef(0.01);
 
   useEffect(() => {
     document.body.style.overflow = 'hidden';
@@ -91,10 +90,12 @@ export default function Pvp2d() {
     window.addEventListener('resize', onWindowResize);
 
     const animate = () => {
+      
       requestAnimationFrame(animate);
-
+      if (opponentDisconnected) return;
+      
       if (!isPausedRef.current) {
-        ball.position.add(ballDirectionRef.current.clone().multiplyScalar(0.01));
+        ball.position.add(ballDirectionRef.current.clone().multiplyScalar(ballSpeedRef.current));
         // handleCollisions(ball, paddle1, paddle2);
       }
 
@@ -113,7 +114,7 @@ export default function Pvp2d() {
       }
       renderer.dispose();
     };
-  }, [isMatched]);
+  }, [isMatched, opponentDisconnected]);
 
   useEffect(() => {
     if (token && !wsRef.current) {
@@ -140,7 +141,7 @@ export default function Pvp2d() {
           }
         }
         if (message.type === 'match_found') {
-          setNames({ player1: message.player1, player2: message.player2 });
+          setNames({ player1: message.names.player1, player2: message.names.player2 });
           setIsMatched(true);
           setIsPlayer1(message.player_id === '1');
           isPlayer1Ref.current = message.player_id === '1';
@@ -191,12 +192,13 @@ export default function Pvp2d() {
     if (gameState) {
       isPausedRef.current = gameState.is_paused;
       ballDirectionRef.current.set(gameState.ball_direction_x, 0, gameState.ball_direction_z);
+      ballSpeedRef.current = gameState.ball_speed / 10;
       if (isPlayer1Ref.current)
         paddle2Ref.current.position.z = gameState.paddle2_z;
       else
         paddle1Ref.current.position.z = gameState.paddle1_z;
       ballRef.current.position.set(gameState.ball_x, 0.1, gameState.ball_z);
-      if (gameState.is_paused) {
+      if (isPausedRef.current) {
         if (gameState.scoreP1 >= 5 || gameState.scoreP2 >= 5) {
           winnerRef.current = gameState.scoreP1 >= 5 ? 'Player 1' : 'Player 2';
           wsRef.current.send(JSON.stringify({ type: 'game_event', event: 'end' }));
@@ -411,12 +413,12 @@ export default function Pvp2d() {
         <div id="game-container">
           <GameScore
             player1={{
-              username: 'You',
+              username: names.player1,
               avatar: '/player1.png?height=40&width=40',
               score: score1
             }}
             player2={{
-              username: 'Computer',
+              username: names.player2,
               avatar: '/player2.png?height=40&width=40',
               score: score2
             }}

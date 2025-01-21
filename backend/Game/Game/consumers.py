@@ -419,17 +419,21 @@ class Pvp2dConsumer(AsyncWebsocketConsumer):
                 }))
             pvp2d_user_channels[self.username] = self
             if self.invite_code:
-                if self.invite_code in pvp2d_pools:
+                if self.invite_code in pvp2d_pools and pvp2d_pools[self.invite_code] != self.username:
                     opponent = pvp2d_pools.pop(self.invite_code)
                     await self.match_users(self.username, opponent)
                 else:
                     pvp2d_pools[self.invite_code] = self.username
             elif self.match_id:
-                if self.match_id in pvp2d_pools:
-                    opponent = pvp2d_pools.pop(self.match_id)
-                    await self.match_users(self.username, opponent)
+                match_players = self.get_players_from_match_id(self.match_id)
+                if match_players and self.username in match_players:
+                    if self.match_id in pvp2d_pools and pvp2d_pools[self.match_id] != self.username:
+                        opponent = pvp2d_pools.pop(self.match_id)
+                        await self.match_users(self.username, opponent)
+                    else:
+                        pvp2d_pools[self.match_id] = self.username
                 else:
-                    pvp2d_pools[self.match_id] = self.username
+                    await self.send_error_message('invalid_match_id', 4003)
             else:
                 if self.username not in pvp2d_matchmaking_pool and self.username not in pvp2d_matched_users:
                     pvp2d_matchmaking_pool.append(self.username)
@@ -455,7 +459,6 @@ class Pvp2dConsumer(AsyncWebsocketConsumer):
         self.player_id = '1' if user1 == self.username else '2'
         await self.create_game(user1, user2)
 
-        # Initialize shared game state for both players
         shared_game_state = self.init_gamestate()
         pvp2d_game_states[user1] = shared_game_state
         pvp2d_game_states[user2] = shared_game_state
@@ -487,6 +490,14 @@ class Pvp2dConsumer(AsyncWebsocketConsumer):
             pvp2d_send_gamestate_tasks[user2] = task
 
     @database_sync_to_async
+    def get_players_from_match_id(self, match_id):
+        try:
+            match = Match.objects.get(id=match_id)
+            return (match.username1, match.username2)
+        except Match.DoesNotExist:
+            return None
+
+    @database_sync_to_async
     def create_game(self, username1, username2):
         Match.objects.create(
             username1=username1,
@@ -501,8 +512,8 @@ class Pvp2dConsumer(AsyncWebsocketConsumer):
     def update_ball_position(self, game_state):
         if game_state['is_paused']:
             return
-        game_state['ball_x'] += game_state['ball_direction_x'] * BALL_SPEED
-        game_state['ball_z'] += game_state['ball_direction_z'] * BALL_SPEED
+        game_state['ball_x'] += game_state['ball_direction_x'] * game_state['ball_speed']
+        game_state['ball_z'] += game_state['ball_direction_z'] * game_state['ball_speed']
 
         self.handle_collisions(game_state)
 
@@ -512,13 +523,15 @@ class Pvp2dConsumer(AsyncWebsocketConsumer):
             game_state['ball_direction_z'] *= -1
 
         # paddles collision
-        if (game_state['ball_x'] < -2.5 and abs(game_state['ball_z'] - game_state['paddle1_z']) < 0.5) :
+        if (game_state['ball_x'] < -2.3 and abs(game_state['ball_z'] - game_state['paddle1_z']) < 0.5) :
             game_state['ball_direction_x'] *= -1
             game_state['ball_direction_z'] = (game_state['ball_z'] - game_state['paddle1_z']) * 1.5
+            game_state['ball_speed'] *= 1.02
         
-        if (game_state['ball_x'] > 2.5 and abs(game_state['ball_z'] - game_state['paddle2_z']) < 0.5):
+        if (game_state['ball_x'] > 2.3 and abs(game_state['ball_z'] - game_state['paddle2_z']) < 0.5):
             game_state['ball_direction_x'] *= -1
             game_state['ball_direction_z'] = (game_state['ball_z'] - game_state['paddle2_z']) * 1.5
+            game_state['ball_speed'] *= 1.02
 
         # goal scored
         if game_state['ball_x'] < -2.6 or game_state['ball_x'] > 2.6:
@@ -571,10 +584,15 @@ class Pvp2dConsumer(AsyncWebsocketConsumer):
             'ball_direction_z': 1,
             'scoreP1': 0,
             'scoreP2': 0,
+            'ball_speed': BALL_SPEED,
         }
     
     async def disconnect(self, close_code):
-        if self.username:            
+        if self.username:
+            if self.username in pvp2d_matchmaking_pool:
+                pvp2d_matchmaking_pool.remove(self.username)
+            if self.username in pvp2d_pools:
+                pvp2d_pools.pop(self.username)
             if self.username in pvp2d_matched_users:
                 countdown_task = asyncio.create_task(self.start_reconnect_countdown(self.username))
                 logger.warning(f"Starting countdown task for {self.username}")
@@ -585,6 +603,7 @@ class Pvp2dConsumer(AsyncWebsocketConsumer):
                     'game_state': pvp2d_game_states[self.username],
                 }
             pvp2d_user_channels.pop(self.username, None)
+
 
     async def start_reconnect_countdown(self, username):
         start_time = asyncio.get_event_loop().time()
@@ -663,30 +682,20 @@ class Pvp2dConsumer(AsyncWebsocketConsumer):
         except Exception as e:
             logger.error(f"Error updating game result: {e}")
 
+    @database_sync_to_async
     def calculate_elo(self, username):
-        # Base rating: last match's rating or default
-        last_match = Match.objects.filter(Q(username1=username) | Q(username2=username)) \
-                                  .exclude(winner=None).order_by('-datetime').first()
-        base_rating = 1000
-        if last_match:
-            base_rating = last_match.ratingP1 if last_match.username1 == username else last_match.ratingP2
-
         matches = Match.objects.filter(Q(username1=username) | Q(username2=username))
         total_matches = matches.count()
         wins = matches.filter(winner=username).count()
         if total_matches == 0:
-            return base_rating
+            return 1000  # Starting Elo
 
-        k = 200
         win_rate = wins / total_matches
-        normalized_win_rate = win_rate - 0.5
-        rating_change = k * normalized_win_rate * (total_matches ** 0.5)
+        # Lower rating change as more games are played
+        rating_change = 200 * (win_rate - 0.5) / (1 + total_matches ** 0.5)
 
-        # Assume this match is won if the last_match was won by this username, else reduce
-        if last_match and last_match.winner == username:
-            return base_rating + rating_change
-        else:
-            return base_rating - rating_change
+        new_rating = 1000 + rating_change  # Base rating of 1000
+        return new_rating
 
     async def receive(self, text_data):
         data = json.loads(text_data)

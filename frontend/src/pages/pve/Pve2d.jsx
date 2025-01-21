@@ -6,7 +6,7 @@ import GameScore from '../../components/pvp/GameScore';
 import { ColorContext } from '../../context/ColorContext';
 
 export default function Pve2d() {
-  // Default single-player scoreboard
+
   const [{ score1, score2 }, setScores] = useState({ score1: 0, score2: 0 });
   const [winner, setWinner] = useState(null);
   const [countdown, setCountdown] = useState(null);
@@ -23,27 +23,24 @@ export default function Pve2d() {
   const collisionsRef = useRef(0);
   const winnerRef = useRef(null);
 
-  // Color context
   const { tableMainColor, tableSecondaryColor, paddlesColor } = useContext(ColorContext);
 
-  // Vector controlling ball motion
   let ballDirection = new THREE.Vector3(1, 0, 1);
 
   const aiInterval = useRef(null);
 
   useEffect(() => {
-    document.body.style.overflow = 'hidden'; // Disable scrolling
+    document.body.style.overflow = 'none';
+    document.documentElement.style.overflow = 'none';
 
     const gameContainer = document.getElementById('game-container');
     const scene = new THREE.Scene();
 
-    // Camera
     const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
     camera.position.set(0, 2.5, 2.5);
     camera.lookAt(scene.position);
     cameraRef.current = camera;
 
-    // Renderer
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.setSize(window.innerWidth, window.innerHeight);
@@ -51,7 +48,6 @@ export default function Pve2d() {
     gameContainer?.appendChild(renderer.domElement);
     rendererRef.current = renderer;
 
-    // Orbit controls
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.75;
@@ -62,27 +58,21 @@ export default function Pve2d() {
       RIGHT: null
     };
 
-    // Background
     createSpaceBackground(scene);
 
-    // Table
     const table = createTable();
     tableRef.current = table;
 
-    // Table add-ons (stripes, legs, etc.)
     const tableAddons = createTableAddons();
     tableAddonsRef.current = tableAddons;
 
-    // Paddles
     const { paddle1, paddle2 } = createPaddles();
     paddle1Ref.current = paddle1;
     paddle2Ref.current = paddle2;
 
-    // Ball
     const ball = createBall();
     ballRef.current = ball;
 
-    // Lights
     scene.add(table, tableAddons, paddle1, paddle2, ball, new THREE.AmbientLight(0xffffff, 0.5));
     scene.add(createLight());
 
@@ -90,7 +80,6 @@ export default function Pve2d() {
     document.addEventListener('keyup', onDocumentKeyUp);
     window.addEventListener('resize', onWindowResize);
 
-    // Animation
     const animate = () => {
       requestAnimationFrame(animate);
       if (winnerRef.current) {
@@ -106,13 +95,12 @@ export default function Pve2d() {
     animate();
 
     function onAIKeyDown(direction) {
-      // Similar logic to onDocumentKeyDown, but for paddle2
       if (!paddle2Ref.current.userData.keyPressed && (direction === 'up' || direction === 'down')) {
         paddle2Ref.current.userData.keyPressed = true;
         const moveDirection = direction === 'up' ? -1 : 1;
         const PADDLE_SPEED = 0.1;
         const intervalId = setInterval(() => {
-          if (winnerRef.current) return; // Stop if there's a winner
+          if (winnerRef.current) return;
           const paddle2Geometry = paddle2Ref.current.geometry;
           const tableGeometry = tableRef.current.geometry;
           const newPosition = paddle2Ref.current.position.z + moveDirection * PADDLE_SPEED;
@@ -127,7 +115,6 @@ export default function Pve2d() {
     }
 
     function onAIKeyUp(direction) {
-      // Similar logic to onDocumentKeyUp, but for paddle2
       if ((direction === 'up' || 'down') && paddle2Ref.current.userData.keyPressed) {
         paddle2Ref.current.userData.keyPressed = false;
         clearInterval(paddle2Ref.current.userData.intervalId);
@@ -137,7 +124,7 @@ export default function Pve2d() {
     aiInterval.current = setInterval(() => {
       const distanceToPaddle2 = paddle2Ref.current.position.x - ball.position.x;
       const timeToPaddle2 = distanceToPaddle2 / (ballDirection.x || 0.00001);
-      const predictedPosition = ball.position.z + ballDirection.z * timeToPaddle2; // Predict ball position
+      const predictedPosition = ball.position.z + ballDirection.z * timeToPaddle2;
       const moveDirection = predictedPosition > paddle2Ref.current.position.z ? 'down' : 'up';
       const distanceZ = Math.abs(predictedPosition - paddle2Ref.current.position.z);
       const pressDuration = 200 + distanceZ * 100;
@@ -148,6 +135,9 @@ export default function Pve2d() {
     startCountdown();
 
     return () => {
+      document.body.style.overflow = 'auto';
+      document.documentElement.style.overflow = 'auto';
+      
       document.body.style.overflow = 'auto';
       document.removeEventListener('keydown', onDocumentKeyDown);
       document.removeEventListener('keyup', onDocumentKeyUp);
@@ -160,7 +150,6 @@ export default function Pve2d() {
     };
   }, []);
 
-  // Color watchers
   useEffect(() => {
     if (tableRef.current) {
       tableRef.current.material.color.set(tableMainColor);
@@ -178,13 +167,11 @@ export default function Pve2d() {
     }
   }, [tableMainColor, tableSecondaryColor, paddlesColor]);
 
-  // Handle collisions
   function handleCollisions(ball, paddle1, paddle2) {
     const paddle1Box = new THREE.Box3().setFromObject(paddle1);
     const paddle2Box = new THREE.Box3().setFromObject(paddle2);
     const ballSphere = new THREE.Sphere(ball.position, ball.geometry.parameters.radius);
 
-    // Left paddle bounce
     if (paddle1Box.intersectsSphere(ballSphere)) {
       const paddleCenter = new THREE.Vector3();
       paddle1Box.getCenter(paddleCenter);
@@ -194,7 +181,6 @@ export default function Pve2d() {
       ballDirection.setLength(ballDirection.length() * 1.02);
     }
 
-    // Right paddle bounce (AI)
     if (paddle2Box.intersectsSphere(ballSphere)) {
       const paddleCenter = new THREE.Vector3();
       paddle2Box.getCenter(paddleCenter);
@@ -204,7 +190,6 @@ export default function Pve2d() {
       ballDirection.setLength(ballDirection.length() * 1.02);
     }
 
-    // Goals
     const goalLeft = new THREE.Box3(new THREE.Vector3(-3, -1, -1.5), new THREE.Vector3(-2.5, 1, 1.5));
     const goalRight = new THREE.Box3(new THREE.Vector3(2.5, -1, -1.5), new THREE.Vector3(3, 1, 1.5));
 
@@ -215,11 +200,11 @@ export default function Pve2d() {
         if (updated.score2 >= 5) {
           winnerRef.current = 'Computer';
           setWinner('Computer');
+          return updated;
         }
+        restartGame(ball);
         return updated;
       });
-      if (!winnerRef.current)
-        restartGame(ball);
     }
 
     if (goalRight.intersectsSphere(ballSphere)) {
@@ -229,20 +214,18 @@ export default function Pve2d() {
         if (updated.score1 >= 5) {
           winnerRef.current = 'You';
           setWinner('You');
+          return updated;
         }
+        restartGame(ball);
         return updated;
       });
-      if (!winnerRef.current)
-        restartGame(ball);
     }
 
-    // Bounce off top/bottom edges
     if (ball.position.z < -1.5 || ball.position.z > 1.5) {
       ballDirection.z *= -1;
     }
   }
 
-  // Restart the ball & paddles
   function restartGame(ball) {
     ball.position.set(0, 0.1, 0);
     paddle1Ref.current.position.set(-2.5, 0.1, 0);
@@ -251,7 +234,6 @@ export default function Pve2d() {
     startCountdown();
   }
 
-  // Key handling
   let keyPressed = false;
   function onDocumentKeyDown(event) {
     if (!keyPressed && (event.key === 'ArrowUp' || event.key === 'ArrowDown')) {
@@ -259,7 +241,7 @@ export default function Pve2d() {
       const moveDirection = event.key === 'ArrowUp' ? -1 : 1;
       const PADDLE_SPEED = 0.1;
       const intervalId = setInterval(() => {
-        if (winnerRef.current) return; // Stop if there's a winner
+        if (winnerRef.current) return;
         const paddle1Geometry = paddle1Ref.current.geometry;
         const tableGeometry = tableRef.current.geometry;
         const newPosition = paddle1Ref.current.position.z + moveDirection * PADDLE_SPEED;
@@ -280,7 +262,6 @@ export default function Pve2d() {
     }
   }
 
-  // Window resize
   function onWindowResize() {
     if (rendererRef.current && cameraRef.current) {
       cameraRef.current.aspect = window.innerWidth / window.innerHeight;
@@ -289,7 +270,6 @@ export default function Pve2d() {
     }
   }
 
-  // Create objects
   function createSpaceBackground(scene) {
     const starsGeometry = new THREE.BufferGeometry();
     const starsMaterial = new THREE.PointsMaterial({ color: 0xffffff, size: 0.1 });
@@ -329,22 +309,24 @@ export default function Pve2d() {
     stripes[3].position.set(-2.5, 0.06, 0);
     stripes[4].position.set(0, 0.06, 0);
 
-    // New modern legs
-    const legGeometry = new THREE.BoxGeometry(0.1, 1, 0.1);
+    const hockeyLegShape = new THREE.Shape();
+    hockeyLegShape.moveTo(-1.8, 0);
+    hockeyLegShape.absarc(0, 0, 1.8, Math.PI, 0, false);
+
+    const legGeometry = new THREE.ExtrudeGeometry(hockeyLegShape, {
+      depth: 0.07,
+      bevelEnabled: false
+    });
     const legMaterial = new THREE.MeshStandardMaterial({ color: 0x333333 });
-    const legs = [
-      new THREE.Mesh(legGeometry, legMaterial),
-      new THREE.Mesh(legGeometry, legMaterial),
-      new THREE.Mesh(legGeometry, legMaterial),
-      new THREE.Mesh(legGeometry, legMaterial),
-    ];
-    legs[0].position.set(2.4, -0.55, 1.4);
-    legs[1].position.set(-2.4, -0.55, 1.4);
-    legs[2].position.set(2.4, -0.55, -1.4);
-    legs[3].position.set(-2.4, -0.55, -1.4);
+    const arcLeft = new THREE.Mesh(legGeometry, legMaterial);
+    arcLeft.rotation.z = - Math.PI ;
+    arcLeft.position.set(0, -1, -1.6);
+
+    const arcRight = arcLeft.clone();
+    arcRight.position.set(0, -1, 1.55);
 
     const group = new THREE.Group();
-    group.add(...stripes, ...legs);
+    group.add(...stripes, arcLeft, arcRight);
     return group;
   }
   function createPaddles() {
@@ -424,5 +406,4 @@ export default function Pve2d() {
         />
       </div>
     </>
-  );
-}
+  );}
