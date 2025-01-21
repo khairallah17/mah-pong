@@ -196,8 +196,7 @@ class TournamentConsumer(AsyncWebsocketConsumer):
 
     @database_sync_to_async
     def get_or_create_tournament_matches(self, tournament, username):
-        matches = list(TournamentMatch.objects.filter(tournament=tournament))
-        logger.warning(f"matches: {matches}")
+        matches = list(TournamentMatch.objects.filter(tournament=tournament).order_by('created_at'))
 
         if matches and not any(username in [match.player1, match.player2] for match in matches):
             for match in matches:
@@ -205,11 +204,13 @@ class TournamentConsumer(AsyncWebsocketConsumer):
                     match.player1 = username
                     self.current_match = match.id
                     match.save()
+                    logger.warning(f"matches: {matches} adding player1: {username} to match: {match.id}")
                     return matches
                 elif not match.player2:
                     match.player2 = username
                     self.current_match = match.id
                     match.save()
+                    logger.warning(f"matches: {matches} adding player2: {username} to match: {match.id}")
                     return matches
         if not matches:
             matches = self._create_tournament_matches(tournament, username)
@@ -225,6 +226,7 @@ class TournamentConsumer(AsyncWebsocketConsumer):
 
         matches[0].player1 = username
         self.current_match = matches[0].id
+        logger.warning(f"matches: {matches} adding player1: {username} to match: {matches[0].id}")
         matches[0].save()
         return matches
 
@@ -305,7 +307,7 @@ class TournamentConsumer(AsyncWebsocketConsumer):
     @database_sync_to_async
     def get_tournament_state(self, tournament):
         try:
-            matches = TournamentMatch.objects.filter(tournament=tournament)
+            matches = TournamentMatch.objects.filter(tournament=tournament).order_by('created_at')
             return {
                 "matches": [
                     {

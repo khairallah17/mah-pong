@@ -21,6 +21,7 @@ export default function Pve2d() {
   const tableAddonsRef = useRef(null);
   const isPausedRef = useRef(true);
   const collisionsRef = useRef(0);
+  const winnerRef = useRef(null);
 
   // Color context
   const { tableMainColor, tableSecondaryColor, paddlesColor } = useContext(ColorContext);
@@ -92,7 +93,7 @@ export default function Pve2d() {
     // Animation
     const animate = () => {
       requestAnimationFrame(animate);
-      if (winner) {
+      if (winnerRef.current) {
         return;
       }
       if (!isPausedRef.current) {
@@ -111,7 +112,7 @@ export default function Pve2d() {
         const moveDirection = direction === 'up' ? -1 : 1;
         const PADDLE_SPEED = 0.1;
         const intervalId = setInterval(() => {
-          if (winner) return; // Stop if there's a winner
+          if (winnerRef.current) return; // Stop if there's a winner
           const paddle2Geometry = paddle2Ref.current.geometry;
           const tableGeometry = tableRef.current.geometry;
           const newPosition = paddle2Ref.current.position.z + moveDirection * PADDLE_SPEED;
@@ -127,20 +128,21 @@ export default function Pve2d() {
 
     function onAIKeyUp(direction) {
       // Similar logic to onDocumentKeyUp, but for paddle2
-      if ((direction === 'up' || direction === 'down') && paddle2Ref.current.userData.keyPressed) {
+      if ((direction === 'up' || 'down') && paddle2Ref.current.userData.keyPressed) {
         paddle2Ref.current.userData.keyPressed = false;
         clearInterval(paddle2Ref.current.userData.intervalId);
       }
     }
 
     aiInterval.current = setInterval(() => {
-      const errorFactor = 1;
       const distanceToPaddle2 = paddle2Ref.current.position.x - ball.position.x;
       const timeToPaddle2 = distanceToPaddle2 / (ballDirection.x || 0.00001);
-      const predictedPosition = ball.position.z + ballDirection.z * timeToPaddle2 + (Math.random() - 0.5) * errorFactor; // Predict ball position
+      const predictedPosition = ball.position.z + ballDirection.z * timeToPaddle2; // Predict ball position
       const moveDirection = predictedPosition > paddle2Ref.current.position.z ? 'down' : 'up';
+      const distanceZ = Math.abs(predictedPosition - paddle2Ref.current.position.z);
+      const pressDuration = 200 + distanceZ * 100;
       onAIKeyDown(moveDirection);
-      setTimeout(() => onAIKeyUp(moveDirection), 200);
+      setTimeout(() => onAIKeyUp(moveDirection), pressDuration);
     }, 1000);
 
     startCountdown();
@@ -207,29 +209,31 @@ export default function Pve2d() {
     const goalRight = new THREE.Box3(new THREE.Vector3(2.5, -1, -1.5), new THREE.Vector3(3, 1, 1.5));
 
     if (goalLeft.intersectsSphere(ballSphere)) {
-      // Right side (computer) scores
       isPausedRef.current = true;
       setScores(prev => {
         const updated = { score1: prev.score1, score2: prev.score2 + 1 };
         if (updated.score2 >= 5) {
+          winnerRef.current = 'Computer';
           setWinner('Computer');
         }
         return updated;
       });
-      restartGame(ball);
+      if (!winnerRef.current)
+        restartGame(ball);
     }
 
     if (goalRight.intersectsSphere(ballSphere)) {
-      // Left side (player) scores
       isPausedRef.current = true;
       setScores(prev => {
         const updated = { score1: prev.score1 + 1, score2: prev.score2 };
         if (updated.score1 >= 5) {
+          winnerRef.current = 'You';
           setWinner('You');
         }
         return updated;
       });
-      restartGame(ball);
+      if (!winnerRef.current)
+        restartGame(ball);
     }
 
     // Bounce off top/bottom edges
@@ -255,7 +259,7 @@ export default function Pve2d() {
       const moveDirection = event.key === 'ArrowUp' ? -1 : 1;
       const PADDLE_SPEED = 0.1;
       const intervalId = setInterval(() => {
-        if (winner) return; // Stop if there's a winner
+        if (winnerRef.current) return; // Stop if there's a winner
         const paddle1Geometry = paddle1Ref.current.geometry;
         const tableGeometry = tableRef.current.geometry;
         const newPosition = paddle1Ref.current.position.z + moveDirection * PADDLE_SPEED;
@@ -325,8 +329,9 @@ export default function Pve2d() {
     stripes[3].position.set(-2.5, 0.06, 0);
     stripes[4].position.set(0, 0.06, 0);
 
-    const legGeometry = new THREE.CylinderGeometry(0.1, 0.1, 1, 32);
-    const legMaterial = new THREE.MeshStandardMaterial({ color: 0x8B4513 });
+    // New modern legs
+    const legGeometry = new THREE.BoxGeometry(0.1, 1, 0.1);
+    const legMaterial = new THREE.MeshStandardMaterial({ color: 0x333333 });
     const legs = [
       new THREE.Mesh(legGeometry, legMaterial),
       new THREE.Mesh(legGeometry, legMaterial),

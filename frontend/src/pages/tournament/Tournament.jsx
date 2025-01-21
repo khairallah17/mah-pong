@@ -23,6 +23,7 @@ export default function Tournament() {
   const [loadingQuit, setLoadingQuit] = useState(false);
   const [wrongTournament, setWrongTournament] = useState(false);
   const [eliminated, setEliminated] = useState(false);
+  const [isTournamentStarted, setIsTournamentStarted] = useState(false);
   const token = localStorage.getItem('authtoken');
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
@@ -54,11 +55,13 @@ export default function Tournament() {
           console.log('Tournament updated:', message.matches);
         } else if (message.type === 'match_start') {
           console.log('Match started:', message.tournamentMatch_id);
+          setIsTournamentStarted(true);
           navigate(`/dashboard/game/pvp2d?match_id=${message.tournamentMatch_id}`);
         } else if (message.type === 'tournament_code') {
           setTournamentCode(message.code);
         } else if (message.type === 'players_ready') {
           console.log('Players ready:', message.players);
+          setIsTournamentStarted(true);
           wsManager.sendMessage('Tournament players Ready', message.players, "/dashboard/tournament/live");
           //wsManager implement broadcastmsg and selfmsg (here we should use selfmsg)
           //make this received only once
@@ -202,7 +205,9 @@ export default function Tournament() {
       </div>
 
       <div className="w-full flex items-end flex-col  bottom-4 right-4">
-        {matches.length > 0 && matches[matches.length - 1].winner && (
+        {(matches.length > 0 && matches[matches.length - 1].winner 
+          || !isTournamentStarted
+        )&& (
           <div className="flex gap-4">
             <button
               onClick={handleQuit}

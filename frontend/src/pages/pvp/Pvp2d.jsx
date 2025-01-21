@@ -33,6 +33,7 @@ export default function Pvp2d() {
   const winnerRef = useRef(null);
   const isPlayer1Ref = useRef(true);
   const [processingResults, setProcessingResults] = useState(false);
+  const [opponentDisconnected, setOpponentDisconnected] = useState(false);
 
   // Color context
   const { tableMainColor, tableSecondaryColor, paddlesColor } = useContext(ColorContext);
@@ -41,18 +42,15 @@ export default function Pvp2d() {
   const ballDirectionRef = useRef(new THREE.Vector3(1, 0, 1));
 
   useEffect(() => {
-    document.body.style.overflow = 'hidden'; // Disable scrolling
-
+    document.body.style.overflow = 'hidden';
     const gameContainer = document.getElementById('game-container');
     const scene = new THREE.Scene();
 
-    // Camera
     const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
     camera.position.set(0, 2.5, 2.5);
     camera.lookAt(scene.position);
     cameraRef.current = camera;
 
-    // Renderer
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.setSize(window.innerWidth, window.innerHeight);
@@ -60,7 +58,6 @@ export default function Pvp2d() {
     gameContainer?.appendChild(renderer.domElement);
     rendererRef.current = renderer;
 
-    // Orbit controls
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.75;
@@ -71,27 +68,21 @@ export default function Pvp2d() {
       RIGHT: null
     };
 
-    // Background
     createSpaceBackground(scene);
 
-    // Table
     const table = createTable();
     tableRef.current = table;
 
-    // Table add-ons (stripes, legs, etc.)
     const tableAddons = createTableAddons();
     tableAddonsRef.current = tableAddons;
 
-    // Paddles
     const { paddle1, paddle2 } = createPaddles();
     paddle1Ref.current = paddle1;
     paddle2Ref.current = paddle2;
 
-    // Ball
     const ball = createBall();
     ballRef.current = ball;
 
-    // Lights
     scene.add(table, tableAddons, paddle1, paddle2, ball, new THREE.AmbientLight(0xffffff, 0.5));
     scene.add(createLight());
 
@@ -99,7 +90,6 @@ export default function Pvp2d() {
     document.addEventListener('keyup', onDocumentKeyUp);
     window.addEventListener('resize', onWindowResize);
 
-    // Animation
     const animate = () => {
       requestAnimationFrame(animate);
 
@@ -125,9 +115,7 @@ export default function Pvp2d() {
     };
   }, [isMatched]);
 
-  // WebSocket connection
   useEffect(() => {
-    // Connect to WebSocket
     if (token && !wsRef.current) {
       const wsUrl = `ws://localhost:8000/ws/pvp2d/?token=${accessToken}${inviteCode ? `&invite=${inviteCode}` : ''}${matchId ? `&match_id=${matchId}` : ''}`;
       wsRef.current = new WebSocket(wsUrl);
@@ -160,8 +148,7 @@ export default function Pvp2d() {
         } else if (message.type === 'game_state') {
           setGameState(message.game_state);
         } else if (message.type === 'opponent_disconnected') {
-          alert('You won because your opponent disconnected.');
-          window.location.href = '/dashboard';
+          setOpponentDisconnected(true);
         } else if (message.type === 'game_end') {
           setProcessingResults(false);
           setWinner(winnerRef.current);
@@ -202,7 +189,6 @@ export default function Pvp2d() {
 
   useEffect(() => {
     if (gameState) {
-      // Update paddle and ball positions based on gameState
       isPausedRef.current = gameState.is_paused;
       ballDirectionRef.current.set(gameState.ball_direction_x, 0, gameState.ball_direction_z);
       if (isPlayer1Ref.current)
@@ -239,7 +225,6 @@ export default function Pvp2d() {
     }, 1000);
   };
 
-  // Color watchers
   useEffect(() => {
     if (tableRef.current) {
       tableRef.current.material.color.set(tableMainColor);
@@ -292,7 +277,6 @@ export default function Pvp2d() {
     }
   }
 
-  // Window resize
   function onWindowResize() {
     if (rendererRef.current && cameraRef.current) {
       cameraRef.current.aspect = window.innerWidth / window.innerHeight;
@@ -301,8 +285,6 @@ export default function Pvp2d() {
     }
   }
 
-  
-  // Create objects
   function createSpaceBackground(scene) {
     const starsGeometry = new THREE.BufferGeometry();
     const starsMaterial = new THREE.PointsMaterial({ color: 0xffffff, size: 0.1 });
@@ -412,6 +394,17 @@ export default function Pvp2d() {
               Back to Tournament
             </button>
           )}
+        </div>
+      )}
+      {opponentDisconnected && (
+        <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-gray-900/95 p-8 rounded-lg text-center">
+          <h2 className="text-2xl font-bold text-white mb-4">Opponent Disconnected</h2>
+          <button
+            onClick={() => window.location.href = '/dashboard'}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Back to Dashboard
+          </button>
         </div>
       )}
       {isMatched && (
