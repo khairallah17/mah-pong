@@ -143,29 +143,6 @@ const Games = () => {
           path: "/dashboard/game/pvp3d"
         }
       ]
-    },
-    {
-      title: t('Tournaments'),
-      cards: [
-        {
-          title: t('Online Tournament'),
-          description: t('Compete in classic Online tournament brackets.'),
-          accentColor: "border-yellow-500",
-          buttonColor: "bg-gradient-to-r from-yellow-600 to-yellow-400",
-          image: "/play-Tournaments.jpg",
-          icon: Trophy,
-          path: "/dashboard/tournament"
-        },
-        {
-          title: t('Local Tournament'),
-          description: t('Join elite Local tournament competitions.'),
-          accentColor: "border-orange-500",
-          buttonColor: "bg-gradient-to-r from-orange-600 to-orange-400",
-          image: "/play-Tournaments.jpg",
-          icon: Trophy,
-          path: "/dashboard/tournament/local"
-        }
-      ]
     }
   ];
 
