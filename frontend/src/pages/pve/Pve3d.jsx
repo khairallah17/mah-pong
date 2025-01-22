@@ -25,12 +25,12 @@ function Pve3d() {
     const initBallPos = new THREE.Vector3(0, 1, 0);
     let waitforpaddle2 = false;
     let lastHitByPlayer1 = true;
+    let tableHitCount = 0;
 
     useEffect(() => {
         if (!rendererRef.current) {
             const gameContainer = gameContainerRef.current;
 
-            // Scene Setup
             const scene = new THREE.Scene();
             const camera = createCamera();
             const renderer = createRenderer(gameContainer);
@@ -38,7 +38,6 @@ function Pve3d() {
             const mouse = new THREE.Vector2();
             let isListening = true;
 
-            // Objects
             let paddle1, paddle2, ball, table, grid;
             let velocity = INITIAL_VELOCITY.clone();
             let paddlePositionDiff = new THREE.Vector3(0, 0, 0);
@@ -47,7 +46,6 @@ function Pve3d() {
             velocityRef.current = velocity;
             paddlePositionDiffRef.current = paddlePositionDiff;
 
-            // Load Scene and Start Animation
             loadScene(scene, (objects) => {
                 ({ paddle1, paddle2, ball, table, grid } = objects);
                 paddle2Ref.current = paddle2;
@@ -263,59 +261,15 @@ function Pve3d() {
                     handleTableCollision(ballBox, tableBox);
                 }
 
-                if (ball.position.z > 1.5) {
-                    // Player 1 scores
-                    setScores(prevScores => {
-                        const newScores = { score1: prevScores.score1 + 1, score2: prevScores.score2 };
-                        if (newScores.score1 >= 10) {
-                            winnerRef.current = 'Player 1'
-                            isPausedRef.current = true;
-                            setShowPopup(true);
-                        } else {
-                            restartGame();
-                        }
-                        return newScores;
-                    });
-                } else if (ball.position.z < -1.5) {
-                    // Player 2 scores
-                    setScores(prevScores => {
-                        const newScores = { score1: prevScores.score1, score2: prevScores.score2 + 1 };
-                        if (newScores.score2 >= 10) {
-                            winnerRef.current = 'Player 2'
-                            isPausedRef.current = true;
-                            setShowPopup(true);
-                        } else {
-                            restartGame();
-                        }
-                        return newScores;
-                    });
-                } else if (ball.position.y < 0.2) {
-                    // Out of bounds
-                    if (lastHitByPlayer1) {
-                        setScores(prevScores => {
-                            const newScores = { score1: prevScores.score1, score2: prevScores.score2 + 1 };
-                            if (newScores.score2 >= 10) {
-                                winnerRef.current = 'Player 2'
-                                isPausedRef.current = true;
-                                setShowPopup(true);
-                            } else {
-                                restartGame();
-                            }
-                            return newScores;
-                        });
+                if (ball.position.z > 1.5 || ball.position.z < -1.5 || ball.position.y < 0.2) {
+                    let scoringPlayer;
+                    if (tableHitCount === 0) {
+                        scoringPlayer = lastHitByPlayer1 ? 2 : 1;
+                        console.log('scoringPlayer', scoringPlayer);
                     } else {
-                        setScores(prevScores => {
-                            const newScores = { score1: prevScores.score1 + 1, score2: prevScores.score2 };
-                            if (newScores.score1 >= 10) {
-                                winnerRef.current = 'Player 1'
-                                isPausedRef.current = true;
-                                setShowPopup(true);
-                            } else {
-                                restartGame();
-                            }
-                            return newScores;
-                        });
+                        scoringPlayer = lastHitByPlayer1 ? 1 : 2;
                     }
+                    scoreGoal(scoringPlayer);
                 }
 
                 if (ballBox.intersectsBox(paddle1Box)) {
@@ -332,7 +286,6 @@ function Pve3d() {
             function handleSpin() {
                 if (firstIntersectionPosition !== null && lastIntersectionPosition !== null) {
                     paddlePositionDiffRef.current = lastIntersectionPosition.clone().sub(firstIntersectionPosition);
-                    //set max value for paddlePositionDiff
                     if (Math.abs(paddlePositionDiffRef.current.x) > 13)
                         paddlePositionDiffRef.current.x = Math.sign(paddlePositionDiffRef.current.x) * 13;
                     if (Math.abs(paddlePositionDiffRef.current.z) > 13)
@@ -341,14 +294,21 @@ function Pve3d() {
                     firstIntersectionPosition = null;
                     lastIntersectionPosition = null;
                 }
-                velocity.x -= paddlePositionDiffRef.current.x / 500;
-                velocity.z -= paddlePositionDiffRef.current.z / 500;
+                velocity.x -= paddlePositionDiffRef.current.x / 1000;
+                velocity.z -= paddlePositionDiffRef.current.z / 1000;
             }
 
             function handleTableCollision(ballBox, tableBox) {
                 waitforpaddle2 = false;
                 paddlePositionDiffRef.current.set(0, 0, 0);
-                // Move the ball out of the intersection
+                tableHitCount++;
+                if (tableHitCount === 2) {
+                    if (lastHitByPlayer1) {
+                        scoreGoal(2);
+                    } else {
+                        scoreGoal(1);
+                    }
+                }
                 while (ballBox.intersectsBox(tableBox)) {
                     ball.position.y += 0.01;
                     ballBox.setFromObject(ball);
@@ -358,6 +318,7 @@ function Pve3d() {
 
             function handlePaddle1Collision(ballBox, paddleBox) {
                 lastHitByPlayer1 = true;
+                tableHitCount = 0;
                 if (firstIntersectionPosition === null)
                     firstIntersectionPosition = paddle1.position.clone();
                 else
@@ -370,7 +331,6 @@ function Pve3d() {
                     velocity.y = mapRange(relativePosition.z, { min: -1.5, max: 1.5 }, { min: 0.015, max: 0.019 });
                     velocity.x = -mapRange(relativePosition.x, { min: -TABLE_DIMENSIONS.width / 2, max: TABLE_DIMENSIONS.width / 2 }, { min: -0.02, max: 0.02 });
 
-                    //animatePaddle1();
 
                     if (paddle1.rotation.y < 2.66 && paddle1.rotation.y > 0.52) {
                         collisionAnimation(paddle1);
@@ -383,18 +343,15 @@ function Pve3d() {
             }
             function handlePaddle2Collision(ballBox, paddleBox) {
                 lastHitByPlayer1 = false;
+                tableHitCount = 0;
                 waitforpaddle2 = false;
                 const relativePosition = ball.position.clone().sub(table.position);
+                if (relativePosition.x < 0.25 && relativePosition.x > -0.25) {
+                    relativePosition.x = Math.random() * TABLE_DIMENSIONS.width - TABLE_DIMENSIONS.width / 2;
+                }
                 velocity.z = -mapRange(relativePosition.z, { min: -1.5, max: 1.5 }, { min: -0.04, max: 0.04 });
                 velocity.y = mapRange(relativePosition.z, { min: -1.5, max: 1.5 }, { min: 0.015, max: 0.019 });
                 velocity.x = -mapRange(relativePosition.x, { min: -TABLE_DIMENSIONS.width / 2, max: TABLE_DIMENSIONS.width / 2 }, { min: -0.02, max: 0.02 });
-                // if (velocity.x > 0.35) {
-                //     velocity.x = -1 + Math.random() * (velocity.x - (-1));
-                // } else if (velocity.x < -0.35) {
-                //     velocity.x = velocity.x + Math.random() * (1 - velocity.x);
-                // } else {
-                //     velocity.x = Math.random() * 2 - 1;
-                // }
 
                 if (paddle1.rotation.y < 2.66 && paddle1.rotation.y > 0.52) {
                     collisionAnimation(paddle2);
@@ -441,12 +398,40 @@ function Pve3d() {
                 paddlePositionDiffRef.current?.set(0, 0, 0);
                 ballRef.current?.position.copy(initBallPos);
                 isPausedRef.current = true;
+                tableHitCount = 0;
                 startCountdown();
+            }
+
+            function scoreGoal(player) {
+                setScores(prevScores => {
+                    let newScores;
+                    if (player === 1) {
+                        newScores = { score1: prevScores.score1 + 1, score2: prevScores.score2 };
+                        if (newScores.score1 >= 10) {
+                            winnerRef.current = 'AI';
+                            isPausedRef.current = true;
+                            setShowPopup(true);
+                        } else {
+                            restartGame();
+                        }
+                    } else {
+                        newScores = { score1: prevScores.score1, score2: prevScores.score2 + 1 };
+                        if (newScores.score2 >= 10) {
+                            winnerRef.current = 'Player';
+                            isPausedRef.current = true;
+                            setShowPopup(true);
+                        } else {
+                            restartGame();
+                        }
+                    }
+                    return newScores;
+                });
             }
 
             return () => {
                 window.removeEventListener('resize', () => onWindowResize(camera, renderer));
                 window.removeEventListener('keydown', onRestartKey);
+                document.body.style.cursor = 'auto';
                 window.removeEventListener('click', onToggleListening);
                 window.removeEventListener('mousemove', (event) => onMouseMove(event, mouse, paddle1, camera, table));
                 console.log('cleanup');
@@ -522,12 +507,12 @@ function Pve3d() {
                 player1={{
                     username: 'You',
                     avatar: '/player1.png?height=40&width=40',
-                    score: score2
+                    score: score1
                 }}
                 player2={{
                     username: 'Computer',
                     avatar: '/player2.png?height=40&width=40',
-                    score: score1
+                    score: score2
                 }}
             />
         </>

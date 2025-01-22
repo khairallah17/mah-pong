@@ -415,7 +415,8 @@ class Pvp2dConsumer(AsyncWebsocketConsumer):
                     'type': 'match_found',
                     'player_id': user_data['player_id'],
                     'names': user_data['names'],
-                    'game_state': user_data['game_state']
+                    'game_state': user_data['game_state'],
+                    'role': user_data['role']
                 }))
             pvp2d_user_channels[self.username] = self
             if self.invite_code:
@@ -425,7 +426,7 @@ class Pvp2dConsumer(AsyncWebsocketConsumer):
                 else:
                     pvp2d_pools[self.invite_code] = self.username
             elif self.match_id:
-                match_players = self.get_players_from_match_id(self.match_id)
+                match_players = await self.get_players_from_match_id(self.match_id)
                 if match_players and self.username in match_players:
                     if self.match_id in pvp2d_pools and pvp2d_pools[self.match_id] != self.username:
                         opponent = pvp2d_pools.pop(self.match_id)
@@ -437,7 +438,6 @@ class Pvp2dConsumer(AsyncWebsocketConsumer):
             else:
                 if self.username not in pvp2d_matchmaking_pool and self.username not in pvp2d_matched_users:
                     pvp2d_matchmaking_pool.append(self.username)
-                    # await self.channel_layer.group_add("matchmaking_pool", self.channel_name)
             
             if len(pvp2d_matchmaking_pool) >= 2:
                 await self.match_users()
@@ -457,7 +457,6 @@ class Pvp2dConsumer(AsyncWebsocketConsumer):
             pvp2d_matched_users[user2] = user1
 
         self.player_id = '1' if user1 == self.username else '2'
-        await self.create_game(user1, user2)
 
         shared_game_state = self.init_gamestate()
         pvp2d_game_states[user1] = shared_game_state
@@ -497,17 +496,17 @@ class Pvp2dConsumer(AsyncWebsocketConsumer):
         except Match.DoesNotExist:
             return None
 
-    @database_sync_to_async
-    def create_game(self, username1, username2):
-        Match.objects.create(
-            username1=username1,
-            username2=username2,
-            scoreP1=0,
-            scoreP2=0,
-            winner=None
-        )
-        pvp2d_game_states[username1] = self.init_gamestate()
-        pvp2d_game_states[username2] = pvp2d_game_states[username1]
+    # @database_sync_to_async
+    # def create_game(self, username1, username2):
+    #     Match.objects.create(
+    #         username1=username1,
+    #         username2=username2,
+    #         scoreP1=0,
+    #         scoreP2=0,
+    #         winner=None
+    #     )
+    #     pvp2d_game_states[username1] = self.init_gamestate()
+    #     pvp2d_game_states[username2] = pvp2d_game_states[username1]
 
     def update_ball_position(self, game_state):
         if game_state['is_paused']:
@@ -617,7 +616,6 @@ class Pvp2dConsumer(AsyncWebsocketConsumer):
                     pvp2d_user_channels[opponent].channel_name,
                     {
                         'type': 'opponent_disconnected',
-                        'event': 'You won because your opponent disconnected.',
                     }
                 )
             else:
@@ -771,7 +769,6 @@ class Pvp2dConsumer(AsyncWebsocketConsumer):
     async def opponent_disconnected(self, event):
         await self.send(text_data=json.dumps({
             'type': 'opponent_disconnected',
-            'message': event['event']
         }))
 
 #frontend has to receive:
@@ -780,3 +777,214 @@ class Pvp2dConsumer(AsyncWebsocketConsumer):
 # opponent_disconnected
 #frontend has to send:
 # game_event : player_move{plyer_id, position}, start
+
+
+# Global variables for TictactoeConsumer
+tictactoe_pool = []
+tictactoe_matched_users = {}
+tictactoe_user_channels = {}
+tictactoe_game_states = {}
+tictactoe_disconnected_users = {}
+tictactoe_matchmaking_pool = []
+
+class TictactoeConsumer(AsyncWebsocketConsumer):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.username = None
+        self.player_id = None
+
+    async def connect(self):
+        await self.accept()
+        query_params = parse_qs(self.scope['query_string'].decode())
+        token = query_params.get('token', [None])[0]
+        self.invite_code = query_params.get('invite', [None])[0]
+        self.match_id = query_params.get('match_id', [None])[0]
+        try:
+            payload = jwt.decode(token, settings.SECRET_KEY, algorithms=['HS256'])
+            self.username = payload.get('username')
+            if not self.username:
+                raise jwt.InvalidTokenError("Username not found in token")
+            
+            if self.username in tictactoe_disconnected_users:
+                user_data = tictactoe_disconnected_users.pop(self.username)
+                user_data['task'].cancel()
+                logger.warning(f"Cancelled countdown task for {self.username}")
+                await self.send(text_data=json.dumps({
+                    'type': 'match_found',
+                    'player_id': user_data['player_id'],
+                    'names': user_data['names'],
+                    'game_state': user_data['game_state'],
+                    'role': user_data['role']
+                }))
+            tictactoe_user_channels[self.username] = self
+            if self.username not in tictactoe_matchmaking_pool and self.username not in tictactoe_matched_users:
+                tictactoe_matchmaking_pool.append(self.username)
+            
+            if len(tictactoe_matchmaking_pool) >= 2:
+                await self.match_users()
+        except jwt.ExpiredSignatureError:
+            await self.send_error_message('token_expired', 4001)
+        except jwt.InvalidTokenError as e:
+            await self.send_error_message('invalid_token', 4002, str(e))
+
+    async def match_users(self, user1=None, user2=None):
+        if user1 and user2:
+            tictactoe_matched_users[user1] = user2
+            tictactoe_matched_users[user2] = user1
+        else:
+            user1 = tictactoe_matchmaking_pool.pop(0)
+            user2 = tictactoe_matchmaking_pool.pop(0)
+            tictactoe_matched_users[user1] = user2
+            tictactoe_matched_users[user2] = user1
+
+        self.player_id = '1' if user1 == self.username else '2'
+
+        shared_game_state = self.init_gamestate()
+        tictactoe_game_states[user1] = shared_game_state
+        tictactoe_game_states[user2] = shared_game_state
+
+        if user1 in tictactoe_user_channels:
+            await self.channel_layer.send(
+                tictactoe_user_channels[user1].channel_name,
+                {
+                    'type': 'match_found',
+                    'player_id': '1',
+                    'names': {'player1': user1, 'player2': user2},
+                    'game_state': shared_game_state,
+                    'role': 'X'
+                }
+            )
+        if user2 in tictactoe_user_channels:
+            await self.channel_layer.send(
+                tictactoe_user_channels[user2].channel_name,
+                {
+                    'type': 'match_found',
+                    'player_id': '2',
+                    'names': {'player1': user1, 'player2': user2},
+                    'game_state': shared_game_state,
+                    'role': 'O'
+                }
+            )
+
+    async def receive(self, text_data):
+        data = json.loads(text_data)
+        if data.get('type') == 'game_event':
+            if data.get('event') == 'move':
+                await self.handle_move(data)
+
+    async def handle_move(self, data):
+        game_state = tictactoe_game_states[self.username]
+        position = data.get('position')
+        if game_state['board'][position] is None:
+            game_state['board'][position] = game_state['currentPlayer']
+            game_state['winner'] = self.check_winner(game_state['board'])
+            game_state['currentPlayer'] = 'O' if game_state['currentPlayer'] == 'X' else 'X'
+            if game_state['winner']:
+                await self.send(text_data=json.dumps({'type': 'game_end', 'game_state': game_state}))
+                asyncio.create_task(self.update_results(self.username))
+            await self.send_game_state()
+
+    async def game_state(self, event):
+        await self.send(text_data=json.dumps({
+            'type': 'game_state',
+            'game_state': event['game_state']
+        }))
+
+    async def send_game_state(self):
+        game_state = tictactoe_game_states[self.username]
+        await self.channel_layer.send(
+            tictactoe_user_channels[self.username].channel_name,
+            {
+                'type': 'game_state',
+                'game_state': game_state
+            }
+        )
+        opponent = tictactoe_matched_users[self.username]
+        await self.channel_layer.send(
+            tictactoe_user_channels[opponent].channel_name,
+            {
+                'type': 'game_state',
+                'game_state': game_state
+            }
+        )
+
+    def init_gamestate(self):
+        return {
+            'currentPlayer': 'X',
+            'role': 'X',
+            'board': [None] * 9,
+            'winner': None
+        }
+
+    async def disconnect(self, close_code):
+        if self.username:
+            if self.username in tictactoe_matchmaking_pool:
+                tictactoe_matchmaking_pool.remove(self.username)
+            if self.username in tictactoe_matched_users:
+                opponent = tictactoe_matched_users.pop(self.username)
+                tictactoe_matched_users.pop(opponent, None)
+                if opponent in tictactoe_user_channels:
+                    await self.channel_layer.send(
+                        tictactoe_user_channels[opponent].channel_name,
+                        {
+                            'type': 'opponent_disconnected',
+                        }
+                    )
+            tictactoe_user_channels.pop(self.username, None)
+
+    async def match_found(self, event):
+        await self.send(text_data=json.dumps({
+            'type': 'match_found',
+            'player_id': event['player_id'],
+            'names': event['names'],
+            'game_state': event['game_state'],
+            'role': event['role']
+        }))
+    
+    def check_winner(self, board):
+        lines = [
+            (0,1,2), (3,4,5), (6,7,8),
+            (0,3,6), (1,4,7), (2,5,8),
+            (0,4,8), (2,4,6)
+        ]
+        for a, b, c in lines:
+            if board[a] and board[a] == board[b] and board[b] == board[c]:
+                return board[a]
+        if None not in board:
+            return "Draw"
+        return None
+    
+    async def opponent_disconnected(self, event):
+        await self.send(text_data=json.dumps({
+            'type': 'opponent_disconnected',
+        }))
+
+    @database_sync_to_async
+    def update_results(self, winner_username):
+        try:
+            opponent = tictactoe_matched_users.get(self.username)
+            if not opponent:
+                return
+            username1, username2 = self.username, opponent
+            scoreP1 = 1 if winner_username == username1 else 0
+            scoreP2 = 1 if winner_username == username2 else 0
+
+            Match.objects.create(
+                username1=username1,
+                username2=username2,
+                scoreP1=scoreP1,
+                scoreP2=scoreP2,
+                winner=winner_username
+            )
+            # ...existing code...
+        except Exception as e:
+            logger.error(f"Error storing Tictactoe match results: {e}")
+
+    async def send_error_message(self, error_type, code, message=None):
+        logger.warning(f"{error_type}: {message}")
+        await self.send(text_data=json.dumps({
+            'type': error_type,
+            'message': message
+        }))
+        await self.close(code=code)
+
