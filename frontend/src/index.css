@@ -11,6 +11,10 @@
   grid-template-rows: 100px 1fr;
 }
 
+.homepage {
+  background-image: url("images/background.png");
+}
+
 .sidebar-grid {
   grid-area: b;
   grid-row-start: 2;

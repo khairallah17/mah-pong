@@ -3,8 +3,11 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useSidebarContext } from '../hooks/useSidebar';
 import { Gamepad2, Users, Trophy, ChevronLeft, ChevronRight } from 'lucide-react';
+import '../i18n';
+import { useTranslation } from 'react-i18next';
 
 const GameCard = ({ title, description, accentColor, buttonColor, image, icon: Icon, path }) => {
+  const { t } = useTranslation();
   const [isHovered, setIsHovered] = useState(false);
   const navigate = useNavigate();
 
@@ -60,7 +63,7 @@ const GameCard = ({ title, description, accentColor, buttonColor, image, icon: I
           transform hover:-translate-y-0.5
         `}
       >
-        PLAY NOW
+        {t('PLAY NOW')}
       </button>
     </div>
   );
@@ -80,6 +83,7 @@ const GameSlide = ({ title, cards }) => (
 );
 
 const Games = () => {
+  const { t } = useTranslation();
   const { setActiveLink } = useSidebarContext();
   const [currentSlide, setCurrentSlide] = useState(0);
   const location = useLocation();
@@ -95,11 +99,11 @@ const Games = () => {
 
   const slides = [
     {
-      title: "2D Games",
+      title: t('2D Games'),
       cards: [
         {
-          title: "PvE Classic",
-          description: "Challenge AI opponents in classic 2D pong gameplay.",
+          title: t('PvE Classic'),
+          description: t('Challenge AI opponents in classic 2D pong gameplay.'),
           accentColor: "border-green-500",
           buttonColor: "bg-gradient-to-r from-green-600 to-green-400",
           image: "/play-bot.jpg",
@@ -108,7 +112,7 @@ const Games = () => {
         },
         {
           title: "PvP 2D",
-          description: "Challenge other players in classic 2D matches.",
+          description: t('Challenge other players in classic 2D matches.'),
           accentColor: "border-blue-500",
           buttonColor: "bg-gradient-to-r from-blue-600 to-blue-400",
           image: "/play-1vs1.jpg",
@@ -118,11 +122,11 @@ const Games = () => {
       ]
     },
     {
-      title: "3D Games",
+      title: t('3D Games'),
       cards: [
         {
           title: "PvE 3D",
-          description: "Experience next-gen 3D gameplay against AI.",
+          description: t('Experience next-gen 3D gameplay against AI.'),
           accentColor: "border-purple-500",
           buttonColor: "bg-gradient-to-r from-purple-600 to-purple-400",
           image: "/play-bot.jpg",
@@ -131,7 +135,7 @@ const Games = () => {
         },
         {
           title: "PvP 3D",
-          description: "Challenge players in immersive 3D battles.",
+          description: t('Challenge players in immersive 3D battles.'),
           accentColor: "border-indigo-500",
           buttonColor: "bg-gradient-to-r from-indigo-600 to-indigo-400",
           image: "/play-1vs1.jpg",
@@ -141,11 +145,11 @@ const Games = () => {
       ]
     },
     {
-      title: "Tournaments",
+      title: t('Tournaments'),
       cards: [
         {
-          title: "Online Tournament",
-          description: "Compete in classic Online tournament brackets.",
+          title: t('Online Tournament'),
+          description: t('Compete in classic Online tournament brackets.'),
           accentColor: "border-yellow-500",
           buttonColor: "bg-gradient-to-r from-yellow-600 to-yellow-400",
           image: "/play-Tournaments.jpg",
@@ -153,8 +157,8 @@ const Games = () => {
           path: "/dashboard/tournament"
         },
         {
-          title: "Local Tournament",
-          description: "Join elite Local tournament competitions.",
+          title: t('Local Tournament'),
+          description: t('Join elite Local tournament competitions.'),
           accentColor: "border-orange-500",
           buttonColor: "bg-gradient-to-r from-orange-600 to-orange-400",
           image: "/play-Tournaments.jpg",
@@ -177,7 +181,7 @@ const Games = () => {
     <div className="max-w-[1400px] mx-auto">
       <div className="m-4 sm:m-8 p-8 rounded-2xl bg-gradient-to-br from-indigo-950 to-indigo-900 shadow-2xl border-4 border-indigo-900">
         <h2 className="text-4xl font-bold text-white mb-12 text-center uppercase tracking-wide">
-          Select Your Battleground
+          {t('Select Your Battleground')}
         </h2>
 
         <div className="relative">

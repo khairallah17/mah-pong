@@ -4,8 +4,12 @@ import { Search, X, Menu, UserPlus } from 'lucide-react';
 import DefaultAvatar from '../assets/khr.jpg';
 import NotificationDisplay from './NotificationDisplay';
 import ButtonLng from "../components/ButtonLng";
+import '../i18n';
+import { useTranslation } from 'react-i18next';
+import { NavLink } from 'react-router-dom';
 
 const Navbar = () => {
+  const { t } = useTranslation();
   const [user, setUser] = useState({ 
     username: '', 
     email: '', 
@@ -134,7 +138,7 @@ const Navbar = () => {
             </div>
             <input
               type="search"
-              placeholder="Search users..."
+              placeholder={t("Search users...")}
               value={searchQuery}
               onChange={(e) => {
                 setSearchQuery(e.target.value);
@@ -147,7 +151,7 @@ const Navbar = () => {
             {showResults && searchQuery && (
               <div className="absolute w-full mt-2 bg-gray-800 rounded-lg shadow-lg max-h-96 overflow-y-auto">
                 {isLoading ? (
-                  <div className="p-4 text-white text-center">Searching...</div>
+                  <div className="p-4 text-white text-center">{t('Searching...')}</div>
                 ) : searchResults.length > 0 ? (
                   <div>
                     {searchResults.map((searchedUser) => (
@@ -181,7 +185,7 @@ const Navbar = () => {
                     ))}
                   </div>
                 ) : (
-                  <div className="p-4 text-white text-center">No users found</div>
+                  <div className="p-4 text-white text-center">{t('No users found')}</div>
                 )}
               </div>
             )}
@@ -197,15 +201,16 @@ const Navbar = () => {
               <div className="text-sm font-medium text-white">{user.fullname}</div>
               <div className="text-xs text-white/60">{user.email}</div>
             </div>
-            <img
-              src={user.img ? `http://localhost:8001/${user.img}` : DefaultAvatar}
-              alt={`${user.fullname}'s avatar`}
-              className="h-12 w-12 rounded-full object-cover ring-2 ring-white/20 cursor-pointer"
-              onClick={() => window.location.href = `http://localhost:5173/dashboard/profil/${user.username}`}
-              onError={(e) => {
-                e.target.src = DefaultAvatar;
-              }}
-            />
+            <NavLink to={`/dashboard/profil/${user.username}`}>
+              <img
+                src={user.img ? `http://localhost:8001/${user.img}` : DefaultAvatar}
+                alt={`${user.fullname}'s avatar`}
+                className="h-12 w-12 rounded-full object-cover ring-2 ring-white/20 cursor-pointer"
+                onError={(e) => {
+                  e.target.src = DefaultAvatar;
+                }}
+              />
+            </NavLink>
           </div>
         </div>
       </div>

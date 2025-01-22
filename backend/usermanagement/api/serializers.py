@@ -75,7 +75,7 @@ class ProfilSerializer(serializers.ModelSerializer):
 
     def get_is_verified(self, obj):
         # Check if user has an email and update verification
-        if obj.user.email:
+        if User.objects.filter(email=email).exists():
             obj.is_verified = True
             obj.save()
         return obj.is_verified
@@ -88,8 +88,8 @@ class UserProfileSerializer(serializers.ModelSerializer):
         model = User
         fields = ['id', 'fullname', 'username', 'email', 'img', 'avatar', 'profil', 'is_online']
         
-    # def get_is_online(self, obj):
-    #     return obj.is_online
+    def get_is_online(self, obj):
+        return obj.is_online
 
 # Friend Request Serializer
 class FriendRequestSerializer(serializers.ModelSerializer):

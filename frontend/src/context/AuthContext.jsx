@@ -14,19 +14,31 @@ export default AuthContext
 export const AuthProvider = ({ children }) => {
 
     //GETTING TOKEN
-    const [authtoken, setAuthToken] = useState(() => {
-        // Check localStorage for existing token
-        const token = localStorage.getItem("authtoken");
-        return token ? JSON.parse(token) : null;
-    });
+    const [authtoken, setAuthToken] = useState(null);
+    const [user, setUser] = useState(null);
 
-    //GETTING NOW THE DECODE OF THE TOKEN AND STORE ==> {FULLNAME, USERNAME, EMAIL}
-    // const [user, setUser] = useState(localStorage.getItem("authtoken") ? jwtDecode("authtoken") : null);
-    const [user, setUser] = useState(() => {
-        // Check localStorage for existing token and decode if exists
-        const token = localStorage.getItem("authtoken");
-        return token ? jwtDecode(JSON.parse(token).access) : null;
-    });
+    useEffect(() => {
+
+        if (!authtoken) {
+            console.log("SETTING AUTH TOKEN ==> ", authtoken)
+            
+            return 
+        }
+
+
+        try {
+            const token = localStorage.getItem("authtoken");
+            const parsed = JSON.parse(token)
+            
+            if (!token)
+                return
+            const decoded = jwtDecode(parsed.access)
+            setAuthToken(parsed.access || null)
+            setUser(decoded || null)
+        } catch (error) {}
+
+    }, [])
+
     
 
     // const [loading, setloading] = useState(true)
@@ -582,9 +594,10 @@ export const AuthProvider = ({ children }) => {
 
     useEffect(() => {
         if (authtoken) {
-            localStorage.setItem("authtoken", JSON.stringify(authtoken));
+            console.log("CHANGED AUTH TOKEN STORED ==> ", JSON.stringify(authtoken))
+            // localStorage.getItem("authtoken", JSON.stringify(authtoken));
         } else {
-            localStorage.removeItem("authtoken");
+            // localStorage.removeItem("authtoken");
         }
     }, [authtoken]);
 

@@ -33,6 +33,8 @@ import NotFound from "./pages/404.jsx";
 import useOnlineStatus from "./hooks/useOnlineStatus.jsx"
 
 
+import "./App.css"
+
 function App() {
   // const { t } = useTranslation();
   useOnlineStatus();

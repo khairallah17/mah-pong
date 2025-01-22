@@ -4,33 +4,30 @@ import { MatchHistory } from '../components/Match-history';
 import { Statistics } from '../components/StatisticUser';
 import { GripHorizontal } from 'lucide-react';
 import { useParams } from 'react-router-dom';
+import { useAuthContext } from '../hooks/useAuthContext';
 
 const Profile = () => {
   const [activeTab, setActiveTab] = useState('stats');
   const [totalGames, setTotalGames] = useState(0);
   const [winRate, setWinRate] = useState(0);
-  // get the username from the URL else use the current user
-  const { username } = useParams();
-  const token = JSON.parse(localStorage.getItem('authtoken')).access;
-
+  let { username, authToken } = useParams();
+  
+  const { user } = useAuthContext()
 
   useEffect(() => {
   const fetchStats = async () => {
     try {
       if (!username)
-        username = token.username;
-      else
-        username = username;
+        username = user.username;
 
       const response = await fetch(`http://localhost:8000/api/player-stats/${username}/`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${authToken}`
         }
       });
       const data = await response.json();
-      console.log("------>", data);
       const totalGames = data.wins + data.losses;
       const winRate = totalGames > 0 ? Math.round((data.wins / totalGames) * 100) : 0;
       setTotalGames(totalGames);
@@ -42,7 +39,7 @@ const Profile = () => {
    if (username) {
     fetchStats();
   }
-}, [token, username]);
+}, [authToken, username]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-navy-950 via-navy-900 to-navy-950">
@@ -72,7 +69,7 @@ const Profile = () => {
                 {/* Quick Stats - Desktop Only */}
                 <div className="mt-6 grid grid-cols-2 gap-4 border-t border-white/10 pt-6">
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-indigo-400">{totalGames}</div>
+                    <div className="text-2xl font-bold text-indigo-400">{totalGames || 0}</div>
                     <div className="text-sm text-gray-400">total Games</div>
                   </div>
                   <div className="text-center">
