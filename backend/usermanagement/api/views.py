@@ -990,7 +990,7 @@ class Disable2FAView(APIView):
         except Exception as e:
             return Response({
                 'error': str(e)
-            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            }, status=400)
 
 class Check2FAStatusView(APIView):
     permission_classes = [IsAuthenticated]
@@ -1115,7 +1115,7 @@ class FriendRequestListCreateView(generics.ListCreateAPIView):
             print("Error:", str(e))  # Debug log
             return Response(
                 {'detail': 'An error occurred while processing your request'},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                status=400
             )
 
 class FriendRequestDetailView(generics.RetrieveAPIView):

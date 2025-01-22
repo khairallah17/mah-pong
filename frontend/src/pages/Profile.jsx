@@ -4,8 +4,11 @@ import intraImage from '../images/intraImage.webp';
 import axios from 'axios';
 import Swal from 'sweetalert2';
 import { useSidebarContext } from '../hooks/useSidebar';
+import '../i18n';
+import { useTranslation } from 'react-i18next';
 
 export default function Profile() {
+  const { t } = useTranslation();
   const [profileData, setProfileData] = useState({
     fullname: "",
     username: "",
@@ -243,7 +246,7 @@ export default function Profile() {
 
   return (
     <div className="w-full max-w-6xl mx-auto p-8 space-y-8 shadow-2xl shadow-black rounded-xl border border-gray-800 backdrop-blur-sm">
-      <h2 className="text-2xl font-inter text-white mb-6 zen-dots">Account</h2>
+      <h2 className="text-2xl font-inter text-white mb-6 zen-dots">{t('Account')}</h2>
       <div className="flex flex-col md:flex-row justify-between items-center gap-8">
         <div className="flex flex-col md:flex-row items-center gap-4">
           <div className="w-24 h-24 bg-blue-800 rounded-full border-2 border-white/40 flex items-center justify-center text-white text-2xl font-inter">
@@ -258,8 +261,8 @@ export default function Profile() {
             )}
           </div>
           <div className="space-y-2 text-center md:text-left">
-            <h3 className="font-inter text-white text-xl">Profile Picture</h3>
-            <p className="text-sm text-white/70">PNG, JPEG under 15MB</p>
+            <h3 className="font-inter text-white text-xl">{t('Profile Picture')}</h3>
+            <p className="text-sm text-white/70">{t('PNG, JPEG under 15MB')}</p>
             <div className="flex flex-wrap justify-center md:justify-start gap-3">
               <label className="px-6 py-2 bg-white text-black rounded-md hover:bg-white/90 transition-colors cursor-pointer">
                 <input 
@@ -268,13 +271,13 @@ export default function Profile() {
                   accept="media/*" 
                   onChange={handleImageUpload}
                 />
-                Upload an image
+                {t('Upload an image')}
               </label>
               <button 
                 onClick={handleImageDelete}
                 className="px-6 py-2 bg-[#BD3944] text-white rounded-md hover:bg-red-600 transition-colors"
               >
-                Delete
+                {t('Delete')}
               </button>
             </div>
           </div>
@@ -286,7 +289,7 @@ export default function Profile() {
             className="w-24 h-24 bg-blue-800 rounded-full border-2 border-white/90"
           />
           <div className="space-y-2 text-center md:text-left">
-            <h3 className="font-inter text-white text-sm">Profile Avatar</h3>
+            <h3 className="font-inter text-white text-sm">{t('Profile Avatar')}</h3>
             <div className="flex flex-wrap justify-center md:justify-start gap-3">
               <label className="px-6 py-2 bg-white text-black rounded-md hover:bg-white/90 transition-colors cursor-pointer">
                 <input 
@@ -295,7 +298,7 @@ export default function Profile() {
                   accept="media/*" 
                   onChange={handleAvatarUpload}
                 />
-                Upload an avatar
+                {t('Upload an avatar')}
               </label>
             </div>
           </div>
@@ -305,16 +308,17 @@ export default function Profile() {
       <div className="space-y-6 pt-8 border-t border-white/80">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="md:col-span-2">
-            <label className="block text-sm text-white/90 mb-2">Full Name</label>
+            <label className="block text-sm text-white/90 mb-2">{t('Full Name')}</label>
             <input
               type="text"
+              placeholder={t('Enter Your Full Name')}
               value={profileData.fullname}
               onChange={(e) => setProfileData(prev => ({...prev, fullname: e.target.value}))}
               className="w-full px-4 py-2 bg-black/80 border border-white/10 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-white/5 transition-all mb-4"
             />
           </div>
           <div>
-            <label className="block text-sm text-white/90 mb-2">Username</label>
+            <label className="block text-sm text-white/90 mb-2">{t('Username')}</label>
             <input
               type="text"
               value={profileData.username}
@@ -323,7 +327,7 @@ export default function Profile() {
             />
           </div>
           <div>
-            <label className="block text-sm text-white/90 mb-2">Email</label>
+            <label className="block text-sm text-white/90 mb-2">{t('Email')}</label>
             <input
               type="email"
               value={profileData.email}
@@ -333,29 +337,13 @@ export default function Profile() {
           </div>
         </div>
 
-        <button 
-          onClick={handleSubmit}
-          className="w-40 px-2 py-2 bg-white text-black rounded-lg hover:bg-white/80 transition-colors text-sm font-Inter"
-        >
-          Submit
-        </button>
 
         <div className="flex flex-wrap justify-center gap-4 pt-8 border-t border-white/80">
-          <button className="px-6 py-2 bg-white text-black rounded-lg hover:bg-white/90 transition-colors flex items-center gap-4">
-            <img
-              src={googleImage}
-              alt="Google"
-              className="w-6 h-6"
-            />
-            Link with Google
-          </button>
-          <button className="px-12 py-2 bg-[#1a1a1a] text-white rounded-lg hover:bg-[#1a1a1a]/90 transition-colors flex items-center gap-4">
-            <img
-              src={intraImage}
-              alt="42"
-              className="w-6 h-6"
-            />
-            Link with 42
+          <button 
+            onClick={handleSubmit}
+            className="w-60 px-2 py-2 text-lg font-medium bg-white text-black rounded-lg hover:bg-white/80 transition-colors font-Inter"
+          >
+            {t('Submit')}
           </button>
         </div>
       </div>

@@ -5,9 +5,13 @@ import GameSettingsButton from '../../components/pvp/Customize2d';
 import GameScore from '../../components/pvp/GameScore';
 import { ColorContext } from '../../context/ColorContext';
 import { Navigate } from 'react-router-dom';
+import '../../i18n';
+import { useTranslation } from 'react-i18next';
 
 export default function Pvp2d() {
+
   // Default single-player scoreboard
+  const { t } = useTranslation();
   const [{ score1, score2 }, setScores] = useState({ score1: 0, score2: 0 });
   const [winner, setWinner] = useState(null);
   const [countdown, setCountdown] = useState(null);
@@ -200,7 +204,7 @@ export default function Pvp2d() {
       ballRef.current.position.set(gameState.ball_x, 0.1, gameState.ball_z);
       if (isPausedRef.current) {
         if (gameState.scoreP1 >= 5 || gameState.scoreP2 >= 5) {
-          winnerRef.current = gameState.scoreP1 >= 5 ? 'Player 1' : 'Player 2';
+          winnerRef.current = gameState.scoreP1 >= 5 ? t('Player') + ' 1' : t('Player')+' 2';
           wsRef.current.send(JSON.stringify({ type: 'game_event', event: 'end' }));
           setProcessingResults(true);
         } else if (!countdownRef.current) {
@@ -374,18 +378,18 @@ export default function Pvp2d() {
       <GameSettingsButton />
       {!isMatched && (
         <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-white text-2xl">
-          <h1>Waiting for an opponent...</h1>
+          <h1>{t('Waiting for an opponent...')}</h1>
         </div>
       )}
       {winner && (
         <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-gray-900/95 p-8 rounded-lg text-center">
-          <h2 className="text-2xl font-bold text-white mb-4">{winner} Wins!</h2>
+          <h2 className="text-2xl font-bold text-white mb-4">{winner} {t('Wins!')}</h2>
           {!matchId && (
             <button
               onClick={() => window.location.reload()}
               className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
             >
-              Play Again
+              {t('Play Again')}
             </button>
           )}
           {matchId && (
@@ -393,7 +397,7 @@ export default function Pvp2d() {
               onClick={() => window.location.href = '/dashboard/tournament/live'}
               className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors mt-4"
             >
-              Back to Tournament
+              {t('Back to Tournament')}
             </button>
           )}
         </div>
@@ -432,7 +436,7 @@ export default function Pvp2d() {
       )}
       {processingResults && (
         <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-gray-900/95 p-8 rounded-lg text-center">
-          <h2 className="text-2xl font-bold text-white mb-4">Processing game results...</h2>
+          <h2 className="text-2xl font-bold text-white mb-4">{t('Processing game results...')}</h2>
           <div className="loader border-t-white border-2 border-solid rounded-full w-8 h-8 animate-spin mx-auto"></div>
         </div>
       )}

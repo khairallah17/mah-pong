@@ -4,8 +4,11 @@ import { Search, X, Menu, UserPlus } from 'lucide-react';
 import DefaultAvatar from '../assets/khr.jpg';
 import NotificationDisplay from './NotificationDisplay';
 import ButtonLng from "../components/ButtonLng";
+import '../i18n';
+import { useTranslation } from 'react-i18next';
 
 const Navbar = () => {
+  const { t } = useTranslation();
   const [user, setUser] = useState({ 
     username: '', 
     email: '', 
@@ -134,7 +137,7 @@ const Navbar = () => {
             </div>
             <input
               type="search"
-              placeholder="Search users..."
+              placeholder={t("Search users...")}
               value={searchQuery}
               onChange={(e) => {
                 setSearchQuery(e.target.value);
@@ -147,7 +150,7 @@ const Navbar = () => {
             {showResults && searchQuery && (
               <div className="absolute w-full mt-2 bg-gray-800 rounded-lg shadow-lg max-h-96 overflow-y-auto">
                 {isLoading ? (
-                  <div className="p-4 text-white text-center">Searching...</div>
+                  <div className="p-4 text-white text-center">{t('Searching...')}</div>
                 ) : searchResults.length > 0 ? (
                   <div>
                     {searchResults.map((searchedUser) => (
@@ -181,7 +184,7 @@ const Navbar = () => {
                     ))}
                   </div>
                 ) : (
-                  <div className="p-4 text-white text-center">No users found</div>
+                  <div className="p-4 text-white text-center">{t('No users found')}</div>
                 )}
               </div>
             )}

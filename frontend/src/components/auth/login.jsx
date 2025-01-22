@@ -33,7 +33,7 @@ const LoginForm = ({setSwap}) => {
             const res = await loginUsers(data.email, data.password)
             
         } catch (error) {
-            toast.error("incorrect username or password", {
+            toast.error(t("incorrect username or password"), {
                 position: "top-right",
                 autoClose: 5000,
                 hideProgressBar: false,

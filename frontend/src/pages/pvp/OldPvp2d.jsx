@@ -5,8 +5,11 @@ import GameSettingsButton from '../../components/pvp/Customize2d';
 import GameScore from '../../components/pvp/GameScore';
 import { ColorContext } from '../../context/ColorContext';
 import { Navigate } from 'react-router-dom';
+import '../i18n';
+import { useTranslation } from 'react-i18next';
 
 function Pvp2d() {
+    const { t } = useTranslation();
     const wsRef = useRef(null);
     const [{ score1, score2 }, setScores] = useState({ score1: 0, score2: 0 });
     const [{ username1, username2 }, setUsernames] = useState({ username1: '', username2: '' });
@@ -567,7 +570,7 @@ function Pvp2d() {
         setInviteCode(code);
         const inviteLink = `${window.location.origin}/dashboard/game/pvp2d?invite=${code}`;
         navigator.clipboard.writeText(inviteLink).then(() => {
-            alert('Invite link copied to clipboard!');
+            alert(t('Invite link copied to clipboard!'));
         });
     };
 
@@ -576,21 +579,21 @@ function Pvp2d() {
             <GameSettingsButton />
             {!isMatched && (
                 <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-white text-2xl">
-                    <h1>Waiting for an opponent...</h1>
+                    <h1>{t('Waiting for an opponent...')}</h1>
                     <button onClick={generateInviteLink} className="mt-4 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors">
-                        Generate Invite Link
+                        {t('Generate Invite Link')}
                     </button>
                 </div>
             )}
             {winnerRef.current && (
                 <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-gray-900/95 p-8 rounded-lg text-center">
-                    <h2 className="text-2xl font-bold text-white mb-4">{winnerRef.current} Wins!</h2>
+                    <h2 className="text-2xl font-bold text-white mb-4">{winnerRef.current} {t('Wins!')}</h2>
                     {!matchId && (
                         <button
                             onClick={() => window.location.reload()}
                             className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
                         >
-                            Play Again
+                            {t('Play Again')}
                         </button>
                     )}
                     {matchId && (
@@ -598,7 +601,7 @@ function Pvp2d() {
                             onClick={() => window.location.href = '/dashboard/tournament/live'}
                             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors mt-4"
                         >
-                            Back to Tournament
+                            {t('Back to Tournament')}
                         </button>
                     )}
                 </div>

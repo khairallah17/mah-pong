@@ -2,6 +2,8 @@ import { useState, useEffect, createContext, useCallback } from "react";
 import { jwtDecode } from "jwt-decode"
 import { useNavigate, useLocation } from "react-router-dom"
 import useAxios from "../hooks/useAxios";
+import '../i18n';
+import { useTranslation } from 'react-i18next';
 
 import Swal from "sweetalert2";
 
@@ -12,6 +14,7 @@ const AuthContext = createContext()
 export default AuthContext
 
 export const AuthProvider = ({ children }) => {
+    const { t } = useTranslation();
 
     //GETTING TOKEN
     const [authtoken, setAuthToken] = useState(null);
@@ -57,7 +60,7 @@ export const AuthProvider = ({ children }) => {
 
             if (!response.ok) {
                 console.log("Error: ", data);
-                toast.error("you don't have an account you should to register", {
+                toast.error(f('you don\'t have an account you should to register'), {
                     position: "top-right",
                     autoClose: 5000,
                     hideProgressBar: false,
@@ -76,14 +79,14 @@ export const AuthProvider = ({ children }) => {
                 if (data.requires_2fa) {
                     // Show 2FA verification dialog
                     const { value: code } = await Swal.fire({
-                        title: '2FA Verification Required',
+                        title: t('2FA Verification Required'),
                         input: 'text',
-                        inputLabel: 'Please enter your 2FA code',
-                        inputPlaceholder: 'Enter 6-digit code',
+                        inputLabel: t('Please enter your 2FA code'),
+                        inputPlaceholder: t('Enter 6-digit code'),
                         showCancelButton: true,
                         inputValidator: (value) => {
                             if (!value) {
-                                return 'You need to enter the code!';
+                                return t('You need to enter the code!');
                             }
                         }
                     });
@@ -100,7 +103,7 @@ export const AuthProvider = ({ children }) => {
                 localStorage.setItem("authtoken", JSON.stringify(data));
 
                 navigation("/dashboard");
-                toast.success("you have successfully logged in", {
+                toast.success(t('you have successfully logged in'), {
                     position: "top-right",
                     autoClose: 5000,
                     hideProgressBar: false,
@@ -113,7 +116,7 @@ export const AuthProvider = ({ children }) => {
                 });
                 
             } else {
-                toast.error("Failed to logged in", {
+                toast.error(t('Failed to logged in'), {
                     position: "top-right",
                     autoClose: 5000,
                     hideProgressBar: false,
@@ -126,7 +129,7 @@ export const AuthProvider = ({ children }) => {
                 });
             }
         } catch (error) {
-            toast.error("error during login", {
+            toast.error(t('error during login'), {
                 position: "top-right",
                 autoClose: 5000,
                 hideProgressBar: false,
@@ -154,7 +157,7 @@ export const AuthProvider = ({ children }) => {
 
         if (response.status === 201)
         {
-            toast.success('you have successfully Registred', {
+            toast.success(t('you have successfully Registred'), {
                 position: "top-right",
                 autoClose: 5000,
                 hideProgressBar: false,
@@ -172,7 +175,7 @@ export const AuthProvider = ({ children }) => {
         {
             const data = await response.json();
             console.log("Error:  ", data);
-            toast.error('There is some error in Your registration', {
+            toast.error(t('There is some error in Your registration'), {
                 position: "top-right",
                 autoClose: 5000,
                 hideProgressBar: false,
@@ -213,11 +216,11 @@ export const AuthProvider = ({ children }) => {
         const error = searchParams.get('error');
         
         if (error) {
-            console.error('Google login error:', error);
+            console.error(t('Google login error:'), error);
             Swal.fire({
                 position: "top-end",
                 icon: "error",
-                title: "Failed to log in with Google",
+                title: t('Failed to log in with Google'),
                 showConfirmButton: true,
                 timerProgressBar: true,
                 timer: 3000
@@ -254,11 +257,11 @@ export const AuthProvider = ({ children }) => {
                     completeLogin(token);
                 });
             } catch (error) {
-                console.error('Token processing error:', error);
+                console.error(t('Token processing error:'), error);
                 Swal.fire({
                     position: "top-end",
                     icon: "error",
-                    title: "Failed to process login",
+                    title: t('Failed to process login'),
                     showConfirmButton: true,
                     timerProgressBar: true,
                     timer: 3000
@@ -277,11 +280,11 @@ export const AuthProvider = ({ children }) => {
         const error = searchParams.get('error');
     
         if (error) {
-            console.error('42 login error:', error);
+            console.error(t('42 login error:'), error);
             Swal.fire({
                 position: "top-end",
                 icon: "error",
-                title: "Failed to log in with 42",
+                title: t('Failed to log in with 42'),
                 showConfirmButton: true,
                 timerProgressBar: true,
                 timer: 3000
@@ -317,11 +320,11 @@ export const AuthProvider = ({ children }) => {
                     completeLogin(token);
                 });
             } catch (error) {
-                console.error('Token processing error:', error);
+                console.error(t('Token processing error:'), error);
                 Swal.fire({
                     position: "top-end",
                     icon: "error",
-                    title: "Failed to process login",
+                    title: t('Failed to process login'),
                     showConfirmButton: true,
                     timerProgressBar: true,
                     timer: 3000
@@ -333,7 +336,7 @@ export const AuthProvider = ({ children }) => {
             Swal.fire({
                 position: "top-end",
                 icon: "error",
-                title: "Failed to process login",
+                title: t('Failed to process login'),
                 showConfirmButton: true,
                 timerProgressBar: true,
                 timer: 3000
@@ -374,7 +377,7 @@ export const AuthProvider = ({ children }) => {
             console.log("Logout successful");
     
         } catch (error) {
-            console.error('Logout error:', error);
+            console.error(t('Logout error:'), error);
             toast.error(error.message, {
                 position: "top-right",
                 autoClose: 5000,
@@ -393,7 +396,7 @@ export const AuthProvider = ({ children }) => {
             localStorage.removeItem("authtoken");
             navigation("/login");
             
-            toast.success("Successfully logged out", {
+            toast.success(t('Successfully logged out'), {
                 position: "top-right",
                 autoClose: 5000,
                 hideProgressBar: false,
@@ -410,7 +413,7 @@ export const AuthProvider = ({ children }) => {
     // Helper function to handle password setup
     const handlePasswordSetup = async (token, tmp_password) => {
         const { value: passwordData } = await Swal.fire({
-            title: 'Set Your Password',
+            title: t('Set Your Password'),
             html: `
                 <input type="password" id="password" class="swal2-input" placeholder="New Password">
                 <input type="password" id="confirmPassword" class="swal2-input" placeholder="Confirm Password">
@@ -423,17 +426,17 @@ export const AuthProvider = ({ children }) => {
                 
                 console.log("isss===> ", password, confirmPassword)
                 if (!password || !confirmPassword) {
-                    Swal.showValidationMessage('Please fill in both password fields');
+                    Swal.showValidationMessage(t('Please fill in both password fields'));
                     return false;
                 }
                 
                 if (password !== confirmPassword) {
-                    Swal.showValidationMessage('Passwords do not match');
+                    Swal.showValidationMessage(t('Passwords do not match'));
                     return false;
                 }
                 
                 if (password.length < 8) {
-                    Swal.showValidationMessage('Password must be at least 8 characters long');
+                    Swal.showValidationMessage(t('Password must be at least 8 characters long'));
                     return false;
                 }
                 
@@ -461,7 +464,7 @@ export const AuthProvider = ({ children }) => {
                     Swal.fire({
                         position: "top-end",
                         icon: "success",
-                        title: "Password set successfully",
+                        title: t('Password set successfully'),
                         showConfirmButton: true,
                         timerProgressBar: true,
                         timer: 3000
@@ -490,7 +493,7 @@ export const AuthProvider = ({ children }) => {
                 Swal.fire({
                     position: "top-end",
                     icon: "error",
-                    title: "Failed to set password",
+                    title: t('Failed to set password'),
                     showConfirmButton: true,
                     timerProgressBar: true,
                     timer: 3000
@@ -506,15 +509,15 @@ export const AuthProvider = ({ children }) => {
     // Helper function for 2FA verification (existing code refactored into a function)
     const handle2FAVerification = async (token) => {
         const { value: code } = await Swal.fire({
-            title: '2FA Verification Required',
+            title: t('2FA Verification Required'),
             input: 'text',
-            inputLabel: 'Please enter your 2FA code',
-            inputPlaceholder: 'Enter 6-digit code',
+            inputLabel: t('Please enter your 2FA code'),
+            inputPlaceholder: t('Enter 6-digit code'),
             showCancelButton: true,
             // className: bg-red-600,
             inputValidator: (value) => {
                 if (!value) {
-                    return 'You need to enter the code!';
+                    return t('You need to enter the code!');
                 }
             }
         });
@@ -533,7 +536,7 @@ export const AuthProvider = ({ children }) => {
                 completeLogin(token);
                 Swal.fire({
                     position: "top-end",
-                    title: "You successfully logged in using 2FA",
+                    title: t('You successfully logged in using 2FA'),
                     icon: "success",
                     showConfirmButton: true,
                     timerProgressBar: true,
@@ -543,7 +546,7 @@ export const AuthProvider = ({ children }) => {
                 Swal.fire({
                     position: "top-end",
                     icon: "error",
-                    title: "Failed on 2FA verification",
+                    title: t('Failed on 2FA verification'),
                     showConfirmButton: true,
                     timerProgressBar: true,
                     timer: 3000
@@ -562,7 +565,7 @@ export const AuthProvider = ({ children }) => {
         navigate("/dashboard");
         Swal.fire({
             position: "top-end",
-            title: "Successfully logged in",
+            title: t('Successfully logged in'),
             icon: "success",
             showConfirmButton: true,
             timerProgressBar: true,

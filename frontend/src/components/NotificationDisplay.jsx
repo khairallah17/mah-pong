@@ -3,8 +3,11 @@ import { WebSocketContext } from "../websockets/WebSocketProvider";
 import { jwtDecode } from "jwt-decode";
 import { useNavigate } from "react-router-dom";
 import { UserCircle, UserPlus, UserCheck, X } from "lucide-react";
+import '../i18n';
+import { useTranslation } from 'react-i18next';
 
 const NotificationDisplay = () => {
+  const { t } = useTranslation();
   const { notifications: wsNotifications, wsManager } = useContext(WebSocketContext);
   const [alerts, setAlerts] = useState(0);
   const [notifications, setNotifications] = useState([]);
@@ -65,13 +68,13 @@ const NotificationDisplay = () => {
     const hours = Math.floor(diff / 3600000);
     const days = Math.floor(diff / 86400000);
 
-    if (minutes < 60) return `${minutes}m ago`;
-    if (hours < 24) return `${hours}h ago`;
-    return `${days}d ago`;
+    if (minutes < 60) return `${minutes}m ${t('ago')}`;
+    if (hours < 24) return `${hours}h ${t('ago')}`;
+    return `${days}d ${t('ago')}`;
   };
 
   const getNotificationStyle = (message) => {
-    if (message.includes("accepted your friend request")) {
+    if (message.includes('accepted your friend request')) {
       return {
         icon: <UserCheck className="w-4 h-4 text-emerald-500" />,
         bgColor: "bg-emerald-50",
@@ -150,7 +153,7 @@ const NotificationDisplay = () => {
             <div className="flex flex-col h-full max-h-[80vh]">
               {/* Header */}
               <div className="px-4 py-3 border-b border-gray-200 flex justify-between items-center sticky top-0 bg-white z-10">
-                <h3 className="text-lg font-semibold text-gray-800">Notifications</h3>
+                <h3 className="text-lg font-semibold text-gray-800">{t('Notifications')}</h3>
                 <button 
                   onClick={() => setIsOpen(false)}
                   className="p-1 hover:bg-gray-100 rounded-full"
@@ -203,7 +206,7 @@ const NotificationDisplay = () => {
                 ) : (
                   <div className="px-4 py-6 text-center">
                     <UserCircle className="w-12 h-12 text-gray-300 mx-auto mb-2" />
-                    <p className="text-sm text-gray-500">No notifications yet</p>
+                    <p className="text-sm text-gray-500">{t('No notifications yet')}</p>
                   </div>
                 )}
               </div>

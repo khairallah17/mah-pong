@@ -34,6 +34,10 @@ export const Statistics = () => {
         const data = await response.json();
         const totalGames = data.wins + data.losses;
         const winRate = totalGames > 0 ? Math.round((data.wins / totalGames) * 100) : 0;
+        const eloRating = data.elo ?? 0;
+        const dataWins = data.wins ?? 0;
+        const dataLosses = data.losses ?? 0;
+
         
         setStats([
           {
@@ -50,19 +54,19 @@ export const Statistics = () => {
           },
           {
             label: 'ELO Rating',
-            value: data.elo.toString(),
+            value: eloRating.toString(),
             icon: <Activity size={20} />,
             color: 'from-yellow-500 to-orange-500'
           },
           {
             label: 'Wins',
-            value: data.wins.toString(),
+            value: dataWins.toString(),
             icon: <BarChart2 size={20} />,
             color: 'from-pink-500 to-rose-500'
           },
           {
             label: 'Losses',
-            value: data.losses.toString(),
+            value: dataLosses.toString(),
             icon: <XCircle size={20} />,
             color: 'from-red-500 to-red-600'
           }

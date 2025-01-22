@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSidebarContext } from "../../hooks/useSidebar";
+import '../../i18n';
+import { useTranslation } from 'react-i18next';
+
 
 const TournamentHome = () => {
-
+    const { t } = useTranslation();
     const { setActiveLink } = useSidebarContext()
 
     const navigate = useNavigate();
@@ -39,12 +42,12 @@ const TournamentHome = () => {
         <div className="w-full h-full flex">
             <div className="mx-auto self-center justify-self-center">
                 <h1 className="text-4xl font-bold mb-8 text-center animate-fade-in-down zen-dots">
-                    Tournament Home
+                    {t('Tournament Home')}
                 </h1>
                 <div className="mb-8 bg-black/50 rounded-xl border border-gray-800 overflow-hidden backdrop-blur-sm p-6 animate-fade-in">
                     <input
                         className="w-full p-3 border border-blue-300 rounded mb-4 bg-white/20 text-white placeholder-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-400 transition duration-300"
-                        placeholder="Tournament code"
+                        placeholder={t('Tournament code')}
                         value={tournamentCode}
                         onChange={(e) => setTournamentCode(e.target.value)}
                     />
@@ -53,20 +56,20 @@ const TournamentHome = () => {
                             className="flex-1 p-3 bg-blue-500 text-white rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 transition duration-300 transform hover:scale-105"
                             onClick={() => navigate(`/dashboard/tournament/live?code=${tournamentCode}`)}
                         >
-                            Join
+                            {t('Join')}
                         </button>
                         <button
                             className="flex-1 p-3 bg-green-500 text-white rounded hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-400 transition duration-300 transform hover:scale-105"
                             onClick={() => navigate("/dashboard/tournament/live")}
                         >
-                            Create
+                            {t('Create')}
                         </button>
                     </div>
                 </div>
                 {isLoading ? (
                     <div className="text-center">
                         <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-white"></div>
-                        <p className="mt-2">Loading tournaments...</p>
+                        <p className="mt-2">{t('Loading tournaments...')}</p>
                     </div>
                 ) : (
                     <ul className="space-y-4">
@@ -81,11 +84,11 @@ const TournamentHome = () => {
                                     onClick={() => navigate(`/dashboard/tournament/live?code=${tournament.code}`)}
                                 >
                                     <div className="flex flex-col">
-                                        <p className="text-lg font-semibold mb-2">{tournament.name || 'Unnamed Tournament'}</p>
-                                        <p><span className="font-medium">Date:</span> {new Date(tournament.created_at).toLocaleDateString()}</p>
+                                        <p className="text-lg font-semibold mb-2">{tournament.name || t('Unnamed Tournament')}</p>
+                                        <p><span className="font-medium">{t('Date:')}</span> {new Date(tournament.created_at).toLocaleDateString()}</p>
                                         <p><span className="font-medium">Code:</span> {tournament.code}</p>
                                         <p><span className="font-medium">Status:</span> {tournament.status}</p>
-                                        <p><span className="font-medium">Players:</span> {tournament.players.length}</p>
+                                        <p><span className="font-medium">{t('Players:')}</span> {tournament.players.length}</p>
                                     </div>
                                 </button>
                             </li>
