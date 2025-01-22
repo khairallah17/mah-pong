@@ -69,7 +69,7 @@ const Profile = () => {
                 {/* Quick Stats - Desktop Only */}
                 <div className="mt-6 grid grid-cols-2 gap-4 border-t border-white/10 pt-6">
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-indigo-400">{totalGames}</div>
+                    <div className="text-2xl font-bold text-indigo-400">{totalGames || 0}</div>
                     <div className="text-sm text-gray-400">total Games</div>
                   </div>
                   <div className="text-center">

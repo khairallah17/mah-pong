@@ -437,19 +437,19 @@ const PictureUser = () => {
         <div className="grid grid-cols-3 gap-4 px-4">
           <div className="bg-navy-700/50 rounded-lg p-3">
             <div className="text-lg font-bold text-white">
-              {playerStats ? playerStats.wins + playerStats.losses : 0}
+              {playerStats.wins + playerStats.losses || 0}
             </div>
             <div className="text-xs text-gray-400">{t('Games')}</div>
           </div>
           <div className="bg-navy-700/50 rounded-lg p-3">
             <div className="text-lg font-bold text-white">
-              {playerStats ? playerStats.wins : 0}
+              {playerStats.wins || 0}
             </div>
             <div className="text-xs text-gray-400">{t('Wins')}</div>
           </div>
           <div className="bg-navy-700/50 rounded-lg p-3">
             <div className="text-lg font-bold text-white">
-              {playerStats ? playerStats.losses : 0}
+              {playerStats.losses || 0}
             </div>
             <div className="text-xs text-gray-400">{t('Losses')}</div>
           </div>
