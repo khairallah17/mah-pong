@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useSidebarContext } from '../hooks/useSidebar';
-import { Search, X, Menu, UserPlus } from 'lucide-react';
+import { Search, X, Menu, Bell, UserPlus } from 'lucide-react';
 import DefaultAvatar from '../assets/khr.jpg';
 import NotificationDisplay from './NotificationDisplay';
 import ButtonLng from "../components/ButtonLng";
@@ -9,7 +9,6 @@ import { useTranslation } from 'react-i18next';
 import { NavLink } from 'react-router-dom';
 
 const Navbar = () => {
-  const { t } = useTranslation();
   const [user, setUser] = useState({ 
     username: '', 
     email: '', 
@@ -36,6 +35,7 @@ const Navbar = () => {
           });
           if (response.ok) {
             const userData = await response.json();
+            console.log('User data:', userData);
             setUser({
               username: userData.username,
               email: userData.email,
@@ -64,6 +64,7 @@ const Navbar = () => {
     const token = JSON.parse(authToken).access;
 
     try {
+      // First, get the list of friends to filter them out
       const friendsResponse = await fetch(`http://localhost:8001/api/friends/`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -71,13 +72,14 @@ const Navbar = () => {
       const friendsList = friendsData[0]?.friends || [];
       const friendUsernames = new Set(friendsList.map(friend => friend.username));
 
+      // Then, fetch all users
       const allUsersResponse = await fetch(`http://localhost:8001/api/allusers/?search=${query}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const allUsersData = await allUsersResponse.json();
 
-      const filteredUsers = allUsersData.filter(searchedUser => 
-        !friendUsernames.has(searchedUser.username) && 
+      // Filter out friends and current user from the results
+      const filteredUsers = allUsersData.filter(searchedUser =>  
         searchedUser.username !== user.username &&
         (searchedUser.fullname?.toLowerCase().includes(query.toLowerCase()) ||
          searchedUser.username.toLowerCase().includes(query.toLowerCase()) ||
@@ -120,14 +122,13 @@ const Navbar = () => {
     <nav className="fixed top-0 left-0 right-0 z-50 h-16 backdrop-blur-sm border-b border-white/10">
       <div className="h-full px-6 flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <div
+          <button
             onClick={toggleSidebar}
-            className="p-1.5 rounded-md text-white/80 hover:text-white hover:bg-white/10 focus:outline-none cursor-pointer"
-            role="button"
+            className="p-1.5 rounded-md text-white/80 hover:text-white hover:bg-white/10 focus:outline-none"
             aria-label={open ? "Close sidebar" : "Open sidebar"}
           >
             {open ? <X size={20} /> : <Menu size={20} />}
-          </div>
+          </button>
           <span className="text-white font-semibold">Logo</span>
         </div>
 
@@ -138,7 +139,7 @@ const Navbar = () => {
             </div>
             <input
               type="search"
-              placeholder={t("Search users...")}
+              placeholder="Search users..."
               value={searchQuery}
               onChange={(e) => {
                 setSearchQuery(e.target.value);
@@ -151,7 +152,7 @@ const Navbar = () => {
             {showResults && searchQuery && (
               <div className="absolute w-full mt-2 bg-gray-800 rounded-lg shadow-lg max-h-96 overflow-y-auto">
                 {isLoading ? (
-                  <div className="p-4 text-white text-center">{t('Searching...')}</div>
+                  <div className="p-4 text-white text-center">Searching...</div>
                 ) : searchResults.length > 0 ? (
                   <div>
                     {searchResults.map((searchedUser) => (
@@ -165,7 +166,7 @@ const Navbar = () => {
                         }}
                       >
                         <img
-                          src={`http://localhost:8001/${searchedUser.img}` || searchedUser.avatar || DefaultAvatar}
+                          src={"http://localhost:8001/" + searchedUser.img || searchedUser.avatar || DefaultAvatar}
                           alt={searchedUser.username}
                           className="h-10 w-10 rounded-full object-cover"
                           onError={(e) => {
@@ -185,7 +186,7 @@ const Navbar = () => {
                     ))}
                   </div>
                 ) : (
-                  <div className="p-4 text-white text-center">{t('No users found')}</div>
+                  <div className="p-4 text-white text-center">No users found</div>
                 )}
               </div>
             )}
@@ -193,8 +194,12 @@ const Navbar = () => {
         </div>
 
         <div className="flex items-center gap-4">
-          <ButtonLng />
-          <NotificationDisplay />
+          <button 
+            className="p-4 rounded-md text-white/80 hover:text-white hover:bg-white/10 focus:outline-none"
+            aria-label="Notifications"
+          >
+            <Notification className="h-5 w-5" />
+          </button>
           
           <div className="flex items-center gap-3">
             <div className="hidden md:block text-right">

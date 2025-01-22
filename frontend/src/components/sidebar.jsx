@@ -22,7 +22,7 @@ const navigation = [
   {
     icon: <Trophy size={20} />,
     root: "Tournament",
-    link: "dashboard/tournament",
+    link: "dashboard/tournament/tournamentPage",
     list: []
   },
   {

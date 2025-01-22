@@ -6,6 +6,7 @@ import { Shield, Gamepad2, UserPlus, UserMinus, UserX, Check, X, Loader2 } from 
 import { toast } from 'react-toastify';
 import '../../../i18n.js';
 import { useTranslation } from 'react-i18next';
+import { NavLink } from 'react-router-dom';
 
 import { NavLink } from 'react-router-dom';
 
@@ -306,10 +307,10 @@ const PictureUser = () => {
             <Shield className="w-4 h-4" />
             {t('Edit Profile')}
           </NavLink>
-          <button className="w-full py-2.5 px-4 bg-navy-700 hover:bg-navy-600 text-white rounded-lg flex items-center justify-center gap-2 transition-all">
+          <NavLink to={`/dashboard/game`} className="w-full py-2.5 px-4 bg-navy-700 hover:bg-navy-600 text-white rounded-lg flex items-center justify-center gap-2 transition-all">
             <Gamepad2 className="w-4 h-4" />
             {t('Play Game')}
-          </button>
+          </NavLink>
         </div>
       );
     }
