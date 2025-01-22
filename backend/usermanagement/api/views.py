@@ -58,6 +58,8 @@ from django.shortcuts import get_object_or_404 # type: ignore
 # from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync # type: ignore
 
+import logging
+
 CLIENT_ID = os.environ.get('CLIENT_ID')
 CLIENT_SECRET = os.environ.get('CLIENT_SECRET')
 GCLIENT_ID = os.environ.get('GCLIENT_ID')
@@ -130,6 +132,11 @@ class Get_MyTokenObtainPairView(TokenObtainPairView):
             secure=False,  # Set to True if using HTTPS
             samesite='Lax'
         )
+        logger = logging.getLogger("loggers")
+        message = {
+            'message' : f"user ${email} logged in"
+        }
+        logger.info(message)
         return response
     
     def get(self, request):

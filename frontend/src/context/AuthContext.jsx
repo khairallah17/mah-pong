@@ -14,19 +14,23 @@ export default AuthContext
 export const AuthProvider = ({ children }) => {
 
     //GETTING TOKEN
-    const [authtoken, setAuthToken] = useState(() => {
-        // Check localStorage for existing token
-        const token = localStorage.getItem("authtoken");
-        return token ? JSON.parse(token) : null;
-    });
+    const [authtoken, setAuthToken] = useState(null);
+    const [user, setUser] = useState(null);
 
-    //GETTING NOW THE DECODE OF THE TOKEN AND STORE ==> {FULLNAME, USERNAME, EMAIL}
-    // const [user, setUser] = useState(localStorage.getItem("authtoken") ? jwtDecode("authtoken") : null);
-    const [user, setUser] = useState(() => {
-        // Check localStorage for existing token and decode if exists
-        const token = localStorage.getItem("authtoken");
-        return token ? jwtDecode(JSON.parse(token).access) : null;
-    });
+    useEffect(() => {
+
+        try {
+            const token = localStorage.getItem("authtoken");
+            
+            if (!token)
+                return
+            const decoded = jwtDecode(token)
+            setAuthToken(JSON.parse(token).access || null)
+            setUser(decoded || null)
+        } catch (error) {}
+
+    }, [])
+
     
 
     // const [loading, setloading] = useState(true)
