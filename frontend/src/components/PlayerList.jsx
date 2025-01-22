@@ -1,14 +1,21 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { Users, Search, Gamepad2, MessageCircle } from 'lucide-react';
 import '../i18n';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
+import { WebSocketContext } from '../websockets/WebSocketProvider';
+import { jwtDecode } from 'jwt-decode';
 
 export const PlayerList = () => {
+  const navigate = useNavigate();
   const [friends, setFriends] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [inviteCode, setInviteCode] = useState(null);
+  const { wsManager } = useContext(WebSocketContext);
+  const access = JSON.parse(localStorage.getItem("authtoken"))?.access;
+  const {username} = jwtDecode(access);
   
   const { t } = useTranslation();
   useEffect(() => {
@@ -82,7 +89,7 @@ export const PlayerList = () => {
     friend.username?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const handleGameInvite = async (friendId) => {
+  const handleGameInvite = async (friend) => {
     try {
       const code = Math.random().toString(36).substring(2, 15);
       setInviteCode(code);
@@ -91,13 +98,15 @@ export const PlayerList = () => {
       
       await navigator.clipboard.writeText(inviteLink);
       
-      const Alert = ({ message }) => (
-        <div className="fixed bottom-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg">
-          {message}
-        </div>
-      );
+      // const Alert = ({ message }) => (
+      //   <div className="fixed bottom-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg">
+      //     {message}
+      //   </div>
+      // );
       
-      alert('Game invite link copied to clipboard!');
+      // alert('Game invite link copied to clipboard!');
+      navigate(`game/pvp2d?invite=${code}`);
+      wsManager.sendMessage(`${username} has invited you to a game!`, [friend.username], `/dashboard/game/pvp2d?invite=${code}`);
     } catch (error) {
       console.error('Error generating invite:', error);
       alert('Failed to generate game invite');
@@ -166,7 +175,7 @@ export const PlayerList = () => {
             <div className="flex items-center gap-2">
               <button 
                 className="p-2 hover:bg-blue-400/10 rounded-lg transition-all border border-transparent hover:border-blue-400/20 group"
-                onClick={() => handleGameInvite(friend.id)}
+                onClick={() => handleGameInvite(friend)}
                 title="Invite to game"
               >
                 <Gamepad2 size={18} className="text-blue-400 group-hover:text-blue-300" />
