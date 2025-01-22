@@ -55,11 +55,8 @@ const NotificationDisplay = () => {
   };
 
   const handleNotificationClick = (notification) => {
-    const username = notification.message.split(" ")[0];
-    if (notification.message.includes("friend request") || notification.message.includes("accepted")) {
-      navigate(`/dashboard/profil/${username}`);
-      setIsOpen(false);
-    }
+    navigate(notification.link);
+    setIsOpen(false);
   };
 
   const formatTimestamp = (timestamp) => {
