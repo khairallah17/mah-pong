@@ -16,6 +16,7 @@ import Profil from './pages/Profil.jsx'
 import Tournament from './pages/tournament/Tournament'
 import TournamentHome from './pages/tournament/tournamentHome';
 import LocalTournament from './pages/tournament/LocalTournament';
+import TournamentPage from './pages/tournament/tournamentPage.jsx';
 import Chat from "./pages/chat.jsx";
 import Game from "./pages/game.jsx";
 import Settings from "./pages/settings.jsx";
@@ -69,6 +70,7 @@ function App() {
                     <Route path="profil/:username" element={<Profil />} />
                     
                     <Route path='tournament'>
+                      <Route path='tournamentPage' element={<TournamentPage/>}/>
                       <Route index element={<TournamentHome/>}/>
                       <Route path='live' element={<Tournament/>}/>
                       <Route path='local' element={<LocalTournament/>}/>
