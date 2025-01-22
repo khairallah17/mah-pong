@@ -1,7 +1,0 @@
-Migrations for 'Match':
-  Match/migrations/0001_initial.py
-    - Create model Achievement
-    - Create model Match
-    - Create model Tournament
-    - Create model TournamentMatch
-    - Create model AchievementAssignment

@@ -74,7 +74,7 @@ const GameSlide = ({ title, cards }) => (
     <h3 className="text-3xl font-bold text-white mb-8 text-center">
       {title}
     </h3>
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-12 max-w-6xl mx-auto">
+    <div className={`grid grid-cols-1 md:grid-cols-2 items-center justify-center gap-12 max-w-6xl mx-auto ${cards.length === 1 ? 'justify-center' : ''}`}>
       {cards.map((card, index) => (
         <GameCard key={index} {...card} />
       ))}
@@ -122,7 +122,7 @@ const Games = () => {
       ]
     },
     {
-      title: t('3D Games'),
+      title: t('Other Games'),
       cards: [
         {
           title: "PvE 3D",
@@ -134,13 +134,27 @@ const Games = () => {
           path: "/dashboard/game/pve3d"
         },
         {
-          title: "PvP 3D",
-          description: t('Challenge players in immersive 3D battles.'),
+          title: "TicTacToe",
+          description: t('Play the classic TicTacToe game against other players.'),
           accentColor: "border-indigo-500",
           buttonColor: "bg-gradient-to-r from-indigo-600 to-indigo-400",
           image: "/play-1vs1.jpg",
           icon: Users,
-          path: "/dashboard/game/pvp3d"
+          path: "/dashboard/game/tictactoe"
+        }
+      ]
+    },
+    {
+      title: t('Local Multiplayer'),
+      cards: [
+        {
+          title: "Local 2D",
+          description: t('Play with friends in local 2D multiplayer matches.'),
+          accentColor: "border-blue-500",
+          buttonColor: "bg-gradient-to-r from-blue-600 to-blue-400",
+          image: "/play-1vs1.jpg",
+          icon: Users,
+          path: "/dashboard/game/local2d"
         }
       ]
     }
