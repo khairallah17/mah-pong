@@ -4,27 +4,27 @@ import { MatchHistory } from '../components/Match-history';
 import { Statistics } from '../components/StatisticUser';
 import { GripHorizontal } from 'lucide-react';
 import { useParams } from 'react-router-dom';
+import { useAuthContext } from '../hooks/useAuthContext';
 
 const Profile = () => {
   const [activeTab, setActiveTab] = useState('stats');
   const [totalGames, setTotalGames] = useState(0);
   const [winRate, setWinRate] = useState(0);
-  let { username } = useParams();
-  let token = JSON.parse(localStorage.getItem('authtoken')).access;
+  let { username, authToken } = useParams();
+  
+  const { user } = useAuthContext()
 
   useEffect(() => {
   const fetchStats = async () => {
     try {
       if (!username)
-        username = token.username;
-      else
-        username = username;
+        username = user.username;
 
       const response = await fetch(`http://localhost:8000/api/player-stats/${username}/`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${authToken}`
         }
       });
       const data = await response.json();
@@ -39,7 +39,7 @@ const Profile = () => {
    if (username) {
     fetchStats();
   }
-}, [token, username]);
+}, [authToken, username]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-navy-950 via-navy-900 to-navy-950">

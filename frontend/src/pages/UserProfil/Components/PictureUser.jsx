@@ -7,6 +7,7 @@ import { toast } from 'react-toastify';
 import '../../../i18n.js';
 import { useTranslation } from 'react-i18next';
 
+import { NavLink } from 'react-router-dom';
 
 
 const PictureUser = () => {
@@ -301,10 +302,10 @@ const PictureUser = () => {
     if (currentUser === profil?.username) {
       return (
         <div className="space-y-2">
-          <button className="w-full py-2.5 px-4 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-lg flex items-center justify-center gap-2 transition-all">
+          <NavLink to={`/dashboard/edit-profil`} className="w-full py-2.5 px-4 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-lg flex items-center justify-center gap-2 transition-all">
             <Shield className="w-4 h-4" />
             {t('Edit Profile')}
-          </button>
+          </NavLink>
           <button className="w-full py-2.5 px-4 bg-navy-700 hover:bg-navy-600 text-white rounded-lg flex items-center justify-center gap-2 transition-all">
             <Gamepad2 className="w-4 h-4" />
             {t('Play Game')}
