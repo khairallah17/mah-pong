@@ -7,6 +7,8 @@ from django.db.models import Q
 import jwt
 from django.conf import settings
 import logging
+from django.utils.timezone import now
+# from .serializers import MessageSerializer
 
 logger = logging.getLogger(__name__)
 
@@ -45,7 +47,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
         # Save the message to the database
         message = await self.create_message(sender, receiver_id, content, conversation)
-
+        
         # Broadcast the message to the chat group
         await self.channel_layer.group_send(
             f"chat_{receiver_id}",
@@ -54,6 +56,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 'content': content,
                 'sender': sender.username,
                 'receiver': receiver.username
+                # 'timestamp': message.timestamp
             }
         )
         await self.channel_layer.group_send(
@@ -63,6 +66,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 'content': content,
                 'sender': sender.username,
                 'receiver': receiver.username
+                # 'timestamp': message.timestamp
             }
         )
 
@@ -91,17 +95,19 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     @database_sync_to_async
     def create_message(self, sender, receiver_id, content, conversation):
-        return Message.objects.create(
+        return  Message.objects.create(
             sender=sender,
             receiver_id=receiver_id,
             content=content,
-            conversation=conversation
+            conversation=conversation,
+            # timestamp=now()
         )
 
     async def chat_message(self, event):
         content = event["content"]
         sender = event["sender"]
         receiver = event["receiver"]
+        # timestamp = event["timestamp"]
 
         # Send the message to WebSocket
         await self.send(text_data=json.dumps({
@@ -109,6 +115,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             'content': content,
             'sender': sender,
             'receiver': receiver
+            # 'timestamp': timestamp 
         }))
         
     # utils

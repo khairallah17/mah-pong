@@ -6,6 +6,7 @@ import { IoCheckmarkDoneOutline } from "react-icons/io5";
 import { RiSendPlaneFill } from "react-icons/ri";
 import { IoSearchOutline } from "react-icons/io5";
 import { CgBlock } from "react-icons/cg";
+import { CgUnblock } from "react-icons/cg";
 import { PiGameControllerFill } from "react-icons/pi";
 import React, { useState, useEffect, useRef } from "react";
 import axios from 'axios';
@@ -14,14 +15,12 @@ import { jwtDecode } from "jwt-decode";
 const Chat = ({ roomName }) => {
     const [users, setUsers] = useState([]);
     const [messages, setMessages] = useState([]);
-    const [message, setMessage] = useState("");
     const [newMessage, setNewMessage] = useState("");
-    const [selectedUser, setSelectedUser] = useState(null);
-    const [socket, setSocket] = useState(null);
     const [selectedUserId, setSelectedUserId] = useState(null);
     const [loading, setLoading] = useState(false);
     const socketRef = useRef(null);
     const [hand, setHand] = useState(false);
+    const [isBlocked, setIsBlocked] = useState(false);
     const accessToken = JSON.parse(localStorage.getItem('authtoken')).access;
     const { username, fullname } = jwtDecode(accessToken);
     const messagesEndRef = useRef(null);
@@ -34,12 +33,46 @@ const Chat = ({ roomName }) => {
         if (selectedUserId !== null) {
             loadConversation(selectedUserId);
             initializeWebSocket(selectedUserId);
+            fetchBlockStatus(selectedUserId);
         }
     }, [selectedUserId]);
 
     useEffect(() => {
         scrollToBottom();
     }, [messages]);
+
+    const handleClick = () => {
+        if (isBlocked) {
+            unblock(selectedUserId);
+        } else {
+            block(selectedUserId);
+        }
+        setIsBlocked(!isBlocked)
+    };
+
+    const fetchBlockStatus = async (userId) => {
+            console.log("Fetching block status...");
+            const response = await axios.get(`http://localhost:8003/chat/api/block-status/${userId}/`, {
+                headers: {
+                    Authorization: `Bearer ${accessToken}`,
+                },
+            });
+            console.log("Block status response:", response.data);
+    };
+    const unblock = async (userId) => {
+        try {
+            await axios.post(`http://localhost:8003/chat/api/block_user/${userId}/`, {
+                action: 'unblock'
+            }, {
+                headers: {
+                    'Authorization': `Bearer ${accessToken}`
+                }
+            });
+        } catch (error) {
+            console.error(error.response?.data?.error || 'Failed to block user');
+        }
+    };
+    
 
     const loadUsers = async () => {
         try {
@@ -59,6 +92,7 @@ const Chat = ({ roomName }) => {
     const loadConversation = async (userId) => {
         setLoading(true);
         try {
+            console.log("hette", userId);
             const response = await axios.get(`http://localhost:8003/chat/api/conversation/${userId}/`, {
                 headers: {
                     Authorization: `Bearer ${accessToken}`
@@ -98,7 +132,19 @@ const Chat = ({ roomName }) => {
     const handleUserSelect = (userId) => {
         setSelectedUserId(userId);
     };
-
+    const block = async (userId) => {
+        try {
+            await axios.post(`http://localhost:8003/chat/api/block_user/${userId}/`, {
+                action: 'unblock'
+            }, {
+                headers: {
+                    'Authorization': `Bearer ${accessToken}`
+                }
+            });
+        } catch (error) {
+            console.error(error.response?.data?.error || 'Failed to block user');
+        }
+    };
     const handleSendMessage = () => {
         if (newMessage.trim() !== "") {
             if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
@@ -119,6 +165,11 @@ const Chat = ({ roomName }) => {
         setHand(!hand);
     }
 
+    const formatTime = (timestamp) => {
+        const date = new Date(timestamp);
+        return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }); // Format as "HH:mm"
+      };
+
     return (
         <div className="flex h-full text-[#FFFFFF50] bg-[#10104F] w-full relative">
             <div className="absolute bg-black h-full w-full opacity-50 z-[-1]"></div>
@@ -136,6 +187,7 @@ const Chat = ({ roomName }) => {
                 {/* Dynamic User List */}
                 <div className="flex flex-col gap-2 overflow-y-auto px-4"> {/* User list */}
                     {users.map((user) => {
+                        console.log("User data:", user);
                         const lastMessage = messages
                             .filter(msg => msg.sender === user.id || msg.receiver === user.id)
                             .slice(-1)[0]?.content || "No messages yet";
@@ -146,7 +198,11 @@ const Chat = ({ roomName }) => {
                                 className={`hover:bg-blue-950 p-2 rounded-lg flex gap-2 cursor-pointer user ${selectedUserId === user.id ? "selected" : ""}`}>
                                 {/* User Profile Image */}
                                 <div className="h-12 w-12 rounded-full overflow-hidden border border-purple-950">
-                                    <img src={user.img || "default-profile-img.webp"} alt="profile"/>
+                                <img 
+                                    src={user.img ? `http://localhost:8001//${user.img}` : "./images/pong_logo.png"} 
+                                    alt="profile" 
+                                />
+
                                 </div>
 
                                 {/* User Information */}
@@ -162,6 +218,15 @@ const Chat = ({ roomName }) => {
 
             {/* Chat Section */}
             <div className="grow my-[20px] flex justify-between  rounded-r-[30px] mr-[20px]   border-[3px] border-l-0 border-black flex-col gap-5">
+                {!selectedUserId ? 
+                (
+                    <div className="div">
+                        select your friend
+                    </div>
+                )
+                :
+                (
+                    <>
                 <div className="border-black bg-gradient-to-l  from-black/15 to-black/50  abg-opacity-30 bg-opacity-25 p-4 flex h-[100px] rounded-tr-[27px] items-center justify-between">
                     <div className="flex gap-2 ml-[15px]">
                         <div className="h-16 w-16 rounded-full overflow-hidden">
@@ -177,10 +242,26 @@ const Chat = ({ roomName }) => {
                         <MdInfoOutline onClick={handel} className="text-[30px] cursor-pointer"/>
                 </div>
 
-                <div className="overflow-auto px-4 gap-2 flex flex-col">
+                <div className="overflow-auto h-full justify-end px-4 gap-2 flex flex-col">
                     {messages.map((msg, index) => (
-                        <div key={index} className={`p-2 rounded-2xl ${msg.sender === username ? 'place-self-end bg-blue-600' : 'bg-gray-700'}`}>
+                        <div 
+                            key={index} 
+                            className={`p-2 rounded-2xl flex flex-col break-words px-3 w-fit ${
+                                msg.sender === username 
+                                ? 'place-self-end bg-blue-600 text-white' 
+                                : 'bg-gray-700 text-white'
+                            }`}
+                            style={{ 
+                                maxWidth: "60%", 
+                                wordWrap: "break-word", 
+                                overflowWrap: "break-word", 
+                                wordBreak: "break-word" }}
+                        >
                             <p>{msg.content}</p>
+                        <div className="flex place-self-end justify-end gap-1 items-center">
+                            <p className="text-xs">{formatTime(msg.timestamp)}</p>
+                            <IoCheckmarkDoneOutline className={`text-sm ${msg.seen ? "text-green-600" : "text-gray-400"}`}/>
+                        </div>
                         </div>
                     ))}
                     <div ref={messagesEndRef} />
@@ -201,6 +282,9 @@ const Chat = ({ roomName }) => {
                         </div>
                     </div>
                 </div>
+                    </>
+                )
+                }
             </div>
             <div className={` my-[20px] mr-[20px]   w-[400px]  xl:flex ${hand ? "flex" : "hidden"} `}>
                 <div className="flex flex-col gap-14  w-full pt-9 px-2 border-[3px] border-black rounded-[30px]"> {/* User details*/}
@@ -215,8 +299,15 @@ const Chat = ({ roomName }) => {
                         </div>
                     </div>
                     <div className="flex gap-8 justify-center items-center"> {/* challenge/ block*/}
-                        <button className="h-16 w-32 border-[6px] border-blue-900 flex items-center justify-center hover:bg-blue-900 rounded-3xl  font-bold"><PiGameControllerFill className="text-[45px]"/> </button>
-                        <button className="h-16 w-32 border-4 flex items-center justify-center rounded-3xl hover:bg-red-600 font-bold"><CgBlock className="text-[45px]"/></button>
+                        <button className="h-16 w-32 border-[4px] border-blue-800 flex items-center justify-center hover:bg-blue-900 rounded-3xl  font-bold"><PiGameControllerFill className="text-[45px]"/> </button>
+                        <button
+                            onClick={handleClick}
+                            className={`h-16 w-32 border-[4px] flex items-center justify-center rounded-3xl font-bold ${
+                                isBlocked ? 'bg-green-600  border-green-700 hover:bg-green-500' : 'bg-red-700  border-red-900 hover:bg-red-600'
+                            }`}
+                            title={isBlocked ? 'Unblock' : 'Block'}
+                        >
+                            {isBlocked ? <CgUnblock className="text-[45px]" /> : <CgBlock className="text-[45px]" />}</button>
                     </div>     
                 </div>
             </div>
