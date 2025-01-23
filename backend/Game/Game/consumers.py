@@ -12,6 +12,7 @@ from django.core.cache import cache # type: ignore
 from django.db.models import Q, F # type: ignore
 
 logger = logging.getLogger(__name__)
+
 matchmaking_pool = []
 pools = {}
 user_channels = {}
@@ -415,7 +416,8 @@ class Pvp2dConsumer(AsyncWebsocketConsumer):
                     'type': 'match_found',
                     'player_id': user_data['player_id'],
                     'names': user_data['names'],
-                    'game_state': user_data['game_state']
+                    'game_state': user_data['game_state'],
+                    'role': user_data['role']
                 }))
             pvp2d_user_channels[self.username] = self
             if self.invite_code:
@@ -437,8 +439,7 @@ class Pvp2dConsumer(AsyncWebsocketConsumer):
             else:
                 if self.username not in pvp2d_matchmaking_pool and self.username not in pvp2d_matched_users:
                     pvp2d_matchmaking_pool.append(self.username)
-
-            logger.warning(f"Matchmaking pool: {pvp2d_matchmaking_pool}")
+            
             if len(pvp2d_matchmaking_pool) >= 2:
                 await self.match_users()
         except jwt.ExpiredSignatureError:
@@ -451,7 +452,6 @@ class Pvp2dConsumer(AsyncWebsocketConsumer):
             pvp2d_matched_users[user1] = user2
             pvp2d_matched_users[user2] = user1
         else:
-            logger.warning(f"Matching users: {pvp2d_matchmaking_pool}")
             user1 = pvp2d_matchmaking_pool.pop(0)
             user2 = pvp2d_matchmaking_pool.pop(0)
             pvp2d_matched_users[user1] = user2
@@ -590,7 +590,6 @@ class Pvp2dConsumer(AsyncWebsocketConsumer):
     async def disconnect(self, close_code):
         if self.username:
             if self.username in pvp2d_matchmaking_pool:
-                logger.warning(f"removing from pool {self.username}")
                 pvp2d_matchmaking_pool.remove(self.username)
             if self.username in pvp2d_pools:
                 pvp2d_pools.pop(self.username)

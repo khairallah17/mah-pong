@@ -19,7 +19,7 @@ from django.core.exceptions import ValidationError
 import logging
 import jwt
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)  # Changed from __name__ to 'chat'
 
 
 
@@ -138,66 +138,38 @@ def get_conversation(request, id):
         return Response(serializer.data)
     except Exception as e:
         return Response({'error': str(e)}, status=401)
-    # try:
-    #     # Ensure the user is authenticated
-    #     if not request.user.is_authenticated:
-    #         return Response({"error": "Authentication required"}, status=401)
+   
 
-    #     user1 = request.user
-    #     user2 = User.objects.get(id=id)
+# @api_view(['POST'])
+# def send_message(request):
+#     sender_id = request.data.get('sender_id')
+#     receiver_id = request.data.get('receiver_id')
+#     content = request.data.get('message')
 
-    #     conversation = Conversation.objects.filter(
-    #         (Q(user1=user1) & Q(user2=user2)) |
-    #         (Q(user1=user2) & Q(user2=user1))
-    #     ).first()
+#     try:
+#         sender = User.objects.get(id=sender_id)
+#         receiver = User.objects.get(id=receiver_id)
 
-    #     if not conversation:
-    #         conversation = Conversation.objects.create(
-    #             name="New Conversation",
-    #             user1=user1,
-    #             user2=user2
-    #         )
-
-    #     # Permission check
-    #     if request.user != conversation.user1 and request.user != conversation.user2:
-    #         return Response({'error': 'You do not have permission to view this conversation.'}, status=403)
-
-    #     messages = Message.objects.filter(conversation=conversation).order_by('timestamp')
-    #     serializer = MessageSerializer(messages, many=True)
-
-    #     return Response(serializer.data)
-
-    # except User.DoesNotExist:
-    #     return Response({"error": "User not found"}, status=404)
-    # except Exception as e:
-    #     return Response({"error": str(e)}, status=500)
-
-
-
-@api_view(['POST'])
-def send_message(request):
-    sender_id = request.data.get('sender_id')
-    receiver_id = request.data.get('receiver_id')
-    content = request.data.get('message')
-
-    try:
-        sender = User.objects.get(id=sender_id)
-        receiver = User.objects.get(id=receiver_id)
-    except User.DoesNotExist:
-        return Response({"error": "User not found"}, status=404)
-
-    message = Message.objects.create(
-        sender=sender,
-        receiver=receiver,
-        content=content
-    )
-    return Response({
-        "id": message.id,
-        "sender": message.sender.username,
-        "receiver": message.receiver.username,
-        "content": message.content,
-        "timestamp": message.timestamp
-    })
+#         if BlockList.objects.filter(user=sender, blocked_users=receiver).exists():
+#             return Response({"error": "You have blocked this user."}, status=403)
+        
+#         if BlockList.objects.filter(user=receiver, blocked_users=sender).exists():
+#             return Response({"error": "You have been blocked by this user."}, status=403)
+        
+#         message = Message.objects.create(
+#             sender=sender,
+#             receiver=receiver,
+#             content=content
+#         )
+#         return Response({
+#             "id": message.id,
+#             "sender": message.sender.username,
+#             "receiver": message.receiver.username,
+#             "content": message.content,
+#             "timestamp": message.timestamp
+#         })
+#     except User.DoesNotExist:
+#         return Response({"error": "User not found"}, status=404)
 
 @api_view(['POST'])
 def block_user(request, user_id):
@@ -242,9 +214,6 @@ def block_user(request, user_id):
         return Response({"error": "Token has expired"}, status=401)
     except jwt.InvalidTokenError as e:
         return Response({"error": str(e)}, status=401)
-    except Exception as e:
-        return Response({"error": str(e)}, status=500)
-
 
 
 # @api_view(['GET'])
@@ -271,10 +240,8 @@ def get_block_status(request, user_id):
         try:
             user2 = User.objects.get(id=user_id)
         except User.DoesNotExist:
-            logger.error("User with id %s not found", user_id)
             return Response({"error": "User not found"}, status=404)
         except ValidationError:
-            logger.error("Invalid UUID format for user_id: %s", user_id)
             return Response({"error": "Invalid UUID format for user_id"}, status=400)
 
         is_user1_blocking = BlockList.objects.filter(user=user1, blocked_users=user2).exists()
@@ -287,7 +254,4 @@ def get_block_status(request, user_id):
 
     except ValidationError:
         return Response({"error": "Invalid UUID format for user2_id"}, status=400)
-
-    except Exception as e:
-        return Response({"error": str(e)}, status=500)
 
