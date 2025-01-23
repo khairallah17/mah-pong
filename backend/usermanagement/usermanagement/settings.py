@@ -251,7 +251,7 @@ SIMPLE_JWT = {
 
 
 # SMTP GMAIL
-
+#include to .env
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_POST = 587
