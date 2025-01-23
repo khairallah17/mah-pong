@@ -194,12 +194,12 @@ const Navbar = () => {
         </div>
 
         <div className="flex items-center gap-4">
-          <button 
-            className="p-4 rounded-md text-white/80 hover:text-white hover:bg-white/10 focus:outline-none"
+          <div 
+            className="p-4 rounded-md text-white/80 focus:outline-none"
             aria-label="Notifications"
           >
-            <Notification className="h-5 w-5" />
-          </button>
+            <NotificationDisplay className="h-5 w-5" />
+          </div>
           
           <div className="flex items-center gap-3">
             <div className="hidden md:block text-right">

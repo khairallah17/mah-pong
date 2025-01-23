@@ -149,7 +149,7 @@ volumes:
   front_vm:
     driver: local
     driver_opts:
-      device: ${PWD}frontend
+      device: ${PWD}/frontend
       type: none
       o: bind
 
