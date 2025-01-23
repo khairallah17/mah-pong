@@ -1,4 +1,6 @@
-
+body{
+  background: radial-gradient(circle, rgba(18,17,92,1) 17%, rgba(9,10,56,1) 68%);
+}
   
   .logo {
     height: 6em;
