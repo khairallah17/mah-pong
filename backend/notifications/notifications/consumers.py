@@ -33,7 +33,7 @@ class notificationsConsumer(AsyncWebsocketConsumer):
             await self.send_error_message('token_expired', 4001)
             logger.warning("Token expired")
         except jwt.InvalidTokenError as e:
-            # await self.send_error_message('invalid_token', 4002, str(e))
+            await self.send_error_message('invalid_token', 4002, str(e))
             logger.warning(f"Invalid token: {e}")
         
     async def receive(self, text_data):
@@ -83,7 +83,8 @@ class notificationsConsumer(AsyncWebsocketConsumer):
         message = event['message']
         await self.send(text_data=json.dumps({
             'type': 'notification',
-            'message': message
+            'message': message,
+            'link': event.get('link', '')
         }))
 
     async def disconnect(self, code):
