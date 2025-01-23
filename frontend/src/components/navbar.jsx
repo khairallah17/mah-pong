@@ -97,7 +97,7 @@ const Navbar = () => {
   };
 
   const handleUserClick = (username) => {
-    navigate(`http://localhost:5173/dashboard/profil/${username}`);
+    navigate(`/dashboard/profil/${username}`);
   };
 
   useEffect(() => {
