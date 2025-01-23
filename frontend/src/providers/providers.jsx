@@ -8,12 +8,10 @@ export default function Providers({ children }) {
     return (
         <SidebarContextProvider>
             <AuthProvider>
-                <WebSocketProvider>
-                    <ColorProvider>
-                        {children}
-                    </ColorProvider>
-                    <ToastContainer/>
-                </WebSocketProvider>
+                <ColorProvider>
+                    {children}
+                </ColorProvider>
+                <ToastContainer/>
             </AuthProvider>
         </SidebarContextProvider>
     )

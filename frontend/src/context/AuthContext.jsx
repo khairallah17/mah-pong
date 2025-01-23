@@ -198,8 +198,6 @@ export const AuthProvider = ({ children }) => {
         window.location.replace(`https://api.intra.42.fr/oauth/authorize?client_id=${clientId}&redirect_uri=${callbackURI}&response_type=code`);
     }
 
-
-    const navigate = useNavigate();
     const location = useLocation();
     const handleGoogleLoginCallback = useCallback(() => {
         const searchParams = new URLSearchParams(location.search);
@@ -218,7 +216,7 @@ export const AuthProvider = ({ children }) => {
                 timerProgressBar: true,
                 timer: 3000
             });
-            navigate('/login');
+            navigation('/login');
             return;
         }
 
@@ -259,10 +257,10 @@ export const AuthProvider = ({ children }) => {
                     timerProgressBar: true,
                     timer: 3000
                 });
-                navigate('/login');
+                navigation('/login');
             }
         }
-    }, [location.search, navigate, setAuthToken, setUser]);
+    }, [location.search, navigation, setAuthToken, setUser]);
 
 
     const handle42LoginCallback = useCallback(() => {
@@ -282,7 +280,7 @@ export const AuthProvider = ({ children }) => {
                 timerProgressBar: true,
                 timer: 3000
             });
-            navigate('/login');
+            navigation('/login');
             return;
         }
     
@@ -322,7 +320,7 @@ export const AuthProvider = ({ children }) => {
                     timerProgressBar: true,
                     timer: 3000
                 });
-                navigate('/login');
+                navigation('/login');
             }
         }
         else{
@@ -334,9 +332,9 @@ export const AuthProvider = ({ children }) => {
                 timerProgressBar: true,
                 timer: 3000
             });
-            navigate('/login');
+            navigation('/login');
         }
-    }, [location.search, navigate, setAuthToken, setUser]);
+    }, [location.search, navigation, setAuthToken, setUser]);
 
 
     const logoutUsers = async () => {
@@ -492,7 +490,7 @@ export const AuthProvider = ({ children }) => {
                     timerProgressBar: true,
                     timer: 3000
                 });
-                navigate('/login');
+                navigation('/login');
             }
         }
         else{
@@ -545,7 +543,7 @@ export const AuthProvider = ({ children }) => {
                     timerProgressBar: true,
                     timer: 3000
                 });
-                navigate('/login');
+                navigation('/login');
             }
         }
     };
@@ -556,7 +554,7 @@ export const AuthProvider = ({ children }) => {
         setAuthToken({ access: token });
         setUser(decodedToken);
         localStorage.setItem("authtoken", JSON.stringify({ access: token }));
-        navigate("/dashboard");
+        navigation("/dashboard");
         Swal.fire({
             position: "top-end",
             title: "Successfully logged in",

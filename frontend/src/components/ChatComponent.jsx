@@ -43,8 +43,10 @@ const Chat = ({ roomName }) => {
 
     const handleClick = () => {
         if (isBlocked) {
+            console.log("Unblocking user...");
             unblock(selectedUserId);
         } else {
+            console.log("Blocking user...");
             block(selectedUserId);
         }
         setIsBlocked(!isBlocked)
@@ -122,6 +124,9 @@ const Chat = ({ roomName }) => {
             if (data.type === "chat_message") {
                 setMessages((prev) => [...prev, data]);
             }
+            else if (data.type === "error") {
+                alert(data.message);
+            }
         };
 
         chatSocket.onclose = () => {
@@ -135,7 +140,7 @@ const Chat = ({ roomName }) => {
     const block = async (userId) => {
         try {
             await axios.post(`http://localhost:8003/chat/api/block_user/${userId}/`, {
-                action: 'unblock'
+                action: 'block'
             }, {
                 headers: {
                     'Authorization': `Bearer ${accessToken}`

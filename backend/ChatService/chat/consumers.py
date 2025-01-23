@@ -1,7 +1,7 @@
 import json
 from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
-from .models import Message, Conversation, CustomUser as User
+from .models import BlockList, Message, Conversation, CustomUser as User
 from urllib.parse import parse_qs
 from django.db.models import Q 
 import jwt
@@ -42,7 +42,15 @@ class ChatConsumer(AsyncWebsocketConsumer):
         receiver = await self.get_user(user_id=receiver_id)
         content = data['message']
 
-        # Ensure conversation exists between sender and receiver
+        isBlocked = await self.get_blocklists(sender, receiver)
+
+        if (isBlocked):
+            self.send(text_data=json.dumps({
+                'type': 'error',
+                'content': 'You cannot send messages to this user.'
+            }))
+            return
+
         conversation = await self.get_or_create_conversation(sender, receiver_id)
 
         # Save the message to the database
@@ -69,6 +77,20 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 # 'timestamp': message.timestamp
             }
         )
+
+    @database_sync_to_async
+    def get_blocklists(self, user1, user2):
+        try:
+            blocklist1 = BlockList.objects.get(user=user1)
+        except BlockList.DoesNotExist:
+            blocklist1 = None
+        try:
+            blocklist2 = BlockList.objects.get(user=user2)
+        except BlockList.DoesNotExist:
+            blocklist2 = None
+        if ((blocklist1 and blocklist1.is_user_blocked(user2)) or (blocklist2 and blocklist2.is_user_blocked(user1))):
+            return True
+        return False
 
     @database_sync_to_async
     def get_user(self, username=None, user_id=None):

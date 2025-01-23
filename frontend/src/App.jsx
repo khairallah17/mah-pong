@@ -1,5 +1,4 @@
 import ProtectRouter from "./providers/ProtectRouter"
-import ProtectAuthRouter from "./providers/ProtectAuthRouter"
 import Authentication from "./pages/authentication.jsx";
 import Dashboard from './pages/dashboard';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
@@ -19,7 +18,6 @@ import TournamentHome from './pages/tournament/tournamentHome';
 import LocalTournament from './pages/tournament/LocalTournament';
 import TournamentPage from './pages/tournament/tournamentPage.jsx';
 import Chat from "./pages/chat.jsx";
-import ResetEmailSend from "./pages/ResetEmailSend.jsx";
 import Game from "./pages/game.jsx";
 import Settings from "./pages/settings.jsx";
 import { ColorProvider } from "./context/ColorContext.jsx";
@@ -48,13 +46,9 @@ function App() {
 
             <Routes>
               <Route path="/" element={<HomePage />} />
-
-              <Route element={<ProtectAuthRouter />}>
-                <Route path="/login" element={<Authentication />} />
-                <Route path="/verify-email" element={<VerifyPsdEmail />} />
-                <Route path="/password-reset/confirm" element={<ResetPassword />} />
-                <Route path="/email-check" element={<ResetEmailSend />} />
-              </Route>
+              <Route path="/login" element={<Authentication />} />
+              <Route path="/verify-email" element={<VerifyPsdEmail />} />
+              <Route path="password-reset/confirm" element={<ResetPassword />} />
 
               <Route element={<ProtectRouter />}>
                 <Route element={<Layout/>}>

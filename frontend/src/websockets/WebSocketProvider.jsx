@@ -1,12 +1,13 @@
 import React, { createContext, useEffect, useState } from "react";
 import WebSocketManager from "./WebSocketManager";
-import Cookies from 'js-cookie';
+import { Navigate, useNavigate } from "react-router-dom";
 
 export const WebSocketContext = createContext();
 
 export const WebSocketProvider = ({ children }) => {
+  const navigate = useNavigate();
   const [notifications, setNotifications] = useState([]);
-  const accessToken = Cookies.get("access_token");
+  const accessToken = JSON.parse(localStorage.getItem('authtoken'))?.access;
   const webSocketUrl = 'ws://localhost:8002/ws/notifications/?token=' + accessToken;
   const [wsManager, setWsManager] = useState(null);
 
@@ -16,7 +17,7 @@ export const WebSocketProvider = ({ children }) => {
 
     const handleMessage = async (data) => {
       const message = JSON.parse(data);
-      if (message.type === 'token_expired') {
+      if (message.type === 'token_expired' || message.type === 'invalid_token') {
         console.log('Token expired, refreshing...');
         const newToken = await refreshToken();
         if (newToken) {
@@ -27,7 +28,7 @@ export const WebSocketProvider = ({ children }) => {
           console.log('WebSocket connection established with new token');
         } else {
           localStorage.removeItem('authtoken');
-          window.location.href = '/login';
+          navigate('/login');
         }
       } else if (message.type === 'other') {
         // Handle other message types
@@ -39,6 +40,7 @@ export const WebSocketProvider = ({ children }) => {
     wsManagerInstance.connect(handleMessage);
 
     const refreshToken = async () => {
+      return null;
       let refreshtokenUrl = "http://localhost:8001/api/token/refresh/"
       try {
         const response = await fetch(refreshtokenUrl, {

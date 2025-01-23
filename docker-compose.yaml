@@ -102,8 +102,8 @@ services:
   game_db:
     image: postgres:15-alpine
     container_name: game_db
-    ports:
-      - 5432:5432
+    expose:
+      - 5432
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password
@@ -130,8 +130,8 @@ services:
   chat_db:
     image: postgres:15-alpine
     container_name: chat_db
-    expose:
-      - 5432
+    ports:
+      - 5432:5432
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password

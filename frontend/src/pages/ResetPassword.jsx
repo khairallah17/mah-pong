@@ -82,7 +82,7 @@ export const ResetPassword = () => {
       });
       
       setTimeout(() => {
-        window.location.href = '/login';
+        navigate('/login');
       }, 2000);
       
     } catch (err) {
