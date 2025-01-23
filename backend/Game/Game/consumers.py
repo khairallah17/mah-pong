@@ -416,8 +416,7 @@ class Pvp2dConsumer(AsyncWebsocketConsumer):
                     'type': 'match_found',
                     'player_id': user_data['player_id'],
                     'names': user_data['names'],
-                    'game_state': user_data['game_state'],
-                    'role': user_data['role']
+                    'game_state': user_data['game_state']
                 }))
             pvp2d_user_channels[self.username] = self
             if self.invite_code:
@@ -785,7 +784,6 @@ tictactoe_pool = []
 tictactoe_matched_users = {}
 tictactoe_user_channels = {}
 tictactoe_game_states = {}
-tictactoe_disconnected_users = {}
 tictactoe_matchmaking_pool = []
 
 class TictactoeConsumer(AsyncWebsocketConsumer):
@@ -806,17 +804,6 @@ class TictactoeConsumer(AsyncWebsocketConsumer):
             if not self.username:
                 raise jwt.InvalidTokenError("Username not found in token")
             
-            if self.username in tictactoe_disconnected_users:
-                user_data = tictactoe_disconnected_users.pop(self.username)
-                user_data['task'].cancel()
-                logger.warning(f"Cancelled countdown task for {self.username}")
-                await self.send(text_data=json.dumps({
-                    'type': 'match_found',
-                    'player_id': user_data['player_id'],
-                    'names': user_data['names'],
-                    'game_state': user_data['game_state'],
-                    'role': user_data['role']
-                }))
             tictactoe_user_channels[self.username] = self
             if self.username not in tictactoe_matchmaking_pool and self.username not in tictactoe_matched_users:
                 tictactoe_matchmaking_pool.append(self.username)
@@ -881,9 +868,24 @@ class TictactoeConsumer(AsyncWebsocketConsumer):
             game_state['winner'] = self.check_winner(game_state['board'])
             game_state['currentPlayer'] = 'O' if game_state['currentPlayer'] == 'X' else 'X'
             if game_state['winner']:
+                await self.update_results(self.username)
+                await self.channel_layer.send(
+                    tictactoe_user_channels[tictactoe_matched_users[self.username]].channel_name,
+                    {
+                        'type': 'game_end',
+                        'game_state': game_state
+                    }
+                )
                 await self.send(text_data=json.dumps({'type': 'game_end', 'game_state': game_state}))
-                asyncio.create_task(self.update_results(self.username))
-            await self.send_game_state()
+            else:
+                await self.send_game_state()
+
+    async def game_end(self, event):
+        game_state = event['game_state']
+        await self.send(text_data=json.dumps({
+            'type': 'game_end',
+            'game_state': game_state
+        }))
 
     async def game_state(self, event):
         await self.send(text_data=json.dumps({
@@ -922,32 +924,18 @@ class TictactoeConsumer(AsyncWebsocketConsumer):
             if self.username in tictactoe_matchmaking_pool:
                 tictactoe_matchmaking_pool.remove(self.username)
             if self.username in tictactoe_matched_users:
-                countdown_task = asyncio.create_task(self.start_reconnect_countdown(self.username))
-                logger.warning(f"Starting countdown task for {self.username}")
-                tictactoe_disconnected_users[self.username] = {
-                    'task': countdown_task,
-                    'player_id': self.player_id,
-                    'names': {'player1': self.username, 'player2': tictactoe_matched_users[self.username]},
-                    'game_state': tictactoe_game_states[self.username],
-                    'role': 'X' if self.player_id == '1' else 'O'
-                }
+                opponent = tictactoe_matched_users.pop(self.username)
+                tictactoe_matched_users.pop(opponent, None)
+                if opponent in tictactoe_user_channels:
+                    await self.channel_layer.send(
+                        tictactoe_user_channels[opponent].channel_name,
+                        {
+                            'type': 'opponent_disconnected',
+                        }
+                    )
+                    await self.update_results(opponent)
             tictactoe_user_channels.pop(self.username, None)
         await super().disconnect(close_code)
-
-    async def start_reconnect_countdown(self, username):
-        start_time = asyncio.get_event_loop().time()
-        opponent = tictactoe_matched_users.get(username)
-        while opponent and opponent not in tictactoe_disconnected_users and \
-              asyncio.get_event_loop().time() - start_time < 5:
-            await asyncio.sleep(1)
-        if username in tictactoe_disconnected_users:
-            tictactoe_disconnected_users.pop(username)
-            if opponent and opponent not in tictactoe_disconnected_users:
-                await self.channel_layer.send(
-                    tictactoe_user_channels[opponent].channel_name,
-                    {'type': 'opponent_disconnected'}
-                )
-            await self.update_results(opponent)
 
     async def match_found(self, event):
         await self.send(text_data=json.dumps({

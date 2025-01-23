@@ -1,11 +1,23 @@
 import React, { useEffect, useState, useRef } from 'react';
+import { Navigate, useNavigate } from 'react-router-dom';
+
+function Cell({ value, onClick, className }) {
+  return (
+    <div onClick={onClick} className={`${className} text-black`}> {/* Added text-black to set text color */}
+      {value}
+    </div>
+  );
+}
 
 export default function Tictactoe() {
+  const navigate = useNavigate();
   const [board, setBoard] = useState(Array(9).fill(null));
   const [currentPlayer, setCurrentPlayer] = useState('X');
   const [winner, setWinner] = useState(null);
   const [role, setRole] = useState(null);
-  const [isMatched, setIsMatched] = useState(false); // New state
+  const [isMatched, setIsMatched] = useState(false);
+  const [showPopup, setShowPopup] = useState(false);
+  const [popupMessage, setPopupMessage] = useState('');
   const wsRef = useRef(null);
 
   useEffect(() => {
@@ -16,23 +28,15 @@ export default function Tictactoe() {
       const data = JSON.parse(evt.data);
       if (data.type === 'match_found') {
         setRole(data.role);
-        setIsMatched(true); // Set matched to true
+        setIsMatched(true);
       }
-      if (data.type === 'game_state') { // Changed from 'move' to 'game_state'
+      if (data.type === 'game_state') {
         setBoard(data.game_state.board);
-        setCurrentPlayer(data.game_state.currentPlayer); // Update currentPlayer from game_state
+        setCurrentPlayer(data.game_state.currentPlayer);
         setWinner(data.game_state.winner);
       }
-      if (data.type === 'game_end') { // Added handling for 'game_end'
-        if (data.game_state.winner && data.game_state.winner !== "Draw") {
-          alert(`${data.game_state.winner} Wins!`);
-        } else if (data.game_state.winner === "Draw") {
-          alert("It's a Draw!");
-        }
-        setBoard(Array(9).fill(null));
-        setCurrentPlayer('X');
-        setWinner(null);
-        setIsMatched(false);
+      if (data.type === 'game_end') {
+        handleGameEnd(data.game_state.winner);
       }
       if (data.type === 'error') {
         alert(data.message);
@@ -45,55 +49,91 @@ export default function Tictactoe() {
   }, [winner]);
 
   function handleCellClick(index) {
-    if (!winner && !board[index] && role === currentPlayer) { // Check if it's player's turn
+    if (!winner && !board[index] && role === currentPlayer) {
       wsRef.current.send(JSON.stringify({
         type: 'game_event',
         event: 'move',
-        position: index, // Changed from 'index' to 'position'
-        player_id: role, // Send player's role as player_id
+        position: index,
+        player_id: role,
       }));
     }
   }
 
-  function resetGame() {
-    setBoard(Array(9).fill(null));
-    setCurrentPlayer('X');
-    setWinner(null);
-    wsRef.current.send(JSON.stringify({
-      type: 'game_event',
-      event: 'reset_game',
-    }));
+  function handleGameEnd(winner) {
+    if (winner && winner !== "Draw") {
+      setPopupMessage(`${winner} Wins!`);
+    } else if (winner === "Draw") {
+      setPopupMessage("It's a Draw!");
+    }
+    setShowPopup(true);
+  }
+
+  function handlePlayAgain() {
+    winner = null;
+    setShowPopup(false);
+  }
+
+  function handleQuit() {
+    navigate('/dashboard');
   }
 
   return (
-    <div>
-      <h1>TicTacToe</h1>
-      {!isMatched && <div>Waiting for opponent...</div>} {/* Display waiting message */}
+    <div className="flex flex-col items-center">
+      <h1 className="text-3xl font-bold mb-4">TicTacToe</h1>
+      {!isMatched && <div className="text-lg">Waiting for opponent...</div>} {/* Display waiting message */}
       {isMatched && (
         <>
-          <div>Your Role: {role}</div>
+          <div className="mb-2">Your Role: {role}</div>
           {winner && winner !== "Draw" && (
-            <div>
+            <div className="mb-2">
               {winner} Wins!
-              <button onClick={resetGame}>Play Again</button>
+              <button onClick={resetGame} className="ml-2 px-4 py-2 bg-blue-500 text-white rounded">
+                Play Again
+              </button>
             </div>
           )}
           {winner === "Draw" && (
-            <div>
+            <div className="mb-2">
               It's a Draw!
-              <button onClick={resetGame}>Play Again</button>
+              <button onClick={resetGame} className="ml-2 px-4 py-2 bg-blue-500 text-white rounded">
+                Play Again
+              </button>
             </div>
           )}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 50px)' }}>
+          <div className="grid grid-cols-3 gap-2 mt-5">
             {board.map((cell, idx) => (
-              <div key={idx} onClick={() => handleCellClick(idx)}
-                   style={{ border: '1px solid black', width: 50, height: 50, textAlign: 'center' }}>
-                {cell}
-              </div>
+              <Cell
+                key={idx}
+                value={cell}
+                onClick={() => handleCellClick(idx)}
+                className="w-20 h-20 flex justify-center items-center bg-gray-200 border-2 border-gray-800 text-2xl cursor-pointer transition-colors duration-300 hover:bg-gray-300 sm:w-16 sm:h-16 sm:text-xl"
+              />
             ))}
           </div>
-          {role !== currentPlayer && !winner && <div>Waiting for opponent's move...</div>}
+          {role !== currentPlayer && !winner && <div className="mt-4 text-lg">Waiting for opponent's move...</div>}
         </>
+      )}
+
+      {showPopup && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white p-6 rounded shadow-lg">
+            <h2 className="text-xl mb-4">{popupMessage}</h2>
+            <div className="flex justify-end space-x-4">
+              <button
+                onClick={handlePlayAgain}
+                className="px-4 py-2 bg-green-500 text-white rounded"
+              >
+                Play Again
+              </button>
+              <button
+                onClick={handleQuit}
+                className="px-4 py-2 bg-red-500 text-white rounded"
+              >
+                Quit
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

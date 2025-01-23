@@ -5,8 +5,10 @@ import leftArrowImg from "../images/left.png";
 import rightArrowImg from "../images/right.png";
 import searchicon from "../images/searchIcon.png";
 import "../styles/SearchPage.css";
+import { useNavigate } from "react-router-dom";
 
 const FriendFinder = () => {
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [isFocused, setIsFocused] = useState(false);
   const cardContainerRef = useRef(null);
@@ -101,7 +103,7 @@ const FriendFinder = () => {
   };
 
   const handleUserClick = (username) => {
-    window.location.href = `http://localhost:5173/dashboard/profil/${username}`;
+    navigate(`http://localhost:5173/dashboard/profil/${username}`);
   };
 
   // Calculate visible users based on pagination

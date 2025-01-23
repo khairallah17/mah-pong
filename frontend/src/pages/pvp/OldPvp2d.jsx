@@ -4,11 +4,12 @@ import { useEffect, useRef, useState, useContext } from 'react';
 import GameSettingsButton from '../../components/pvp/Customize2d';
 import GameScore from '../../components/pvp/GameScore';
 import { ColorContext } from '../../context/ColorContext';
-import { Navigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import '../i18n';
 import { useTranslation } from 'react-i18next';
 
 function Pvp2d() {
+    const navigate = useNavigate();
     const { t } = useTranslation();
     const wsRef = useRef(null);
     const [{ score1, score2 }, setScores] = useState({ score1: 0, score2: 0 });
@@ -60,7 +61,7 @@ function Pvp2d() {
                         console.log('WebSocket connection established with new token');
                     } else {
                         localStorage.removeItem('authtoken');
-                        window.location.href = '/login';
+                        navigate('/login');
                     }
                 }
                 if (message.type === 'match_found') {
@@ -471,7 +472,7 @@ function Pvp2d() {
 
             setTimeout(() => {
                 document.body.removeChild(popup);
-                window.location.href = '/dashboard';
+                navigate('/dashboard');
             }, 3000);
         }
         if (isPausedRef.current && document.visibilityState === 'visible' && event !== 'game_over' && event !== 'score_update') {
@@ -598,7 +599,7 @@ function Pvp2d() {
                     )}
                     {matchId && (
                         <button
-                            onClick={() => window.location.href = '/dashboard/tournament/live'}
+                            onClick={() => navigate('/dashboard/tournament/live')}
                             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors mt-4"
                         >
                             {t('Back to Tournament')}

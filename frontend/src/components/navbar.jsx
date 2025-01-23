@@ -6,9 +6,10 @@ import NotificationDisplay from './NotificationDisplay';
 import ButtonLng from "../components/ButtonLng";
 import '../i18n';
 import { useTranslation } from 'react-i18next';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 
 const Navbar = () => {
+  const navigate = useNavigate();
   const [user, setUser] = useState({ 
     username: '', 
     email: '', 
@@ -96,7 +97,7 @@ const Navbar = () => {
   };
 
   const handleUserClick = (username) => {
-    window.location.href = `http://localhost:5173/dashboard/profil/${username}`;
+    navigate(`http://localhost:5173/dashboard/profil/${username}`);
   };
 
   useEffect(() => {

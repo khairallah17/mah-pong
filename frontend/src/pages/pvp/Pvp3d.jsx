@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { gsap } from 'gsap';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import GameScore from '../../components/pvp/GameScore';
+import { Navigate } from 'react-router-dom';
 
 function Pve3d() {
     const gameContainerRef = useRef(null);
@@ -54,7 +55,7 @@ function Pve3d() {
                         console.log('WebSocket connection established with new token');
                     } else {
                         localStorage.removeItem('authtoken');
-                        window.location.href = '/login';
+                        Navigate('/login');
                     }
                 }
                 if (message.type === 'match_found') {
@@ -674,7 +675,7 @@ function Pve3d() {
                             winnerRef.current = null;
                             restartGame();
                         }}>Play Again</button>
-                        <button onClick={() => window.location.href = '/Dashboard'}>Quit</button>
+                        <button onClick={() => Navigate('/Dashboard')}>Quit</button>
                     </div>
                 )}
             </div>

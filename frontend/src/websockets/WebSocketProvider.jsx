@@ -1,9 +1,11 @@
 import React, { createContext, useEffect, useState } from "react";
 import WebSocketManager from "./WebSocketManager";
+import { Navigate, useNavigate } from "react-router-dom";
 
 export const WebSocketContext = createContext();
 
 export const WebSocketProvider = ({ children }) => {
+  const navigate = useNavigate();
   const [notifications, setNotifications] = useState([]);
   const accessToken = JSON.parse(localStorage.getItem('authtoken'))?.access;
   const webSocketUrl = 'ws://localhost:8002/ws/notifications/?token=' + accessToken;
@@ -26,7 +28,7 @@ export const WebSocketProvider = ({ children }) => {
           console.log('WebSocket connection established with new token');
         } else {
           localStorage.removeItem('authtoken');
-          window.location.href = '/login';
+          navigate('/login');
         }
       } else if (message.type === 'other') {
         // Handle other message types

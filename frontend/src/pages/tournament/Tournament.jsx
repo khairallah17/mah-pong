@@ -1,6 +1,6 @@
 import { React, useState, useRef, useEffect, useContext } from 'react'
 import { Trophy } from 'lucide-react'
-import { useNavigate, useLocation } from 'react-router-dom'
+import { useNavigate, useLocation, Navigate } from 'react-router-dom'
 import { WebSocketContext } from '../../websockets/WebSocketProvider'
 import '../../i18n';
 import { useTranslation } from 'react-i18next';
@@ -51,7 +51,7 @@ export default function Tournament() {
             console.log('WebSocket connection established with new token');
           } else {
             localStorage.removeItem('authtoken');
-            window.location.href = '/login';
+            navigate('/login');
           }
         } else if (message.type === 'tournament_update') {
           setMatches(message.matches);

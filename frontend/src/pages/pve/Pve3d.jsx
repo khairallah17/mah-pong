@@ -3,9 +3,10 @@ import { useEffect, useRef, useState } from 'react';
 import { gsap } from 'gsap';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import GameScore from '../../components/pvp/GameScore';
-import { ScrollRestoration } from 'react-router-dom';
+import { ScrollRestoration, useNavigate } from 'react-router-dom';
 
 function Pve3d() {
+    const navigate = useNavigate();
     const gameContainerRef = useRef(null);
     const rendererRef = useRef(null);
     const paddle2Ref = useRef(null);
@@ -490,7 +491,7 @@ function Pve3d() {
                             border: 'none',
                             borderRadius: '5px',
                             cursor: 'pointer'
-                        }} onClick={() => window.location.reload()}>Play Again</button>
+                        }} onClick={() => navigate(0)}>Play Again</button>
                         <button style={{
                             margin: '10px',
                             padding: '10px 20px',
@@ -499,7 +500,7 @@ function Pve3d() {
                             border: 'none',
                             borderRadius: '5px',
                             cursor: 'pointer'
-                        }} onClick={() => window.location.href = '/Dashboard'}>Quit</button>
+                        }} onClick={() => navigate('/Dashboard')}>Quit</button>
                     </div>
                 )}
             </div>
