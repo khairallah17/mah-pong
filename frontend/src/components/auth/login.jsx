@@ -19,6 +19,7 @@ import ButtonLng from "../../components/ButtonLng";
 
 const LoginForm = ({setSwap}) => {
 
+    console.log("in the login page ")
     const { loginUsers, GoogleLogin, Intra42Login } = useContext(AuthContext)
     
     const {

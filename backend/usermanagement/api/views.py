@@ -634,6 +634,7 @@ class   Confirm_reset_Password(View):
 #                 status=status.HTTP_400_BAD_REQUEST
 #             )
 
+
 class LogoutViews(APIView):
     permission_classes = [IsAuthenticated]
 

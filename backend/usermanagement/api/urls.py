@@ -36,4 +36,5 @@ urlpatterns = [
     path('friends/remove/', views.RemoveFriendView.as_view(), name='friend-remove'),
     path('user-online/', views.UserOnlineView.as_view(), name='user-online'),
     path('user-offline/', views.UserOfflineView.as_view(), name='user-offline'),
+
 ]

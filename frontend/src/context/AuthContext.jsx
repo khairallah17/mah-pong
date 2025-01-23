@@ -341,6 +341,7 @@ export const AuthProvider = ({ children }) => {
 
     const logoutUsers = async () => {
         try {
+
             const authData = localStorage.getItem('authtoken');
             if (!authData) {
                 console.log('No auth token found');
@@ -579,14 +580,6 @@ export const AuthProvider = ({ children }) => {
     const contextData = {
         authtoken, setAuthToken, user, setUser, loginUsers, registerUsers, logoutUsers, GoogleLogin, Intra42Login
     }
-
-    // useEffect(() => {
-    //     if (authtoken) {
-    //         localStorage.setItem("authtoken", JSON.stringify(authtoken));
-    //     } else {
-    //         localStorage.removeItem("authtoken");
-    //     }
-    // }, [authtoken]);
 
     // Returning My context Provider
     return ( 

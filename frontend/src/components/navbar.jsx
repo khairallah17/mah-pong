@@ -194,6 +194,7 @@ const Navbar = () => {
         </div>
 
         <div className="flex items-center gap-4">
+          <ButtonLng />
           <div 
             className="p-4 rounded-md text-white/80 focus:outline-none"
             aria-label="Notifications"

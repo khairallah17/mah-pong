@@ -5,7 +5,6 @@ import AuthContext from "../context/AuthContext";
 const ProtectRouter = () => {
     
     const { user, authtoken } = useContext(AuthContext);
-
     if (!authtoken) {
         return <Navigate to="/login" replace />;
     }

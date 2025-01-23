@@ -148,7 +148,7 @@ const Games = () => {
       title: t('Local Multiplayer'),
       cards: [
         {
-          title: "Local 2D",
+          title: t("Local 2D"),
           description: t('Play with friends in local 2D multiplayer matches.'),
           accentColor: "border-blue-500",
           buttonColor: "bg-gradient-to-r from-blue-600 to-blue-400",

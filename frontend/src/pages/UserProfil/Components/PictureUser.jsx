@@ -296,6 +296,28 @@ const PictureUser = () => {
     }
   };
 
+  const handleRemoveFriend = async () => {
+    try {
+      const response = await fetch('http://localhost:8001/api/friends/remove/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ username })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to remove friend');
+      }
+
+      setFriendStatus('none');
+    } catch (err) {
+      console.error('Error removing friend:', err);
+      setError(err.message);
+    }
+  };
+
   const renderActionButtons = () => {
     if (currentUser === profil?.username) {
       return (
