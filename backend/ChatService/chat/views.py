@@ -4,7 +4,7 @@ from django.shortcuts import render # type: ignore
 from rest_framework.views import APIView # type: ignore
 from rest_framework.decorators import api_view, permission_classes, authentication_classes # type: ignore
 from rest_framework.response import Response # type: ignore
-from .models import Message, Conversation
+from .models import Message, Conversation, BlockList
 from .models import Message, CustomUser as User
 from .serializers import MessageSerializer, UserSerializer, ConversationSerializer
 from rest_framework import authentication, permissions # type: ignore
@@ -13,6 +13,9 @@ from rest_framework.authentication import SessionAuthentication, TokenAuthentica
 from django.db.models import Q # type: ignore
 from django.contrib.auth.models import AnonymousUser # type: ignore
 from django.shortcuts import get_object_or_404  # type: ignore
+from uuid import UUID
+from rest_framework import status
+from django.core.exceptions import ValidationError
 import logging
 import jwt
 
@@ -170,10 +173,6 @@ def get_conversation(request, id):
     #     return Response({"error": str(e)}, status=500)
 
 
-@api_view(['GET'])
-def test(request):
-    test = "fasdf"
-    return Response(test)
 
 @api_view(['POST'])
 def send_message(request):
@@ -199,5 +198,96 @@ def send_message(request):
         "content": message.content,
         "timestamp": message.timestamp
     })
-# class ConversationView(ApiView):
-#     pass
+
+@api_view(['POST'])
+def block_user(request, user_id):
+    try:
+        # Authenticate user
+        auth_header = request.headers.get('Authorization')
+        if not auth_header:
+            return Response({"error": "Authorization header missing"}, status=400)
+        token = auth_header.split(' ')[1]
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=['HS256'])
+        username = payload.get('username')  
+        if not username:
+            raise jwt.InvalidTokenError("Username not found in token.")
+        
+        # Get the requesting user
+        requesting_user = User.objects.get(username=username)
+        
+        # Protect fetching the target user
+        try:
+            target_user = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            return Response({"error": "Target user not found"}, status=404)
+        except ValidationError:
+            return Response({"error": "Invalid user ID format"}, status=400)
+        
+        # Get or create blocklist for the requesting user
+        blocklist, created = BlockList.objects.get_or_create(user=requesting_user)
+        
+        action = request.data.get('action')
+        if action == 'block':
+            # Block the target user
+            blocklist.block_user(target_user)
+            return Response({"message": f"You have blocked {target_user.username}."})
+        elif action == 'unblock':
+            # Unblock the target user
+            blocklist.unblock_user(target_user)
+            return Response({"message": f"You have unblocked {target_user.username}."})
+        else:
+            return Response({"error": "Invalid action"}, status=400)
+    
+    except jwt.ExpiredSignatureError:
+        return Response({"error": "Token has expired"}, status=401)
+    except jwt.InvalidTokenError as e:
+        return Response({"error": str(e)}, status=401)
+    except Exception as e:
+        return Response({"error": str(e)}, status=500)
+
+
+
+# @api_view(['GET'])
+# def get_block_status(request, user_id):
+#     # user = User.objects.get(id=user_id).exist()
+#     # if (not user):
+#     #     return False
+#     # if (BlockList.is_user_blocked(User.objects.get(id=user_id))):
+#     #     return True
+#     return False
+
+@api_view(['GET'])
+def get_block_status(request, user_id):
+    try:
+        auth_header = request.headers.get('Authorization')
+        if not auth_header:
+            return Response({"error": "Authorization header missing"}, status=400)
+        token = auth_header.split(' ')[1]
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=['HS256'])
+        username = payload.get('username')
+        if not username:
+            raise jwt.InvalidTokenError("Username not found in token.")
+        user1 = User.objects.get(username=username)
+        try:
+            user2 = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            logger.error("User with id %s not found", user_id)
+            return Response({"error": "User not found"}, status=404)
+        except ValidationError:
+            logger.error("Invalid UUID format for user_id: %s", user_id)
+            return Response({"error": "Invalid UUID format for user_id"}, status=400)
+
+        is_user1_blocking = BlockList.objects.filter(user=user1, blocked_users=user2).exists()
+        is_user2_blocking = BlockList.objects.filter(user=user2, blocked_users=user1).exists()
+
+        return Response({
+            "user1_blocking_user2": is_user1_blocking,
+            "user2_blocking_user1": is_user2_blocking,
+        })
+
+    except ValidationError:
+        return Response({"error": "Invalid UUID format for user2_id"}, status=400)
+
+    except Exception as e:
+        return Response({"error": str(e)}, status=500)
+
