@@ -1,8 +1,11 @@
 import { React, useState, useEffect } from 'react';
 import { Trophy } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import '../../i18n';
+import { useTranslation } from 'react-i18next';
 
 export default function LocalTournament() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const [players, setPlayers] = useState({ player1: '', player2: '', player3: '', player4: '' });
@@ -111,18 +114,18 @@ export default function LocalTournament() {
         {!tournamentStarted ? (
           <div className="text-center mb-12">
             <h1 className="text-6xl font-bold text-white tracking-wider zen-dots" style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.3)' }}>
-              LOCAL TOURNAMENT
+              {t('LOCAL TOURNAMENT')}
             </h1>
             <div className="w-48 h-1 bg-white mx-auto mt-2"></div>
             <div className="mt-8 space-y-4">
-              {['player1', 'player2', 'player3', 'player4'].map((player, index) => (
+              {[t('player')+'1', t('player')+'2', t('player')+'3', t('player')+'4'].map((player, index) => (
                 <div key={index} className="flex items-center justify-center space-x-2">
                   <input
                     type="text"
                     name={player}
                     value={players[player]}
                     onChange={handleInputChange}
-                    placeholder={`Enter alias for ${player}`}
+                    placeholder={`${t('Enter alias for')} ${player}`}
                     className="px-4 py-2 bg-gray-200 rounded-lg w-1/2"
                   />
                 </div>
@@ -132,7 +135,7 @@ export default function LocalTournament() {
               onClick={startTournament}
               className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors mt-4"
             >
-              Start Tournament
+              {t('Start Tournament')}
             </button>
           </div>
         ) : (
@@ -140,7 +143,7 @@ export default function LocalTournament() {
             {/* Tournament Title */}
             <div className="text-center mb-12">
               <h1 className="text-6xl font-bold text-white tracking-wider zen-dots" style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.3)' }}>
-                TOURNAMENT
+                {t('TOURNAMENT')}
               </h1>
               <div className="w-48 h-1 bg-white mx-auto mt-2"></div>
             </div>
@@ -225,14 +228,14 @@ export default function LocalTournament() {
             onClick={handleQuit}
             className="px-4 py-2 bg-red-500 text-white rounded-md flex items-center gap-2"
           >
-            Quit
+            {t('Quit')}
           </button>
           {tournamentStarted && (
             <button
               onClick={startNextMatch}
               className="px-4 py-2 bg-green-500 text-white rounded-md flex items-center gap-2"
             >
-              Start Match
+              {t('Start Match')}
             </button>
           )}
         </div>
@@ -240,13 +243,13 @@ export default function LocalTournament() {
 
       {champion && (
         <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-gray-900/95 p-8 rounded-lg text-center">
-          <h2 className="text-2xl font-bold text-white mb-4">Congratulations {champion}!</h2>
-          <p className="text-white mb-4">You are the champion!</p>
+          <h2 className="text-2xl font-bold text-white mb-4">{t('Congratulations')} {champion}!</h2>
+          <p className="text-white mb-4">{t('You are the champion!')}</p>
           <button
             onClick={() => navigate('/dashboard')}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
           >
-            Go to Dashboard
+            {t('Go to Dashboard')}
           </button>
         </div>
       )}

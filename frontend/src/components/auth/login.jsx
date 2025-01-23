@@ -33,7 +33,7 @@ const LoginForm = ({setSwap}) => {
             const res = await loginUsers(data.email, data.password)
             
         } catch (error) {
-            toast.error("incorrect username or password", {
+            toast.error(t("incorrect username or password"), {
                 position: "top-right",
                 autoClose: 5000,
                 hideProgressBar: false,
@@ -95,7 +95,7 @@ const LoginForm = ({setSwap}) => {
                             {errors.password?.message}
                         </span>
                     }
-                    <NavLink to="/reset-password" className='text-red-500 uppercase hover:underline'>{t('forget password?')}</NavLink>
+                    <NavLink to="/verify-email" className='text-red-500 uppercase hover:underline'>{t('forget password?')}</NavLink>
                 </div>
 
                 <button type="submit" className="bg-black w-1/4 self-center rounded-lg py-2 font-bold text-2xl hover:bg-white hover:text-black">{t('SIGN IN')}</button>

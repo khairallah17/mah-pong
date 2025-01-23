@@ -1,7 +1,13 @@
 import React, { useState } from 'react';
-import Swal from 'sweetalert2';
+import { useNavigate } from 'react-router-dom';
+import { Lock, Eye, EyeOff, KeyRound } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { toast } from 'react-toastify';
 
 export const ResetPassword = () => {
+
+  const navigate = useNavigate();
+
   const [showPassword, setShowPassword] = useState({
     new: false,
     confirm: false
@@ -9,7 +15,7 @@ export const ResetPassword = () => {
   const [new_password, setNew_password] = useState('');
   const [confirm_password, setConfirm_password] = useState('');
 
-  // Extract parameters from URL
+  // Extracting parameters from URL
   const params = new URLSearchParams(window.location.search);
   const token = params.get('token');
   const uidb64 = params.get('uidb64');
@@ -21,9 +27,19 @@ export const ResetPassword = () => {
     console.log('token:', token);
   
     if (new_password !== confirm_password) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Passwords do not match',
+      toast.error('Passwords do not match', {
+        position: "top-right",
+        autoClose: 5000,
+        theme: "dark",
+      });
+      return;
+    }
+
+    if (new_password.length < 8) {
+      toast.error('Password must be at least 8 characters long', {
+        position: "top-right",
+        autoClose: 5000,
+        theme: "dark",
       });
       return;
     }
@@ -59,10 +75,10 @@ export const ResetPassword = () => {
       }
   
       // Success
-      Swal.fire({
-        icon: 'success',
-        title: 'Success!',
-        text: 'Your password has been reset successfully.',
+      toast.success('Password reset successfully', {
+        position: "top-right",
+        autoClose: 5000,
+        theme: "dark",
       });
       
       setTimeout(() => {
@@ -71,10 +87,10 @@ export const ResetPassword = () => {
       
     } catch (err) {
       console.error('Reset password error:', err);
-      Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: err.message || 'Failed to reset password',
+      toast.error(errorData.message || 'Failed to reset password', {
+        position: "top-right",
+        autoClose: 5000,
+        theme: "dark",
       });
     }
   };
@@ -87,24 +103,28 @@ export const ResetPassword = () => {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-root-background object-cover object-center text-white  px-4 py-12 sm:px-6 lg:px-8">
-      <div className="w-full max-w-md space-y-8">
-        <div className="text-center">
-          <h2 className="mt-6 text-3xl font-bold tracking-tight">
-            Reset Your Password
-          </h2>
-          <p className="mt-2 text-sm ">
-            Please enter your new password below
+    <div className="min-h-screen bg-gradient-to-br from-navy-950 via-navy-900 to-navy-950 flex items-center justify-center p-4">
+      <motion.div 
+        initial={{ opacity: 0, y: 50 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="bg-white bg-navy-800/70 backdrop-blur-sm rounded-2xl shadow-2xl border border-white/10 w-full max-w-md p-8 space-y-6"
+      >
+        <div className="flex justify-center mb-6">
+          <KeyRound className="w-16 h-16 text-indigo-400 animate-pulse" />
+        </div>
+        
+        <div className="text-center space-y-4">
+          <h1 className="text-3xl font-bold text-black">Reset Password</h1>
+          <p className="text-black leading-relaxed">
+            Create a strong, unique password to secure your account
           </p>
         </div>
 
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}> 
+        <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-4">
             <div>
-              <label htmlFor="new_password" className="block text-sm font-medium ">
-                New Password
-              </label>
-              <div className="relative mt-1">
+              <div className="relative">
                 <input
                   type={showPassword.new ? 'text' : 'password'}
                   id="new_password"
@@ -112,59 +132,71 @@ export const ResetPassword = () => {
                   required
                   value={new_password}
                   onChange={(e) => setNew_password(e.target.value)}
-                  className="block w-full rounded-md border border-gray-300 px-3 py-2 pr-10 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                  placeholder="Enter your new password"
+                  className="w-full bg-navy-700/50 text-black border-b-2 border-black/50 focus:border-indigo-600 py-3 pr-10 focus:outline-none transition-colors duration-300"
+                  placeholder="Enter new password"
                 />
                 <button
                   type="button"
                   onClick={() => togglePasswordVisibility('new')}
                   className="absolute inset-y-0 right-0 flex items-center pr-3"
                 >
-                  <span className="text-gray-500">
-                    {showPassword.new ? '🔓' : '🔒'}
-                  </span>
+                  {showPassword.new ? (
+                    <Eye className="w-5 h-5 text-gray-600" />
+                  ) : (
+                    <EyeOff className="w-5 h-5 text-gray-600" />
+                  )}
                 </button>
               </div>
             </div>
 
             <div>
-              <label htmlFor="confirm_password" className="block text-sm font-medium text-gray-700">
-                Confirm New Password
-              </label>
-              <div className="relative mt-1">
+              <div className="relative">
                 <input
+                  type={showPassword.confirm ? 'text' : 'password'}
                   id="confirm_password"
                   name="confirm_password"
-                  type={showPassword.confirm ? 'text' : 'password'}
                   required
                   value={confirm_password}
                   onChange={(e) => setConfirm_password(e.target.value)}
-                  className="block w-full rounded-md border border-gray-300 px-3 py-2 pr-10 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                  placeholder="Confirm your new password"
+                  className="w-full bg-navy-700/50 text-black border-b-2 border-black/50 focus:border-indigo-600 py-3 pr-10 focus:outline-none transition-colors duration-300"
+                  placeholder="Confirm new password"
                 />
                 <button
                   type="button"
                   onClick={() => togglePasswordVisibility('confirm')}
                   className="absolute inset-y-0 right-0 flex items-center pr-3"
                 >
-                  <span className="text-gray-500">
-                    {showPassword.confirm ? '🔓' : '🔒'}
-                  </span>
+                  {showPassword.confirm ? (
+                    <Eye className="w-5 h-5 text-gray-600" />
+                  ) : (
+                    <EyeOff className="w-5 h-5 text-gray-600" />
+                  )}
                 </button>
               </div>
             </div>
           </div>
 
-          <div>
+          <div className="mt-6">
             <button
               type="submit"
-              className="group relative flex w-full justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+              className="w-full flex items-center justify-center gap-3 bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-lg transition-all duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
             >
+              <Lock className="w-5 h-5" />
               Reset Password
             </button>
           </div>
         </form>
-      </div>
+
+        <div className="text-center text-sm text-gray-500 mt-4">
+          Remembered your password? 
+          <button 
+            onClick={() => navigate('/login')} 
+            className="text-indigo-400 ml-1 hover:underline"
+          >
+            Back to Login
+          </button>
+        </div>
+      </motion.div>
     </div>
   );
 };

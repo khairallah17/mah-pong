@@ -580,13 +580,13 @@ export const AuthProvider = ({ children }) => {
         authtoken, setAuthToken, user, setUser, loginUsers, registerUsers, logoutUsers, GoogleLogin, Intra42Login
     }
 
-    useEffect(() => {
-        if (authtoken) {
-            localStorage.setItem("authtoken", JSON.stringify(authtoken));
-        } else {
-            localStorage.removeItem("authtoken");
-        }
-    }, [authtoken]);
+    // useEffect(() => {
+    //     if (authtoken) {
+    //         localStorage.setItem("authtoken", JSON.stringify(authtoken));
+    //     } else {
+    //         localStorage.removeItem("authtoken");
+    //     }
+    // }, [authtoken]);
 
     // Returning My context Provider
     return ( 

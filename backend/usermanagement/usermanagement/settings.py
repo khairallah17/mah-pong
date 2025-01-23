@@ -64,7 +64,6 @@ INSTALLED_APPS = [
     "django_otp",
     "django_otp.plugins.otp_totp",
     "rest_framework_simplejwt.token_blacklist",
-
 ]
 
 SITE_ID = 1
@@ -252,7 +251,7 @@ SIMPLE_JWT = {
 
 
 # SMTP GMAIL
-
+#include to .env
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_POST = 587

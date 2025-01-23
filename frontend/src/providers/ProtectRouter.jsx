@@ -9,7 +9,6 @@ const ProtectRouter = () => {
     if (!authtoken) {
         return <Navigate to="/login" replace />;
     }
-    
     return <Outlet />;
 
 };

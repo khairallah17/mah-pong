@@ -3,6 +3,8 @@ import { NavLink } from "react-router-dom"
 import { useAuthContext } from "../hooks/useAuthContext"
 import { useSidebarContext } from "../hooks/useSidebar"
 import SidebarList from "./sidebarList"
+import '../i18n';
+import { useTranslation } from 'react-i18next';
 
 const navigation = [
   {
@@ -20,7 +22,7 @@ const navigation = [
   {
     icon: <Trophy size={20} />,
     root: "Tournament",
-    link: "dashboard/tournament",
+    link: "dashboard/tournament/tournamentPage",
     list: []
   },
   {
@@ -44,6 +46,7 @@ const navigation = [
 ]
 
 const Sidebar = () => {
+  const { t } = useTranslation();
   const { logoutUsers } = useAuthContext()
   const { open } = useSidebarContext()
 
@@ -67,7 +70,7 @@ const Sidebar = () => {
               key={index} 
               link={item.link} 
               icon={item.icon} 
-              item={item.root} 
+              item={t(item.root)} 
               list={item.list} 
             />
           ))}

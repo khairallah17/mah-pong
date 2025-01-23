@@ -1,4 +1,5 @@
 import ProtectRouter from "./providers/ProtectRouter"
+import ProtectAuthRouter from "./providers/ProtectAuthRouter"
 import Authentication from "./pages/authentication.jsx";
 import Dashboard from './pages/dashboard';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
@@ -9,13 +10,16 @@ import Pve3d from './pages/pve/Pve3d';
 import Pvp2d from './pages/pvp/Pvp2d';
 import Pve2d from './pages/pve/Pve2d';
 import Pvp3d from './pages/pvp/Pvp3d';
+import Tictactoe from "./pages/tictactoe/Tictactoe.jsx";
 import Local2d from "./pages/local/Local2d";
 import Profile from './pages/Profile.jsx'
 import Profil from './pages/Profil.jsx'
 import Tournament from './pages/tournament/Tournament'
 import TournamentHome from './pages/tournament/tournamentHome';
 import LocalTournament from './pages/tournament/LocalTournament';
+import TournamentPage from './pages/tournament/tournamentPage.jsx';
 import Chat from "./pages/chat.jsx";
+import ResetEmailSend from "./pages/ResetEmailSend.jsx";
 import Game from "./pages/game.jsx";
 import Settings from "./pages/settings.jsx";
 import { ColorProvider } from "./context/ColorContext.jsx";
@@ -32,6 +36,8 @@ import NotFound from "./pages/404.jsx";
 import useOnlineStatus from "./hooks/useOnlineStatus.jsx"
 
 
+import "./App.css"
+
 function App() {
   // const { t } = useTranslation();
   useOnlineStatus();
@@ -42,9 +48,13 @@ function App() {
 
             <Routes>
               <Route path="/" element={<HomePage />} />
-              <Route path="/login" element={<Authentication />} />
-              <Route path="/verify-email" element={<VerifyPsdEmail />} />
-              <Route path="password-reset/confirm" element={<ResetPassword />} />
+
+              <Route element={<ProtectAuthRouter />}>
+                <Route path="/login" element={<Authentication />} />
+                <Route path="/verify-email" element={<VerifyPsdEmail />} />
+                <Route path="/password-reset/confirm" element={<ResetPassword />} />
+                <Route path="/email-check" element={<ResetEmailSend />} />
+              </Route>
 
               <Route element={<ProtectRouter />}>
                 <Route element={<Layout/>}>
@@ -59,12 +69,14 @@ function App() {
                       <Route path="pvp3d" element={<Pvp3d />} />
                       <Route path="pvp2d" element={<ColorProvider><Pvp2d /></ColorProvider>} />
                       <Route path="pve2d" element={<ColorProvider><Pve2d /></ColorProvider>} />
+                      <Route path="tictactoe" element={<Tictactoe />} />
                       <Route path="local2d" element={ <ColorProvider><Local2d /></ColorProvider> } />
                     </Route>
                     
                     <Route path="profil/:username" element={<Profil />} />
                     
                     <Route path='tournament'>
+                      <Route path='tournamentPage' element={<TournamentPage/>}/>
                       <Route index element={<TournamentHome/>}/>
                       <Route path='live' element={<Tournament/>}/>
                       <Route path='local' element={<LocalTournament/>}/>

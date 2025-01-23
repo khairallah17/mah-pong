@@ -109,7 +109,7 @@ const HomePage = () => {
   const { t } = useTranslation();
 
   return (
-    <div className="homepage">
+    <div className="homepage bg-no-repeat bg-cover text-white">
       {/* Navbar */}
       <header>
         <nav className="fixed top-0 left-0 flex items-center justify-between w-full h-16 bg-gradient-to-r from-[#0908304A] to-[#1A195B4A] backdrop-blur-md z-50">

@@ -69,9 +69,6 @@ function Pve3d() {
                 } else if (message.type === 'game_event') {
                     if (message.event === 'restart') restartGame(new THREE.Vector3(0, 1, 0));
                     else updateScene(message.event, message.position);
-                } else if (message.type === 'game_state') {
-                    //gameStateRef.current = message.game_state;
-                    //setGameState(message.game_state);
                 }
             };
             wsRef.current.onclose = () => console.log('WebSocket connection closed');
@@ -136,7 +133,6 @@ function Pve3d() {
         if (event === 'player_move') {
             paddle2Ref.current.position.set(position.x, position.y, position.z);
         }
-        // animatePaddleRotation(paddle1Ref.current, paddle2Ref.current);
     };
     function animatePaddleRotation(paddle1, paddle2) {
         let rotationy = Math.atan2(Math.abs(paddle1.position.y), paddle1.position.x * 5);
@@ -179,7 +175,6 @@ function Pve3d() {
         if (!rendererRef.current && isMatched) {
             const gameContainer = gameContainerRef.current;
 
-            // Scene Setup
             const scene = new THREE.Scene();
             const camera = createCamera();
             const renderer = createRenderer(gameContainer);
@@ -187,7 +182,6 @@ function Pve3d() {
             const mouse = new THREE.Vector2();
             let isListening = true;
 
-            // Objects
             let paddle1, paddle2, ball, table, grid;
             let velocity = INITIAL_VELOCITY.clone();
             let paddlePositionDiff = new THREE.Vector3(0, 0, 0);
@@ -196,7 +190,6 @@ function Pve3d() {
             velocityRef.current = velocity;
             paddlePositionDiffRef.current = paddlePositionDiff;
 
-            // Load Scene and Start Animation
             loadScene(scene, (objects) => {
                 ({ paddle1, paddle2, ball, table, grid } = objects);
                 paddle2Ref.current = paddle2;
@@ -281,7 +274,6 @@ function Pve3d() {
                 renderer,
                 scene
             ) {
-                // document.addEventListener('visibilitychange', handleVisibilityChange);
                 window.addEventListener('keydown', onRestartKey);
                 window.addEventListener('click', () => onToggleListening());
                 window.addEventListener('mousemove', (event) => onMouseMove(event, mouse, paddle1, camera, table));
@@ -380,7 +372,6 @@ function Pve3d() {
             }
 
             function animate() {
-                // updatePaddle2AI();
                 if (isPausedRef.current) {
                     requestAnimationFrame(animate);
                     renderer.render(scene, camera);
@@ -390,22 +381,12 @@ function Pve3d() {
                 applyGravity();
                 moveBall();
 
-                //applyAirResistance();
 
                 handleCollisions();
 
                 renderer.render(scene, camera);
                 requestAnimationFrame(animate);
             }
-
-            // function updatePaddle2AI() {
-            //     const speed = 3;
-            //     const XdistanceToBall = ball.position.x - paddle2.position.x;
-            //     const speedModifier = Math.min(Math.abs(XdistanceToBall) / 10, 1);
-            //     paddle2.position.x += Math.sign(XdistanceToBall) * speed * speedModifier;
-            //     // Optionally enable Y-axis movement
-            //     // paddle2.position.y += Math.sign(YdistanceToBall) * speed * speedModifier;
-            // }
 
             function moveBall() {
                 ball.position.x += velocity.x;
@@ -431,7 +412,6 @@ function Pve3d() {
                 }
 
                 if (ball.position.z > 1.5) {
-                    // Player 1 scores
                     setScores(prevScores => {
                         const newScores = { score1: prevScores.score1 + 1, score2: prevScores.score2 };
                         if (newScores.score2 >= 10) {
@@ -464,7 +444,6 @@ function Pve3d() {
                         return newScores;
                     });
                 } else if (ball.position.z < -1.5) {
-                    // Player 2 scores
                     setScores(prevScores => {
                         const newScores = { score1: prevScores.score1, score2: prevScores.score2 + 1 };
                         if (newScores.score2 >= 10) {
@@ -508,41 +487,14 @@ function Pve3d() {
                     handlePaddle1Collision(ballBox, paddle1Box);
                 }
 
-                //handleSpin();
-
                 if (ballBox.intersectsBox(paddle2Box)) {
                     handlePaddle2Collision(ballBox, paddle2Box);
                 }
 
-                // if (ballBox.intersectsBox(gridBox)) {
-                //     handleGridCollision(ballBox, gridBox);
-                // }
-            }
-
-            function handleSpin() {
-                if (firstIntersectionPosition !== null && lastIntersectionPosition !== null) {
-                    paddlePositionDiff = lastIntersectionPosition.clone().sub(firstIntersectionPosition);
-                    //set max value for paddlePositionDiff
-                    if (Math.abs(paddlePositionDiff.x) > 13)
-                        paddlePositionDiff.x = Math.sign(paddlePositionDiff.x) * 13;
-                    if (Math.abs(paddlePositionDiff.z) > 13)
-                        paddlePositionDiff.z = Math.sign(paddlePositionDiff.z) * 13;
-                    console.log(paddlePositionDiff);
-                    firstIntersectionPosition = null;
-                    lastIntersectionPosition = null;
-                    wsRef.current.send(JSON.stringify({
-                        type: 'game_event',
-                        event: 'spin',
-                        spin: { x: paddlePositionDiff.x, y: paddlePositionDiff.y, z: paddlePositionDiff.z },
-                    }));
-                }
-                velocity.x -= paddlePositionDiff.x / 200;
-                velocity.z -= paddlePositionDiff.z / 500;
             }
 
             function handleTableCollision(ballBox, tableBox) {
                 paddlePositionDiff.set(0, 0, 0);
-                // Move the ball out of the intersection
                 while (ballBox.intersectsBox(tableBox)) {
                     ball.position.y += 0.01;
                     ballBox.setFromObject(ball);
@@ -563,13 +515,11 @@ function Pve3d() {
                 velocity.y = 0.018;
                 velocity.x = -mapRange(relativePosition.x, { min: -TABLE_DIMENSIONS.width / 2, max: TABLE_DIMENSIONS.width / 2 }, { min: -0.04, max: 0.04 });
 
-                //animatePaddle1();
                 if (velocity.x < 0.015 || velocity.x > -0.015) {
                     const relative1 = paddle1.position.clone().sub(ball.position);
                     velocity.x = -mapRange(relative1.x, { min: -paddleWidth / 2, max: paddleWidth / 2 }, { min: -0.02, max: 0.02 });
                 }
                 if (paddle1.rotation.y < 2.66 && paddle1.rotation.y > 0.52 || paddle2.rotation.y < 2.66 && paddle2.rotation.y > 0.52) {
-                    collisionAnimation(paddle1);
                 }
                 velocity.y *= 0.8;
                 velocity.z *= 0.8;
@@ -588,7 +538,6 @@ function Pve3d() {
                     velocity.x = -mapRange(relative2.x, { min: -paddleWidth / 2, max: paddleWidth / 2 }, { min: -0.02, max: 0.02 });
                 }
                 if (paddle2.rotation.y < 2.66 && paddle2.rotation.y > 0.52 || paddle1.rotation.y < -0.52 && paddle1.rotation.y > -2.66) {
-                    collisionAnimation(paddle2);
                 }
                 velocity.y *= 0.8;
                 velocity.z *= 0.8;
@@ -616,23 +565,6 @@ function Pve3d() {
                 }
             }
 
-            // function animatePaddle1() {
-            //     gsap.to(paddle1.position, {
-            //         x: ball.position.x + 3,
-            //         y: ball.position.y,
-            //         z: ball.position.z + 3,
-            //         duration: 0.2,
-            //         onComplete: () => {
-            //             gsap.to(paddle1.position, {
-            //                 x: paddleX + TABLE_DIMENSIONS.width / 2,
-            //                 y: paddleY - 10,
-            //                 z: -paddleZ + 60,
-            //                 duration: 0.3
-            //             });
-            //         }
-            //     });
-            // }
-
             function collisionAnimation(paddle) {
                 gsap.to(paddle.rotation, {
                     y: paddle.rotation.y / 100,
@@ -657,69 +589,15 @@ function Pve3d() {
                 }
                 renderer.dispose();
 
-                // document.removeEventListener('visibilitychange', handleVisibilityChange);
                 scene.clear();
             };
         }
     }, [isMatched, isPlayer1]);
 
-    // const handleVisibilityChange = () => {
-    //     if (document.visibilityState === 'visible') {
-    //         document.removeEventListener('keydown', onDocumentKeyDown);
-    //         document.removeEventListener('keyup', onDocumentKeyUp);
-
-    //         // Show popup alert or loading animation
-    //         const popup = document.createElement('div');
-    //         popup.id = 'reconnecting-popup';
-    //         popup.style.position = 'fixed';
-    //         popup.style.top = '50%';
-    //         popup.style.left = '50%';
-    //         popup.style.transform = 'translate(-50%, -50%)';
-    //         popup.style.padding = '20px';
-    //         popup.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
-    //         popup.style.color = 'white';
-    //         popup.style.fontSize = '20px';
-    //         popup.style.zIndex = '1000';
-    //         popup.innerText = 'Reconnecting...';
-    //         document.body.appendChild(popup);
-
-    //         setTimeout(() => {
-    //             document.addEventListener('keydown', onDocumentKeyDown);
-    //             document.addEventListener('keyup', onDocumentKeyUp);
-
-    //             // Hide popup alert or loading animation
-    //             document.body.removeChild(popup);
-    //         }, 1000);
-    //     }
-    // };
-
-    function handleScoreUpdate(newScores) {
-        setScores(newScores);
-        wsRef.current.send(JSON.stringify({
-            type: 'game_event',
-            event: 'score_update',
-            scoreP1: newScores.score1,
-            scoreP2: newScores.score2,
-        }));
-    }
-
-    function handleGameOver(winner) {
-        winnerRef.current = winner;
-        wsRef.current.send(JSON.stringify({
-            type: 'game_event',
-            event: 'game_over',
-            winner: winner,
-            scoreP1: score1,
-            scoreP2: score2,
-        }));
-    }
-
     function restartGame() {
         console.log('restart');
         velocityRef.current?.copy(INITIAL_VELOCITY);
         paddlePositionDiffRef.current?.set(0, 0, 0);
-        // paddle1Ref.current?.position.set(0, 1, 1);
-        // paddle2Ref.current?.position.set(0, 1, -1);
         ballRef.current?.position.copy(initBallPos);
         isPausedRef.current = true;
         startCountdown();
