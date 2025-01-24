@@ -69,8 +69,7 @@ export default function Tictactoe() {
   }
 
   function handlePlayAgain() {
-    winner = null;
-    setShowPopup(false);
+    navigate(0);
   }
 
   function handleQuit() {

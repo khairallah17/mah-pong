@@ -4,13 +4,14 @@ import { useEffect, useRef, useState, useContext } from 'react';
 import GameSettingsButton from '../../components/pvp/Customize2d';
 import GameScore from '../../components/pvp/GameScore';
 import { ColorContext } from '../../context/ColorContext';
-import { Navigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import '../../i18n';
 import { useTranslation } from 'react-i18next';
 
 export default function Pvp2d() {
 
   // Default single-player scoreboard
+  const navigate = useNavigate();
   const { t } = useTranslation();
   const [{ score1, score2 }, setScores] = useState({ score1: 0, score2: 0 });
   const [winner, setWinner] = useState(null);
@@ -141,7 +142,7 @@ export default function Pvp2d() {
             console.log('WebSocket connection established with new token');
           } else {
             localStorage.removeItem('authtoken');
-            Navigate('/login');
+            navigate('/login');
           }
         }
         if (message.type === 'match_found') {
@@ -394,7 +395,7 @@ export default function Pvp2d() {
           )}
           {matchId && (
             <button
-              onClick={() => Navigate('/dashboard/tournament/live')}
+              onClick={() => navigate('/dashboard/tournament/live')}
               className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors mt-4"
             >
               {t('Back to Tournament')}
@@ -406,7 +407,7 @@ export default function Pvp2d() {
         <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-gray-900/95 p-8 rounded-lg text-center">
           <h2 className="text-2xl font-bold text-white mb-4">Opponent Disconnected</h2>
           <button
-            onClick={() => Navigate('/dashboard')}
+            onClick={() => navigate('/dashboard')}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
           >
             Back to Dashboard

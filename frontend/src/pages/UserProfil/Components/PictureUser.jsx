@@ -174,7 +174,7 @@ const PictureUser = () => {
       const newRequest = await response.json();
       setPendingRequest(newRequest);
       setFriendStatus('pending');
-      wsManager?.sendMessage(`${currentUser} sent you a friend request`, [username]);
+      wsManager?.sendMessage(`${currentUser} sent you a friend request`, [username], `/dashboard/profil/${currentUser}`);
     } catch (err) {
       console.error('Error:', err);
       setError(err.message);
@@ -214,7 +214,7 @@ const PictureUser = () => {
       }
 
       setFriendStatus('friends');
-      wsManager?.sendMessage(`${currentUser} accepted your friend request`, [username]);
+      wsManager?.sendMessage(`${currentUser} accepted your friend request`, [username], `/dashboard/profil/${currentUser}`);
     } catch (err) {
       console.error('Error accepting friend request:', err);
       setError(err.message);
@@ -252,7 +252,7 @@ const PictureUser = () => {
       }
 
       setFriendStatus('none');
-      wsManager.sendMessage(`${currentUser} Reject your friend request`, [username]);
+      wsManager.sendMessage(`${currentUser} Rejected your friend request`, [username], `/dashboard/profil/${currentUser}`);
     } catch (err) {
       console.error('Error rejecting friend request:', err);
       setError(err.message);

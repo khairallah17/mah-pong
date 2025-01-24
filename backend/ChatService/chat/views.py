@@ -71,7 +71,6 @@ class ApiUsers(APIView):
                 }
             )
 
-
             return Response(user_data.get('friends', []))
         except requests.ConnectionError as e:
             logger.error(f"ConnectionError: {e}")

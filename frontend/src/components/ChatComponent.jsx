@@ -192,7 +192,11 @@ const Chat = ({ roomName }) => {
                 {/* Dynamic User List */}
                 <div className="flex flex-col gap-2 overflow-y-auto px-4"> {/* User list */}
                     {users.map((user) => {
-                        console.log("User data:", user);
+                        // console.log("User data:", user);
+                        if (user.img.startsWith('http://usermanagement:8000')) {
+                            user.img = user.img.replace('usermanagement:8000', 'localhost:8001');
+                        }
+                        console.log("user img", user.img)
                         const lastMessage = messages
                             .filter(msg => msg.sender === user.id || msg.receiver === user.id)
                             .slice(-1)[0]?.content || "No messages yet";
@@ -204,7 +208,7 @@ const Chat = ({ roomName }) => {
                                 {/* User Profile Image */}
                                 <div className="h-12 w-12 rounded-full overflow-hidden border border-purple-950">
                                 <img 
-                                    src={user.img ? `http://localhost:8001//${user.img}` : "./images/pong_logo.png"} 
+                                    src={user.img ? user.img : "./images/pong_logo.png"} 
                                     alt="profile" 
                                 />
 
@@ -235,7 +239,7 @@ const Chat = ({ roomName }) => {
                 <div className="border-black bg-gradient-to-l  from-black/15 to-black/50  abg-opacity-30 bg-opacity-25 p-4 flex h-[100px] rounded-tr-[27px] items-center justify-between">
                     <div className="flex gap-2 ml-[15px]">
                         <div className="h-16 w-16 rounded-full overflow-hidden">
-                            <img src={users.find(user => user.id === selectedUserId)?.avatar} alt="profile"/>
+                            <img src={users.find(user => user.id === selectedUserId)?.img} alt="profile"/>
                         </div>
                         <div className="ml-3 justify-center flex flex-col text-lg">
                             <p className="font-semibold">
