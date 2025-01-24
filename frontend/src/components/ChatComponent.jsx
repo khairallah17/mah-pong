@@ -11,6 +11,7 @@ import { PiGameControllerFill } from "react-icons/pi";
 import React, { useState, useEffect, useRef } from "react";
 import axios from 'axios';
 import { jwtDecode } from "jwt-decode";
+import { toast } from 'react-toastify';
 
 const Chat = ({ roomName }) => {
     const [users, setUsers] = useState([]);
@@ -42,14 +43,17 @@ const Chat = ({ roomName }) => {
     }, [messages]);
 
     const handleClick = () => {
+        console.log("is user blocker ====================>",isBlocked)
         if (isBlocked) {
             console.log("Unblocking user...");
             unblock(selectedUserId);
+            setIsBlocked(false);
         } else {
             console.log("Blocking user...");
             block(selectedUserId);
+            setIsBlocked(true);
+            // setIsBlocked(isBlocked)
         }
-        setIsBlocked(!isBlocked)
     };
 
     const fetchBlockStatus = async (userId) => {
@@ -59,7 +63,8 @@ const Chat = ({ roomName }) => {
                     Authorization: `Bearer ${accessToken}`,
                 },
             });
-            console.log("Block status response:", response.data);
+            console.log("Block status response:", response.data.block_status);
+            setIsBlocked(response.data.block_status);
     };
     const unblock = async (userId) => {
         try {
@@ -75,6 +80,19 @@ const Chat = ({ roomName }) => {
         }
     };
     
+    const block = async (userId) => {
+        try {
+            await axios.post(`http://localhost:8003/chat/api/block_user/${userId}/`, {
+                action: 'block'
+            }, {
+                headers: {
+                    'Authorization': `Bearer ${accessToken}`
+                }
+            });
+        } catch (error) {
+            console.error(error.response?.data?.error || 'Failed to block user');
+        }
+    };
 
     const loadUsers = async () => {
         try {
@@ -124,8 +142,17 @@ const Chat = ({ roomName }) => {
             if (data.type === "chat_message") {
                 setMessages((prev) => [...prev, data]);
             }
-            else if (data.type === "error") {
-                alert(data.message);
+            else if (data.type === "blocked") {
+                toast.error(data.content, {
+                    position: "top-right",
+                    autoClose: 5000,
+                    hideProgressBar: false,
+                    closeOnClick: false,
+                    pauseOnHover: true,
+                    draggable: true,
+                    progress: undefined,
+                    theme: "dark",
+                })
             }
         };
 
@@ -136,19 +163,6 @@ const Chat = ({ roomName }) => {
 
     const handleUserSelect = (userId) => {
         setSelectedUserId(userId);
-    };
-    const block = async (userId) => {
-        try {
-            await axios.post(`http://localhost:8003/chat/api/block_user/${userId}/`, {
-                action: 'block'
-            }, {
-                headers: {
-                    'Authorization': `Bearer ${accessToken}`
-                }
-            });
-        } catch (error) {
-            console.error(error.response?.data?.error || 'Failed to block user');
-        }
     };
     const handleSendMessage = () => {
         if (newMessage.trim() !== "") {
@@ -300,11 +314,15 @@ const Chat = ({ roomName }) => {
                     <h1 className="font-bold text-3xl text-white text-center">Details</h1>
                     <div className="flex flex-col items-center gap-3">
                         <div className=" h-28 w-28 rounded-full overflow-hidden border-4 border-green-700 place-items-center">
-                            <img src="img.webp" alt="photo" />
+                            <img src={users.find(user => user.id === selectedUserId)?.img} alt="profile"/>
                         </div>
                         <div className="flex flex-col items-center gap-1">
-                            <p className="font-semibold text-2xl">{fullname}</p> {/* Fullname */}
-                            <p className="font-semibold text-xl">{username}</p> {/* Username */}
+                            <p className="font-semibold text-xl">
+                                {selectedUserId ? users.find(user => user.id === selectedUserId)?.fullname : 'Select a user'}
+                            </p> {/* Fullname */}
+                            <p className="font-semibold text-xl">
+                                {selectedUserId ? users.find(user => user.id === selectedUserId)?.username : 'Select a user'}
+                            </p> {/* Username */}
                         </div>
                     </div>
                     <div className="flex gap-8 justify-center items-center"> {/* challenge/ block*/}
