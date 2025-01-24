@@ -208,16 +208,16 @@ const Navbar = () => {
               <div className="text-sm font-medium text-white">{user.fullname}</div>
               <div className="text-xs text-white/60">{user.email}</div>
             </div>
-            <NavLink to={`/dashboard/profil/${user.username}`}>
-              <img
-                src={user.img ? `http://localhost:8001/${user.img}` : DefaultAvatar}
-                alt={`${user.fullname}'s avatar`}
-                className="h-12 w-12 rounded-full object-cover ring-2 ring-white/20 cursor-pointer"
-                onError={(e) => {
-                  e.target.src = DefaultAvatar;
-                }}
-              />
-            </NavLink>
+              <NavLink to={`/dashboard/profil/${user.username}`}>
+                <img
+                  src={user.img ? `http://localhost:8001/${user.img}` : DefaultAvatar}
+                  alt={`${user.fullname}'s avatar`}
+                  className="h-12 w-12 rounded-full object-cover ring-2 ring-white/20 cursor-pointer hidden md:block"
+                  onError={(e) => {
+                    e.target.src = DefaultAvatar;
+                  }}
+                />
+              </NavLink>
           </div>
         </div>
       </div>

@@ -16,9 +16,14 @@ class User(AbstractUser):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     username = models.CharField(max_length=50, unique=True)
     email = models.EmailField(unique=True)
+
+    def get_random_image_profil():
+        list_avatars = os.listdir(path = './media')
+
+        return('/' + random.choice(list_avatars))
     img = models.ImageField(
         upload_to='./',
-        default='./pic1.jpeg'
+        default=get_random_image_profil
     )
     
     is_online = models.BooleanField(default=False)

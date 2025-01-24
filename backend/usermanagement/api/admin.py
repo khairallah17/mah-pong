@@ -2,7 +2,7 @@ from django.contrib import admin
 from api.models import User, Profil, FriendRequest, FriendList
 
 class Admin_Users(admin.ModelAdmin):
-    list_display = ('id', 'fullname', 'username', 'email', "password", 'is_online')
+    list_display = ('id', 'fullname', 'username', 'email', "password", 'is_online', 'img', 'avatar')
 
 
 class Admin_Profil(admin.ModelAdmin):
