@@ -10,7 +10,6 @@ import { useTranslation } from 'react-i18next';
 
 export default function Pvp2d() {
 
-  // Default single-player scoreboard
   const navigate = useNavigate();
   const { t } = useTranslation();
   const [{ score1, score2 }, setScores] = useState({ score1: 0, score2: 0 });
@@ -379,7 +378,7 @@ export default function Pvp2d() {
       <GameSettingsButton />
       {!isMatched && (
         <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-white text-2xl">
-          <h1>{t('Waiting for an opponent...')}</h1>
+          <h1>{t('Waiting for opponent...')}</h1>
         </div>
       )}
       {winner && (

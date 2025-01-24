@@ -18,6 +18,7 @@ export default function Tictactoe() {
   const [isMatched, setIsMatched] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
   const [popupMessage, setPopupMessage] = useState('');
+  const [isProcessing, setIsProcessing] = useState(false); // Add a new state variable for processing popup
   const wsRef = useRef(null);
 
   useEffect(() => {
@@ -36,7 +37,11 @@ export default function Tictactoe() {
         setWinner(data.game_state.winner);
       }
       if (data.type === 'game_end') {
+        setIsProcessing(false);
         handleGameEnd(data.game_state.winner);
+      }
+      if (data.type === 'processing') {
+        setIsProcessing(true);
       }
       if (data.type === 'error') {
         alert(data.message);
@@ -84,7 +89,7 @@ export default function Tictactoe() {
         <>
           <div className="mb-2">Your Role: {role}</div>
           {winner && winner !== "Draw" && (
-            <div className="mb-2">
+            <div className="mb-2 text-black">
               {winner} Wins!
               <button onClick={resetGame} className="ml-2 px-4 py-2 bg-blue-500 text-white rounded">
                 Play Again
@@ -92,7 +97,7 @@ export default function Tictactoe() {
             </div>
           )}
           {winner === "Draw" && (
-            <div className="mb-2">
+            <div className="mb-2 text-black">
               It's a Draw!
               <button onClick={resetGame} className="ml-2 px-4 py-2 bg-blue-500 text-white rounded">
                 Play Again
@@ -116,7 +121,7 @@ export default function Tictactoe() {
       {showPopup && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
           <div className="bg-white p-6 rounded shadow-lg">
-            <h2 className="text-xl mb-4">{popupMessage}</h2>
+            <h2 className="text-xl mb-4 text-black text-center">{popupMessage}</h2>
             <div className="flex justify-end space-x-4">
               <button
                 onClick={handlePlayAgain}
@@ -131,6 +136,15 @@ export default function Tictactoe() {
                 Quit
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {isProcessing && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white p-6 rounded shadow-lg flex flex-col items-center">
+            <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent border-solid rounded-full animate-spin mb-4"></div>
+            <h2 className="text-xl text-black text-center">Processing game results</h2>
           </div>
         </div>
       )}

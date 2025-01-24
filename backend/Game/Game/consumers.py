@@ -379,7 +379,6 @@ class TournamentConsumer(AsyncWebsocketConsumer):
 
 
 
-# Global variables for Pvp2dConsumer
 pvp2d_matchmaking_pool = []
 pvp2d_pools = {}
 pvp2d_user_channels = {}
@@ -457,6 +456,7 @@ class Pvp2dConsumer(AsyncWebsocketConsumer):
             pvp2d_matched_users[user2] = user1
 
         self.player_id = '1' if user1 == self.username else '2'
+        await self.create_game(user1, user2)
 
         shared_game_state = self.init_gamestate()
         pvp2d_game_states[user1] = shared_game_state
@@ -496,17 +496,15 @@ class Pvp2dConsumer(AsyncWebsocketConsumer):
         except Match.DoesNotExist:
             return None
 
-    # @database_sync_to_async
-    # def create_game(self, username1, username2):
-    #     Match.objects.create(
-    #         username1=username1,
-    #         username2=username2,
-    #         scoreP1=0,
-    #         scoreP2=0,
-    #         winner=None
-    #     )
-    #     pvp2d_game_states[username1] = self.init_gamestate()
-    #     pvp2d_game_states[username2] = pvp2d_game_states[username1]
+    @database_sync_to_async
+    def create_game(self, username1, username2):
+        Match.objects.create(
+            username1=username1,
+            username2=username2,
+            scoreP1=0,
+            scoreP2=0,
+            winner=None
+        )
 
     def update_ball_position(self, game_state):
         if game_state['is_paused']:
@@ -612,12 +610,7 @@ class Pvp2dConsumer(AsyncWebsocketConsumer):
         if username in pvp2d_disconnected_users:
             pvp2d_disconnected_users.pop(username)
             if opponent not in pvp2d_disconnected_users:
-                await self.channel_layer.send(
-                    pvp2d_user_channels[opponent].channel_name,
-                    {
-                        'type': 'opponent_disconnected',
-                    }
-                )
+                await self.channel_layer.send(pvp2d_user_channels[opponent].channel_name, {'type': 'opponent_disconnected'})
             else:
                 pvp2d_disconnected_users.pop(opponent)
             await self.update_game_result(pvp2d_game_states[username], winner=opponent)
@@ -680,7 +673,6 @@ class Pvp2dConsumer(AsyncWebsocketConsumer):
         except Exception as e:
             logger.error(f"Error updating game result: {e}")
 
-    @database_sync_to_async
     def calculate_elo(self, username):
         matches = Match.objects.filter(Q(username1=username) | Q(username2=username))
         total_matches = matches.count()
@@ -769,6 +761,7 @@ class Pvp2dConsumer(AsyncWebsocketConsumer):
     async def opponent_disconnected(self, event):
         await self.send(text_data=json.dumps({
             'type': 'opponent_disconnected',
+            'message': event['event']
         }))
 
 #frontend has to receive:
@@ -868,6 +861,9 @@ class TictactoeConsumer(AsyncWebsocketConsumer):
             game_state['winner'] = self.check_winner(game_state['board'])
             game_state['currentPlayer'] = 'O' if game_state['currentPlayer'] == 'X' else 'X'
             if game_state['winner']:
+                await self.channel_layer.send(
+                    tictactoe_user_channels[tictactoe_matched_users[self.username]].channel_name, {'type': 'processing'})
+                await self.send(text_data=json.dumps({'type': 'processing'}))
                 await self.update_results(self.username)
                 await self.channel_layer.send(
                     tictactoe_user_channels[tictactoe_matched_users[self.username]].channel_name,
@@ -945,6 +941,11 @@ class TictactoeConsumer(AsyncWebsocketConsumer):
             'game_state': event['game_state'],
             'role': event['role']
         }))
+
+    async def processing(self, event):
+        await self.send(text_data=json.dumps({
+            'type': 'processing'
+        }))
     
     def check_winner(self, board):
         lines = [
@@ -981,7 +982,6 @@ class TictactoeConsumer(AsyncWebsocketConsumer):
                 scoreP2=scoreP2,
                 winner=winner_username
             )
-            # ...existing code...
         except Exception as e:
             logger.error(f"Error storing Tictactoe match results: {e}")
 
