@@ -5,6 +5,10 @@ import { useSidebarContext } from "../hooks/useSidebar"
 import SidebarList from "./sidebarList"
 import '../i18n';
 import { useTranslation } from 'react-i18next';
+import React, { useState, useEffect } from 'react';
+import DefaultAvatar from '../assets/khr.jpg';
+
+
 
 const navigation = [
   {
@@ -49,6 +53,37 @@ const Sidebar = () => {
   const { t } = useTranslation();
   const { logoutUsers } = useAuthContext()
   const { open } = useSidebarContext()
+  const [user, setUser] = useState([])
+
+
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      const authToken = localStorage.getItem('authtoken');
+      if (!authToken) return;
+  
+      try {
+        const parsedToken = JSON.parse(authToken);
+        const response = await fetch('http://localhost:8001/api/edit-profile/', {
+          headers: {
+            'Authorization': `Bearer ${parsedToken.access}`
+          }
+        });
+  
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+  
+        const userData = await response.json();
+        console.log(userData);
+        setUser(userData);
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+      }
+    };
+  
+    fetchUserData();
+  }, []);
 
   return (
     <aside 
@@ -81,15 +116,15 @@ const Sidebar = () => {
       <div className="space-y-4 pt-4 border-t border-white/10">
         {/* Mobile Profile Link */}
         <NavLink 
-          to="/dashboard/profile" 
+          to={`/dashboard/profil/${user.username}`}
           className={({ isActive }) => `
             md:hidden flex items-center gap-3 p-2 rounded-lg
             transition-colors duration-200
             ${isActive ? 'bg-white/10 text-white' : 'text-white/60 hover:text-white hover:bg-white/5'}
           `}
         >
-          <div className="w-6 h-6 bg-white/20 rounded-full flex-shrink-0" />
-          {open && <span className="text-sm">mkhairal</span>}
+
+          <img src={user && user.img ? `http://localhost:8001/${user.img}` : DefaultAvatar} className='w-6 h-6 bg-white/20 rounded-full flex-shrink-0'/>
         </NavLink>
 
         {/* Logout Button */}
@@ -98,7 +133,7 @@ const Sidebar = () => {
           className="w-full flex items-center gap-3 p-2 rounded-lg text-white/60 hover:text-white hover:bg-white/5 transition-colors duration-200"
         >
           <LogOut size={20} />
-          {open && <span className="text-sm">Logout</span>}
+          {open && <span className="text-sm">{t('Logout')}</span>}
         </button>
       </div>
     </aside>

@@ -600,40 +600,6 @@ class   Confirm_reset_Password(View):
         response["Access-Control-Allow-Headers"] = "Content-Type, X-Requested-With"
         return response
 
-# class LogoutViews(APIView):
-#     permission_classes = [IsAuthenticated]
-
-#     def post(self, request):
-#         print ("ahyya Hanyaa1")
-#         try:
-#             # Set user offline first
-#             request.user.is_online = False
-#             request.user.save(update_fields=['is_online'])
-        
-#             refresh_token = request.data.get('refresh')
-#             print ("not here 1")
-#             if not refresh_token:
-#                 return Response(
-#                     {'error': 'Refresh token is required'}, 
-#                     status=status.HTTP_400_BAD_REQUEST
-#                 )
-#             print ("ahyya Hanyaa2")
-#             token = RefreshToken(refresh_token)
-#             print ("ahyya Hanyaa23")
-#             token.blacklist()
-#             print ("ahyya Hanyaa24")
-
-#             return Response(
-#                 {'message': 'Successfully logged out'}, 
-#                 status=status.HTTP_200_OK
-#             )
-#         except TokenError as e: # type: ignore
-#             print ("ahyya Hanyaa12")
-#             return Response(
-#                 {'error': 'Invalid token'}, 
-#                 status=status.HTTP_400_BAD_REQUEST
-#             )
-
 
 class LogoutViews(APIView):
     permission_classes = [IsAuthenticated]
@@ -684,53 +650,6 @@ class UserProfileApi(APIView):
         except Exception as e:
             # logger.error(f"Error getting profile for {username}: {str(e)}")
             return Response({"error": str(e)}, status=400)
-
-# Make Comminication Between Game App and Usermanagment App using API
-# class UserInfoApi(APIView):
-    # # permission_classes = [IsAuthenticated]
-
-    # def get(self, request, username):
-    #     try:
-    #         logger.info(f"Getting user data for {username}") # type: ignore
-    #         user = User.objects.get(username=username)
-    #         serializer = UserSerial(user)
-    #         return Response(serializer.data)
-    #     except User.DoesNotExist:
-    #         logger.error(f"User {username} does not exist") # type: ignore
-    #         return Response({"error": "User does not exist"}, status=404)
-    
-    # def patch(self, request, username):
-    #     try:
-    #         logger.info(f"Updating user data for {username}") # type: ignore
-    #         user = User.objects.get(username=username)
-    #         #allowed Fields to update from Game App
-    #         game_fields = {
-    #             'nblose',
-    #             'nbwin', 
-    #             'score',
-    #         }
-
-    #         data = {}
-
-    #         for key, value in request.data.items():
-    #             if key in game_fields:
-    #                 if key in ['nblose', 'nbwin']:
-    #                     current_value = getattr(user, key, 0)
-    #                     data[key] = current_value + value
-    #                 else:
-    #                     data[key] = value
-    #         serializer = UserSerial(request.user, data=data, partial=True) # partial=True kay3ni update just what field allowed  "game_fields = {'nblose','nbwin', 'score'}" 
-    #         # if partial=False it will always update all fieled in UserSerial all those "fields = ['id', 'username', 'email', 'fullname', 'nblose', 'nbwin', 'score', 'img', 'avatar', 'two_factor_enabled', 'last_login_2fa']" every time
-
-    #         if serializer.is_valid():
-    #             serializer.save()
-    #             logger.info(f"User data updated for {username}") # type: ignore
-    #             return Response(serializer.data)
-    #         logger.error(f"Error updating user data for {username}") # type: ignore
-    #         return Response(serializer.errors, status=400)
-    #     except Exception as e:
-    #         logger.error(f"Error updating user data for {username}") # type: ignore
-    #         return Response({"error": "Somthing Wrong in updating data"}, status=400)
 
 
 def viewallrouting(request):
@@ -783,39 +702,27 @@ class UserEditProfileView(APIView):
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     def delete(self, request):
-        """
-        Delete user's profile image
-        """
         user = request.user
         
         # Check if user has a profile image
         if not user.img:
             return Response(
                 {"detail": "No profile image to delete"}, 
-                status=status.HTTP_404_NOT_FOUND
+                status=400
             )
-
-        # Get the file path
-        image_path = user.img.path
-
         try:
-            # Delete the file from storage
-            if os.path.exists(image_path):
-                os.remove(image_path)
-            
-            # Clear the img field
-            user.profile_image = None
+            user.img.delete()
+            user.img = "./Default.jpg"
             user.save()
             
             return Response(
                 {"detail": "Profile image deleted successfully"},
                 status=status.HTTP_200_OK
             )
-            
         except Exception as e:
             return Response(
                 {"detail": f"Error deleting profile image: {str(e)}"},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR #replace this with another error like bad requeste
+                status=400
             )
     
 
@@ -1033,7 +940,7 @@ class ChangePasswordView(APIView):
                 if not valid_password:
                     return Response({'error': 'Invalid old password'},status=200)
             except Exception as e:
-                return Response({'error': 'Error validating password'}, status=500)
+                return Response({'error': 'Error validating password'}, status=400)
 
             # Validate passwords
             if not new_password or not confirm_password:
