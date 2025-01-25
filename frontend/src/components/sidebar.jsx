@@ -8,8 +8,6 @@ import { useTranslation } from 'react-i18next';
 import React, { useState, useEffect } from 'react';
 import DefaultAvatar from '../assets/khr.jpg';
 
-
-
 const navigation = [
   {
     icon: <LayoutGrid size={20} />,
@@ -55,31 +53,24 @@ const Sidebar = () => {
   const { open } = useSidebarContext()
   const [user, setUser] = useState([])
 
-
+  const { authtoken } = useAuthContext()
 
   useEffect(() => {
     const fetchUserData = async () => {
-      const authToken = localStorage.getItem('authtoken');
-      if (!authToken) return;
   
       try {
-        const parsedToken = JSON.parse(authToken);
         const response = await fetch('/api/usermanagement/api/edit-profile/', {
           headers: {
-            'Authorization': `Bearer ${parsedToken.access}`
+            'Authorization': `Bearer ${authtoken}`
           }
         });
-  
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-  
+
         const userData = await response.json();
-        console.log(userData);
         setUser(userData);
       } catch (error) {
         console.error('Error fetching user data:', error);
       }
+
     };
   
     fetchUserData();

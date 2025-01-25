@@ -6,6 +6,8 @@ from django.db.models import Q
 from .models import Tournament, Match, AchievementAssignment
 from .serializers import TournamentSerializer, MatchSerializer, PlayerStatsSerializer, AchievementAssignmentSerializer
 import requests
+import logging
+logger = logging.getLogger(__name__)
 
 class TournamentList(generics.ListCreateAPIView):
     queryset = Tournament.objects.all()
@@ -13,6 +15,7 @@ class TournamentList(generics.ListCreateAPIView):
 
 class PlayerMatchHistory(APIView):
     def get(self, request, username=None):
+        logger.warning("MATCH HISTORY API")
         matches = Match.objects.filter(Q(username1=username) | Q(username2=username))
         serializer = MatchSerializer(matches, many=True, context={'player': username})
         return Response(serializer.data, status=status.HTTP_200_OK)

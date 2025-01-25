@@ -6,48 +6,14 @@ import { Achievements } from '../components/AchievementBadgeProps';
 import  PlayerList  from '../components/PlayerList';
 import '../i18n';
 import { useTranslation } from 'react-i18next';
+import { useAuthContext } from '../hooks/useAuthContext';
 
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState('matches');
   const [selectedMode, setSelectedMode] = useState(null);
   const { t } = useTranslation();
   
-  useEffect( () =>{
-    const fetchstats = async () => {
-    const response = await fetch("/api/game/api/player-stats/alemsafi");
-    const data = await response.json();
-    console.log("player stats:", data);
-    }
-
-    fetchstats();
-
-    const fetchHistory = async () => {
-    const response = await fetch("/api/game/api/match-history/alemsafi");
-    const data = await response.json();
-    console.log("match history:", data);
-    }
-
-    fetchHistory();
-
-    const fetchFriends = async () => {
-    const response = await fetch("/api/usermanagement/api/friends/", 
-    {
-      credentials: "include",
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": "Bearer " + JSON.parse(localStorage.getItem("authtoken")).access,
-      },
-    }
-    );
-    const data = await response.json();
-    console.log("friends:", data);
-    }
-
-    fetchFriends();
-    
-  }, []);
-
+  const { authToken } = useAuthContext()
   
 
   const renderTabContent = () => {

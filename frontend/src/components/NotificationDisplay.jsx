@@ -15,12 +15,12 @@ const NotificationDisplay = () => {
   const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate();
 
+  const { user } = useAuthContext()
+    const { username } = user
+
   useEffect(() => {
     const fetchNotifications = async () => {
       try {
-        
-        const { user } = useAuthContext()
-        const { username } = user
 
         const response = await fetch(`/api/notifications/api/notifications/${username}/`);
         const data = await response.json();

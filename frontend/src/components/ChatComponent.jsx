@@ -6,6 +6,10 @@ import React, { useState, useEffect, useRef } from "react";
 import axios from 'axios';
 import { jwtDecode } from "jwt-decode";
 
+import useChatContext from "../hooks/useChatContext";
+import { useAuthContext } from "../hooks/useAuthContext";
+import useWebsocketContext from "../hooks/useWebsocketContext";
+
 const Chat = () => {
 
     const {  

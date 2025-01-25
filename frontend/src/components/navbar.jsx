@@ -7,6 +7,7 @@ import ButtonLng from "../components/ButtonLng";
 import '../i18n';
 import { useTranslation } from 'react-i18next';
 import { NavLink, useNavigate } from 'react-router-dom';
+import { useAuthContext } from '../hooks/useAuthContext';
 
 const Navbar = () => {
   const navigate = useNavigate();
@@ -24,45 +25,49 @@ const Navbar = () => {
   const [showResults, setShowResults] = useState(false);
   const searchRef = useRef(null);
 
+  const { authtoken } = useAuthContext()
+
   useEffect(() => {
     const fetchUserData = async () => {
-      const authToken = localStorage.getItem('authtoken');
-      if (authToken) {
+
+      console.log(authtoken)
+
         try {
           const response = await fetch('/api/usermanagement/api/edit-profile/', {
             headers: {
-              'Authorization': `Bearer ${JSON.parse(authToken).access}`
+              'Authorization': `Bearer ${authtoken}`
             }
           });
-          if (response.ok) {
-            const userData = await response.json();
-            console.log('User data:', userData);
-            setUser({
-              username: userData.username,
-              email: userData.email,
-              fullname: userData.fullname,
-              avatar: userData.avatar,
-              img: userData.img
-            });
-          }
+
+          const userData = await response.json();
+
+          console.log("==> ", userData)
+          
+          setUser({
+            username: userData.username,
+            email: userData.email,
+            fullname: userData.fullname,
+            avatar: userData.avatar,
+            img: userData.img
+          });
+
         } catch (error) {
           console.error('Error fetching user data:', error);
         }
-      }
+
     };
 
     fetchUserData();
   }, []);
 
   const searchUsers = async (query) => {
+
     if (!query.trim()) {
       setSearchResults([]);
       return;
     }
 
     setIsLoading(true);
-    const authToken = localStorage.getItem('authtoken');
-    const token = JSON.parse(authToken).access;
 
     try {
       // First, get the list of friends to filter them out
@@ -75,7 +80,7 @@ const Navbar = () => {
 
       // Then, fetch all users
       const allUsersResponse = await fetch(`/api/usermanagement/api/allusers/?search=${query}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: { 'Authorization': `Bearer ${authtoken}` }
       });
       const allUsersData = await allUsersResponse.json();
 
@@ -83,8 +88,8 @@ const Navbar = () => {
       const filteredUsers = allUsersData.filter(searchedUser =>  
         searchedUser.username !== user.username &&
         (searchedUser.fullname?.toLowerCase().includes(query.toLowerCase()) ||
-         searchedUser.username.toLowerCase().includes(query.toLowerCase()) ||
-         searchedUser.email?.toLowerCase().includes(query.toLowerCase()))
+          searchedUser.username.toLowerCase().includes(query.toLowerCase()) ||
+          searchedUser.email?.toLowerCase().includes(query.toLowerCase()))
       );
 
       setSearchResults(filteredUsers);

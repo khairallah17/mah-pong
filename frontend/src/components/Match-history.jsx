@@ -5,6 +5,8 @@ import { Activity, ChevronLeft, ChevronRight } from 'lucide-react';
 import { jwtDecode } from "jwt-decode";
 import { useAuthContext } from '../hooks/useAuthContext';
 
+import axios from 'axios';
+
 export const MatchHistory = () => {
   const { t } = useTranslation();
   const [matches, setMatches] = useState([]);
@@ -20,8 +22,8 @@ export const MatchHistory = () => {
     const fetchMatches = async () => {
       try {
         // Fetch all matches first
-        const response = await fetch(`/api/game/api/match-history/${username}/`);
-        const allMatches = await response.json();
+        const response = await axios.get(`/api/game/api/match-history/${username}/`);
+        const allMatches = response.data;
         
         // Calculate total pages based on all matches
         const total = Math.ceil(allMatches.length / matchesPerPage);
@@ -77,7 +79,7 @@ export const MatchHistory = () => {
           {matches.length > 0 ? (
             <>
               <div className="grid gap-3">
-                {matches.map((match) => (
+                {matches?.map((match) => (
                   <div key={match.id} className="flex items-center justify-between p-4 bg-white/5 rounded-lg hover:bg-white/10 transition-colors">
                     <div className="flex items-center gap-4">
                       <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${
