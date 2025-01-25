@@ -1,74 +1,75 @@
-from django.shortcuts import redirect, get_object_or_404 # type: ignore
-from django.db import models # type: ignore
-from django.db.models import Q # type: ignore
-from django.http import HttpResponse, HttpResponseRedirect # type: ignore
+from django.shortcuts import redirect, get_object_or_404
+from django.db import models
+from django.db.models import Q
+from django.http import HttpResponse, HttpResponseRedirect
 from .models import User, TwoFactorAuthAttempt, FriendRequest, FriendList
 from .serializers import Get_Token_serial, RegistrationSerial, UserSerial, LogoutSerial, UserProfileSerializer, FriendRequestSerializer, FriendListSerializer
-from rest_framework.decorators import api_view, permission_classes # type: ignore
-from rest_framework.response import Response # type: ignore
-from rest_framework_simplejwt.views import TokenObtainPairView # type: ignore
-from rest_framework_simplejwt.tokens import RefreshToken, AccessToken # type: ignore
-from rest_framework import generics # type: ignore
-from rest_framework.permissions import AllowAny, IsAuthenticated # type: ignore
-from rest_framework import status, views, viewsets # type: ignore
-from rest_framework.decorators import action # type: ignore
-from django.contrib.auth import authenticate, get_user_model # type: ignore
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.response import Response
+from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
+from rest_framework import generics
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework import status, views, viewsets
+from rest_framework.decorators import action
+from django.contrib.auth import authenticate, get_user_model
 # For Google Login/registring api
-from allauth.socialaccount.providers.google.views import GoogleOAuth2Adapter # type: ignore
-from allauth.socialaccount.providers.oauth2.client import OAuth2Client # type: ignore
-from dj_rest_auth.registration.views import SocialLoginView # type: ignore
+from allauth.socialaccount.providers.google.views import GoogleOAuth2Adapter
+from allauth.socialaccount.providers.oauth2.client import OAuth2Client
+from dj_rest_auth.registration.views import SocialLoginView
 import os
-from django.conf import settings # type: ignore
+from django.conf import settings
 import uuid
-from allauth.socialaccount.adapter import DefaultSocialAccountAdapter # type: ignore
-from django.views import View # type: ignore
-from django.views.decorators.csrf import csrf_exempt # type: ignore
-from django.http import JsonResponse # type: ignore
+from allauth.socialaccount.adapter import DefaultSocialAccountAdapter
+from django.views import View
+from django.views.decorators.csrf import csrf_exempt
+from django.http import JsonResponse
 import requests
-from rest_framework.views import APIView # type: ignore
-from django.utils.encoding import force_bytes, force_str # type: ignore
-from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode # type: ignore
-from .token_reset_passwordd import account_activation_token # type: ignore
-from django.core.mail import send_mail, EmailMessage # type: ignore
+from rest_framework.views import APIView
+from django.utils.encoding import force_bytes, force_str
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from .token_reset_passwordd import account_activation_token
+from django.core.mail import send_mail, EmailMessage
 import urllib.request
-from django.core.exceptions import ValidationError # type: ignore
-from django.contrib.auth.password_validation import validate_password # type: ignore
+from django.core.exceptions import ValidationError
+from django.contrib.auth.password_validation import validate_password
 
-from django.utils.decorators import method_decorator # type: ignore
-from django.http import JsonResponse # type: ignore
+from django.utils.decorators import method_decorator
+from django.http import JsonResponse
 import json
 
-from django_otp.plugins.otp_totp.models import TOTPDevice # type: ignore
-import pyotp # type: ignore
-import qrcode # type: ignore
-import qrcode.image.svg # type: ignore
+from django_otp.plugins.otp_totp.models import TOTPDevice
+import pyotp
+import qrcode
+import qrcode.image.svg
 from io import BytesIO
 import base64
-from rest_framework_simplejwt.authentication import JWTAuthentication # type: ignore
+from rest_framework_simplejwt.authentication import JWTAuthentication
 from datetime import datetime
 import time
-from django.contrib.auth.hashers import check_password, make_password # type: ignore
+from django.contrib.auth.hashers import check_password, make_password
 import random
 import string
-from rest_framework import viewsets, status # type: ignore
-from rest_framework.decorators import action # type: ignore
-from rest_framework.response import Response # type: ignore
-from rest_framework.permissions import IsAuthenticated # type: ignore
-from django.shortcuts import get_object_or_404 # type: ignore
-# from channels.layers import get_channel_layer
-from asgiref.sync import async_to_sync # type: ignore
+from rest_framework import viewsets, status
+from rest_framework.decorators import action
+from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
 
-import logging
 
 CLIENT_ID = os.environ.get('CLIENT_ID')
 CLIENT_SECRET = os.environ.get('CLIENT_SECRET')
 GCLIENT_ID = os.environ.get('GCLIENT_ID')
 GCLIENT_SECRET = os.environ.get('GCLIENT_SECRET')
 
-print (CLIENT_ID)
-print (CLIENT_SECRET)
-print (GCLIENT_ID)
-print (GCLIENT_SECRET)
+
+# """
+# ███████╗██╗ ██████╗ ███╗   ██╗    ██╗███╗   ██╗        ██╗    ███████╗██╗ ██████╗ ███╗   ██╗    ██╗   ██╗██████╗     ███████╗██╗███╗   ███╗██████╗ ██╗     ███████╗    ███████╗██╗███████╗██╗     ██████╗ 
+# ██╔════╝██║██╔════╝ ████╗  ██║    ██║████╗  ██║       ██╔╝    ██╔════╝██║██╔════╝ ████╗  ██║    ██║   ██║██╔══██╗    ██╔════╝██║████╗ ████║██╔══██╗██║     ██╔════╝    ██╔════╝██║██╔════╝██║     ██╔══██╗
+# ███████╗██║██║  ███╗██╔██╗ ██║    ██║██╔██╗ ██║      ██╔╝     ███████╗██║██║  ███╗██╔██╗ ██║    ██║   ██║██████╔╝    ███████╗██║██╔████╔██║██████╔╝██║     █████╗      █████╗  ██║█████╗  ██║     ██║  ██║
+# ╚════██║██║██║   ██║██║╚██╗██║    ██║██║╚██╗██║     ██╔╝      ╚════██║██║██║   ██║██║╚██╗██║    ██║   ██║██╔═══╝     ╚════██║██║██║╚██╔╝██║██╔═══╝ ██║     ██╔══╝      ██╔══╝  ██║██╔══╝  ██║     ██║  ██║
+# ███████║██║╚██████╔╝██║ ╚████║    ██║██║ ╚████║    ██╔╝       ███████║██║╚██████╔╝██║ ╚████║    ╚██████╔╝██║         ███████║██║██║ ╚═╝ ██║██║     ███████╗███████╗    ██║     ██║███████╗███████╗██████╔╝
+# ╚══════╝╚═╝ ╚═════╝ ╚═╝  ╚═══╝    ╚═╝╚═╝  ╚═══╝    ╚═╝        ╚══════╝╚═╝ ╚═════╝ ╚═╝  ╚═══╝     ╚═════╝ ╚═╝         ╚══════╝╚═╝╚═╝     ╚═╝╚═╝     ╚══════╝╚══════╝    ╚═╝     ╚═╝╚══════╝╚══════╝╚═════╝ 
+# """
 
 # Create your views here.
 class Get_MyTokenObtainPairView(TokenObtainPairView):
@@ -132,11 +133,9 @@ class Get_MyTokenObtainPairView(TokenObtainPairView):
             secure=False,  # Set to True if using HTTPS
             samesite='Lax'
         )
-        logger = logging.getLogger("loggers")
         message = {
             'message' : f"user ${email} logged in"
         }
-        logger.info(message)
         return response
     
     def get(self, request):
@@ -154,19 +153,7 @@ class Get_MyTokenObtainPairView(TokenObtainPairView):
                 "is_authenticated": True
             }, status=status.HTTP_200_OK
         )
-    #rechecking for user on Post fuction if the user are not in database also impliment get function to catch http request and sending access token and refresh token
-    # def post(self, request):
-    #     email = request.data.get('email')
-    #     password = request.data.get('password')
-    #     user = authenticate(request, email=email, password=password)
-    #     if user is None:
-    #         output = f"This user are not on database{request.user}"
-    #         return Response({'response' : output}, status=status.HTTP_200_OK) #we should to return another HTTP request not 200 OK request
-    # def get(self, request):
-    #     output = f"Welcome {request.user}, Request Accepted You can Login Now"
-    #     return Response({'response' : output}, status=status.HTTP_202_ACCEPTED)
     
-# User = get_user_model()
 
 class RegisterationView(generics.CreateAPIView):
     queryset = User.objects.all()
@@ -206,38 +193,25 @@ class RegisterationView(generics.CreateAPIView):
         )
 
     def get(self, request):
-        # user = request.user
-        # if user.is_authenticated: # no needed we already check for unique username
-        #     return Response(
-        #         {
-        #             "message": "User is already authenticated",
-        #             "username": user.username,
-        #             "email": user.email,
-        #             # "fullname": user.fullname,  # Uncomment if fullname is available
-        #         },
-        #         status=status.HTTP_400_BAD_REQUEST
-        #     )
-        # else:
         return Response(
             {"message": "User is not authenticated"},
             status=status.HTTP_202_ACCEPTED
         )
 
-# class GoogleLogin(SocialLoginView):
-#     # adapter_class = GoogleOAuth2Adapter
-#     callback_url = "http://localhost:3000/"
-#     # client_class = OAuth2Client
-#     def get(self, request):
-#         print ("sdjaskdjalskdjaskldjaskldjaksldjaskldjaklsdjaksldjaklsdjaksld")
-#         code = request.args.get("code")
-#         print (code)
-#         return ("Hello User DONE!")
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated]) # thats mean no one can pass to here util they authenticated 
 
-# Creating Views For Google Login/Signup User using dj-rest-auth's Package
+# """
+#  ██████╗     ██╗██╗  ██╗██████╗     ███████╗██╗ ██████╗ ███╗   ██╗    ██╗███╗   ██╗        ██╗    ███████╗██╗ ██████╗ ███╗   ██╗    ██╗   ██╗██████╗ 
+# ██╔════╝    ██╔╝██║  ██║╚════██╗    ██╔════╝██║██╔════╝ ████╗  ██║    ██║████╗  ██║       ██╔╝    ██╔════╝██║██╔════╝ ████╗  ██║    ██║   ██║██╔══██╗
+# ██║  ███╗  ██╔╝ ███████║ █████╔╝    ███████╗██║██║  ███╗██╔██╗ ██║    ██║██╔██╗ ██║      ██╔╝     ███████╗██║██║  ███╗██╔██╗ ██║    ██║   ██║██████╔╝
+# ██║   ██║ ██╔╝  ╚════██║██╔═══╝     ╚════██║██║██║   ██║██║╚██╗██║    ██║██║╚██╗██║     ██╔╝      ╚════██║██║██║   ██║██║╚██╗██║    ██║   ██║██╔═══╝ 
+# ╚██████╔╝██╔╝        ██║███████╗    ███████║██║╚██████╔╝██║ ╚████║    ██║██║ ╚████║    ██╔╝       ███████║██║╚██████╔╝██║ ╚████║    ╚██████╔╝██║     
+#  ╚═════╝ ╚═╝         ╚═╝╚══════╝    ╚══════╝╚═╝ ╚═════╝ ╚═╝  ╚═══╝    ╚═╝╚═╝  ╚═══╝    ╚═╝        ╚══════╝╚═╝ ╚═════╝ ╚═╝  ╚═══╝     ╚═════╝ ╚═╝     
+# """
 
+# Creating Views For Google Login/Signup User using dj-rest-auth's Package
 class GoogleLoginView(SocialLoginView):
     adapter_class = GoogleOAuth2Adapter
     callback_url = "http://localhost:5173/"
@@ -249,21 +223,14 @@ def generate_temp_password(length=12):
     return ''.join(random.choice(characters) for i in range(length))
 
 
-# import logging
-# logger = logging.getLogger(__name__)
-
 # Creating Google login CallBack views
 class GoogleLoginCallback(APIView):
     def get(self, request):
-        logger.debug("I am heeeererererererer121000000000")
-        # user = super().get(request)
         code = request.GET.get("code")
         if code is None:
             return redirect("http://localhost:5173/login")
-        logger.debug("I am heeeererererererer1210000000054540")
-        print("code are: ", code)
+    
         token_url  = "https://oauth2.googleapis.com/token"
-        logger.debug("I am heeeererererererer12100000000545445454545450")
         try:
             token_data = {
                 "code"          : code,
@@ -272,13 +239,7 @@ class GoogleLoginCallback(APIView):
                 "redirect_uri"  : "http://localhost:8001/api/v2/auth/googlelogin/callback/",
                 "grant_type"    : "authorization_code"
             }
-            logger.debug("I am heeeererererererer")
-            # error = request.GET.get("error")
-            # if error:
-            #     error_url_redirect = (f"http://localhost:5173/google-callback?error={error}")
-            #     response = redirect(error_url_redirect)
 
-            #     return response
 
             token_response = requests.post(token_url, data = token_data)
             if not token_response.ok:
@@ -295,7 +256,6 @@ class GoogleLoginCallback(APIView):
             email = getInfo.json()["email"]
             username = getInfo.json()['email'].split('@')[0]
         except Exception as e:
-            logger.error(f"Google authentication error: {str(e)}")
             return redirect("http://localhost:5173/login?error=authentication_failed")
         
         #telechargit imaghe dyal google
@@ -305,10 +265,8 @@ class GoogleLoginCallback(APIView):
         # Generating Random Password
         tmp_password = generate_temp_password()
 
-        logger.debug("I am heeeererererererer121000")
         try:
             user = User.objects.get(email=email)
-            # valid_password = check_password(tmp_password, user.password)
             if not user.password:
                 is_password_need = True
             else:
@@ -318,13 +276,11 @@ class GoogleLoginCallback(APIView):
                 fullname=getInfo.json()['name'],
                 username=username,
                 email=email,
-                # password=make_password(tmp_password),
                 img="./" + username + ".jpg"
             )
             is_password_need = True
             user.save()
         
-        logger.debug("I am heeeererererererer121")
 
         # Set user as online before generating tokens
         user.is_online = True
@@ -363,10 +319,6 @@ class GoogleLoginCallback(APIView):
 
         return response
 
-import logging
-
-# Get an instance of a logger
-logger = logging.getLogger(__name__)
 
 
 class Login42Auth(APIView):
@@ -395,17 +347,16 @@ class Login42Auth(APIView):
             token_json = request_token.json()
             if 'access_token' not in token_json:
                 return redirect("http://localhost:5173/login")
-            # print (token_json)
+
             # extracting information From Token Now Hnaya
             getInfoUser = requests.get("https://api.intra.42.fr/v2/me", headers={'Authorization': f'Bearer {token_json["access_token"]}'})
             if not getInfoUser.ok:
                 return redirect("http://localhost:5173/login")
         
-            # print("heeeere", getInfoUser.json().get('email'))
+
             username = getInfoUser.json().get('login')
             email = getInfoUser.json().get('email')
         except Exception as e:
-            logger.error(f"Google authentication error: {str(e)}")
             return redirect("http://localhost:5173/login?error=authentication_failed")
         
         #telechargit imaghe dyal intra
@@ -417,7 +368,6 @@ class Login42Auth(APIView):
         try:
             user = User.objects.get(email=email)
             valid_password = check_password(tmp_password, user.password)
-            logger.error(valid_password)
             if not user.password:
                 is_password_need = True
             else:
@@ -467,6 +417,14 @@ class Login42Auth(APIView):
 
         return response
 
+# """
+# ███████╗███████╗████████╗████████╗██╗███╗   ██╗ ██████╗     ██████╗  █████╗ ███████╗███████╗██╗    ██╗ ██████╗ ██████╗ ██████╗     ███████╗ ██████╗ ██████╗     ██╗  ██╗██████╗     ██╗ ██████╗      █████╗ ██████╗ ██╗
+# ██╔════╝██╔════╝╚══██╔══╝╚══██╔══╝██║████╗  ██║██╔════╝     ██╔══██╗██╔══██╗██╔════╝██╔════╝██║    ██║██╔═══██╗██╔══██╗██╔══██╗    ██╔════╝██╔═══██╗██╔══██╗    ██║  ██║╚════██╗   ██╔╝██╔════╝     ██╔══██╗██╔══██╗██║
+# ███████╗█████╗     ██║      ██║   ██║██╔██╗ ██║██║  ███╗    ██████╔╝███████║███████╗███████╗██║ █╗ ██║██║   ██║██████╔╝██║  ██║    █████╗  ██║   ██║██████╔╝    ███████║ █████╔╝  ██╔╝ ██║  ███╗    ███████║██████╔╝██║
+# ╚════██║██╔══╝     ██║      ██║   ██║██║╚██╗██║██║   ██║    ██╔═══╝ ██╔══██║╚════██║╚════██║██║███╗██║██║   ██║██╔══██╗██║  ██║    ██╔══╝  ██║   ██║██╔══██╗    ╚════██║██╔═══╝  ██╔╝  ██║   ██║    ██╔══██║██╔═══╝ ██║
+# ███████║███████╗   ██║      ██║   ██║██║ ╚████║╚██████╔╝    ██║     ██║  ██║███████║███████║╚███╔███╔╝╚██████╔╝██║  ██║██████╔╝    ██║     ╚██████╔╝██║  ██║         ██║███████╗██╔╝   ╚██████╔╝    ██║  ██║██║     ██║
+# ╚══════╝╚══════╝   ╚═╝      ╚═╝   ╚═╝╚═╝  ╚═══╝ ╚═════╝     ╚═╝     ╚═╝  ╚═╝╚══════╝╚══════╝ ╚══╝╚══╝  ╚═════╝ ╚═╝  ╚═╝╚═════╝     ╚═╝      ╚═════╝ ╚═╝  ╚═╝         ╚═╝╚══════╝╚═╝     ╚═════╝     ╚═╝  ╚═╝╚═╝     ╚═╝
+# """
 
 class SetPasswordForApi(APIView):
     def post(self, request):
@@ -479,24 +437,26 @@ class SetPasswordForApi(APIView):
                 {'error': 'New Password is Required'},
                 status=400
             )
-        
-        # if tmp_password: #and not user.check_password(tmp_password): #checking if the tmp_password are setted to user before entring new password
-        #     return Response(
-        #         {'error': 'Temporary Password are Invalid'},
-        #         status=400
-        #     )
+
         user.password = make_password(new_password)
         user.save()
-        logger.error("valid_password")
 
         return Response({'message': 'Password set successfully'})
 
+# """
+# ███████╗ ██████╗ ██████╗  ██████╗  ██████╗ ████████╗    ██████╗  █████╗ ███████╗███████╗██╗    ██╗ ██████╗ ██████╗ ██████╗     ███████╗███╗   ███╗████████╗██████╗ 
+# ██╔════╝██╔═══██╗██╔══██╗██╔════╝ ██╔═══██╗╚══██╔══╝    ██╔══██╗██╔══██╗██╔════╝██╔════╝██║    ██║██╔═══██╗██╔══██╗██╔══██╗    ██╔════╝████╗ ████║╚══██╔══╝██╔══██╗
+# █████╗  ██║   ██║██████╔╝██║  ███╗██║   ██║   ██║       ██████╔╝███████║███████╗███████╗██║ █╗ ██║██║   ██║██████╔╝██║  ██║    ███████╗██╔████╔██║   ██║   ██████╔╝
+# ██╔══╝  ██║   ██║██╔══██╗██║   ██║██║   ██║   ██║       ██╔═══╝ ██╔══██║╚════██║╚════██║██║███╗██║██║   ██║██╔══██╗██║  ██║    ╚════██║██║╚██╔╝██║   ██║   ██╔═══╝ 
+# ██║     ╚██████╔╝██║  ██║╚██████╔╝╚██████╔╝   ██║       ██║     ██║  ██║███████║███████║╚███╔███╔╝╚██████╔╝██║  ██║██████╔╝    ███████║██║ ╚═╝ ██║   ██║   ██║     
+# ╚═╝      ╚═════╝ ╚═╝  ╚═╝ ╚═════╝  ╚═════╝    ╚═╝       ╚═╝     ╚═╝  ╚═╝╚══════╝╚══════╝ ╚══╝╚══╝  ╚═════╝ ╚═╝  ╚═╝╚═════╝     ╚══════╝╚═╝     ╚═╝   ╚═╝   ╚═╝     
+# """
 
 # class   Send_Reset_Password(View):
 @api_view(['POST'])
 def send_resetpass(request): #sending email 
     email = request.data.get('email')
-    print(email)
+
     if User.objects.filter(email=email).exists():
         user = User.objects.get(email=email)
         uidb64 = urlsafe_base64_encode(force_bytes(str(user.id)))
@@ -516,7 +476,6 @@ def send_resetpass(request): #sending email
         Thanks,
         Your App Team
         """
-        print (reset_url)
         send_mail(
             subject,
             message,
@@ -524,8 +483,7 @@ def send_resetpass(request): #sending email
             [email],
             fail_silently=False,
         )
-        print (" hhhhhhhhhhh ")
-        # email_message.send(fail_silently=False)
+
         return Response({'message': 'Password reset email has been sent.'}, status=200)
     return Response({'error': 'Email not found'}, status=400)
 
@@ -552,10 +510,6 @@ class   Confirm_reset_Password(View):
 
     def post(self, request, uidb64, token):
         try:
-            # Add debug logging
-            print(f"Received uidb64: {uidb64}")
-            print(f"Received token: {token}")
-            print(f"Request body: {request.body}")
 
             # Parse the request body properly
             try:
@@ -590,7 +544,6 @@ class   Confirm_reset_Password(View):
             return JsonResponse({'message': 'Password reset successful'}, status=200)
 
         except Exception as e:
-            print(f"Error: {str(e)}")
             return JsonResponse({'error': 'An error occurred'}, status=400)
 
     def options(self, request, *args, **kwargs):
@@ -600,6 +553,14 @@ class   Confirm_reset_Password(View):
         response["Access-Control-Allow-Headers"] = "Content-Type, X-Requested-With"
         return response
 
+# """
+# ██╗      ██████╗  ██████╗  ██████╗ ██╗   ██╗████████╗    ██████╗ ██╗      █████╗  ██████╗██╗  ██╗██╗     ██╗███████╗████████╗██╗███╗   ██╗ ██████╗     ████████╗ ██████╗ ██╗  ██╗███████╗███╗   ██╗
+# ██║     ██╔═══██╗██╔════╝ ██╔═══██╗██║   ██║╚══██╔══╝    ██╔══██╗██║     ██╔══██╗██╔════╝██║ ██╔╝██║     ██║██╔════╝╚══██╔══╝██║████╗  ██║██╔════╝     ╚══██╔══╝██╔═══██╗██║ ██╔╝██╔════╝████╗  ██║
+# ██║     ██║   ██║██║  ███╗██║   ██║██║   ██║   ██║       ██████╔╝██║     ███████║██║     █████╔╝ ██║     ██║███████╗   ██║   ██║██╔██╗ ██║██║  ███╗       ██║   ██║   ██║█████╔╝ █████╗  ██╔██╗ ██║
+# ██║     ██║   ██║██║   ██║██║   ██║██║   ██║   ██║       ██╔══██╗██║     ██╔══██║██║     ██╔═██╗ ██║     ██║╚════██║   ██║   ██║██║╚██╗██║██║   ██║       ██║   ██║   ██║██╔═██╗ ██╔══╝  ██║╚██╗██║
+# ███████╗╚██████╔╝╚██████╔╝╚██████╔╝╚██████╔╝   ██║       ██████╔╝███████╗██║  ██║╚██████╗██║  ██╗███████╗██║███████║   ██║   ██║██║ ╚████║╚██████╔╝       ██║   ╚██████╔╝██║  ██╗███████╗██║ ╚████║
+# ╚══════╝ ╚═════╝  ╚═════╝  ╚═════╝  ╚═════╝    ╚═╝       ╚═════╝ ╚══════╝╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝╚══════╝╚═╝╚══════╝   ╚═╝   ╚═╝╚═╝  ╚═══╝ ╚═════╝        ╚═╝    ╚═════╝ ╚═╝  ╚═╝╚══════╝╚═╝  ╚═══╝
+# """
 
 class LogoutViews(APIView):
     permission_classes = [IsAuthenticated]
@@ -616,7 +577,7 @@ class LogoutViews(APIView):
                     token = RefreshToken(refresh_token)
                     token.blacklist()
                 except Exception as e:
-                    print(f"Error blacklisting token: {str(e)}")
+                    return Response({'error': f"Error blacklisting token: {str(e)}"})
                     # Continue with logout even if blacklisting fails
 
             # Create response and delete cookies
@@ -630,7 +591,6 @@ class LogoutViews(APIView):
             return response
             
         except Exception as e:
-            print(f"Logout error: {str(e)}")
             # Still try to delete cookies even if there's an error
             response = Response(
                 {'error': str(e)}, 
@@ -640,15 +600,22 @@ class LogoutViews(APIView):
             response.delete_cookie('refresh_token')
             return response
 
+# """
+#  ██████╗██████╗ ███████╗ █████╗ ████████╗██╗███╗   ██╗ ██████╗     ██████╗ ██████╗  ██████╗ ███████╗██╗██╗     ███████╗    ███████╗ ██████╗ ██████╗     ██╗   ██╗███████╗███████╗██████╗ ███████╗
+# ██╔════╝██╔══██╗██╔════╝██╔══██╗╚══██╔══╝██║████╗  ██║██╔════╝     ██╔══██╗██╔══██╗██╔═══██╗██╔════╝██║██║     ██╔════╝    ██╔════╝██╔═══██╗██╔══██╗    ██║   ██║██╔════╝██╔════╝██╔══██╗██╔════╝
+# ██║     ██████╔╝█████╗  ███████║   ██║   ██║██╔██╗ ██║██║  ███╗    ██████╔╝██████╔╝██║   ██║█████╗  ██║██║     █████╗      █████╗  ██║   ██║██████╔╝    ██║   ██║███████╗█████╗  ██████╔╝███████╗
+# ██║     ██╔══██╗██╔══╝  ██╔══██║   ██║   ██║██║╚██╗██║██║   ██║    ██╔═══╝ ██╔══██╗██║   ██║██╔══╝  ██║██║     ██╔══╝      ██╔══╝  ██║   ██║██╔══██╗    ██║   ██║╚════██║██╔══╝  ██╔══██╗╚════██║
+# ╚██████╗██║  ██║███████╗██║  ██║   ██║   ██║██║ ╚████║╚██████╔╝    ██║     ██║  ██║╚██████╔╝██║     ██║███████╗███████╗    ██║     ╚██████╔╝██║  ██║    ╚██████╔╝███████║███████╗██║  ██║███████║
+#  ╚═════╝╚═╝  ╚═╝╚══════╝╚═╝  ╚═╝   ╚═╝   ╚═╝╚═╝  ╚═══╝ ╚═════╝     ╚═╝     ╚═╝  ╚═╝ ╚═════╝ ╚═╝     ╚═╝╚══════╝╚══════╝    ╚═╝      ╚═════╝ ╚═╝  ╚═╝     ╚═════╝ ╚══════╝╚══════╝╚═╝  ╚═╝╚══════╝
+# """
+
 class UserProfileApi(APIView):
     def get(self, request, username):
         try:
-            # logger.info(f"Getting profile data for {username}")
             user = get_object_or_404(User, username=username)
             serializer = UserProfileSerializer(user)
             return Response(serializer.data)
         except Exception as e:
-            # logger.error(f"Error getting profile for {username}: {str(e)}")
             return Response({"error": str(e)}, status=400)
 
 
@@ -660,40 +627,43 @@ def viewallrouting(request):
         'api/token',
         'api/logout',
         'api/password-reset'
-        # 'api/googlelogin/callback/'
-        # 'admin/token/refresh',
-        # 'admin/register/',
-        # 'admin/token/'APIView
     ]
     return Response(data)
+
+# """
+# ██╗     ██╗███████╗████████╗██╗███╗   ██╗ ██████╗      █████╗ ██╗     ██╗         ██╗   ██╗███████╗███████╗██████╗ ███████╗
+# ██║     ██║██╔════╝╚══██╔══╝██║████╗  ██║██╔════╝     ██╔══██╗██║     ██║         ██║   ██║██╔════╝██╔════╝██╔══██╗██╔════╝
+# ██║     ██║███████╗   ██║   ██║██╔██╗ ██║██║  ███╗    ███████║██║     ██║         ██║   ██║███████╗█████╗  ██████╔╝███████╗
+# ██║     ██║╚════██║   ██║   ██║██║╚██╗██║██║   ██║    ██╔══██║██║     ██║         ██║   ██║╚════██║██╔══╝  ██╔══██╗╚════██║
+# ███████╗██║███████║   ██║   ██║██║ ╚████║╚██████╔╝    ██║  ██║███████╗███████╗    ╚██████╔╝███████║███████╗██║  ██║███████║
+# ╚══════╝╚═╝╚══════╝   ╚═╝   ╚═╝╚═╝  ╚═══╝ ╚═════╝     ╚═╝  ╚═╝╚══════╝╚══════╝     ╚═════╝ ╚══════╝╚══════╝╚═╝  ╚═╝╚══════╝
+# """
 
 class get_allusers(APIView):
     permission_classes = [IsAuthenticated]
     def get(self, request):
         
         users = User.objects.all()
-        print (users)
         serializer = UserSerial(users, many=True)
         return Response(serializer.data)
 
+# """
+# ██╗   ██╗██████╗ ██████╗  █████╗ ████████╗██╗███╗   ██╗ ██████╗     ██████╗ ██████╗  ██████╗ ███████╗██╗██╗     ███████╗    ██╗███╗   ██╗███████╗ ██████╗ 
+# ██║   ██║██╔══██╗██╔══██╗██╔══██╗╚══██╔══╝██║████╗  ██║██╔════╝     ██╔══██╗██╔══██╗██╔═══██╗██╔════╝██║██║     ██╔════╝    ██║████╗  ██║██╔════╝██╔═══██╗
+# ██║   ██║██████╔╝██║  ██║███████║   ██║   ██║██╔██╗ ██║██║  ███╗    ██████╔╝██████╔╝██║   ██║█████╗  ██║██║     █████╗      ██║██╔██╗ ██║█████╗  ██║   ██║
+# ██║   ██║██╔═══╝ ██║  ██║██╔══██║   ██║   ██║██║╚██╗██║██║   ██║    ██╔═══╝ ██╔══██╗██║   ██║██╔══╝  ██║██║     ██╔══╝      ██║██║╚██╗██║██╔══╝  ██║   ██║
+# ╚██████╔╝██║     ██████╔╝██║  ██║   ██║   ██║██║ ╚████║╚██████╔╝    ██║     ██║  ██║╚██████╔╝██║     ██║███████╗███████╗    ██║██║ ╚████║██║     ╚██████╔╝
+#  ╚═════╝ ╚═╝     ╚═════╝ ╚═╝  ╚═╝   ╚═╝   ╚═╝╚═╝  ╚═══╝ ╚═════╝     ╚═╝     ╚═╝  ╚═╝ ╚═════╝ ╚═╝     ╚═╝╚══════╝╚══════╝    ╚═╝╚═╝  ╚═══╝╚═╝      ╚═════╝ 
+# """
 
 class UserEditProfileView(APIView):
-    """
-    API View to handle user profile retrieval and updates
-    """
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        """
-        Retrieve current user's profile information
-        """
         serializer = UserSerial(request.user)
         return Response(serializer.data)
 
     def put(self, request):
-        """
-        Update user profile information
-        """
         serializer = UserSerial(request.user, data=request.data, partial=True)
         
         if serializer.is_valid():
@@ -725,6 +695,14 @@ class UserEditProfileView(APIView):
                 status=400
             )
     
+# """
+# ██████╗ ███████╗ █████╗     ███████╗███╗   ██╗ █████╗ ██████╗ ██╗     ███████╗    ██████╗ ██╗███████╗ █████╗ ██████╗ ██╗     ███████╗    ██╗   ██╗███████╗██████╗ ██╗███████╗██╗   ██╗      ██████╗██╗  ██╗███████╗ ██████╗██╗  ██╗
+# ╚════██╗██╔════╝██╔══██╗    ██╔════╝████╗  ██║██╔══██╗██╔══██╗██║     ██╔════╝    ██╔══██╗██║██╔════╝██╔══██╗██╔══██╗██║     ██╔════╝    ██║   ██║██╔════╝██╔══██╗██║██╔════╝╚██╗ ██╔╝     ██╔════╝██║  ██║██╔════╝██╔════╝██║ ██╔╝
+#  █████╔╝█████╗  ███████║    █████╗  ██╔██╗ ██║███████║██████╔╝██║     █████╗█████╗██║  ██║██║███████╗███████║██████╔╝██║     █████╗█████╗██║   ██║█████╗  ██████╔╝██║█████╗   ╚████╔╝█████╗██║     ███████║█████╗  ██║     █████╔╝ 
+# ██╔═══╝ ██╔══╝  ██╔══██║    ██╔══╝  ██║╚██╗██║██╔══██║██╔══██╗██║     ██╔══╝╚════╝██║  ██║██║╚════██║██╔══██║██╔══██╗██║     ██╔══╝╚════╝╚██╗ ██╔╝██╔══╝  ██╔══██╗██║██╔══╝    ╚██╔╝ ╚════╝██║     ██╔══██║██╔══╝  ██║     ██╔═██╗ 
+# ███████╗██║     ██║  ██║    ███████╗██║ ╚████║██║  ██║██████╔╝███████╗███████╗    ██████╔╝██║███████║██║  ██║██████╔╝███████╗███████╗     ╚████╔╝ ███████╗██║  ██║██║██║        ██║        ╚██████╗██║  ██║███████╗╚██████╗██║  ██╗
+# ╚══════╝╚═╝     ╚═╝  ╚═╝    ╚══════╝╚═╝  ╚═══╝╚═╝  ╚═╝╚═════╝ ╚══════╝╚══════╝    ╚═════╝ ╚═╝╚══════╝╚═╝  ╚═╝╚═════╝ ╚══════╝╚══════╝      ╚═══╝  ╚══════╝╚═╝  ╚═╝╚═╝╚═╝        ╚═╝         ╚═════╝╚═╝  ╚═╝╚══════╝ ╚═════╝╚═╝  ╚═╝
+# """
 
 class TwoFactorAuthenticationView(APIView):
     permission_classes = [IsAuthenticated]
@@ -738,7 +716,6 @@ class TwoFactorAuthenticationView(APIView):
             }, status=status.HTTP_401_UNAUTHORIZED)
 
         user = request.user
-        print(f"Authenticated user: {user.email}")
         
         # Get or create TOTP device for user
         device, created = TOTPDevice.objects.get_or_create(
@@ -915,6 +892,15 @@ class Check2FAStatusView(APIView):
                 'requires_2fa': False
             })
 
+# """
+# ██╗   ██╗██████╗ ██████╗  █████╗ ████████╗██╗███╗   ██╗ ██████╗      ██████╗ ██╗     ██████╗     ██████╗  █████╗ ███████╗███████╗██╗    ██╗ ██████╗ ██████╗ ██████╗ 
+# ██║   ██║██╔══██╗██╔══██╗██╔══██╗╚══██╔══╝██║████╗  ██║██╔════╝     ██╔═══██╗██║     ██╔══██╗    ██╔══██╗██╔══██╗██╔════╝██╔════╝██║    ██║██╔═══██╗██╔══██╗██╔══██╗
+# ██║   ██║██████╔╝██║  ██║███████║   ██║   ██║██╔██╗ ██║██║  ███╗    ██║   ██║██║     ██║  ██║    ██████╔╝███████║███████╗███████╗██║ █╗ ██║██║   ██║██████╔╝██║  ██║
+# ██║   ██║██╔═══╝ ██║  ██║██╔══██║   ██║   ██║██║╚██╗██║██║   ██║    ██║   ██║██║     ██║  ██║    ██╔═══╝ ██╔══██║╚════██║╚════██║██║███╗██║██║   ██║██╔══██╗██║  ██║
+# ╚██████╔╝██║     ██████╔╝██║  ██║   ██║   ██║██║ ╚████║╚██████╔╝    ╚██████╔╝███████╗██████╔╝    ██║     ██║  ██║███████║███████║╚███╔███╔╝╚██████╔╝██║  ██║██████╔╝
+#  ╚═════╝ ╚═╝     ╚═════╝ ╚═╝  ╚═╝   ╚═╝   ╚═╝╚═╝  ╚═══╝ ╚═════╝      ╚═════╝ ╚══════╝╚═════╝     ╚═╝     ╚═╝  ╚═╝╚══════╝╚══════╝ ╚══╝╚══╝  ╚═════╝ ╚═╝  ╚═╝╚═════╝ 
+# """
+
 class ChangePasswordView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -922,13 +908,11 @@ class ChangePasswordView(APIView):
         try:
             # Parse the request body properly
             try:
-
                 old_password = request.data.get('old_password')
                 new_password = request.data.get('new_password')
                 confirm_password = request.data.get('confirm_password')
             except (TypeError, ValueError):
                 return Response({'error': 'Invalid JSON data'})
-
 
             # Decode the user ID
             user = request.user
@@ -956,9 +940,16 @@ class ChangePasswordView(APIView):
             return Response({'message': 'Password reset successful'})
 
         except Exception as e:
-            print(f"Error: {str(e)}")
             return Response({'error': 'An error occurred'})
 
+# """
+# ███████╗██████╗ ██╗███████╗███╗   ██╗██████╗     ██████╗ ███████╗ ██████╗ ██╗   ██╗███████╗███████╗████████╗    ██████╗ ███████╗███╗   ███╗ ██████╗ ██╗   ██╗███████╗     █████╗ ██████╗ ██████╗        ██████╗ █████╗ ███╗   ██╗ ██████╗███████╗██╗      ██████╗ ███████╗     ██╗███████╗ ██████╗████████╗
+# ██╔════╝██╔══██╗██║██╔════╝████╗  ██║██╔══██╗    ██╔══██╗██╔════╝██╔═══██╗██║   ██║██╔════╝██╔════╝╚══██╔══╝    ██╔══██╗██╔════╝████╗ ████║██╔═══██╗██║   ██║██╔════╝    ██╔══██╗██╔══██╗██╔══██╗      ██╔════╝██╔══██╗████╗  ██║██╔════╝██╔════╝██║      ██╔══██╗██╔════╝     ██║██╔════╝██╔════╝╚══██╔══╝
+# █████╗  ██████╔╝██║█████╗  ██╔██╗ ██║██║  ██║    ██████╔╝█████╗  ██║   ██║██║   ██║█████╗  ███████╗   ██║       ██████╔╝█████╗  ██╔████╔██║██║   ██║██║   ██║█████╗█████╗███████║██║  ██║██║  ██║█████╗██║     ███████║██╔██╗ ██║██║     █████╗  ██║█████╗██████╔╝█████╗       ██║█████╗  ██║        ██║   
+# ██╔══╝  ██╔══██╗██║██╔══╝  ██║╚██╗██║██║  ██║    ██╔══██╗██╔══╝  ██║▄▄ ██║██║   ██║██╔══╝  ╚════██║   ██║       ██╔══██╗██╔══╝  ██║╚██╔╝██║██║   ██║╚██╗ ██╔╝██╔══╝╚════╝██╔══██║██║  ██║██║  ██║╚════╝██║     ██╔══██║██║╚██╗██║██║     ██╔══╝  ██║╚════╝██╔══██╗██╔══╝  ██   ██║██╔══╝  ██║        ██║   
+# ██║     ██║  ██║██║███████╗██║ ╚████║██████╔╝    ██║  ██║███████╗╚██████╔╝╚██████╔╝███████╗███████║   ██║       ██║  ██║███████╗██║ ╚═╝ ██║╚██████╔╝ ╚████╔╝ ███████╗    ██║  ██║██████╔╝██████╔╝      ╚██████╗██║  ██║██║ ╚████║╚██████╗███████╗███████╗ ██║  ██║███████╗╚█████╔╝███████╗╚██████╗   ██║   
+# ╚═╝     ╚═╝  ╚═╝╚═╝╚══════╝╚═╝  ╚═══╝╚═════╝     ╚═╝  ╚═╝╚══════╝ ╚══▀▀═╝  ╚═════╝ ╚══════╝╚══════╝   ╚═╝       ╚═╝  ╚═╝╚══════╝╚═╝     ╚═╝ ╚═════╝   ╚═══╝  ╚══════╝    ╚═╝  ╚═╝╚═════╝ ╚═════╝        ╚═════╝╚═╝  ╚═╝╚═╝  ╚═══╝ ╚═════╝╚══════╝╚══════╝ ╚═╝  ╚═╝╚══════╝ ╚════╝ ╚══════╝ ╚═════╝   ╚═╝   
+# """
 
 class FriendRequestListCreateView(generics.ListCreateAPIView):
     serializer_class = FriendRequestSerializer
@@ -1020,7 +1011,6 @@ class FriendRequestListCreateView(generics.ListCreateAPIView):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
         except Exception as e:
-            print("Error:", str(e))  # Debug log
             return Response(
                 {'detail': 'An error occurred while processing your request'},
                 status=400
@@ -1065,8 +1055,6 @@ class FriendRequestRejectView(APIView):
                 {'detail': 'Not authorized'},
                 status=status.HTTP_403_FORBIDDEN
             )
-        # friend_request.status = FriendRequest.REJECTED
-        # friend_request.save()
         friend_request.delete()
         return Response({'status': 'friend request rejected'})
 
@@ -1085,7 +1073,7 @@ class FriendRequestCancelView(APIView):
 
 class FriendListView(generics.ListAPIView):
     serializer_class = FriendListSerializer
-    # permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         return FriendList.objects.filter(user=self.request.user)
@@ -1105,7 +1093,15 @@ class RemoveFriendView(APIView):
         friend_request.delete()
         
         return Response({'status': 'friend removed'})
-    
+
+# """
+# ███████╗ █████╗ ██╗  ██╗██╗███╗   ██╗ ██████╗     ██████╗ ███████╗ █████╗ ██╗  ████████╗██╗███╗   ███╗███████╗     ██████╗ ███╗   ██╗██╗     ██╗███╗   ██╗███████╗    ███████╗████████╗ █████╗ ████████╗██╗   ██╗███████╗
+# ██╔════╝██╔══██╗██║ ██╔╝██║████╗  ██║██╔════╝     ██╔══██╗██╔════╝██╔══██╗██║  ╚══██╔══╝██║████╗ ████║██╔════╝    ██╔═══██╗████╗  ██║██║     ██║████╗  ██║██╔════╝    ██╔════╝╚══██╔══╝██╔══██╗╚══██╔══╝██║   ██║██╔════╝
+# █████╗  ███████║█████╔╝ ██║██╔██╗ ██║██║  ███╗    ██████╔╝█████╗  ███████║██║     ██║   ██║██╔████╔██║█████╗      ██║   ██║██╔██╗ ██║██║     ██║██╔██╗ ██║█████╗      ███████╗   ██║   ███████║   ██║   ██║   ██║███████╗
+# ██╔══╝  ██╔══██║██╔═██╗ ██║██║╚██╗██║██║   ██║    ██╔══██╗██╔══╝  ██╔══██║██║     ██║   ██║██║╚██╔╝██║██╔══╝      ██║   ██║██║╚██╗██║██║     ██║██║╚██╗██║██╔══╝      ╚════██║   ██║   ██╔══██║   ██║   ██║   ██║╚════██║
+# ██║     ██║  ██║██║  ██╗██║██║ ╚████║╚██████╔╝    ██║  ██║███████╗██║  ██║███████╗██║   ██║██║ ╚═╝ ██║███████╗    ╚██████╔╝██║ ╚████║███████╗██║██║ ╚████║███████╗    ███████║   ██║   ██║  ██║   ██║   ╚██████╔╝███████║
+# ╚═╝     ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝╚═╝  ╚═══╝ ╚═════╝     ╚═╝  ╚═╝╚══════╝╚═╝  ╚═╝╚══════╝╚═╝   ╚═╝╚═╝     ╚═╝╚══════╝     ╚═════╝ ╚═╝  ╚═══╝╚══════╝╚═╝╚═╝  ╚═══╝╚══════╝    ╚══════╝   ╚═╝   ╚═╝  ╚═╝   ╚═╝    ╚═════╝ ╚══════╝
+# """
     
 #Faking Realtime Online status
 class UserOnlineView(APIView):

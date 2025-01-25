@@ -107,54 +107,6 @@ const PictureUser = () => {
   }, [username, token]);
 
 
-  // useEffect(() => {
-  //   const fetchProfil = async () => {
-  //     try {
-  //       const response = await fetch(`http://localhost:8001/api/user-profile/${username}/`);
-  //       // Check for 400 error first
-  //       if (!response.ok) {
-  //         navigate('/dashboard');
-  //         toast.error('User not found2', {
-  //           position: "top-right",
-  //           autoClose: 5000,
-  //           hideProgressBar: false,
-  //           closeOnClick: false,
-  //           pauseOnHover: true,
-  //           draggable: true,
-  //           progress: undefined,
-  //           theme: "dark",
-  //         });
-  //         return;
-  //       }
-        
-  //       if (!response.ok) {
-  //         throw new Error('Profile not found');
-  //       }
-        
-  //       const data = await response.json();
-  //       setProfil(data);
-  //       await checkFriendStatus();
-  //     } catch (err) {
-  //       navigate('/dashboard');
-  //       toast.error(`${err.message}`, {
-  //         position: "top-right",
-  //         autoClose: 5000,
-  //         hideProgressBar: false,
-  //         closeOnClick: false,
-  //         pauseOnHover: true,
-  //         draggable: true,
-  //         progress: undefined,
-  //         theme: "dark",
-  //       });
-  //     }
-  //   };
-  
-  //   if (username && token) {
-  //     fetchProfil();
-  //   }
-  // }, [username, token, navigate]);
-
-
   const handleFriendRequest = async () => {
     try {
       const response = await fetch('http://localhost:8001/api/friend-requests/', {
@@ -400,28 +352,18 @@ const PictureUser = () => {
   };
 
   if (error) {
-    // navigate('/dashboard')
-    return ;
-      // toast.error(`${error}`, {
-      //   position: "top-right",
-      //   autoClose: 5000,
-      //   hideProgressBar: false,
-      //   closeOnClick: false,
-      //   pauseOnHover: true,
-      //   draggable: true,
-      //   progress: undefined,
-      //   theme: "dark",
-      // })
-    
+    toast.error(`${error}`, {
+      position: "top-right",
+      autoClose: 5000,
+      hideProgressBar: false,
+      closeOnClick: false,
+      pauseOnHover: true,
+      draggable: true,
+      progress: undefined,
+      theme: "dark",
+    })
   }
 
-  // if (isLoading) {
-  //   return (
-  //     <div className="flex items-center justify-center p-6">
-  //       <Loader2 className="w-8 h-8 text-indigo-400 animate-spin" />
-  //     </div>
-  //   );
-  // }
 
   return (
     <div className="space-y-6">

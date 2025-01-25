@@ -1,6 +1,6 @@
 {
 
-    "_comment": "Login Translator DE",
+    "_comment": "Login Translator FR",
     "Login": "Se connecter",
     "EMAIL": "E-MAIL",
     "PASSWORD": "MOT DE PASSE",
@@ -15,7 +15,7 @@
     "Continue with 42": "Continuer avec 42",
     "incorrect username or password": "nom d'utilisateur ou mot de passe incorrect",
 
-    "__comment": "SIGNUP Translator DE",
+    "__comment": "SIGNUP Translator FR",
     "Register": "Registre",
     "FULLNAME": "NOM ET PRÉNOM",
     "You must specify a fullname": "Vous devez spécifier un nom complet",
@@ -26,7 +26,7 @@
     "SIGN UP": "S'INSCRIRE",
     "already have an account?": "Vous avez déjà un compte ?",
     
-    "___comment": "Dashboard Translator DE",
+    "___comment": "Dashboard Translator FR",
     "matches": "allumettes",
     "statistics": "statistiques",
     "Ping Pong Pro League": "Ligue professionnelle de ping-pong",
@@ -56,7 +56,7 @@
     "Friends": "Amis",
     "Search friends...": "Rechercher des amis...",
 
-    "____comment": "Game cards Translator DE",
+    "____comment": "Game cards Translator FR",
     "Select Your Battleground": "Sélectionnez votre champ de bataille",
     "PLAY NOW": "JOUER MAINTENANT",
     "2D Games": "Jeux 2D",
@@ -78,7 +78,7 @@
     "Join elite Local tournament competitions.": "Rejoignez des compétitions de tournois locaux d'élite.",
     "Challenge AI opponents in classic 2D pong gameplay..": "Défiez des adversaires IA dans un gameplay de pong classique en 2D.",
     
-    "______comment": "Tournament Home Page Translator DE",
+    "______comment": "Tournament Home Page Translator FR",
     "Tournament Home": "Accueil du tournoi",
     "Tournament code": "Code du tournoi",
     "Join": "Rejoindre",
@@ -110,7 +110,7 @@
     "Invite link copied to clipboard!": "Lien d'invitation copié dans le presse-papiers !",
     "Processing game results...": "Traitement des résultats du jeu...",
     
-    "_______comment": "Security Page Translator DE",
+    "_______comment": "Security Page Translator FR",
     "Security": "Sécurité",
     "Secure your account": "Sécurisez votre compte",
     "Old Password": "Ancien mot de passe",
@@ -151,7 +151,7 @@
     "Failed to Disable 2FA": "Impossible de désactiver la 2FA",
     "An error occurred while trying to disable 2FA. Please try again.": "Une erreur s'est produite lors de la tentative de désactivation de la 2FA. Veuillez réessayer.",
     
-    "________comment": "AuthContext File Translator DE",
+    "________comment": "AuthContext File Translator FR",
     "you don't have an account you should to register": "vous n'avez pas de compte vous devez vous inscrire",
     "2FA Verification Required": "Vérification 2FA requise",
     "Please enter your 2FA code": "Veuillez saisir votre code 2FA",
@@ -179,7 +179,7 @@
     "You successfully logged in using 2FA" : "Vous vous êtes connecté avec succès en utilisant la 2FA",
     "Failed on 2FA verification" : "Échec de la vérification 2FA",
 
-    "_________comment": "Update Profil Page Translator DE",
+    "_________comment": "Update Profil Page Translator FR",
     "Account" : "Compte",
     "Profile Picture" : "Photo de profil",
     "PNG, JPEG under 15MB" : "PNG, JPEG moins de 15 Mo",
@@ -194,7 +194,7 @@
     "Submit" : "Envoyer",
 
 
-    "___________comment": "NavBar file Translator DE",
+    "___________comment": "NavBar file Translator FR",
     "Search users..." : "Rechercher des utilisateurs...",
     "Searching..." : "Recherche en cours...",
     "No users found" : "Aucun utilisateur trouvé",
@@ -204,7 +204,7 @@
     "Edit Profile" : "Modifier le profil",
     "Logout": "Déconnexion",
 
-    "____________comment": "Notif file Translator DE",
+    "____________comment": "Notif file Translator FR",
     "Notifications viewed" : "Notifications vues",
     "friend request" : "demande d'ami",
     "accepted" : "accepté",
@@ -220,5 +220,21 @@
     "Accept Request" : "Accepter la demande",
     "Reject Request" : "Rejeter la demande",
     "Remove Friend" : "Supprimer l'ami",
-    "Invite to Game" : "Inviter à jouer"
+    "Invite to Game" : "Inviter à jouer",
+    
+    "_____________comment": "Profil Page Translator FR",
+    "total Games" : "Jeux au total",
+    "win Rate" : "Taux de victoire",
+    "Statistics Overview" : "Aperçu des statistiques",
+    "Recent Matches" : "Matchs récents",
+    "Total Games" : "Jeux totaux",
+    "Win Rate" : "Taux de victoire",
+    "ELO Rating" : "Classement ELO",
+    "Sun": "Dim", 
+    "Mon": "Lun", 
+    "Tue": "Mar", 
+    "Wed": "Mer", 
+    "Thu": "Jeu", 
+    "Fri": "Ven", 
+    "Sat": "Sam"
 }
