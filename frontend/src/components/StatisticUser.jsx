@@ -4,8 +4,11 @@ import { StatCard } from './StatisticCards';
 import { WeeklyChart } from './WeklyChart';
 import { useParams } from 'react-router-dom';
 import { jwtDecode } from "jwt-decode";
+import '../i18n';
+import { useTranslation } from 'react-i18next';
 
 export const Statistics = () => {
+  const { t } = useTranslation();
   const [stats, setStats] = useState([
     { label: 'Total Games', value: '...', icon: <Gamepad2 size={20} />, color: 'from-blue-500 to-purple-500' },
     { label: 'Win Rate', value: '...', icon: <Trophy size={20} />, color: 'from-green-500 to-emerald-500' },
@@ -41,31 +44,31 @@ export const Statistics = () => {
         
         setStats([
           {
-            label: 'Total Games',
+            label: t('Total Games'),
             value: totalGames.toString(),
             icon: <Gamepad2 size={20} />,
             color: 'from-blue-500 to-purple-500'
           },
           {
-            label: 'Win Rate',
+            label: t('Win Rate'),
             value: `${winRate}%`,
             icon: <Trophy size={20} />,
             color: 'from-green-500 to-emerald-500'
           },
           {
-            label: 'ELO Rating',
+            label: t('ELO Rating'),
             value: eloRating.toString(),
             icon: <Activity size={20} />,
             color: 'from-yellow-500 to-orange-500'
           },
           {
-            label: 'Wins',
+            label: t('Wins'),
             value: dataWins.toString(),
             icon: <BarChart2 size={20} />,
             color: 'from-pink-500 to-rose-500'
           },
           {
-            label: 'Losses',
+            label: t('Losses'),
             value: dataLosses.toString(),
             icon: <XCircle size={20} />,
             color: 'from-red-500 to-red-600'

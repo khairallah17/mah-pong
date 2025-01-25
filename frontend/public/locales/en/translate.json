@@ -1,5 +1,5 @@
 {
-    "_comment": "Login Translator DE",
+    "_comment": "Login Translator EN",
     "Login": "Login",
     "EMAIL": "EMAIL",
     "PASSWORD": "PASSWORD",
@@ -14,7 +14,7 @@
     "Continue with 42": "Continue with 42",
     "incorrect username or password": "incorrect username or password",
 
-    "__comment": "SIGNUP Translator DE",
+    "__comment": "SIGNUP Translator EN",
     "Register": "Register",
     "FULLNAME": "FULLNAME",
     "You must specify a fullname": "You must specify a fullname",
@@ -25,7 +25,7 @@
     "SIGN UP": "SIGN UP",
     "already have an account?": "already have an account?",
     
-    "___comment": "Dashboard Translator DE",
+    "___comment": "Dashboard Translator EN",
     "matches": "matches",
     "statistics": "statistics",
     "Ping Pong Pro League": "Ping Pong Pro League",
@@ -55,7 +55,7 @@
     "Friends": "Friends",
     "Search friends...": "Search friends...",
 
-    "____comment": "Game cards Translator DE",
+    "____comment": "Game cards Translator EN",
     "Select Your Battleground": "Select Your Battleground",
     "PLAY NOW": "PLAY NOW",
     "2D Games": "2D Games",
@@ -78,7 +78,7 @@
     "Challenge AI opponents in classic 2D pong gameplay..": "Challenge AI opponents in classic 2D pong gameplay..",
 
 
-    "______comment": "Tournament Home Page Translator DE",
+    "______comment": "Tournament Home Page Translator EN",
     "Tournament Home": "Tournament Home",
     "Tournament code": "Tournament code",
     "Join": "Join",
@@ -111,7 +111,7 @@
     "Processing game results...": "Processing game results...",
 
 
-    "_______comment": "Security Page Translator DE",
+    "_______comment": "Security Page Translator EN",
     "Security": "Security",
     "Secure your account": "Secure your account",
     "Old Password": "Old Password",
@@ -152,7 +152,7 @@
     "Failed to Disable 2FA": "Failed to Disable 2FA",
     "An error occurred while trying to disable 2FA. Please try again.": "An error occurred while trying to disable 2FA. Please try again.",
 
-    "________comment": "AuthContext File Translator DE",
+    "________comment": "AuthContext File Translator EN",
     "you don't have an account you should to register": "you don't have an account you should to register",
     "2FA Verification Required": "2FA Verification Required",
     "Please enter your 2FA code": "Please enter your 2FA code",
@@ -181,7 +181,7 @@
     "Failed on 2FA verification": "Failed on 2FA verification",
 
 
-    "_________comment": "Update Profil Page Translator DE",
+    "_________comment": "Update Profil Page Translator EN",
     "Account": "Account",
     "Profile Picture": "Profile Picture",
     "PNG, JPEG under 15MB": "PNG, JPEG under 15MB",
@@ -195,7 +195,7 @@
     "Email": "Email",
     "Submit": "Submit",
 
-    "___________comment": "NavBar file Translator DE",
+    "___________comment": "NavBar file Translator EN",
     "Search users...": "Search users...",
     "Searching...": "Searching...",
     "No users found": "No users found",
@@ -205,7 +205,7 @@
     "Edit Profile": "Edit Profile",
     "Logout": "Logout",
 
-    "____________comment": "Notif file Translator DE",
+    "____________comment": "Notif file Translator EN",
     "Notifications viewed": "Notifications viewed",
     "friend request": "friend request",
     "accepted": "accepted",
@@ -222,6 +222,22 @@
     "Reject Request": "Reject Request",
     "Remove Friend": "Remove Friend",
     "Games": "Jeux",
-    "Invite to Game": "Invite to Game"
+    "Invite to Game": "Invite to Game",
+
+    "_____________comment": "Profil Page Translator EN",
+    "total Games" : "total Games",
+    "win Rate" : "win Rate",
+    "Statistics Overview" : "Statistics Overview",
+    "Recent Matches" : "Recent Matches",
+    "Total Games" : "Total Games",
+    "Win Rate" : "Win Rate",
+    "ELO Rating" : "ELO Rating",
+    "Sun": "Sun", 
+    "Mon": "Mon", 
+    "Tue": "Tue", 
+    "Wed": "Wed", 
+    "Thu": "Thu", 
+    "Fri": "Fri", 
+    "Sat": "Sat"
     
 }

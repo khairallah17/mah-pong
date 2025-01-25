@@ -83,31 +83,12 @@ class ApiUsers(APIView):
             return Response({"error": str(e)}, status=500)
 
 
-# @api_view(['GET'])
-# def get_users(request):
-#     print(request)
-#     print("heeere i am ")
-#     users = User.objects.exclude(id=request.user.id) #Exclude current user
-#     serializer = UserSerializer(users, many=True)
-#     return Response(serializer.data)
-
 @api_view(['GET'])
 def user_list(self, request):
     users = User.objects.all().values("id", "username")
     return JsonResponse(list(users), safe=False) # type: ignore
 
-# @api_view(['GET'])
-# def get_conversation(request, user_id):
-#     user = User.objects.get(id=user_id)
-#     messages = Message.objects.filter(
-#         sender__in=[user]
-#     ).order_by('timestamp')
-
-#     serializer = MessageSerializer(messages, many=True)
-#     print (serializer.data)
-#     return Response(serializer.data)
 @api_view(['GET'])
-# @permission_classes([IsAuthenticated])
 def get_conversation(request, id):
     try:
         auth_header = request.headers.get('Authorization')
@@ -138,37 +119,6 @@ def get_conversation(request, id):
     except Exception as e:
         return Response({'error': str(e)}, status=401)
    
-
-# @api_view(['POST'])
-# def send_message(request):
-#     sender_id = request.data.get('sender_id')
-#     receiver_id = request.data.get('receiver_id')
-#     content = request.data.get('message')
-
-#     try:
-#         sender = User.objects.get(id=sender_id)
-#         receiver = User.objects.get(id=receiver_id)
-
-#         if BlockList.objects.filter(user=sender, blocked_users=receiver).exists():
-#             return Response({"error": "You have blocked this user."}, status=403)
-        
-#         if BlockList.objects.filter(user=receiver, blocked_users=sender).exists():
-#             return Response({"error": "You have been blocked by this user."}, status=403)
-        
-#         message = Message.objects.create(
-#             sender=sender,
-#             receiver=receiver,
-#             content=content
-#         )
-#         return Response({
-#             "id": message.id,
-#             "sender": message.sender.username,
-#             "receiver": message.receiver.username,
-#             "content": message.content,
-#             "timestamp": message.timestamp
-#         })
-#     except User.DoesNotExist:
-#         return Response({"error": "User not found"}, status=404)
 
 @api_view(['POST'])
 def block_user(request, user_id):
@@ -215,15 +165,6 @@ def block_user(request, user_id):
         return Response({"error": str(e)}, status=401)
 
 
-# @api_view(['GET'])
-# def get_block_status(request, user_id):
-#     # user = User.objects.get(id=user_id).exist()
-#     # if (not user):
-#     #     return False
-#     # if (BlockList.is_user_blocked(User.objects.get(id=user_id))):
-#     #     return True
-#     return False
-
 @api_view(['GET'])
 def get_block_status(request, user_id):
     try:
@@ -244,12 +185,15 @@ def get_block_status(request, user_id):
             return Response({"error": "Invalid UUID format for user_id"}, status=400)
 
         is_user1_blocking = BlockList.objects.filter(user=user1, blocked_users=user2).exists()
-        is_user2_blocking = BlockList.objects.filter(user=user2, blocked_users=user1).exists()
+        # is_user2_blocking = BlockList.objects.filter(user=user2, blocked_users=user1).exists()
 
         return Response({
-            "user1_blocking_user2": is_user1_blocking,
-            "user2_blocking_user1": is_user2_blocking,
+            "block_status": is_user1_blocking
         })
+        # return Response({
+        #     "user2_blocking_user1": is_user1_blocking
+        #     "user2_blocking_user1": is_user2_blocking,
+        # })
 
     except ValidationError:
         return Response({"error": "Invalid UUID format for user2_id"}, status=400)

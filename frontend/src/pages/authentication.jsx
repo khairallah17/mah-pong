@@ -19,7 +19,6 @@ export const Authentication = () => {
 
     <div className="bg-root-background h-screen w-screen bg-cover bg-center">
       <div className="container mx-auto grid lg:grid-cols-2 text-white h-full relative">
-
         <motion.div
         layout
         transition={{ duration: 0.5 }}
@@ -42,7 +41,7 @@ export const Authentication = () => {
             swap ? "order-1" : "order-2"
           }`}
         >
-          <motion.img transition={{ duration: 0.5 }} src={pong_right} alt="Pong" className={`w-3/4 duration-500 ${swap ? "" : "-scale-x-100"}`} />
+          <motion.img transition={{ duration: 0.5 }} src={pong_right} alt="Pong" className={`w-3/4 duration-500 animate-bounce animate-infinite ${swap ? "" : "-scale-x-100"}`} />
         </motion.div>
       </div>
     </div>

@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { UserCircle, UserPlus, UserCheck, X } from "lucide-react";
 import '../i18n';
 import { useTranslation } from 'react-i18next';
+import { useAuthContext } from "../hooks/useAuthContext";
 
 const NotificationDisplay = () => {
   const { t } = useTranslation();
@@ -17,8 +18,10 @@ const NotificationDisplay = () => {
   useEffect(() => {
     const fetchNotifications = async () => {
       try {
-        const accessToken = JSON.parse(localStorage.getItem("authtoken")).access;
-        const { username } = jwtDecode(accessToken);
+        
+        const { user } = useAuthContext()
+        const { username } = user
+
         const response = await fetch(`/api/notifications/api/notifications/${username}/`);
         const data = await response.json();
         const sortedData = data.sort((a, b) => 
@@ -105,7 +108,7 @@ const NotificationDisplay = () => {
     return (
       <>
         <span className="font-semibold text-gray-900">{username}</span>
-        <span className="text-gray-600"> {rest.join(" ")}</span>
+        <span className="text-gray-600"> {t(rest.join(" "))}</span>
       </>
     );
   };
@@ -149,8 +152,8 @@ const NotificationDisplay = () => {
           />
           
           {/* Notification Container */}
-          <div className="fixed top-16 right-2 left-2 md:absolute md:right-0 md:left-auto md:top-full md:mt-2 max-h-[80vh] w-auto md:w-96 bg-white rounded-lg shadow-xl z-20 border border-gray-200">
-            <div className="flex flex-col h-full max-h-[80vh]">
+          <div className="fixed top-16 overflow-hidden right-2 left-2 md:absolute md:right-0 md:left-auto md:top-full md:mt-2 max-h-[80vh] w-auto md:w-96 bg-white rounded-lg shadow-xl z-20 border border-gray-200">
+            <div className="flex flex-col max-h-[80vh] h-[300px]">
               {/* Header */}
               <div className="px-4 py-3 border-b border-gray-200 flex justify-between items-center sticky top-0 bg-white z-10">
                 <h3 className="text-lg font-semibold text-gray-800">{t('Notifications')}</h3>
@@ -163,7 +166,7 @@ const NotificationDisplay = () => {
               </div>
               
               {/* Notifications List */}
-              <div className="overflow-y-auto flex-1 divide-y divide-gray-200 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-50">
+              <div className="overflow-y-scroll !h-[300px] flex-1">
                 {notifications.length > 0 ? (
                   notifications.map((notification, index) => {
                     const style = getNotificationStyle(notification.message);
@@ -171,7 +174,7 @@ const NotificationDisplay = () => {
                       <div
                         key={notification.id || index}
                         onClick={() => handleNotificationClick(notification)}
-                        className={`px-4 py-3 hover:bg-gray-50 cursor-pointer transition-all duration-200 border-l-4 ${style.bgColor} ${style.borderColor}`}
+                        className={`px-4 py-3 hover:bg-gray-50 cursor-pointer transition-all duration-200 ${style.bgColor} ${style.borderColor}`}
                       >
                         <div className="flex items-start space-x-3">
                           {notification.sender_image ? (

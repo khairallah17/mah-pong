@@ -8,6 +8,10 @@ import '../../../i18n.js';
 import { useTranslation } from 'react-i18next';
 import { NavLink } from 'react-router-dom';
 
+import useWebsocketContext from '../../../hooks/useWebsocketContext.jsx';
+
+import { useAuthContext } from '../../../hooks/useAuthContext.jsx';
+
 const PictureUser = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
@@ -21,10 +25,24 @@ const PictureUser = () => {
   const { username } = useParams();
   const token = JSON.parse(localStorage.getItem('authtoken'))?.access;
   const currentUser = token ? jwtDecode(token).username : null;
-  const { wsManager } = useContext(WebSocketContext);
+  const { wsManager } = useWebsocketContext();
 
+  const { user } = useAuthContext()
 
-
+  const handleGameInvite = async () => {
+    try {
+      const code = Math.random().toString(36).substring(2, 15);
+      // setInviteCode(code);
+      
+      navigate(`/dashboard/game/pvp2d?invite=${code}`, {
+        replace: true
+      });
+      wsManager.sendMessage(`${user.username} has invited you to a game!`, [username], `/dashboard/game/pvp2d?invite=${code}`);
+    } catch (error) {
+      console.error('Error generating invite:', error);
+      alert('Failed to generate game invite');
+    }
+  };
 
   const checkFriendStatus = async () => {
     try {
@@ -53,7 +71,6 @@ const PictureUser = () => {
               setFriendStatus('pending');
               return;
           } else if (existingRequest.status === 'accepted') {
-            console.log('hna l9a existging request o dar friend')
               setFriendStatus('friends');
               return;
           }
@@ -73,18 +90,22 @@ const PictureUser = () => {
 
         const friendsData = await friendsResponse.json();
         const isFriend = friendsData.friends?.some(friend => friend.username === username);
-        console.log('hna l9a jiha ta7taniya wach is friend:', isFriend)
 
         setFriendStatus(isFriend ? 'friends' : 'none');
     } catch (err) {
-        console.error('Error checking friend status:', err);
+      toast.warn(`Error checking friend status: ${err}`, {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: false,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "dark",
+      })
         setFriendStatus('none');
     }
   };
-
-  // useEffect(() => {
-  //   console.log(friendStatus, 'status changge')
-  // }, [friendStatus])
 
   useEffect(() => {
     const fetchProfil = async () => {
@@ -105,55 +126,6 @@ const PictureUser = () => {
       fetchProfil();
     }
   }, [username, token]);
-
-
-  // useEffect(() => {
-  //   const fetchProfil = async () => {
-  //     try {
-  //       const response = await fetch(`/api/usermanagement/api/user-profile/${username}/`);
-  //       // Check for 400 error first
-  //       if (!response.ok) {
-  //         navigate('/dashboard');
-  //         toast.error('User not found2', {
-  //           position: "top-right",
-  //           autoClose: 5000,
-  //           hideProgressBar: false,
-  //           closeOnClick: false,
-  //           pauseOnHover: true,
-  //           draggable: true,
-  //           progress: undefined,
-  //           theme: "dark",
-  //         });
-  //         return;
-  //       }
-        
-  //       if (!response.ok) {
-  //         throw new Error('Profile not found');
-  //       }
-        
-  //       const data = await response.json();
-  //       setProfil(data);
-  //       await checkFriendStatus();
-  //     } catch (err) {
-  //       navigate('/dashboard');
-  //       toast.error(`${err.message}`, {
-  //         position: "top-right",
-  //         autoClose: 5000,
-  //         hideProgressBar: false,
-  //         closeOnClick: false,
-  //         pauseOnHover: true,
-  //         draggable: true,
-  //         progress: undefined,
-  //         theme: "dark",
-  //       });
-  //     }
-  //   };
-  
-  //   if (username && token) {
-  //     fetchProfil();
-  //   }
-  // }, [username, token, navigate]);
-
 
   const handleFriendRequest = async () => {
     try {
@@ -176,7 +148,16 @@ const PictureUser = () => {
       setFriendStatus('pending');
       wsManager?.sendMessage(`${currentUser} sent you a friend request`, [username], `/dashboard/profil/${currentUser}`);
     } catch (err) {
-      console.error('Error:', err);
+      toast.warn(`Error: ${err}`, {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: false,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "dark",
+      })
       setError(err.message);
     }
   };
@@ -216,7 +197,16 @@ const PictureUser = () => {
       setFriendStatus('friends');
       wsManager?.sendMessage(`${currentUser} accepted your friend request`, [username], `/dashboard/profil/${currentUser}`);
     } catch (err) {
-      console.error('Error accepting friend request:', err);
+      toast.warn(`Error accepting friend request: ${err}`, {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: false,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "dark",
+      })
       setError(err.message);
     }
   };
@@ -254,7 +244,16 @@ const PictureUser = () => {
       setFriendStatus('none');
       wsManager.sendMessage(`${currentUser} Rejected your friend request`, [username], `/dashboard/profil/${currentUser}`);
     } catch (err) {
-      console.error('Error rejecting friend request:', err);
+      toast.warn(`Error rejecting friend request: ${err}`, {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: false,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "dark",
+      })
       setError(err.message);
     }
   };
@@ -291,7 +290,16 @@ const PictureUser = () => {
 
       setFriendStatus('none');
     } catch (err) {
-      console.error('Error canceling friend request:', err);
+      toast.warn(`Error canceling friend request: ${err}`, {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: false,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "dark",
+      })
       setError(err.message);
     }
   };
@@ -313,7 +321,17 @@ const PictureUser = () => {
 
       setFriendStatus('none');
     } catch (err) {
-      console.error('Error removing friend:', err);
+      toast.warn(`Error removing friend: ${err}`, {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: false,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "dark",
+      })
+      // console.error('Error removing friend:', err);
       setError(err.message);
     }
   };
@@ -391,7 +409,7 @@ const PictureUser = () => {
     return (
       <>
         {friendButtons}
-        <button className="w-full py-2.5 px-4 bg-navy-700 hover:bg-navy-600 text-white rounded-lg flex items-center justify-center gap-2 transition-all">
+        <button onClick={() => handleGameInvite()} className="w-full py-2.5 px-4 bg-navy-700 hover:bg-navy-600 text-white rounded-lg flex items-center justify-center gap-2 transition-all">
                 <Gamepad2 className="w-4 h-4" />
                 {t('Invite to Game')}
         </button>
@@ -400,28 +418,18 @@ const PictureUser = () => {
   };
 
   if (error) {
-    // navigate('/dashboard')
-    return ;
-      // toast.error(`${error}`, {
-      //   position: "top-right",
-      //   autoClose: 5000,
-      //   hideProgressBar: false,
-      //   closeOnClick: false,
-      //   pauseOnHover: true,
-      //   draggable: true,
-      //   progress: undefined,
-      //   theme: "dark",
-      // })
-    
+    toast.warn(`${error}`, {
+      position: "top-right",
+      autoClose: 5000,
+      hideProgressBar: false,
+      closeOnClick: false,
+      pauseOnHover: true,
+      draggable: true,
+      progress: undefined,
+      theme: "dark",
+    })
   }
 
-  // if (isLoading) {
-  //   return (
-  //     <div className="flex items-center justify-center p-6">
-  //       <Loader2 className="w-8 h-8 text-indigo-400 animate-spin" />
-  //     </div>
-  //   );
-  // }
 
   return (
     <div className="space-y-6">

@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 import '../i18n';
 import { useTranslation } from 'react-i18next';
 import { Activity, ChevronLeft, ChevronRight } from 'lucide-react';
 import { jwtDecode } from "jwt-decode";
+import { useAuthContext } from '../hooks/useAuthContext';
 
 export const MatchHistory = () => {
   const { t } = useTranslation();
@@ -13,8 +13,8 @@ export const MatchHistory = () => {
   const [totalPages, setTotalPages] = useState(1);
   const matchesPerPage = 6;
 
-  const token = JSON.parse(localStorage.getItem('authtoken')).access;
-  const username = jwtDecode(token).username;
+  const { user } = useAuthContext()
+  const { username } = user
 
   useEffect(() => {
     const fetchMatches = async () => {
