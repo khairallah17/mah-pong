@@ -32,7 +32,7 @@ import Layout from './components/layout';
 import Providers from './providers/providers.jsx';
 import NotFound from "./pages/404.jsx";
 import useOnlineStatus from "./hooks/useOnlineStatus.jsx"
-
+import ProtectAuthRouter from "./providers/ProtectAuthRouter.jsx";
 
 import "./App.css"
 
@@ -45,10 +45,12 @@ function App() {
       <Providers>
 
             <Routes>
-              <Route path="/" element={<HomePage />} />
-              <Route path="/login" element={<Authentication />} />
-              <Route path="/verify-email" element={<VerifyPsdEmail />} />
-              <Route path="password-reset/confirm" element={<ResetPassword />} />
+              <Route element={<ProtectAuthRouter />}>
+                <Route path="/" element={<HomePage />} />
+                <Route path="/login" element={<Authentication />} />
+                <Route path="/verify-email" element={<VerifyPsdEmail />} />
+                <Route path="password-reset/confirm" element={<ResetPassword />} />
+              </Route>
 
               <Route element={<ProtectRouter />}>
                 <Route element={<Layout/>}>

@@ -56,14 +56,12 @@ const Dashboard = () => {
         return <MatchHistory />;
       case 'statistics':
         return <Statistics />;
-      case 'achievements':
-        return <Achievements />;
       default:
         return <MatchHistory />;
     }
   };
   
-  const tabs = ['matches', 'statistics', 'achievements'];
+  const tabs = ['matches', 'statistics'];
 
   return (
     <div className="w-full h-full">

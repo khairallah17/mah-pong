@@ -8,6 +8,10 @@ import '../../../i18n.js';
 import { useTranslation } from 'react-i18next';
 import { NavLink } from 'react-router-dom';
 
+import useWebsocketContext from '../../../hooks/useWebsocketContext.jsx';
+
+import { useAuthContext } from '../../../hooks/useAuthContext.jsx';
+
 const PictureUser = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
@@ -21,10 +25,24 @@ const PictureUser = () => {
   const { username } = useParams();
   const token = JSON.parse(localStorage.getItem('authtoken'))?.access;
   const currentUser = token ? jwtDecode(token).username : null;
-  const { wsManager } = useContext(WebSocketContext);
+  const { wsManager } = useWebsocketContext();
 
+  const { user } = useAuthContext()
 
-
+  const handleGameInvite = async () => {
+    try {
+      const code = Math.random().toString(36).substring(2, 15);
+      // setInviteCode(code);
+      
+      navigate(`/dashboard/game/pvp2d?invite=${code}`, {
+        replace: true
+      });
+      wsManager.sendMessage(`${user.username} has invited you to a game!`, [username], `/dashboard/game/pvp2d?invite=${code}`);
+    } catch (error) {
+      console.error('Error generating invite:', error);
+      alert('Failed to generate game invite');
+    }
+  };
 
   const checkFriendStatus = async () => {
     try {
@@ -53,7 +71,6 @@ const PictureUser = () => {
               setFriendStatus('pending');
               return;
           } else if (existingRequest.status === 'accepted') {
-            console.log('hna l9a existging request o dar friend')
               setFriendStatus('friends');
               return;
           }
@@ -73,7 +90,6 @@ const PictureUser = () => {
 
         const friendsData = await friendsResponse.json();
         const isFriend = friendsData.friends?.some(friend => friend.username === username);
-        console.log('hna l9a jiha ta7taniya wach is friend:', isFriend)
 
         setFriendStatus(isFriend ? 'friends' : 'none');
     } catch (err) {
@@ -81,10 +97,6 @@ const PictureUser = () => {
         setFriendStatus('none');
     }
   };
-
-  // useEffect(() => {
-  //   console.log(friendStatus, 'status changge')
-  // }, [friendStatus])
 
   useEffect(() => {
     const fetchProfil = async () => {
@@ -105,55 +117,6 @@ const PictureUser = () => {
       fetchProfil();
     }
   }, [username, token]);
-
-
-  // useEffect(() => {
-  //   const fetchProfil = async () => {
-  //     try {
-  //       const response = await fetch(`http://localhost:8001/api/user-profile/${username}/`);
-  //       // Check for 400 error first
-  //       if (!response.ok) {
-  //         navigate('/dashboard');
-  //         toast.error('User not found2', {
-  //           position: "top-right",
-  //           autoClose: 5000,
-  //           hideProgressBar: false,
-  //           closeOnClick: false,
-  //           pauseOnHover: true,
-  //           draggable: true,
-  //           progress: undefined,
-  //           theme: "dark",
-  //         });
-  //         return;
-  //       }
-        
-  //       if (!response.ok) {
-  //         throw new Error('Profile not found');
-  //       }
-        
-  //       const data = await response.json();
-  //       setProfil(data);
-  //       await checkFriendStatus();
-  //     } catch (err) {
-  //       navigate('/dashboard');
-  //       toast.error(`${err.message}`, {
-  //         position: "top-right",
-  //         autoClose: 5000,
-  //         hideProgressBar: false,
-  //         closeOnClick: false,
-  //         pauseOnHover: true,
-  //         draggable: true,
-  //         progress: undefined,
-  //         theme: "dark",
-  //       });
-  //     }
-  //   };
-  
-  //   if (username && token) {
-  //     fetchProfil();
-  //   }
-  // }, [username, token, navigate]);
-
 
   const handleFriendRequest = async () => {
     try {
@@ -391,7 +354,7 @@ const PictureUser = () => {
     return (
       <>
         {friendButtons}
-        <button className="w-full py-2.5 px-4 bg-navy-700 hover:bg-navy-600 text-white rounded-lg flex items-center justify-center gap-2 transition-all">
+        <button onClick={() => handleGameInvite()} className="w-full py-2.5 px-4 bg-navy-700 hover:bg-navy-600 text-white rounded-lg flex items-center justify-center gap-2 transition-all">
                 <Gamepad2 className="w-4 h-4" />
                 {t('Invite to Game')}
         </button>

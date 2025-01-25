@@ -4,7 +4,8 @@ import '../i18n';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { WebSocketContext } from '../websockets/WebSocketProvider';
-import { jwtDecode } from 'jwt-decode';
+import { useAuthContext } from '../hooks/useAuthContext';
+import useChatContext from '../hooks/useChatContext';
 
 export const PlayerList = () => {
   const navigate = useNavigate();
@@ -14,8 +15,11 @@ export const PlayerList = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [inviteCode, setInviteCode] = useState(null);
   const { wsManager } = useContext(WebSocketContext);
-  const access = JSON.parse(localStorage.getItem("authtoken"))?.access;
-  const {username} = jwtDecode(access);
+  
+  const { user, authtoken } = useAuthContext()
+  const { username } = user
+
+  const { setSelectedUserId } = useChatContext()
   
   const { t } = useTranslation();
   useEffect(() => {
@@ -27,7 +31,7 @@ export const PlayerList = () => {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
-            "Authorization": "Bearer " + JSON.parse(localStorage.getItem("authtoken"))?.access,
+            "Authorization": "Bearer " + authtoken,
           },
         });
 
@@ -39,7 +43,6 @@ export const PlayerList = () => {
         const friendsList = friendsData[0]?.friends || [];
 
         // Fetch stats for each friend
-        const token = JSON.parse(localStorage.getItem("authtoken"))?.access;
         const friendsWithStats = await Promise.all(
           friendsList.map(async (friend) => {
             try {
@@ -49,7 +52,7 @@ export const PlayerList = () => {
                   method: 'GET',
                   headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
+                    'Authorization': `Bearer ${authtoken}`
                   },
                 }
               );
@@ -94,17 +97,6 @@ export const PlayerList = () => {
       const code = Math.random().toString(36).substring(2, 15);
       setInviteCode(code);
       
-      const inviteLink = `${window.location.origin}/dashboard/game/pvp2d?invite=${code}`;
-      
-      await navigator.clipboard.writeText(inviteLink);
-      
-      // const Alert = ({ message }) => (
-      //   <div className="fixed bottom-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg">
-      //     {message}
-      //   </div>
-      // );
-      
-      // alert('Game invite link copied to clipboard!');
       navigate(`game/pvp2d?invite=${code}`);
       wsManager.sendMessage(`${username} has invited you to a game!`, [friend.username], `/dashboard/game/pvp2d?invite=${code}`);
     } catch (error) {
@@ -114,7 +106,8 @@ export const PlayerList = () => {
   };
 
   const handleMessage = (friendId) => {
-    console.log('Message friend:', friendId);
+    setSelectedUserId(friendId)
+    navigate("/dashboard/chat")
   };
 
   const renderContent = () => {
@@ -155,13 +148,13 @@ export const PlayerList = () => {
         {filteredFriends.map((friend) => (
           <div key={friend.id} className="flex items-center justify-between p-3 hover:bg-blue-500/5 rounded-lg transition-all border border-transparent hover:border-blue-500/20">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-purple-500 p-0.5">
+              <button onClick={() => navigate(`/dashboard/profil/${friend.username}`)} className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-purple-500 p-0.5">
                 <img 
                   src={friend.img || 'https://github.com/shadcn.png'} 
                   alt={`${friend.username}'s Avatar`}
                   className="w-full h-full object-cover rounded-[5px]"
                 />
-              </div>
+              </button>
               <div>
                 <div className="font-medium text-blue-50">{friend.username}</div>
                 <div className="text-xs text-blue-300/60">
