@@ -2,17 +2,9 @@ import { IoSearchOutline } from "react-icons/io5";
 import { CgBlock } from "react-icons/cg";
 import { CgUnblock } from "react-icons/cg";
 import { PiGameControllerFill } from "react-icons/pi";
-import React, { useEffect } from "react";
-import ActiveChat from "./activeChat";
-import useChatContext from "../hooks/useChatContext";
-import { useAuthContext } from "../hooks/useAuthContext";
-import useWebsocketContext from "../hooks/useWebsocketContext";
-
-import { RxCross1 } from "react-icons/rx";
-import { IoIosSend } from "react-icons/io";
-import { LuCirclePlus } from "react-icons/lu";
-import { MdInfoOutline } from "react-icons/md";
-import { MdEmojiEmotions } from "react-icons/md";
+import React, { useState, useEffect, useRef } from "react";
+import axios from 'axios';
+import { jwtDecode } from "jwt-decode";
 
 const Chat = () => {
 
@@ -70,15 +62,151 @@ const Chat = () => {
     }, [messages]);
 
     const handleClick = () => {
+        console.log("is user blocker ====================>",isBlocked)
         if (isBlocked) {
             console.log("Unblocking user...");
             unblock(selectedUserId);
+            setIsBlocked(false);
         } else {
             console.log("Blocking user...");
             block(selectedUserId);
+            setIsBlocked(true);
+            // setIsBlocked(isBlocked)
         }
-        setIsBlocked(!isBlocked)
     };
+
+    const fetchBlockStatus = async (userId) => {
+            console.log("Fetching block status...");
+            const response = await axios.get(`http://localhost:8003/chat/api/block-status/${userId}/`, {
+                headers: {
+                    Authorization: `Bearer ${accessToken}`,
+                },
+            });
+            console.log("Block status response:", response.data.block_status);
+            setIsBlocked(response.data.block_status);
+    };
+    const unblock = async (userId) => {
+        try {
+            await axios.post(`http://localhost:8003/chat/api/block_user/${userId}/`, {
+                action: 'unblock'
+            }, {
+                headers: {
+                    'Authorization': `Bearer ${accessToken}`
+                }
+            });
+        } catch (error) {
+            console.error(error.response?.data?.error || 'Failed to block user');
+        }
+    };
+    
+    const block = async (userId) => {
+        try {
+            await axios.post(`http://localhost:8003/chat/api/block_user/${userId}/`, {
+                action: 'block'
+            }, {
+                headers: {
+                    'Authorization': `Bearer ${accessToken}`
+                }
+            });
+        } catch (error) {
+            console.error(error.response?.data?.error || 'Failed to block user');
+        }
+    };
+
+    const loadUsers = async () => {
+        try {
+            const response = await axios.get("http://localhost:8003/chat/api/users/", {
+                headers: {
+                    Authorization: `Bearer ${accessToken}`
+                },
+                withCredentials: true
+            });
+            console.log(response.data);
+            setUsers(response.data);
+        } catch (error) {
+            console.error("Error loading users:", error);
+        }
+    };
+
+    const loadConversation = async (userId) => {
+        setLoading(true);
+        try {
+            console.log("hette", userId);
+            const response = await axios.get(`http://localhost:8003/chat/api/conversation/${userId}/`, {
+                headers: {
+                    Authorization: `Bearer ${accessToken}`
+                },
+                withCredentials: true
+            });
+            console.log("all data",response.data)
+            setMessages(response.data.messages);
+        } catch (error) {
+            console.error("Error loading conversation:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const initializeWebSocket = (userId) => {
+        if (socketRef.current) {
+            socketRef.current.close();  
+        }
+
+        const chatSocket = new WebSocket(`ws://localhost:8003/ws/chat/?user_id=${userId}&token=${accessToken}`);
+
+        socketRef.current = chatSocket;
+
+        chatSocket.onmessage = (e) => {
+            const data = JSON.parse(e.data);
+            if (data.type === "chat_message") {
+                setMessages((prev) => [...prev, data]);
+            }
+            else if (data.type === "blocked") {
+                toast.error(data.content, {
+                    position: "top-right",
+                    autoClose: 5000,
+                    hideProgressBar: false,
+                    closeOnClick: false,
+                    pauseOnHover: true,
+                    draggable: true,
+                    progress: undefined,
+                    theme: "dark",
+                })
+            }
+        };
+
+        chatSocket.onclose = () => {
+            console.error("Chat socket closed unexpectedly");
+        };
+    };
+
+    const handleUserSelect = (userId) => {
+        setSelectedUserId(userId);
+    };
+    const handleSendMessage = () => {
+        if (newMessage.trim() !== "") {
+            if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
+                socketRef.current.send(JSON.stringify({
+                    message: newMessage,
+                    user_id: selectedUserId,
+                }));
+                setNewMessage("");
+            }
+        }
+    };
+
+    const scrollToBottom = () => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    };
+
+    const handel = () => {
+        setHand(!hand);
+    }
+
+    const formatTime = (timestamp) => {
+        const date = new Date(timestamp);
+        return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }); // Format as "HH:mm"
+      };
 
     return (
         <div className={`grid ${showDetails ? "lg:grid-cols-[3fr_1fr]" : "lg:grid-cols-1"} lg:grid-rows-1 lg:grid-cols-2 grid-rows-[2fr_1fr] h-full text-[#FFFFFF50] gap-5  w-full relative sm:pb-5 sm:px-5 overflow-scroll`}>
@@ -177,11 +305,15 @@ const Chat = () => {
                     <h1 className="font-bold text-3xl text-white text-center">Details</h1>
                     <div className="flex flex-col items-center gap-3">
                         <div className=" h-28 w-28 rounded-full overflow-hidden border-4 border-green-700 place-items-center">
-                            <img src={users.map(item => selectedUserId == item.id ? item.img : "")} alt="photo" />
+                            <img src={users.find(user => user.id === selectedUserId)?.img} alt="profile"/>
                         </div>
                         <div className="flex flex-col items-center gap-1">
-                            <p className="font-semibold text-2xl">{users.map(user => user.id == selectedUserId ? user.username : "")}</p> {/* Fullname */}
-                            <p className="font-semibold text-xl">{users.map(user => user.id == selectedUserId ? user.fullname : "")}</p> {/* Username */}
+                            <p className="font-semibold text-xl">
+                                {selectedUserId ? users.find(user => user.id === selectedUserId)?.fullname : 'Select a user'}
+                            </p> {/* Fullname */}
+                            <p className="font-semibold text-xl">
+                                {selectedUserId ? users.find(user => user.id === selectedUserId)?.username : 'Select a user'}
+                            </p> {/* Username */}
                         </div>
                     </div>
                     <div className="flex gap-8 justify-center items-center"> {/* challenge/ block*/}

@@ -44,9 +44,10 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
         isBlocked = await self.get_blocklists(sender, receiver)
 
+
         if (isBlocked):
-            self.send(text_data=json.dumps({
-                'type': 'error',
+            await self.send(text_data=json.dumps({
+                'type': 'blocked',
                 'content': 'You cannot send messages to this user.'
             }))
             return
