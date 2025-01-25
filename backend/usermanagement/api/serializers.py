@@ -26,7 +26,6 @@ class   Get_Token_serial(TokenObtainPairSerializer):
         
         # stock it on Dectionary
         token['fullname'] = user.fullname
-        # print(user.fullname)
         token['username'] = user.username
         token['email'] = user.email
         # token['bio'] = user.profile.bio
@@ -82,7 +81,6 @@ class ProfilSerializer(serializers.ModelSerializer):
 
 class UserProfileSerializer(serializers.ModelSerializer):
     profil = ProfilSerializer()
-    # is_online = serializers.SerializerMethodField()
     
     class Meta:
         model = User

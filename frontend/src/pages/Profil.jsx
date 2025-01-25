@@ -5,8 +5,11 @@ import { Statistics } from '../components/StatisticUser';
 import { GripHorizontal } from 'lucide-react';
 import { useParams } from 'react-router-dom';
 import { useAuthContext } from '../hooks/useAuthContext';
+import '../i18n';
+import { useTranslation } from 'react-i18next';
 
 const Profile = () => {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState('stats');
   const [totalGames, setTotalGames] = useState(0);
   const [winRate, setWinRate] = useState(0);
@@ -70,11 +73,11 @@ const Profile = () => {
                 <div className="mt-6 grid grid-cols-2 gap-4 border-t border-white/10 pt-6">
                   <div className="text-center">
                     <div className="text-2xl font-bold text-indigo-400">{totalGames || 0}</div>
-                    <div className="text-sm text-gray-400">total Games</div>
+                    <div className="text-sm text-gray-400">{t('total Games')}</div>
                   </div>
                   <div className="text-center">
                     <div className="text-2xl font-bold text-indigo-400">{winRate}</div>
-                    <div className="text-sm text-gray-400">win Rate</div>
+                    <div className="text-sm text-gray-400">{t('win Rate')}</div>
                   </div>
                 </div>
               </div>
@@ -93,7 +96,7 @@ const Profile = () => {
                       ? 'bg-indigo-500/10 text-indigo-400 border-b-2 border-indigo-400' 
                       : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
                 >
-                  Statistics Overview
+                  {t('Statistics Overview')}
                 </button>
                 <button
                   onClick={() => setActiveTab('matches')}
@@ -102,7 +105,7 @@ const Profile = () => {
                       ? 'bg-indigo-500/10 text-indigo-400 border-b-2 border-indigo-400' 
                       : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
                 >
-                  Recent Matches
+                  {t('Recent Matches')}
                 </button>
               </div>
 
@@ -112,7 +115,7 @@ const Profile = () => {
                   <div className="space-y-6">
                     <div className="flex items-center gap-2">
                       <GripHorizontal className="w-5 h-5 text-indigo-400" />
-                      <h2 className="text-xl font-semibold text-white">Statistics Overview</h2>
+                      <h2 className="text-xl font-semibold text-white">{t('Statistics Overview')}</h2>
                     </div>
                     <Statistics />
                   </div>
@@ -121,7 +124,7 @@ const Profile = () => {
                   <div className="space-y-6">
                     <div className="flex items-center gap-2">
                       <GripHorizontal className="w-5 h-5 text-indigo-400" />
-                      <h2 className="text-xl font-semibold text-white">Recent Matches</h2>
+                      <h2 className="text-xl font-semibold text-white">{t('Recent Matches')}</h2>
                     </div>
                     <MatchHistory />
                   </div>

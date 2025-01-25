@@ -32,6 +32,7 @@ import Layout from './components/layout';
 import Providers from './providers/providers.jsx';
 import NotFound from "./pages/404.jsx";
 import useOnlineStatus from "./hooks/useOnlineStatus.jsx"
+import LoadingApi from "./components/auth/LoadingApi.jsx"
 
 
 import "./App.css"
@@ -49,6 +50,9 @@ function App() {
               <Route path="/login" element={<Authentication />} />
               <Route path="/verify-email" element={<VerifyPsdEmail />} />
               <Route path="password-reset/confirm" element={<ResetPassword />} />
+              <Route path="/google-callback" element={<LoadingApi />} />
+              <Route path="/42intra-callback" element={<LoadingApi />} />
+
 
               <Route element={<ProtectRouter />}>
                 <Route element={<Layout/>}>
