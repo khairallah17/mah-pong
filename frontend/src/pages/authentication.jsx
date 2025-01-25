@@ -19,7 +19,6 @@ export const Authentication = () => {
 
     <div className="bg-root-background h-screen w-screen bg-cover bg-center">
       <div className="container mx-auto grid lg:grid-cols-2 text-white h-full relative">
-
         <motion.div
         layout
         transition={{ duration: 0.5 }}

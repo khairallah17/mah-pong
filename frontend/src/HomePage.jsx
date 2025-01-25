@@ -8,6 +8,8 @@ import './i18n';
 import { useTranslation } from 'react-i18next';
 import ButtonLng from "./components/ButtonLng";
 
+import { NavLink } from 'react-router-dom';
+
 import aub from './assets/aub.jpeg';
 import khr from './assets/khr.jpg';
 import hdl from './assets/headline.png';
@@ -42,7 +44,6 @@ const HomePage = () => {
       const containerWidth = window.innerWidth * 0.75;
       let newSlides = Math.max(2, Math.round(containerWidth / slideWidth));
       newSlides = Math.min(newSlides, TEAM_MEMBERS.length - 1);
-      console.log(slides, containerWidth / slideWidth);
 
       setSlides(newSlides);
     };
@@ -124,12 +125,9 @@ const HomePage = () => {
                 {label}
               </button>
             ))}
-            <button
-              onClick={() => navigate('/dashboard')}
-              className="px-4 py-2 text-white bg-blue-500 rounded-md"
-            >
+            <NavLink to="/dashboard">
               Play now
-            </button>
+            </NavLink>
             <ButtonLng />
           </div>
         </nav>
