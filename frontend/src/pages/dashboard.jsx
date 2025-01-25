@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { GameModes } from '../components/GameModes';
 import { MatchHistory } from '../components/Match-history';
 import { Statistics } from '../components/StatisticUser';
-import { Achievements } from '../components/AchievementBadgeProps';
+// import { Achievements } from '../components/AchievementBadgeProps';
 import  PlayerList  from '../components/PlayerList';
 import '../i18n';
 import { useTranslation } from 'react-i18next';
@@ -56,14 +56,14 @@ const Dashboard = () => {
         return <MatchHistory />;
       case 'statistics':
         return <Statistics />;
-      case 'achievements':
-        return <Achievements />;
       default:
         return <MatchHistory />;
+      // case 'achievements':
+        // return <Achievements />;
     }
   };
   
-  const tabs = ['matches', 'statistics', 'achievements'];
+  const tabs = ['matches', 'statistics'];
 
   return (
     <div className="w-full h-full">
