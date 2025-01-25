@@ -38,19 +38,16 @@ const Navbar = () => {
               'Authorization': `Bearer ${authtoken}`
             }
           });
-
-          const userData = await response.json();
-
-          console.log("==> ", userData)
-          
-          setUser({
-            username: userData.username,
-            email: userData.email,
-            fullname: userData.fullname,
-            avatar: userData.avatar,
-            img: userData.img
-          });
-
+          if (response.ok) {
+            const userData = await response.json();
+            setUser({
+              username: userData.username,
+              email: userData.email,
+              fullname: userData.fullname,
+              avatar: userData.avatar,
+              img: userData.img
+            });
+          }
         } catch (error) {
           console.error('Error fetching user data:', error);
         }

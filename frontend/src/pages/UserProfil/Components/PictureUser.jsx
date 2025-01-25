@@ -331,7 +331,6 @@ const PictureUser = () => {
         progress: undefined,
         theme: "dark",
       })
-      // console.error('Error removing friend:', err);
       setError(err.message);
     }
   };

@@ -6,6 +6,8 @@ import Swal from 'sweetalert2';
 import { useSidebarContext } from '../hooks/useSidebar';
 import '../i18n';
 import { useTranslation } from 'react-i18next';
+import { toast } from 'react-toastify';
+
 
 export default function Profile() {
   const { t } = useTranslation();
@@ -23,13 +25,16 @@ export default function Profile() {
     try {
       let token = localStorage.getItem('authtoken');
       if (!token) {
-        console.error('No authentication token found');
-        Swal.fire({
-          icon: 'error',
-          title: 'No authentication token found. Please try again.',
-          showConfirmButton: false,
-          timer: 1500
-        });
+        toast.error("No authentication token found. Please try again.", {
+          position: "top-right",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: false,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+          theme: "dark",
+        })
         return;
       }
       
@@ -41,7 +46,6 @@ export default function Profile() {
           'Authorization': `Bearer ${accessToken}`
         }
       });
-      console.log(response.data);
       setProfileData({
         fullname: response.data.fullname || "",
         username: response.data.username || "",
@@ -142,13 +146,16 @@ export default function Profile() {
         timer: 1500
       });
     } catch (error) {
-      console.error('Failed to upload profile image', error);
-      Swal.fire({
-        icon: 'error',
-        title: 'Failed to upload profile image. Please try again.',
-        showConfirmButton: false,
-        timer: 1500
-      });
+      toast.error(`Error checking friend status: ${error}`, {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: false,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "dark",
+      })
     }
   };
 
@@ -181,13 +188,16 @@ export default function Profile() {
         timer: 1500
       });
     } catch (error) {
-      console.error('Failed to delete profile image', error);
-      Swal.fire({
-        icon: 'error',
-        title: 'Failed to delete profile image. Please try again.',
-        showConfirmButton: false,
-        timer: 1500
-      });
+      toast.error(`Failed to delete profile image. Please try again. ${error}`, {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: false,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "dark",
+      })
     }
   };
 
@@ -213,21 +223,27 @@ export default function Profile() {
           'Authorization': `Bearer ${accessToken}`
         }
       });
-      
-      Swal.fire({
-        icon: 'success',
-        title: 'Profile updated successfully!',
-        showConfirmButton: false,
-        timer: 1500
-      });
+      toast.success("Profile updated successfully!", {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: false,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "dark",
+      })
     } catch (error) {
-      console.error('Failed to update profile', error);
-      Swal.fire({
-        icon: 'error',
-        title: 'Failed to update profile. Please try again.',
-        showConfirmButton: false,
-        timer: 1500 
-      });
+      toast.error("Failed to update profile. Please try again.", {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: false,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "dark",
+      })
     }
   };
 
@@ -240,9 +256,6 @@ export default function Profile() {
     return initials.slice(0, 2);
   };
 
-  // useEffect(() => {
-  //   console.log(profileData.profile_image);
-  // }, [profileData])
 
   return (
     <div className="w-full max-w-6xl mx-auto p-8 space-y-8 shadow-2xl shadow-black rounded-xl border border-gray-800 backdrop-blur-sm">
