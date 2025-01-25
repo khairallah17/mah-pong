@@ -75,6 +75,8 @@ const Chat = () => {
         }
     };
 
+
+
     return (
         <div className={`grid ${showDetails ? "lg:grid-cols-[3fr_1fr]" : "lg:grid-cols-1"} lg:grid-rows-1 lg:grid-cols-2 grid-rows-[2fr_1fr] h-full text-[#FFFFFF50] gap-5  w-full relative sm:pb-5 sm:px-5 overflow-scroll`}>
             

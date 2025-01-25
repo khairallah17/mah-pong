@@ -16,7 +16,7 @@ const TwoFactorAuth = () => {
   const fetchQRCode = async () => {
     try {
       const token = JSON.parse(localStorage.getItem('authtoken')).access;
-      const response = await fetch('http://localhost:8001/api/2fa/setup/', {
+      const response = await fetch('/api/usermanagement/api/2fa/setup/', {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -49,7 +49,7 @@ const TwoFactorAuth = () => {
     e.preventDefault();
     try {
       const token = JSON.parse(localStorage.getItem('authtoken')).access;
-      const response = await fetch('http://localhost:8001/api/2fa/verify/', {
+      const response = await fetch('/api/usermanagement/api/2fa/verify/', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -87,7 +87,7 @@ const TwoFactorAuth = () => {
   const disable2FA = async () => {
     try {
       const token = JSON.parse(localStorage.getItem('authtoken')).access;
-      const response = await fetch('http://localhost:8001/api/2fa/disable/', {
+      const response = await fetch('/api/usermanagement/api/2fa/disable/', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

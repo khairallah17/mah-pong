@@ -17,7 +17,7 @@ class User(AbstractUser):
     email = models.EmailField(unique=True)
     img = models.ImageField(
         upload_to='./',
-        default='./pic1.jpg'
+        default="Default.jpg"
     )
     
     is_online = models.BooleanField(default=False)

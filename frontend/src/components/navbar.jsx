@@ -29,7 +29,7 @@ const Navbar = () => {
       const authToken = localStorage.getItem('authtoken');
       if (authToken) {
         try {
-          const response = await fetch('http://localhost:8001/api/edit-profile/', {
+          const response = await fetch('/api/usermanagement/api/edit-profile/', {
             headers: {
               'Authorization': `Bearer ${JSON.parse(authToken).access}`
             }
@@ -65,7 +65,7 @@ const Navbar = () => {
 
     try {
       // First, get the list of friends to filter them out
-      const friendsResponse = await fetch(`http://localhost:8001/api/friends/`, {
+      const friendsResponse = await fetch(`/api/usermanagement/api/friends/`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const friendsData = await friendsResponse.json();
@@ -73,7 +73,7 @@ const Navbar = () => {
       const friendUsernames = new Set(friendsList.map(friend => friend.username));
 
       // Then, fetch all users
-      const allUsersResponse = await fetch(`http://localhost:8001/api/allusers/?search=${query}`, {
+      const allUsersResponse = await fetch(`/api/usermanagement/api/allusers/?search=${query}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const allUsersData = await allUsersResponse.json();
@@ -166,7 +166,7 @@ const Navbar = () => {
                         }}
                       >
                         <img
-                          src={"http://localhost:8001/" + searchedUser.img || searchedUser.avatar || DefaultAvatar}
+                          src={"/api/usermanagement/" + searchedUser.img || searchedUser.avatar || DefaultAvatar}
                           alt={searchedUser.username}
                           className="h-10 w-10 rounded-full object-cover"
                           onError={(e) => {
@@ -209,7 +209,7 @@ const Navbar = () => {
             </div>
               <NavLink to={`/dashboard/profil/${user.username}`}>
                 <img
-                  src={user.img ? `http://localhost:8001/${user.img}` : DefaultAvatar}
+                  src={user.img ? `/api/usermanagement/${user.img}` : DefaultAvatar}
                   alt={`${user.fullname}'s avatar`}
                   className="h-12 w-12 rounded-full object-cover ring-2 ring-white/20 cursor-pointer hidden md:block"
                   onError={(e) => {

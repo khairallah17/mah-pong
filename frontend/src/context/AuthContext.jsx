@@ -43,7 +43,7 @@ export const AuthProvider = ({ children }) => {
 
     const loginUsers = async (email, password, verificationCode = null) => {
         try {
-            let tokenUrl = "http://localhost:8001/api/token/"
+            let tokenUrl = "/api/usermanagement/api/token/";
             const response = await fetch(tokenUrl, {
                 credentials: 'include',
                 method: "POST",
@@ -146,8 +146,8 @@ export const AuthProvider = ({ children }) => {
 
     const registerUsers = async (fullname, username, email, password, confirm_password) => {
 
-        let tokenUrlregister = "http://localhost:8001/api/register/"
-        const response = await fetch(tokenUrlregister, {
+        let tokenUrlregister = "/api/usermanagement/api/register/";
+        const response = await fetch(tokenUrlregister ,{
             method: 'POST',
             body: JSON.stringify({ fullname, username, email, password, confirm_password }),
             headers: {
@@ -191,14 +191,14 @@ export const AuthProvider = ({ children }) => {
 
     const GoogleLogin = () => {
         const ClientId = import.meta.env.VITE_GCLIENT_ID;
-        const CallBackURI = "http://localhost:8001/api/v2/auth/googlelogin/callback/";
+        const CallBackURI = "/api/usermanagement/api/v2/auth/googlelogin/callback/";
         window.location.replace(`https://accounts.google.com/o/oauth2/v2/auth?redirect_uri=${CallBackURI}&prompt=consent&response_type=code&client_id=${ClientId}&scope=openid%20email%20profile&access_type=offline`)
         // GoogleloginUsers( code )
     }
 
     const Intra42Login = () => {
         const clientId = import.meta.env.VITE_CLIENT_ID;
-        const callbackURI = "http://localhost:8001/api/42login/callback/";
+        const callbackURI = "/api/usermanagement/api/42login/callback/";
         window.location.replace(`https://api.intra.42.fr/oauth/authorize?client_id=${clientId}&redirect_uri=${callbackURI}&response_type=code`);
     }
 
@@ -235,7 +235,7 @@ export const AuthProvider = ({ children }) => {
                 }
 
                 // Then check if 2FA is required
-                fetch('http://localhost:8001/api/2fa/check/', {
+                fetch('/api/usermanagement/api/2fa/check/', {
                     headers: {
                         'Authorization': `Bearer ${token}`,
                         'Content-Type': 'application/json'
@@ -309,7 +309,7 @@ export const AuthProvider = ({ children }) => {
                 }
 
                 // Then check if 2FA is required
-                fetch('http://localhost:8001/api/2fa/check/', {
+                fetch('/api/usermanagement/api/2fa/check/', {
                     headers: {
                         'Authorization': `Bearer ${token}`,
                         'Content-Type': 'application/json'
@@ -374,8 +374,9 @@ export const AuthProvider = ({ children }) => {
             }
 
             const token = JSON.parse(authData).access;
-            const logouturl = "http://localhost:8001/api/logout/";
-
+            const logouturl = "/api/usermanagement/api/logout/";
+            console.log("Attempting logout...");
+    
             const response = await fetch(logouturl, {
                 method: 'POST',
                 headers: {
@@ -461,7 +462,9 @@ export const AuthProvider = ({ children }) => {
 
         if (passwordData) {
             try {
-                const response = await fetch('http://localhost:8001/api/api-set-password/', {
+                console.log("isss===> before response ", passwordData.password, tmp_password)
+                console.log("Token===> before response ", token)
+                const response = await fetch('/api/usermanagement/api/api-set-password/', {
                     method: 'POST',
                     headers: {
                         'Authorization': `Bearer ${token}`,
@@ -485,7 +488,7 @@ export const AuthProvider = ({ children }) => {
                         theme: "dark",
                     })
                     // Continue with normal login flow
-                    fetch('http://localhost:8001/api/2fa/check/', {
+                    fetch('/api/usermanagement/api/2fa/check/', {
                         headers: {
                             'Authorization': `Bearer ${token}`,
                             'Content-Type': 'application/json'
@@ -538,7 +541,7 @@ export const AuthProvider = ({ children }) => {
         });
 
         if (code) {
-            const OTP42 = await fetch('http://localhost:8001/api/2fa/verify/', {
+            const OTP42 = await fetch('/api/usermanagement/api/2fa/verify/', {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${token}`,

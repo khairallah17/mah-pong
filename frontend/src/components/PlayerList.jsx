@@ -26,7 +26,7 @@ export const PlayerList = () => {
     const fetchFriendsWithStats = async () => {
       try {
         // Fetch friends list
-        const friendsResponse = await fetch("http://localhost:8001/api/friends/", {
+        const friendsResponse = await fetch("/api/usermanagement/api/friends/", {
           credentials: "include",
           method: "GET",
           headers: {
@@ -47,7 +47,7 @@ export const PlayerList = () => {
           friendsList.map(async (friend) => {
             try {
               const statsResponse = await fetch(
-                `http://localhost:8000/api/player-stats/${friend.username}/`,
+                `/api/game/api/player-stats/${friend.username}/`,
                 {
                   method: 'GET',
                   headers: {

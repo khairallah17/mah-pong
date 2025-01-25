@@ -14,21 +14,21 @@ const Dashboard = () => {
   
   useEffect( () =>{
     const fetchstats = async () => {
-    const response = await fetch("http://localhost:8000/api/player-stats/alemsafi");
+    const response = await fetch("/api/game/api/player-stats/alemsafi");
     const data = await response.json();
     }
 
     fetchstats();
 
     const fetchHistory = async () => {
-    const response = await fetch("http://localhost:8000/api/match-history/alemsafi");
+    const response = await fetch("/api/game/api/match-history/alemsafi");
     const data = await response.json();
     }
 
     fetchHistory();
 
     const fetchFriends = async () => {
-    const response = await fetch("http://localhost:8001/api/friends/", 
+    const response = await fetch("/api/usermanagement/api/friends/", 
     {
       credentials: "include",
       method: "GET",

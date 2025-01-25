@@ -20,7 +20,7 @@ const TournamentHome = () => {
     
         const fetchTournaments = async () => {
             try {
-                const response = await fetch("http://localhost:8000/api/tournaments");
+                const response = await fetch("/api/game/api/tournaments");
                 const data = await response.json();
                 const waitingTournaments = data.filter(tournament => tournament.status === 'waiting');
                 setTournaments(waitingTournaments);
@@ -45,22 +45,22 @@ const TournamentHome = () => {
                     {t('Tournament Home')}
                 </h1>
                 <div className="mb-8 bg-black/50 rounded-xl border border-gray-800 overflow-hidden backdrop-blur-sm p-6 animate-fade-in">
-                    <input
+                    {/* <input
                         className="w-full p-3 border border-blue-300 rounded mb-4 bg-white/20 text-white placeholder-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-400 transition duration-300"
-                        placeholder={t('Tournament code')}
+                        placeholder={t('Tournament Name')}
                         value={tournamentCode}
                         onChange={(e) => setTournamentCode(e.target.value)}
-                    />
+                    /> */}
                     <div className="flex space-x-4">
-                        <button
+                        {/* <button
                             className="flex-1 p-3 bg-blue-500 text-white rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 transition duration-300 transform hover:scale-105"
                             onClick={() => navigate(`/dashboard/tournament/live?code=${tournamentCode}`)}
                         >
                             {t('Join')}
-                        </button>
+                        </button> */}
                         <button
                             className="flex-1 p-3 bg-green-500 text-white rounded hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-400 transition duration-300 transform hover:scale-105"
-                            onClick={() => navigate("/dashboard/tournament/live")}
+                            onClick={() => navigate("/dashboard/tournament/live?code=" + tournamentCode)}
                         >
                             {t('Create')}
                         </button>
@@ -84,7 +84,7 @@ const TournamentHome = () => {
                                     onClick={() => navigate(`/dashboard/tournament/live?code=${tournament.code}`)}
                                 >
                                     <div className="flex flex-col">
-                                        <p className="text-lg font-semibold mb-2">{tournament.name || t('Unnamed Tournament')}</p>
+                                        <p className="text-lg font-semibold mb-2">{tournament.name || t(`Tournament ${index}`)}</p>
                                         <p><span className="font-medium">{t('Date:')}</span> {new Date(tournament.created_at).toLocaleDateString()}</p>
                                         <p><span className="font-medium">Code:</span> {tournament.code}</p>
                                         <p><span className="font-medium">Status:</span> {tournament.status}</p>

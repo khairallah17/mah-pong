@@ -9,7 +9,7 @@ const useOnlineStatus = () => {
             const token = JSON.parse(authData).access;
             const endpoint = isOnline ? 'user-online' : 'user-offline';
             
-            await fetch(`http://localhost:8001/api/${endpoint}/`, {
+            await fetch(`/api/usermanagement/api/${endpoint}/`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

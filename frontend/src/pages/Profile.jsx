@@ -41,7 +41,7 @@ export default function Profile() {
       const parsed = JSON.parse(token);
       const accessToken = parsed.access;
 
-      const response = await axios.get('http://localhost:8001/api/edit-profile/', {
+      const response = await axios.get('/api/usermanagement/api/edit-profile/', {
         headers: {
           'Authorization': `Bearer ${accessToken}`
         }
@@ -81,7 +81,7 @@ export default function Profile() {
       const parsed = JSON.parse(token);
       const accessToken = parsed.access;
 
-      const response = await axios.put('http://localhost:8001/api/edit-profile/', formData, {
+      const response = await axios.put('/api/usermanagement/api/edit-profile/', formData, {
         headers: {
           'Authorization': `Bearer ${accessToken}`,
           'Content-Type': 'multipart/form-data'
@@ -127,7 +127,7 @@ export default function Profile() {
       const parsed = JSON.parse(token);
       const accessToken = parsed.access;
 
-      const response = await axios.put('http://localhost:8001/api/edit-profile/', formData, {
+      const response = await axios.put('/api/usermanagement/api/edit-profile/', formData, {
         headers: {
           'Authorization': `Bearer ${accessToken}`,
           'Content-Type': 'multipart/form-data'
@@ -170,7 +170,7 @@ export default function Profile() {
       const parsed = JSON.parse(token);
       const accessToken = parsed.access;
 
-      await axios.delete('http://localhost:8001/api/edit-profile/', {
+      await axios.delete('/api/usermanagement/api/edit-profile/', {
         headers: {
           'Authorization': `Bearer ${accessToken}`
         }
@@ -216,7 +216,7 @@ export default function Profile() {
       const parsed = JSON.parse(token);
       const accessToken = parsed.access;
 
-      const response = await axios.put('http://localhost:8001/api/edit-profile/', {
+      const response = await axios.put('/api/usermanagement/api/edit-profile/', {
         fullname: profileData.fullname
       }, {
         headers: {
@@ -265,7 +265,7 @@ export default function Profile() {
           <div className="w-24 h-24 bg-blue-800 rounded-full border-2 border-white/40 flex items-center justify-center text-white text-2xl font-inter">
             {profileData.profile_image ? (
               <img 
-                src={`http://localhost:8001/` + profileData.profile_image}
+                src={`/api/usermanagement/` + profileData.profile_image}
                 alt="Profile" 
                 className="w-full h-full rounded-full object-cover"
               />
@@ -297,7 +297,7 @@ export default function Profile() {
         </div>
         <div className="flex flex-col md:flex-row items-center gap-4">
           <img
-            src={`http://localhost:8001/` + profileData.avatar || "https://github.com/shadcn.png"}
+            src={`/api/usermanagement/` + profileData.avatar || "https://github.com/shadcn.png"}
             alt="Profile Avatar"
             className="w-24 h-24 bg-blue-800 rounded-full border-2 border-white/90"
           />
