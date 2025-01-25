@@ -45,7 +45,7 @@ export const WeeklyChart = ({ user }) => {
       }
 
       try {
-        const response = await fetch(`http://localhost:8000/api/match-history/${username}/`);
+        const response = await fetch(`/api/game/api/match-history/${username}/`);
         const data = await response.json();
 
         // Handle the specific "No matches" error case

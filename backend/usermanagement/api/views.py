@@ -269,7 +269,7 @@ class GoogleLoginCallback(APIView):
                 "code"          : code,
                 "client_id"     : GCLIENT_ID,
                 "client_secret" : GCLIENT_SECRET,
-                "redirect_uri"  : "http://localhost:8001/api/v2/auth/googlelogin/callback/",
+                "redirect_uri"  : "/api/usermanagement/api/v2/auth/googlelogin/callback/",
                 "grant_type"    : "authorization_code"
             }
             logger.debug("I am heeeererererererer")
@@ -383,7 +383,7 @@ class Login42Auth(APIView):
                 'code'          : code,
                 "client_id"     : CLIENT_ID,
                 "client_secret" : CLIENT_SECRET,
-                "redirect_uri"  : "http://localhost:8001/api/42login/callback/",
+                "redirect_uri"  : "/api/usermanagement/api/42login/callback/",
                 "grant_type"    : "authorization_code"
             }
         
@@ -501,7 +501,7 @@ def send_resetpass(request): #sending email
         user = User.objects.get(email=email)
         uidb64 = urlsafe_base64_encode(force_bytes(str(user.id)))
         gen_token = account_activation_token.make_token(user)
-        reset_url = f"http://localhost:8001/api/password-reset/{uidb64}/{gen_token}/"
+        reset_url = f"/api/usermanagement/api/password-reset/{uidb64}/{gen_token}/"
         
         subject = 'Password Reset Request'
         message = f"""

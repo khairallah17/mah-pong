@@ -103,7 +103,7 @@ const FriendFinder = () => {
   };
 
   const handleUserClick = (username) => {
-    navigate(`http://localhost:5173/dashboard/profil/${username}`);
+    navigate(`/dashboard/profil/${username}`);
   };
 
   // Calculate visible users based on pagination

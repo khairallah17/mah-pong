@@ -20,7 +20,7 @@ const Profile = () => {
       if (!username)
         username = user.username;
 
-      const response = await fetch(`http://localhost:8000/api/player-stats/${username}/`, {
+      const response = await fetch(`/api/game/api/player-stats/${username}/`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',

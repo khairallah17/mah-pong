@@ -23,7 +23,7 @@ class User(AbstractUser):
         return('/' + random.choice(list_avatars))
     img = models.ImageField(
         upload_to='./',
-        default=get_random_image_profil
+        default="Default.jpg"
     )
     
     is_online = models.BooleanField(default=False)

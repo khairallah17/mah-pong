@@ -16,7 +16,7 @@ const MatchHistory = () => {
       const fetchdata = async () => {
 
         try {
-          const response = await fetch(`http://localhost:8000/api/player-stats/${username}/`)
+          const response = await fetch(`/api/game/api/player-stats/${username}/`)
 
         if (!response.ok) {
           throw new Error('Failed to fetch user stats');

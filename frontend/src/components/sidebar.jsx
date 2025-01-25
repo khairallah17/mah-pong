@@ -64,7 +64,7 @@ const Sidebar = () => {
   
       try {
         const parsedToken = JSON.parse(authToken);
-        const response = await fetch('http://localhost:8001/api/edit-profile/', {
+        const response = await fetch('/api/usermanagement/api/edit-profile/', {
           headers: {
             'Authorization': `Bearer ${parsedToken.access}`
           }
@@ -124,7 +124,7 @@ const Sidebar = () => {
           `}
         >
 
-          <img src={user && user.img ? `http://localhost:8001/${user.img}` : DefaultAvatar} className='w-6 h-6 bg-white/20 rounded-full flex-shrink-0'/>
+          <img src={user && user.img ? `/api/usermanagement/${user.img}` : DefaultAvatar} className='w-6 h-6 bg-white/20 rounded-full flex-shrink-0'/>
         </NavLink>
 
         {/* Logout Button */}

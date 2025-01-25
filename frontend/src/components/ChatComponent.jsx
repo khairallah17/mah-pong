@@ -54,7 +54,7 @@ const Chat = ({ roomName }) => {
 
     const fetchBlockStatus = async (userId) => {
             console.log("Fetching block status...");
-            const response = await axios.get(`http://localhost:8003/chat/api/block-status/${userId}/`, {
+            const response = await axios.get(`/api/chat/chat/api/block-status/${userId}/`, {
                 headers: {
                     Authorization: `Bearer ${accessToken}`,
                 },
@@ -63,7 +63,7 @@ const Chat = ({ roomName }) => {
     };
     const unblock = async (userId) => {
         try {
-            await axios.post(`http://localhost:8003/chat/api/block_user/${userId}/`, {
+            await axios.post(`/api/chat/chat/api/block_user/${userId}/`, {
                 action: 'unblock'
             }, {
                 headers: {
@@ -78,7 +78,7 @@ const Chat = ({ roomName }) => {
 
     const loadUsers = async () => {
         try {
-            const response = await axios.get("http://localhost:8003/chat/api/users/", {
+            const response = await axios.get("/api/chat/chat/api/users/", {
                 headers: {
                     Authorization: `Bearer ${accessToken}`
                 },
@@ -95,7 +95,7 @@ const Chat = ({ roomName }) => {
         setLoading(true);
         try {
             console.log("hette", userId);
-            const response = await axios.get(`http://localhost:8003/chat/api/conversation/${userId}/`, {
+            const response = await axios.get(`/api/chat/chat/api/conversation/${userId}/`, {
                 headers: {
                     Authorization: `Bearer ${accessToken}`
                 },
@@ -115,7 +115,7 @@ const Chat = ({ roomName }) => {
             socketRef.current.close();  
         }
 
-        const chatSocket = new WebSocket(`ws://localhost:8003/ws/chat/?user_id=${userId}&token=${accessToken}`);
+        const chatSocket = new WebSocket(`/api/chat/ws/chat/?user_id=${userId}&token=${accessToken}`);
 
         socketRef.current = chatSocket;
 
@@ -139,7 +139,7 @@ const Chat = ({ roomName }) => {
     };
     const block = async (userId) => {
         try {
-            await axios.post(`http://localhost:8003/chat/api/block_user/${userId}/`, {
+            await axios.post(`/api/chat/chat/api/block_user/${userId}/`, {
                 action: 'block'
             }, {
                 headers: {

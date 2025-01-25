@@ -7,7 +7,7 @@ export const UserSearchService = {
       const parsed = JSON.parse(token);
       const accessToken = parsed.access;
       
-      const response = await axios.get('http://localhost:8001/api/allusers/', {
+      const response = await axios.get('/api/usermanagement/api/allusers/', {
         headers: {
           Authorization: `Bearer ${accessToken}`
         },

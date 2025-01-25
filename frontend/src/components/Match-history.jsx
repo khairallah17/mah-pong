@@ -20,7 +20,7 @@ export const MatchHistory = () => {
     const fetchMatches = async () => {
       try {
         // Fetch all matches first
-        const response = await fetch(`http://localhost:8000/api/match-history/${username}/`);
+        const response = await fetch(`/api/game/api/match-history/${username}/`);
         const allMatches = await response.json();
         
         // Calculate total pages based on all matches

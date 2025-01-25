@@ -45,7 +45,7 @@ export const ResetPassword = () => {
     }
   
     try {
-      const response = await fetch(`http://localhost:8001/api/password-reset/${uidb64}/${token}/`, {
+      const response = await fetch(`/api/usermanagement/api/password-reset/${uidb64}/${token}/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
