@@ -51,8 +51,7 @@ services:
     env_file:
       - .env
     volumes:
-      - front_vm:/app
-      - /app/node_modules
+      - front_vm_data:/app
     
   notifications:
     container_name: notifications
@@ -146,12 +145,7 @@ volumes:
   notif_db_data:
   usermanagement_db_data:
   chat_db_data:
-  front_vm:
-    driver: local
-    driver_opts:
-      device: ${PWD}/frontend
-      type: none
-      o: bind
+  front_vm_data:
 
 networks:
   game-network:
