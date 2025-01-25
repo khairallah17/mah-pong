@@ -77,7 +77,16 @@ const PictureUser = () => {
 
         setFriendStatus(isFriend ? 'friends' : 'none');
     } catch (err) {
-        console.error('Error checking friend status:', err);
+      toast.warn(`Error checking friend status: ${err}`, {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: false,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "dark",
+      })
         setFriendStatus('none');
     }
   };
@@ -128,7 +137,16 @@ const PictureUser = () => {
       setFriendStatus('pending');
       wsManager?.sendMessage(`${currentUser} sent you a friend request`, [username], `/dashboard/profil/${currentUser}`);
     } catch (err) {
-      console.error('Error:', err);
+      toast.warn(`Error: ${err}`, {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: false,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "dark",
+      })
       setError(err.message);
     }
   };
@@ -168,7 +186,16 @@ const PictureUser = () => {
       setFriendStatus('friends');
       wsManager?.sendMessage(`${currentUser} accepted your friend request`, [username], `/dashboard/profil/${currentUser}`);
     } catch (err) {
-      console.error('Error accepting friend request:', err);
+      toast.warn(`Error accepting friend request: ${err}`, {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: false,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "dark",
+      })
       setError(err.message);
     }
   };
@@ -206,7 +233,16 @@ const PictureUser = () => {
       setFriendStatus('none');
       wsManager.sendMessage(`${currentUser} Rejected your friend request`, [username], `/dashboard/profil/${currentUser}`);
     } catch (err) {
-      console.error('Error rejecting friend request:', err);
+      toast.warn(`Error rejecting friend request: ${err}`, {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: false,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "dark",
+      })
       setError(err.message);
     }
   };
@@ -243,7 +279,16 @@ const PictureUser = () => {
 
       setFriendStatus('none');
     } catch (err) {
-      console.error('Error canceling friend request:', err);
+      toast.warn(`Error canceling friend request: ${err}`, {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: false,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "dark",
+      })
       setError(err.message);
     }
   };
@@ -265,7 +310,17 @@ const PictureUser = () => {
 
       setFriendStatus('none');
     } catch (err) {
-      console.error('Error removing friend:', err);
+      toast.warn(`Error removing friend: ${err}`, {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: false,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "dark",
+      })
+      // console.error('Error removing friend:', err);
       setError(err.message);
     }
   };
@@ -352,7 +407,7 @@ const PictureUser = () => {
   };
 
   if (error) {
-    toast.error(`${error}`, {
+    toast.warn(`${error}`, {
       position: "top-right",
       autoClose: 5000,
       hideProgressBar: false,

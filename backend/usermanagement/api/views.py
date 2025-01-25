@@ -987,8 +987,7 @@ class FriendRequestListCreateView(generics.ListCreateAPIView):
 
             if existing_request:
                 return Response(
-                    {'detail': 'Friend request already exists'},
-                    status=status.HTTP_400_BAD_REQUEST
+                    {'status': 'Friend request already exists'},
                 )
 
             # Check if they're already friends
