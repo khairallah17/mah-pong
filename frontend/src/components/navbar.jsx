@@ -36,7 +36,6 @@ const Navbar = () => {
           });
           if (response.ok) {
             const userData = await response.json();
-            console.log('User data:', userData);
             setUser({
               username: userData.username,
               email: userData.email,

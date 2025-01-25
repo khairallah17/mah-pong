@@ -75,7 +75,6 @@ const Sidebar = () => {
         }
   
         const userData = await response.json();
-        console.log(userData);
         setUser(userData);
       } catch (error) {
         console.error('Error fetching user data:', error);

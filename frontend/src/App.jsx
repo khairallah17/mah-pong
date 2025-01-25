@@ -1,4 +1,5 @@
 import ProtectRouter from "./providers/ProtectRouter"
+import ProtectAuthRouter from "./providers/ProtectAuthRouter"
 import Authentication from "./pages/authentication.jsx";
 import Dashboard from './pages/dashboard';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
@@ -46,12 +47,14 @@ function App() {
       <Providers>
 
             <Routes>
+              <Route element={<ProtectAuthRouter />}>
               <Route path="/" element={<HomePage />} />
               <Route path="/login" element={<Authentication />} />
               <Route path="/verify-email" element={<VerifyPsdEmail />} />
               <Route path="password-reset/confirm" element={<ResetPassword />} />
               <Route path="/google-callback" element={<LoadingApi />} />
               <Route path="/42intra-callback" element={<LoadingApi />} />
+              </Route>
 
 
               <Route element={<ProtectRouter />}>

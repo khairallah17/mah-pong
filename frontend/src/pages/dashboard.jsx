@@ -16,7 +16,6 @@ const Dashboard = () => {
     const fetchstats = async () => {
     const response = await fetch("http://localhost:8000/api/player-stats/alemsafi");
     const data = await response.json();
-    console.log("player stats:", data);
     }
 
     fetchstats();
@@ -24,7 +23,6 @@ const Dashboard = () => {
     const fetchHistory = async () => {
     const response = await fetch("http://localhost:8000/api/match-history/alemsafi");
     const data = await response.json();
-    console.log("match history:", data);
     }
 
     fetchHistory();
@@ -41,7 +39,6 @@ const Dashboard = () => {
     }
     );
     const data = await response.json();
-    console.log("friends:", data);
     }
 
     fetchFriends();

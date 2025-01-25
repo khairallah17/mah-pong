@@ -39,7 +39,6 @@ export const VerifyPsdEmail = () => {
                 throw new Error(data.error || 'Failed to reset password');
             }
         } catch (err) {
-            console.error('Error:', err);
             toast.error('An unexpected error occurred', {
               position: "top-right",
               autoClose: 5000,

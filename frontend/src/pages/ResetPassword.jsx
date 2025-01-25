@@ -22,9 +22,7 @@ export const ResetPassword = () => {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    console.log('Starting password reset...');
-    console.log('uidb64:', uidb64);
-    console.log('token:', token);
+
   
     if (new_password !== confirm_password) {
       toast.error('Passwords do not match', {
@@ -56,14 +54,11 @@ export const ResetPassword = () => {
         })
       });
   
-      // Log the response for debugging
-      console.log('Response status:', response.status);
       
       // Try to parse response as JSON
       let data;
       try {
         const textResponse = await response.text();
-        console.log('Raw response:', textResponse);
         data = JSON.parse(textResponse);
       } catch (error) {
         console.error('Error parsing response:', error);
