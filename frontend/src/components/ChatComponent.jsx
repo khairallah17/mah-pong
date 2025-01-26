@@ -3,8 +3,10 @@ import { LuCirclePlus } from "react-icons/lu";
 import { MdInfoOutline } from "react-icons/md";
 import { MdEmojiEmotions } from "react-icons/md";
 import { IoCheckmarkDoneOutline } from "react-icons/io5";
+import { IoChevronBackOutline } from "react-icons/io5";
 import { RiSendPlaneFill } from "react-icons/ri";
 import { IoSearchOutline } from "react-icons/io5";
+import { IoCloseSharp } from "react-icons/io5";
 import { CgBlock } from "react-icons/cg";
 import { CgUnblock } from "react-icons/cg";
 import { PiGameControllerFill } from "react-icons/pi";
@@ -139,10 +141,10 @@ const Chat = ({ roomName }) => {
 
         chatSocket.onmessage = (e) => {
             const data = JSON.parse(e.data);
+            console.log("received mesage =>> ", e.data)
             if (data.type === "chat_message") {
                 setMessages((prev) => [...prev, data]);
-            }
-            else if (data.type === "blocked") {
+            } else if (data.type === "blocked") {
                 toast.error(data.content, {
                     position: "top-right",
                     autoClose: 5000,
@@ -153,6 +155,25 @@ const Chat = ({ roomName }) => {
                     progress: undefined,
                     theme: "dark",
                 })
+            } else if (data.type === "game_invitation") {
+                setMessages((prev) => [
+                    ...prev,
+                    {
+                        content: (
+                            <div className="flex items-center space-x-2 p-2 border rounded-lg bg-blue-100">
+                                <p>{data.sender} has invited you to play a game!</p>
+                                <button
+                                    className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600"
+                                >
+                                    Play Now
+                                </button>
+                            </div>
+                        ),
+                        sender: data.sender,
+                        receiver: data.receiver,
+                        type: "game_invitation",
+                    },
+                ]);
             }
         };
 
@@ -164,6 +185,7 @@ const Chat = ({ roomName }) => {
     const handleUserSelect = (userId) => {
         setSelectedUserId(userId);
     };
+    
     const handleSendMessage = () => {
         if (newMessage.trim() !== "") {
             if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
@@ -180,25 +202,55 @@ const Chat = ({ roomName }) => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     };
 
-    const handel = () => {
-        setHand(!hand);
-    }
+    const sendGameInvitation = () => {
+        if (socketRef.current) {
+            socketRef.current.send(
+                JSON.stringify({
+                    type: "game_invitation",
+                    user_id: receiverId, // The ID of the user being invited
+                })
+            );
+        }
+    };    
 
     const formatTime = (timestamp) => {
         const date = new Date(timestamp);
-        return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }); // Format as "HH:mm"
+        return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }); 
       };
 
     return (
-        <div className="flex h-full text-[#FFFFFF50] bg-[#10104F] w-full relative">
-            <div className="absolute bg-black h-full w-full opacity-50 z-[-1]"></div>
-
+        <div className="flex h-full py-[20px] w-full px-[20px] sm:px-0 relative"    >
             {/* User List Section */}
-            <div className="md:w-[320px] my-[20px] ml-[20px] border-[3px] border-black bg-gradient-to-t  from-black/25 to-black/50  abg-opacity-30 rounded-l-3xl  flex flex-col gap-10 py-2 md:py-0">
-                <div className="md:flex hidden flex-col gap-2 pt-4 px-4">
-                    <h1 className="font-bold text-white text-xl pl-1">Messages</h1>
-                    <div className="flex gap-2 items-center bg-white py-1 px-3 rounded-full">
-                        <IoSearchOutline className=" text-black text-2xl"/>
+            <div className={`
+                    sm:min-w-80
+                    md:max-w-80  
+                    w-full 
+                    sm:mx-[20px] 
+                    sm:mr-[20px]  
+                    md:rounded-r-none 
+                    md:mx-0 
+                    md:mr-0 
+                    md:ml-[20px] 
+                    border-[3px] 
+                    border-black 
+                    bg-gradient-to-t 
+                    from-black/25 
+                    to-black/50 
+                    bg-opacity-30 
+                    rounded-l-3xl 
+                    rounded-r-3xl 
+                    ${selectedUserId ? 'hidden md:flex' : 'flex'} 
+                    flex-col 
+                    gap-10 
+                    py-2
+                `}
+                    
+>
+
+                <div className="flex flex-col gap-2 pt-4 px-4">
+                    <h1 className="font-bold text-white text-xl pl-1 my-1">Messages</h1>
+                    <div className="flex gap-2 p-1 items-center bg-white   rounded-full ">
+                        <IoSearchOutline className=" text-black text-2xl mx-2"/>
                         <input type="text" placeholder="Search" className="rounded-lg p-1 px-3 w-full outline-none "/>
                     </div>
                 </div>
@@ -221,15 +273,14 @@ const Chat = ({ roomName }) => {
                                 className={`hover:bg-blue-950 p-2 rounded-lg flex gap-2 cursor-pointer user ${selectedUserId === user.id ? "selected" : ""}`}>
                                 {/* User Profile Image */}
                                 <div className="h-12 w-12 rounded-full overflow-hidden border border-purple-950">
-                                <img 
-                                    src={user.img ? user.img : "./images/pong_logo.png"} 
-                                    alt="profile" 
-                                />
-
+                                    <img 
+                                        src={user.img ? user.img : "./images/pong_logo.png"} 
+                                        alt="profile" 
+                                    />
                                 </div>
 
                                 {/* User Information */}
-                                <div className="md:flex flex-col hidden">
+                                <div className="md:flex flex-col">
                                     <p className="font-semibold">{user.fullname}</p>
                                     <p className="text-sm text-gray-300">{lastMessage}</p>
                                 </div>
@@ -240,19 +291,25 @@ const Chat = ({ roomName }) => {
             </div>
 
             {/* Chat Section */}
-            <div className="grow my-[20px] flex justify-between  rounded-r-[30px] mr-[20px]   border-[3px] border-l-0 border-black flex-col gap-5">
+            {/* /// */}
+            <>
                 {!selectedUserId ? 
                 (
+                    <div className={`grow hidden md:flex justify-between rounded-[30px] md:ml-0  md:rounded-l-[0px] md:rounded-r-[30px] mr-[20px]   border-[3px] md:border-l-0 border-black flex-col gap-5 `}> 
                     <div className="div">
                         select your friend
+                    </div>
                     </div>
                 )
                 :
                 (
-                    <>
-                <div className="border-black bg-gradient-to-l  from-black/15 to-black/50  abg-opacity-30 bg-opacity-25 p-4 flex h-[100px] rounded-tr-[27px] items-center justify-between">
-                    <div className="flex gap-2 ml-[15px]">
-                        <div className="h-16 w-16 rounded-full overflow-hidden">
+                <div className={`grow  ${selectedUserId ? 'flex' : 'hidden'}  ml-[20px]  justify-between rounded-[30px]  md:ml-0  md:rounded-l-[0px] md:rounded-r-[30px] mr-[20px]   border-[3px] md:border-l-0 border-black flex-col gap-5 `}>
+                <div className={`border-black bg-gradient-to-l  from-black/15 to-black/50  abg-opacity-30 bg-opacity-25 p-4 flex h-[100px] rounded-t-[27px] md:rounded-l-[0px] lg:rounded-tr-[27px] items-center justify-between`}>
+                    <div className=" gap-2  flex flex-row justify-center h-full items-center ">
+                        <button className=" text-2xl md:hidden" onClick={()=>setSelectedUserId(null)}>
+                            <IoChevronBackOutline  />
+                        </button>
+                        <div className="h-16 w-16 rounded-full overflow-hidden  ">
                             <img src={users.find(user => user.id === selectedUserId)?.img} alt="profile"/>
                         </div>
                         <div className="ml-3 justify-center flex flex-col text-lg">
@@ -262,7 +319,7 @@ const Chat = ({ roomName }) => {
                             <p className="text-green-600">Online</p> {/* changing online and offline*/}
                         </div>
                     </div>
-                        <MdInfoOutline onClick={handel} className="text-[30px] cursor-pointer"/>
+                        <MdInfoOutline onClick={()=> setHand(!hand)} className="text-[30px] cursor-pointer"/>
                 </div>
 
                 <div className="overflow-auto h-full justify-end px-4 gap-2 flex flex-col">
@@ -280,11 +337,30 @@ const Chat = ({ roomName }) => {
                                 overflowWrap: "break-word", 
                                 wordBreak: "break-word" }}
                         >
-                            <p>{msg.content}</p>
-                        <div className="flex place-self-end justify-end gap-1 items-center">
-                            <p className="text-xs">{formatTime(msg.timestamp)}</p>
-                            <IoCheckmarkDoneOutline className={`text-sm ${msg.seen ? "text-green-600" : "text-gray-400"}`}/>
-                        </div>
+                            {msg.isGameInvitation ? (
+                                <div className="game-invitation bg-blue-100 p-4 rounded-lg flex items-center justify-between">
+                                    <span>{msg.message}</span>
+                                    <button
+                                        className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+                                        onClick={() => startGame(msg.sender)}
+                                    >
+                                        Play Now
+                                    </button>
+                                </div>
+                            ) : (
+                                <p>{msg.content}</p>
+                            )}
+                            <div className="flex place-self-end justify-end gap-1 items-center">
+                                <p className="text-xs">{formatTime(msg.timestamp)}</p>
+                                <IoCheckmarkDoneOutline 
+                                    className={`text-sm ${msg.sender === username 
+                                        ? msg.seen
+                                            ? "text-green-600" 
+                                            : "text-gray-400"
+                                        : "hidden" 
+                                    }`}
+                                />
+                            </div>
                         </div>
                     ))}
                     <div ref={messagesEndRef} />
@@ -305,13 +381,23 @@ const Chat = ({ roomName }) => {
                         </div>
                     </div>
                 </div>
-                    </>
+                    </div>
                 )
                 }
-            </div>
-            <div className={` my-[20px] mr-[20px]   w-[400px]  xl:flex ${hand ? "flex" : "hidden"} `}>
-                <div className="flex flex-col gap-14  w-full pt-9 px-2 border-[3px] border-black rounded-[30px]"> {/* User details*/}
-                    <h1 className="font-bold text-3xl text-white text-center">Details</h1>
+            </> 
+            {hand && <>
+            <div className={` absolute w-full h-full xl:w-fit justify-center bg-gray-900 bg-opacity-50 flex items-center xl:h-full xl:relative xl:bg-transparent xl:top-0 xl:right-0 2xl:flex `} >
+                <div className="flex flex-col gap-14 xl:h-full w-[60%] md:w-[27rem] xl:w-full p-9 xl:border-[3px] xl:border-black border border-gray-300/15 bg-black bg-opacity-40 backdrop-blur-md rounded-[30px] mr-[20px]"> {/* User details*/}
+                    <div className="flex flex-row  items-center justify-center ">
+
+                    <button className=" fixed left-4 flex xl:hidden" onClick={()=> setHand(false)}>
+                        <IoCloseSharp className="text-[30px]"/>
+                    </button>
+                    <div className="self-center">
+
+                    <h1 className="font-bold text-3xl text-white text-center ">Details</h1>
+                    </div>
+                    </div>
                     <div className="flex flex-col items-center gap-3">
                         <div className=" h-28 w-28 rounded-full overflow-hidden border-4 border-green-700 place-items-center">
                             <img src={users.find(user => user.id === selectedUserId)?.img} alt="profile"/>
@@ -326,18 +412,23 @@ const Chat = ({ roomName }) => {
                         </div>
                     </div>
                     <div className="flex gap-8 justify-center items-center"> {/* challenge/ block*/}
-                        <button className="h-16 w-32 border-[4px] border-blue-800 flex items-center justify-center hover:bg-blue-900 rounded-3xl  font-bold"><PiGameControllerFill className="text-[45px]"/> </button>
+                        <button 
+                            className="h-16 w-32 border-[4px] border-blue-800 flex items-center justify-center hover:bg-blue-900 rounded-3xl  font-bold"
+                                onClick={sendGameInvitation}><PiGameControllerFill className="text-[45px]"/> </button>
                         <button
                             onClick={handleClick}
                             className={`h-16 w-32 border-[4px] flex items-center justify-center rounded-3xl font-bold ${
                                 isBlocked ? 'bg-green-600  border-green-700 hover:bg-green-500' : 'bg-red-700  border-red-900 hover:bg-red-600'
                             }`}
                             title={isBlocked ? 'Unblock' : 'Block'}
-                        >
+                            >
                             {isBlocked ? <CgUnblock className="text-[45px]" /> : <CgBlock className="text-[45px]" />}</button>
                     </div>     
                 </div>
             </div>
+                            </>
+            }
+            
         </div>
     )
 }
