@@ -24,7 +24,7 @@ export default function Tictactoe() {
   useEffect(() => {
     const tokenData = JSON.parse(localStorage.getItem('authtoken'));
     const accessToken = tokenData && tokenData.access;
-    wsRef.current = new WebSocket(`/api/game/ws/tictactoe/?token=${accessToken}`);
+    wsRef.current = new WebSocket(`ws://localhost/api/game/ws/tictactoe/?token=${accessToken}`);
     wsRef.current.onmessage = (evt) => {
       const data = JSON.parse(evt.data);
       if (data.type === 'match_found') {

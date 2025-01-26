@@ -122,7 +122,7 @@ export default function Pvp2d() {
   useEffect(() => {
     if (token && !wsRef.current) {
       setTimeout(() => {
-        const wsUrl = `/api/game/ws/pvp2d/?token=${accessToken}${inviteCode ? `&invite=${inviteCode}` : ''}${matchId ? `&match_id=${matchId}` : ''}`;
+        const wsUrl = `ws://localhost/api/game/ws/pvp2d/?token=${accessToken}${inviteCode ? `&invite=${inviteCode}` : ''}${matchId ? `&match_id=${matchId}` : ''}`;
         wsRef.current = new WebSocket(wsUrl);
         wsRef.current.onopen = () => {
           console.log('WebSocket connection established');
@@ -136,7 +136,7 @@ export default function Pvp2d() {
             if (newToken) {
               localStorage.setItem('authtoken', JSON.stringify(newToken));
               wsManagerInstance.close();
-              wsManagerInstance.setUrl('/api/notifications/ws/notifications/?token=' + newToken?.access);
+              wsManagerInstance.setUrl('ws://localhost/api/notifications/ws/notifications/?token=' + newToken?.access);
               wsManagerInstance.connect(handleMessage);
               console.log('WebSocket connection established with new token');
             } else {
