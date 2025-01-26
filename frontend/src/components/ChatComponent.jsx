@@ -15,7 +15,7 @@ import axios from 'axios';
 import { jwtDecode } from "jwt-decode";
 import { toast } from 'react-toastify';
 
-const Chat = ({ roomName }) => {
+const Chat = () => {
     const [users, setUsers] = useState([]);
     const [messages, setMessages] = useState([]);
     const [newMessage, setNewMessage] = useState("");
@@ -264,7 +264,7 @@ const Chat = ({ roomName }) => {
                         }
                         console.log("user img", user.img)
                         const lastMessage = messages
-                            .filter(msg => msg.sender === user.id || msg.receiver === user.id)
+                            .filter(msg => msg.sender === user.username || msg.receiver === user.username)
                             .slice(-1)[0]?.content || "No messages yet";
 
                         return (
