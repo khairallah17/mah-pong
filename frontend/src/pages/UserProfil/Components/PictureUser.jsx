@@ -21,6 +21,7 @@ const PictureUser = () => {
   const [error, setError] = useState(null);
   const [pendingRequest, setPendingRequest] = useState(null);
   const [friendStatus, setFriendStatus] = useState('none');
+  const [loading, setLoading] = useState(true)
   const [users, setUsers] = useState(true);
   const { username } = useParams();
   const token = JSON.parse(localStorage.getItem('authtoken'))?.access;
@@ -110,6 +111,7 @@ const PictureUser = () => {
   useEffect(() => {
     const fetchProfil = async () => {
       try {
+        setLoading(true)
         const response = await fetch(`/api/usermanagement/api/user-profile/${username}/`);
         if (!response.ok) {
           throw new Error('Profile not found');
@@ -119,6 +121,8 @@ const PictureUser = () => {
         await checkFriendStatus();
       } catch (err) {
         setError(err.message);
+      } finally {
+        setLoading(false)
       }
     };
 
@@ -432,7 +436,12 @@ const PictureUser = () => {
 
   return (
     <div className="space-y-6">
-      <div className="relative group">
+      {
+        loading ? (
+          <p>Loading...</p>
+        ) : (
+          <>
+            <div className="relative group">
         <div className="h-32 w-full bg-gradient-to-r from-indigo-600 to-purple-600 rounded-t-xl"></div>
         
         <div className="absolute -bottom-16 left-1/2 transform -translate-x-1/2">
@@ -486,6 +495,9 @@ const PictureUser = () => {
           {renderActionButtons()}
         </div>
       </div>
+          </>
+        )
+      }
     </div>
   );
 };

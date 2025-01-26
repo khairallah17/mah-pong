@@ -13,6 +13,7 @@ const Profile = () => {
   const [activeTab, setActiveTab] = useState('stats');
   const [totalGames, setTotalGames] = useState(0);
   const [winRate, setWinRate] = useState(0);
+  const [loading, setLoading] = useState(true)
   let { username, authToken } = useParams();
   
   const { user } = useAuthContext()
@@ -20,6 +21,7 @@ const Profile = () => {
   useEffect(() => {
   const fetchStats = async () => {
     try {
+      setLoading(true)
       if (!username)
         username = user.username;
 
@@ -37,6 +39,8 @@ const Profile = () => {
       setWinRate(winRate);
     } catch (error) {
       console.error('Error fetching stats:', error);
+    } finally {
+      setLoading(false)
     }
   };
    if (username) {
@@ -52,8 +56,13 @@ const Profile = () => {
 
       {/* Main Content Container */}
       <div className="relative max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        
-        {/* Mobile Profile Section */}
+
+       {
+        loading ? (
+          <p>Loading...</p>
+        ): (
+          <>
+                  {/* Mobile Profile Section */}
         <div className="lg:hidden mb-6">
           <div className="bg-navy-800/70 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-white/10 transition-all hover:border-white/20">
             <PictureUser />
@@ -132,7 +141,10 @@ const Profile = () => {
               </div>
             </div>
           </div>
-        </div>
+        </div></>
+        )
+       }      
+  
       </div>
 
       {/* Bottom Gradient */}

@@ -150,7 +150,7 @@ export const PlayerList = () => {
             <div className="flex items-center gap-3">
               <button onClick={() => navigate(`/dashboard/profil/${friend.username}`)} className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-purple-500 p-0.5">
                 <img 
-                  src={friend.img || 'https://github.com/shadcn.png'} 
+                  src={friend.img.replace("http://localhost","/api/usermanagement") || 'https://github.com/shadcn.png'} 
                   alt={`${friend.username}'s Avatar`}
                   className="w-full h-full object-cover rounded-[5px]"
                 />

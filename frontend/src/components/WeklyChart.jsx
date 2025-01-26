@@ -15,6 +15,8 @@ import { Line } from 'react-chartjs-2';
 import '../i18n';
 import { useTranslation } from 'react-i18next';
 
+import { ImSpinner2 } from "react-icons/im";
+
 ChartJS.register(
   CategoryScale,
   LinearScale,
@@ -183,7 +185,10 @@ export const WeeklyChart = ({ user }) => {
 
   const renderContent = () => {
     if (loading) {
-      return <div className="text-center text-gray-400">{t('Loading...')}</div>;
+      return (
+        <div className="text-center text-gray-400">
+          <ImSpinner2 className="animate-spin" />
+        </div>);
     }
 
     if (error) {

@@ -19,7 +19,9 @@ export const AuthProvider = ({ children }) => {
     const [authtoken, setAuthToken] = useState(() => {
         // Check localStorage for existing token
         const token = localStorage.getItem("authtoken");
-        return token ? JSON.parse(token).access : null;
+        if (token)
+            return JSON.parse(token).access
+        return null
     });
 
     //GETTING NOW THE DECODE OF THE TOKEN AND STORE ==> {FULLNAME, USERNAME, EMAIL}
@@ -98,7 +100,7 @@ export const AuthProvider = ({ children }) => {
                     return;
                 }
 
-                setAuthToken(data);
+                setAuthToken(data.access);
                 setUser(jwtDecode(data.access));
                 localStorage.setItem("authtoken", JSON.stringify(data));
 
@@ -191,14 +193,14 @@ export const AuthProvider = ({ children }) => {
 
     const GoogleLogin = () => {
         const ClientId = import.meta.env.VITE_GCLIENT_ID;
-        const CallBackURI = "/api/usermanagement/api/v2/auth/googlelogin/callback/";
+        const CallBackURI = "http://localhost/api/usermanagement/api/v2/auth/googlelogin/callback/";
         window.location.replace(`https://accounts.google.com/o/oauth2/v2/auth?redirect_uri=${CallBackURI}&prompt=consent&response_type=code&client_id=${ClientId}&scope=openid%20email%20profile&access_type=offline`)
         // GoogleloginUsers( code )
     }
 
     const Intra42Login = () => {
         const clientId = import.meta.env.VITE_CLIENT_ID;
-        const callbackURI = "/api/usermanagement/api/42login/callback/";
+        const callbackURI = "http://localhost/api/usermanagement/api/42login/callback/";
         window.location.replace(`https://api.intra.42.fr/oauth/authorize?client_id=${clientId}&redirect_uri=${callbackURI}&response_type=code`);
     }
 

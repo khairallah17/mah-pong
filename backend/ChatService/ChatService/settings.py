@@ -27,6 +27,7 @@ SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
 DEBUG = True
 
 ALLOWED_HOSTS = [
+    'localhost',
     'chat'
 ]
 # # CORS_ALLOWED_ORIGINS = [
@@ -37,8 +38,11 @@ ALLOWED_HOSTS = [
 
 # CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOWED_ORIGINS = [
-    'http://localhost:5173',
-    'http://127.0.0.1:5173',  # Include this if you also access your frontend via 127.0.0.1
+    'http://localhost',
+    'http://127.0.0.1',
+    'http://localhost:3000',
+    'http://127.0.0.1:3000',
+    # Include this if you also access your frontend via 127.0.0.1
 ]
 
 CORS_ALLOW_CREDENTIALS = True

@@ -3,6 +3,8 @@ import { Navigate, Outlet } from "react-router-dom";
 import AuthContext from "../context/AuthContext";
 import { WebSocketProvider } from "../websockets/WebSocketProvider";
 import ChatContextProvider from "../context/chatContext";
+import { OnlineContextProvider } from "../context/onlineStatusContext";
+import { UserContextProvider } from "../context/userContext";
 
 const ProtectRouter = () => {
     
@@ -17,7 +19,11 @@ const ProtectRouter = () => {
         return (
             <WebSocketProvider>
                 <ChatContextProvider>
-                    <Outlet />
+                    <UserContextProvider>
+                        <OnlineContextProvider>
+                            <Outlet />
+                        </OnlineContextProvider>
+                    </UserContextProvider>
                 </ChatContextProvider>
             </WebSocketProvider>
         );
