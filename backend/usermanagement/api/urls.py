@@ -1,5 +1,5 @@
-from django.urls import path # type: ignore
-from rest_framework_simplejwt.views import TokenRefreshView # type: ignore
+from django.urls import path
+from rest_framework_simplejwt.views import TokenRefreshView
 from . import views
 # from .views import GoogleLogin, GoogleLoginCallback
 # from . import adapter
