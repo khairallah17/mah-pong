@@ -40,7 +40,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
         sender = await self.get_user(username=self.username)
         receiver_id = data['user_id']
         receiver = await self.get_user(user_id=receiver_id)
-        content = data.get('message', '') #qwertu
+        content = data.get('message', '')
+        message_type = data.get("message_type", '')
 
         block_status = await self.get_blocklists(sender, receiver)
 
@@ -67,7 +68,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         conversation = await self.get_or_create_conversation(sender, receiver_id)
 
         # Save the message to the database
-        message = await self.create_message(sender, receiver_id, content, conversation)
+        message = await self.create_message(sender, receiver_id, content, conversation, message_type)
         
         # Broadcast the message to the chat group
         await self.channel_layer.group_send(
@@ -77,7 +78,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 'content': content,
                 'sender': sender.username,
                 'receiver': receiver.username,
-                'timestamp': str(now())
+                'timestamp': str(now()),
+                'message_type': message_type
             }
         )
         await self.channel_layer.group_send(
@@ -87,7 +89,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 'content': content,
                 'sender': sender.username,
                 'receiver': receiver.username,
-                'timestamp': str(now())
+                'timestamp': str(now()),
+                'message_type': message_type
             }
         )
 
@@ -150,6 +153,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         sender = event["sender"]
         receiver = event["receiver"]
         timestamp = event["timestamp"]
+        message_type = event["message_type"]
 
         # Send the message to WebSocket
         await self.send(text_data=json.dumps({
@@ -157,7 +161,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
             'content': content,
             'sender': sender,
             'receiver': receiver,
-            'timestamp': timestamp 
+            'timestamp': timestamp,
+            'message_type': message_type
         }))
         
     # utils

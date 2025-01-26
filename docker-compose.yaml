@@ -54,20 +54,6 @@ services:
       - /app/node_modules
     networks:
       - microservices-network
-  frontend:
-    container_name: frontend
-    build: 
-      context: "./frontend"
-      dockerfile: Dockerfile
-    ports:
-      - "5173:5173"
-    env_file:
-      - .env
-    volumes:
-      - front_vm:/app
-      - /app/node_modules
-    networks:
-      - microservices-network
     
   notifications:
     container_name: notifications
@@ -105,11 +91,9 @@ services:
     volumes:
       - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
       - usermanagement_media_data:/usr/share/nginx/media
-      - nginx_vm:/usr/share/nginx/html
     ports:
       - "80:80"
     depends_on:
-      - frontend
       - frontend
       - game
       - usermanagement
@@ -184,12 +168,6 @@ volumes:
     driver: local
     driver_opts:
       device: ${PWD}/frontend
-      type: none
-      o: bind
-  nginx_vm:
-    driver: local
-    driver_opts:
-      device: ${PWD}/frontend/dist
       type: none
       o: bind
 

@@ -195,6 +195,7 @@ const Chat = () => {
                 socketRef.current.send(JSON.stringify({
                     message: newMessage,
                     user_id: selectedUserId,
+                    message_type: "message",
                 }));
                 setNewMessage("");
             }
@@ -210,7 +211,8 @@ const Chat = () => {
             socketRef.current.send(
                 JSON.stringify({
                     type: "game_invitation",
-                    user_id: receiverId, // The ID of the user being invited
+                    user_id: receiverId,
+                    message_type: "invite"
                 })
             );
         }
@@ -222,12 +224,13 @@ const Chat = () => {
       };
 
     return (
-        <div className="flex h-full py-[20px] w-full px-[20px] sm:px-0 relative"    >
+        <div className="flex h-full py-[20px] w-full px-[0px] sm:px-0 relative"    >
             {/* User List Section */}
             <div className={`
                     sm:min-w-80
                     md:max-w-80  
                     w-full 
+                    mx-[20px]
                     sm:mx-[20px] 
                     sm:mr-[20px]  
                     md:rounded-r-none 
@@ -340,7 +343,7 @@ const Chat = () => {
                                 overflowWrap: "break-word", 
                                 wordBreak: "break-word" }}
                         >
-                            {msg.isGameInvitation ? (
+                            {msg.message_type === "invite" ? (
                                 <div className="game-invitation bg-blue-100 p-4 rounded-lg flex items-center justify-between">
                                     <span>{msg.message}</span>
                                     <button
