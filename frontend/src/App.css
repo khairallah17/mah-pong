@@ -180,3 +180,13 @@ body{
   .clip-card {
     clip-path: polygon(13% 0, 100% 0, 100% 71%, 63% 73%, 55% 100%, 0 100%, 0 45%);
   }
+
+  .debug{
+    border: 1px solid red;
+  }
+.debug > * {
+  border: 1px solid green;
+}
+.debug >* > * {
+  border: 1px solid purple;
+}

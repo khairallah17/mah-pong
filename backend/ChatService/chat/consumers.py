@@ -40,15 +40,27 @@ class ChatConsumer(AsyncWebsocketConsumer):
         sender = await self.get_user(username=self.username)
         receiver_id = data['user_id']
         receiver = await self.get_user(user_id=receiver_id)
-        content = data['message']
+        content = data.get('message', '') #qwertu
 
-        isBlocked = await self.get_blocklists(sender, receiver)
+        block_status = await self.get_blocklists(sender, receiver)
 
+        if block_status["status"] == "blocked":
+            if block_status["blocker"] == sender.username:
+                await self.send(text_data=json.dumps({
+                    'type': 'blocked',
+                    'content': f'You cannot send messages to {receiver.username} as you have blocked them.'
+                }))
+            else:
+                await self.send(text_data=json.dumps({
+                    'type': 'blocked',
+                    'content': f'You cannot send messages to {receiver.username} as they have blocked you.'
+                }))
+            return
 
-        if (isBlocked):
+        if block_status["status"] == "mutual_block":
             await self.send(text_data=json.dumps({
                 'type': 'blocked',
-                'content': 'You cannot send messages to this user.'
+                'content': f'You and {receiver.username} have mutually blocked each other.'
             }))
             return
 
@@ -64,8 +76,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 'type': 'chat_message',
                 'content': content,
                 'sender': sender.username,
-                'receiver': receiver.username
-                # 'timestamp': message.timestamp
+                'receiver': receiver.username,
+                'timestamp': str(now())
             }
         )
         await self.channel_layer.group_send(
@@ -74,8 +86,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 'type': 'chat_message',
                 'content': content,
                 'sender': sender.username,
-                'receiver': receiver.username
-                # 'timestamp': message.timestamp
+                'receiver': receiver.username,
+                'timestamp': str(now())
             }
         )
 
@@ -89,9 +101,17 @@ class ChatConsumer(AsyncWebsocketConsumer):
             blocklist2 = BlockList.objects.get(user=user2)
         except BlockList.DoesNotExist:
             blocklist2 = None
-        if ((blocklist1 and blocklist1.is_user_blocked(user2)) or (blocklist2 and blocklist2.is_user_blocked(user1))):
-            return True
-        return False
+        
+        if blocklist1 and blocklist1.is_user_blocked(user2):
+            if blocklist2 and blocklist2.is_user_blocked(user1):
+                return {"status": "mutual_block", "blocker": None}
+            return {"status": "blocked", "blocker": user1.username}
+
+        if blocklist2 and blocklist2.is_user_blocked(user1):
+            return {"status": "blocked", "blocker": user2.username}
+
+        return {"status": "not_blocked", "blocker": None}
+
 
     @database_sync_to_async
     def get_user(self, username=None, user_id=None):
@@ -123,22 +143,21 @@ class ChatConsumer(AsyncWebsocketConsumer):
             receiver_id=receiver_id,
             content=content,
             conversation=conversation,
-            # timestamp=now()
         )
 
     async def chat_message(self, event):
         content = event["content"]
         sender = event["sender"]
         receiver = event["receiver"]
-        # timestamp = event["timestamp"]
+        timestamp = event["timestamp"]
 
         # Send the message to WebSocket
         await self.send(text_data=json.dumps({
             'type': 'chat_message',
             'content': content,
             'sender': sender,
-            'receiver': receiver
-            # 'timestamp': timestamp 
+            'receiver': receiver,
+            'timestamp': timestamp 
         }))
         
     # utils
