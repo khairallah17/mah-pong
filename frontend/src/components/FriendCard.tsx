@@ -4,7 +4,7 @@ const FriendCard = ({ name, imageUrl, onClick }) => {
     // Construct the full image URL by prepending the backend URL
     const fullImageUrl = imageUrl?.startsWith('http') 
         ? imageUrl 
-        : `http://localhost:8001${imageUrl}`;
+        : `/api/usermanagement${imageUrl}`;
 
     return (
         <div 
@@ -16,7 +16,7 @@ const FriendCard = ({ name, imageUrl, onClick }) => {
                 alt={name} 
                 className="w-full h-[170px] rounded-tr-[24px] object-cover"
                 onError={(e) => {
-                    e.target.src = 'http://localhost:8001/media/avatar/1.svg'; // Fallback avatar
+                    e.target.src = '/api/usermanagement/media/avatar/1.svg'; // Fallback avatar
                 }}
             />
             <div 

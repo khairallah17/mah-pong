@@ -21,7 +21,7 @@ export const VerifyPsdEmail = () => {
         };
     
         try {
-            const response = await fetch('http://localhost:8001/api/password-reset/', requestOptions);
+            const response = await fetch('/api/usermanagement/api/password-reset/', requestOptions);
             const data = await response.json();
             
             if (response.ok) {
@@ -39,7 +39,6 @@ export const VerifyPsdEmail = () => {
                 throw new Error(data.error || 'Failed to reset password');
             }
         } catch (err) {
-            console.error('Error:', err);
             toast.error('An unexpected error occurred', {
               position: "top-right",
               autoClose: 5000,

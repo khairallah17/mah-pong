@@ -6,20 +6,20 @@ button {
     transform: scale(1.1);
 } */
 
-.custom-scrollbar {
-    scrollbar-width: thin; /* Firefox */
-    scrollbar-color: #BD3944 transparent; /* Firefox */
+/* .custom-scrollbar {
+    scrollbar-width: thin; 
+    scrollbar-color: #BD3944 transparent; 
 }
 
 .custom-scrollbar::-webkit-scrollbar {
-    width: 8px; /* Width of the scrollbar */
+    width: 8px; 
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-    background-color: #4A4A4A; /* Color of the scrollbar thumb */
-    border-radius: 10px; /* Rounded corners */
+    background-color: #4A4A4A;
+    border-radius: 10px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-track {
-    background: transparent; /* Color of the scrollbar track */
-}
+    background: transparent; 
+} */

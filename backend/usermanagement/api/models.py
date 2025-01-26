@@ -1,11 +1,10 @@
 import uuid
-from django.db import models # type: ignore
-from django.contrib.auth.models import AbstractUser # type: ignore
-# from django.db.models import Q
-from django.db.models.signals import post_save # type: ignore
-from django.dispatch import receiver # type: ignore
-from django.utils import timezone # type: ignore
-from django.conf import settings # type: ignore
+from django.db import models
+from django.contrib.auth.models import AbstractUser
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from django.utils import timezone
+from django.conf import settings
 import os
 import random
 
@@ -16,18 +15,12 @@ class User(AbstractUser):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     username = models.CharField(max_length=50, unique=True)
     email = models.EmailField(unique=True)
-
-    def get_random_image_profil():
-        list_avatars = os.listdir(path = './media')
-
-        return('/' + random.choice(list_avatars))
     img = models.ImageField(
         upload_to='./',
-        default=get_random_image_profil
+        default="Default.jpg"
     )
     
     is_online = models.BooleanField(default=False)
-    # last_activity = models.DateTimeField(default=timezone.now)
     
     def get_random_image():
         list_avatars = os.listdir(path = './media/avatar')
@@ -38,12 +31,7 @@ class User(AbstractUser):
         upload_to='./',
         default=get_random_image
     )
-    
-    # @property
-    # def is_online(self):
-    #     # Consider user online if active in last 5 minutes
-    #     now = timezone.now()
-    #     return (now - self.last_activity).total_seconds() < 300  # 5 minutes
+
     
     # Add these new fields for 2FA
     two_factor_enabled = models.BooleanField(default=False)
@@ -94,14 +82,6 @@ def save_user_profile(sender, instance, **kwargs):
             instance.profile.save()
     except Profil.DoesNotExist:
         Profil.objects.create(user=instance)
-
-# def create_profile_for_user(sender, instance, created, **keyargs):
-#     if created:
-#         Profil.objects.create(user=instance)
-
-# #saving Profile users infos
-# def saving_user_profile(sender, instance, **keyargs):
-#     instance.profil.save()
 
 
 # Fiends Requests Class

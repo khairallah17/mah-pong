@@ -28,12 +28,11 @@ export default function Pvp2d() {
   const wsRef = useRef(null);
   let token = localStorage.getItem('authtoken');
   const accessToken = JSON.parse(token).access;
-  const [inviteCode, setInviteCode] = useState(new URLSearchParams(window.location.search).get('invite'));
-  const [matchId, setMatchId] = useState(new URLSearchParams(window.location.search).get('match_id'));
+  const inviteCode = new URLSearchParams(window.location.search).get('invite');
+  const matchId = new URLSearchParams(window.location.search).get('match_id');
   const [isMatched, setIsMatched] = useState(false);
-  const [isPlayer1, setIsPlayer1] = useState(true);
   const [gameState, setGameState] = useState(null);
-  const [names, setNames] = useState({ player1: 'You', player2: 'Opponent' });
+  const [names, setNames] = useState({ player1: '', player2: '' });
   const winnerRef = useRef(null);
   const isPlayer1Ref = useRef(true);
   const [processingResults, setProcessingResults] = useState(false);
@@ -122,51 +121,53 @@ export default function Pvp2d() {
 
   useEffect(() => {
     if (token && !wsRef.current) {
-      const wsUrl = `ws://localhost:8000/ws/pvp2d/?token=${accessToken}${inviteCode ? `&invite=${inviteCode}` : ''}${matchId ? `&match_id=${matchId}` : ''}`;
-      wsRef.current = new WebSocket(wsUrl);
-      wsRef.current.onopen = () => {
-        console.log('WebSocket connection established');
-      };
-      wsRef.current.onmessage = async (event) => {
-        const message = JSON.parse(event.data);
-        console.log('WebSocket message:', message);
-        if (message.type === 'token_expired') {
-          console.log('Token expired, refreshing...');
-          const newToken = await refreshToken();
-          if (newToken) {
-            localStorage.setItem('authtoken', JSON.stringify(newToken));
-            wsManagerInstance.close();
-            wsManagerInstance.setUrl('ws://localhost:8002/ws/notifications/?token=' + newToken?.access);
-            wsManagerInstance.connect(handleMessage);
-            console.log('WebSocket connection established with new token');
-          } else {
-            localStorage.removeItem('authtoken');
-            navigate('/login');
+      setTimeout(() => {
+        const wsUrl = `ws://localhost/api/game/ws/pvp2d/?token=${accessToken}${inviteCode ? `&invite=${inviteCode}` : ''}${matchId ? `&match_id=${matchId}` : ''}`;
+        wsRef.current = new WebSocket(wsUrl);
+        wsRef.current.onopen = () => {
+          console.log('WebSocket connection established');
+        };
+        wsRef.current.onmessage = async (event) => {
+          const message = JSON.parse(event.data);
+          console.log('WebSocket message:', message);
+          if (message.type === 'token_expired') {
+            console.log('Token expired, refreshing...');
+            const newToken = await refreshToken();
+            if (newToken) {
+              localStorage.setItem('authtoken', JSON.stringify(newToken));
+              wsManagerInstance.close();
+              wsManagerInstance.setUrl('ws://localhost/api/notifications/ws/notifications/?token=' + newToken?.access);
+              wsManagerInstance.connect(handleMessage);
+              console.log('WebSocket connection established with new token');
+            } else {
+              localStorage.removeItem('authtoken');
+              navigate('/login');
+            }
           }
-        }
-        if (message.type === 'match_found') {
-          setNames({ player1: message.names.player1, player2: message.names.player2 });
-          setIsMatched(true);
-          setIsPlayer1(message.player_id === '1');
-          isPlayer1Ref.current = message.player_id === '1';
-          startCountdown();
-        } else if (message.type === 'game_state') {
-          setGameState(message.game_state);
-        } else if (message.type === 'opponent_disconnected') {
-          setOpponentDisconnected(true);
-        } else if (message.type === 'game_end') {
-          setProcessingResults(false);
-          setWinner(winnerRef.current);
-        }
-      };
-      wsRef.current.onclose = () => {
-        console.log('WebSocket connection closed');
-      };
-      wsRef.current.onerror = (e) => console.error('WebSocket error:', e);
+          if (message.type === 'match_found') {
+            setNames({ player1: message.names.player1, player2: message.names.player2 });
+            setIsMatched(true);
+            isPlayer1Ref.current = message.player_id === '1';
+            startCountdown();
+          } else if (message.type === 'game_state') {
+            setGameState(message.game_state);
+          } else if (message.type === 'opponent_disconnected') {
+            setOpponentDisconnected(true);
+            wsRef.current.close();
+          } else if (message.type === 'game_end') {
+            setProcessingResults(false);
+            setWinner(winnerRef.current);
+          }
+        };
+        wsRef.current.onclose = () => {
+          console.log('WebSocket connection closed');
+        };
+        wsRef.current.onerror = (e) => console.error('WebSocket error:', e);
+      }, 4000);
     }
 
     const refreshToken = async () => {
-      let refreshtokenUrl = "http://localhost:8001/api/token/refresh/"
+      let refreshtokenUrl = "/api/usermanagement/api/token/refresh/"
       try {
         const response = await fetch(refreshtokenUrl, {
           method: 'POST',
@@ -204,7 +205,7 @@ export default function Pvp2d() {
       ballRef.current.position.set(gameState.ball_x, 0.1, gameState.ball_z);
       if (isPausedRef.current) {
         if (gameState.scoreP1 >= 5 || gameState.scoreP2 >= 5) {
-          winnerRef.current = gameState.scoreP1 >= 5 ? t('Player') + ' 1' : t('Player')+' 2';
+          winnerRef.current = gameState.scoreP1 >= 5 ? names.player1 : names.player2;
           wsRef.current.send(JSON.stringify({ type: 'game_event', event: 'end' }));
           setProcessingResults(true);
         } else if (!countdownRef.current) {
@@ -377,8 +378,9 @@ export default function Pvp2d() {
     <>
       <GameSettingsButton />
       {!isMatched && (
-        <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-white text-2xl">
-          <h1>{t('Waiting for opponent...')}</h1>
+        <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center text-white">
+          <h2 className="text-2xl font-bold mb-4">{t('Waiting for Opponent...')}</h2>
+          <div className="loader border-t-white border-2 border-solid rounded-full w-8 h-8 animate-spin mx-auto"></div>
         </div>
       )}
       {winner && (
@@ -414,16 +416,16 @@ export default function Pvp2d() {
         </div>
       )}
       {isMatched && (
-        <div id="game-container">
+        <div id="game-container" >
           <GameScore
             player1={{
               username: names.player1,
-              avatar: '/player1.png?height=40&width=40',
+              img: '/player1.png?height=40&width=40',
               score: score1
             }}
             player2={{
               username: names.player2,
-              avatar: '/player2.png?height=40&width=40',
+              img: '/player2.png?height=40&width=40',
               score: score2
             }}
           />

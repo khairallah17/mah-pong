@@ -12,6 +12,10 @@ import {
   Filler
 } from 'chart.js';
 import { Line } from 'react-chartjs-2';
+import '../i18n';
+import { useTranslation } from 'react-i18next';
+
+import { ImSpinner2 } from "react-icons/im";
 
 ChartJS.register(
   CategoryScale,
@@ -25,15 +29,14 @@ ChartJS.register(
 );
 
 export const WeeklyChart = ({ user }) => {
+  const { t } = useTranslation();
   const [matchData, setMatchData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const chartRef = useRef(null);
 
   // Validate username
-  console.log("user", user);
   const username = user?.trim() || '';
-  console.log("username", username);
 
   useEffect(() => {
     const fetchMatchData = async () => {
@@ -45,7 +48,7 @@ export const WeeklyChart = ({ user }) => {
       }
 
       try {
-        const response = await fetch(`http://localhost:8000/api/match-history/${username}/`);
+        const response = await fetch(`/api/game/api/match-history/${username}/`);
         const data = await response.json();
 
         // Handle the specific "No matches" error case
@@ -82,7 +85,7 @@ export const WeeklyChart = ({ user }) => {
   }, [username]);
 
   const processDataForChart = () => {
-    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const days = [t('Sun'), t('Mon'), t('Tue'), t('Wed'), t('Thu'), t('Fri'), t('Sat')];
     const dailyCounts = new Array(7).fill(0);
     
     // Check if matchData exists and is not empty
@@ -182,19 +185,22 @@ export const WeeklyChart = ({ user }) => {
 
   const renderContent = () => {
     if (loading) {
-      return <div className="text-center text-gray-400">Loading...</div>;
+      return (
+        <div className="text-center text-gray-400">
+          <ImSpinner2 className="animate-spin" />
+        </div>);
     }
 
     if (error) {
-      return <div className="text-center text-red-400">Error: {error}</div>;
+      return <div className="text-center text-red-400">{t('Error:')} {error}</div>;
     }
 
     if (!matchData || matchData.length === 0) {
       return (
         <>
-          <h3 className="text-lg font-bold mb-4">Weekly Match Activity</h3>
+          <h3 className="text-lg font-bold mb-4">{t('Weekly Match Activity')}</h3>
           <div className="text-center text-gray-400 py-8">
-            No matches played this week
+            {t('No matches played this week')}
           </div>
         </>
       );
@@ -202,7 +208,7 @@ export const WeeklyChart = ({ user }) => {
 
     return (
       <>
-        <h3 className="text-lg font-bold mb-4">Weekly Match Activity</h3>
+        <h3 className="text-lg font-bold mb-4">{t('Weekly Match Activity')}</h3>
         <div className="h-64 w-full">
           <Line ref={chartRef} data={chartData} options={options} />
         </div>

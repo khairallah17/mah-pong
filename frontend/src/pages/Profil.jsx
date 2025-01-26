@@ -5,11 +5,15 @@ import { Statistics } from '../components/StatisticUser';
 import { GripHorizontal } from 'lucide-react';
 import { useParams } from 'react-router-dom';
 import { useAuthContext } from '../hooks/useAuthContext';
+import '../i18n';
+import { useTranslation } from 'react-i18next';
 
 const Profile = () => {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState('stats');
   const [totalGames, setTotalGames] = useState(0);
   const [winRate, setWinRate] = useState(0);
+  const [loading, setLoading] = useState(true)
   let { username, authToken } = useParams();
   
   const { user } = useAuthContext()
@@ -17,10 +21,11 @@ const Profile = () => {
   useEffect(() => {
   const fetchStats = async () => {
     try {
+      setLoading(true)
       if (!username)
         username = user.username;
 
-      const response = await fetch(`http://localhost:8000/api/player-stats/${username}/`, {
+      const response = await fetch(`/api/game/api/player-stats/${username}/`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -34,6 +39,8 @@ const Profile = () => {
       setWinRate(winRate);
     } catch (error) {
       console.error('Error fetching stats:', error);
+    } finally {
+      setLoading(false)
     }
   };
    if (username) {
@@ -49,8 +56,13 @@ const Profile = () => {
 
       {/* Main Content Container */}
       <div className="relative max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        
-        {/* Mobile Profile Section */}
+
+       {
+        loading ? (
+          <p>Loading...</p>
+        ): (
+          <>
+                  {/* Mobile Profile Section */}
         <div className="lg:hidden mb-6">
           <div className="bg-navy-800/70 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-white/10 transition-all hover:border-white/20">
             <PictureUser />
@@ -70,11 +82,11 @@ const Profile = () => {
                 <div className="mt-6 grid grid-cols-2 gap-4 border-t border-white/10 pt-6">
                   <div className="text-center">
                     <div className="text-2xl font-bold text-indigo-400">{totalGames || 0}</div>
-                    <div className="text-sm text-gray-400">total Games</div>
+                    <div className="text-sm text-gray-400">{t('total Games')}</div>
                   </div>
                   <div className="text-center">
                     <div className="text-2xl font-bold text-indigo-400">{winRate}</div>
-                    <div className="text-sm text-gray-400">win Rate</div>
+                    <div className="text-sm text-gray-400">{t('win Rate')}</div>
                   </div>
                 </div>
               </div>
@@ -93,7 +105,7 @@ const Profile = () => {
                       ? 'bg-indigo-500/10 text-indigo-400 border-b-2 border-indigo-400' 
                       : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
                 >
-                  Statistics Overview
+                  {t('Statistics Overview')}
                 </button>
                 <button
                   onClick={() => setActiveTab('matches')}
@@ -102,7 +114,7 @@ const Profile = () => {
                       ? 'bg-indigo-500/10 text-indigo-400 border-b-2 border-indigo-400' 
                       : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
                 >
-                  Recent Matches
+                  {t('Recent Matches')}
                 </button>
               </div>
 
@@ -112,7 +124,7 @@ const Profile = () => {
                   <div className="space-y-6">
                     <div className="flex items-center gap-2">
                       <GripHorizontal className="w-5 h-5 text-indigo-400" />
-                      <h2 className="text-xl font-semibold text-white">Statistics Overview</h2>
+                      <h2 className="text-xl font-semibold text-white">{t('Statistics Overview')}</h2>
                     </div>
                     <Statistics />
                   </div>
@@ -121,7 +133,7 @@ const Profile = () => {
                   <div className="space-y-6">
                     <div className="flex items-center gap-2">
                       <GripHorizontal className="w-5 h-5 text-indigo-400" />
-                      <h2 className="text-xl font-semibold text-white">Recent Matches</h2>
+                      <h2 className="text-xl font-semibold text-white">{t('Recent Matches')}</h2>
                     </div>
                     <MatchHistory />
                   </div>
@@ -129,7 +141,10 @@ const Profile = () => {
               </div>
             </div>
           </div>
-        </div>
+        </div></>
+        )
+       }      
+  
       </div>
 
       {/* Bottom Gradient */}

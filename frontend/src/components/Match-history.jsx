@@ -1,27 +1,31 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 import '../i18n';
 import { useTranslation } from 'react-i18next';
-import { Activity, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { jwtDecode } from "jwt-decode";
+import { useAuthContext } from '../hooks/useAuthContext';
+import { ImSpinner2 } from "react-icons/im";
+
+import axios from 'axios';
 
 export const MatchHistory = () => {
   const { t } = useTranslation();
   const [matches, setMatches] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const matchesPerPage = 6;
 
-  const token = JSON.parse(localStorage.getItem('authtoken')).access;
-  const username = jwtDecode(token).username;
+  const { user } = useAuthContext()
+  const { username } = user
 
   useEffect(() => {
     const fetchMatches = async () => {
       try {
         // Fetch all matches first
-        const response = await fetch(`http://localhost:8000/api/match-history/${username}/`);
-        const allMatches = await response.json();
+        setLoading(true)
+        const response = await axios.get(`/api/game/api/match-history/${username}/`);
+        const allMatches = response.data;
         
         // Calculate total pages based on all matches
         const total = Math.ceil(allMatches.length / matchesPerPage);
@@ -34,17 +38,15 @@ export const MatchHistory = () => {
         // Slice the matches array for current page
         const paginatedMatches = allMatches.slice(startIndex, endIndex);
         setMatches(paginatedMatches);
-        setLoading(false);
       } catch (error) {
         console.error('Failed to fetch matches:', error);
+      } finally {
         setLoading(false);
       }
     };
 
     fetchMatches();
-    const interval = setInterval(fetchMatches, 5000);
-    return () => clearInterval(interval);
-  }, [currentPage, username]);
+  }, [currentPage]);
 
   const handlePageChange = (newPage) => {
     if (newPage >= 1 && newPage <= totalPages) {
@@ -57,41 +59,30 @@ export const MatchHistory = () => {
     <div className="space-y-3">
       {loading ? (
         // Loading skeletons
-        [...Array(matchesPerPage)].map((_, i) => (
-          <div key={i} className="flex items-center justify-between p-4 bg-white/5 rounded-lg animate-pulse">
-            <div className="flex items-center gap-4">
-              <div className="w-10 h-10 rounded-full bg-white/10" />
-              <div>
-                <div className="h-4 w-24 bg-white/10 rounded" />
-                <div className="h-3 w-20 bg-white/10 rounded mt-2" />
-              </div>
-            </div>
-            <div className="text-right">
-              <div className="h-4 w-16 bg-white/10 rounded" />
-              <div className="h-3 w-20 bg-white/10 rounded mt-2" />
-            </div>
-          </div>
-        ))
+        <ImSpinner2 className="animate-spin"/>
       ) : (
         <>
-          {matches.length > 0 ? (
+          {matches?.length > 0 ? (
             <>
               <div className="grid gap-3">
-                {matches.map((match) => (
+                {matches?.map((match) => (
                   <div key={match.id} className="flex items-center justify-between p-4 bg-white/5 rounded-lg hover:bg-white/10 transition-colors">
                     <div className="flex items-center gap-4">
                       <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${
-                        match.result === 'win' ? 'from-green-500 to-emerald-500' : 'from-purple-500 to-pink-500'
+                        match.result === 'win' ? 'from-green-500 to-emerald-500' : match.result === 'loss' ? 'from-purple-500 to-pink-500' : 'from-gray-500 to-gray-500'
                       } flex items-center justify-center`}>
-                        <Activity size={20} />
+                        {match.mode === 'pong' ?
+                            <img src="../public/pongIcon.png" alt="Pong" className="w-6 h-6" />
+                          :
+                            <img src="../public/tictactoeIcon.png" alt="Pong" className="w-6 h-6" />                        }
                       </div>
                       <div>
-                        <div className="font-medium">Match #{match.id}</div>
+                        <div className="font-medium">Match #{match.id} </div>
                         <div className="text-sm text-gray-400">{match.player} vs {match.opponent}</div>
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className={`font-medium ${match.result === 'win' ? 'text-green-400' : 'text-red-400'}`}>
+                      <div className={`font-medium ${match.result === 'win' ? 'text-green-400' : match.result === 'loss' ? 'text-red-400' : 'text-gray-400'}`}>
                         {match.score_player1} - {match.score_player2}
                       </div>
                       <div className="text-sm text-gray-400">{match.time}</div>

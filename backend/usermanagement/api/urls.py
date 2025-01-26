@@ -6,7 +6,7 @@ from . import views
 
 urlpatterns = [
     
-    #zouhair urls
+    #zouhair urls Path
     path('allusers/', views.get_allusers.as_view(), name="all-users"),
     path('edit-profile/', views.UserEditProfileView.as_view(), name='user-edit-profile'),
     path('change-password/', views.ChangePasswordView.as_view(), name='change_password'),

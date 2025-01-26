@@ -8,6 +8,10 @@ import '../../../i18n.js';
 import { useTranslation } from 'react-i18next';
 import { NavLink } from 'react-router-dom';
 
+import useWebsocketContext from '../../../hooks/useWebsocketContext.jsx';
+
+import { useAuthContext } from '../../../hooks/useAuthContext.jsx';
+
 const PictureUser = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
@@ -17,19 +21,34 @@ const PictureUser = () => {
   const [error, setError] = useState(null);
   const [pendingRequest, setPendingRequest] = useState(null);
   const [friendStatus, setFriendStatus] = useState('none');
+  const [loading, setLoading] = useState(true)
   const [users, setUsers] = useState(true);
   const { username } = useParams();
   const token = JSON.parse(localStorage.getItem('authtoken'))?.access;
   const currentUser = token ? jwtDecode(token).username : null;
-  const { wsManager } = useContext(WebSocketContext);
+  const { wsManager } = useWebsocketContext();
 
+  const { user } = useAuthContext()
 
-
+  const handleGameInvite = async () => {
+    try {
+      const code = Math.random().toString(36).substring(2, 15);
+      // setInviteCode(code);
+      
+      navigate(`/dashboard/game/pvp2d?invite=${code}`, {
+        replace: true
+      });
+      wsManager.sendMessage(`${user.username} has invited you to a game!`, [username], `/dashboard/game/pvp2d?invite=${code}`);
+    } catch (error) {
+      console.error('Error generating invite:', error);
+      alert('Failed to generate game invite');
+    }
+  };
 
   const checkFriendStatus = async () => {
     try {
         // Check friend requests
-        const response = await fetch(`http://localhost:8001/api/friend-requests/`, {
+        const response = await fetch(`/api/usermanagement/api/friend-requests/`, {
             headers: {
                 'Authorization': `Bearer ${token}`
             }
@@ -53,7 +72,6 @@ const PictureUser = () => {
               setFriendStatus('pending');
               return;
           } else if (existingRequest.status === 'accepted') {
-            console.log('hna l9a existging request o dar friend')
               setFriendStatus('friends');
               return;
           }
@@ -61,7 +79,7 @@ const PictureUser = () => {
         }
 
         // If no request exists, check friends list
-        const friendsResponse = await fetch(`http://localhost:8001/api/friends/`, {
+        const friendsResponse = await fetch(`/api/usermanagement/api/friends/`, {
             headers: {
                 'Authorization': `Bearer ${token}`
             }
@@ -73,23 +91,28 @@ const PictureUser = () => {
 
         const friendsData = await friendsResponse.json();
         const isFriend = friendsData.friends?.some(friend => friend.username === username);
-        console.log('hna l9a jiha ta7taniya wach is friend:', isFriend)
 
         setFriendStatus(isFriend ? 'friends' : 'none');
     } catch (err) {
-        console.error('Error checking friend status:', err);
+      toast.warn(`Error checking friend status: ${err}`, {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: false,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "dark",
+      })
         setFriendStatus('none');
     }
   };
 
-  // useEffect(() => {
-  //   console.log(friendStatus, 'status changge')
-  // }, [friendStatus])
-
   useEffect(() => {
     const fetchProfil = async () => {
       try {
-        const response = await fetch(`http://localhost:8001/api/user-profile/${username}/`);
+        setLoading(true)
+        const response = await fetch(`/api/usermanagement/api/user-profile/${username}/`);
         if (!response.ok) {
           throw new Error('Profile not found');
         }
@@ -98,6 +121,8 @@ const PictureUser = () => {
         await checkFriendStatus();
       } catch (err) {
         setError(err.message);
+      } finally {
+        setLoading(false)
       }
     };
 
@@ -106,58 +131,9 @@ const PictureUser = () => {
     }
   }, [username, token]);
 
-
-  // useEffect(() => {
-  //   const fetchProfil = async () => {
-  //     try {
-  //       const response = await fetch(`http://localhost:8001/api/user-profile/${username}/`);
-  //       // Check for 400 error first
-  //       if (!response.ok) {
-  //         navigate('/dashboard');
-  //         toast.error('User not found2', {
-  //           position: "top-right",
-  //           autoClose: 5000,
-  //           hideProgressBar: false,
-  //           closeOnClick: false,
-  //           pauseOnHover: true,
-  //           draggable: true,
-  //           progress: undefined,
-  //           theme: "dark",
-  //         });
-  //         return;
-  //       }
-        
-  //       if (!response.ok) {
-  //         throw new Error('Profile not found');
-  //       }
-        
-  //       const data = await response.json();
-  //       setProfil(data);
-  //       await checkFriendStatus();
-  //     } catch (err) {
-  //       navigate('/dashboard');
-  //       toast.error(`${err.message}`, {
-  //         position: "top-right",
-  //         autoClose: 5000,
-  //         hideProgressBar: false,
-  //         closeOnClick: false,
-  //         pauseOnHover: true,
-  //         draggable: true,
-  //         progress: undefined,
-  //         theme: "dark",
-  //       });
-  //     }
-  //   };
-  
-  //   if (username && token) {
-  //     fetchProfil();
-  //   }
-  // }, [username, token, navigate]);
-
-
   const handleFriendRequest = async () => {
     try {
-      const response = await fetch('http://localhost:8001/api/friend-requests/', {
+      const response = await fetch('/api/usermanagement/api/friend-requests/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -176,7 +152,16 @@ const PictureUser = () => {
       setFriendStatus('pending');
       wsManager?.sendMessage(`${currentUser} sent you a friend request`, [username], `/dashboard/profil/${currentUser}`);
     } catch (err) {
-      console.error('Error:', err);
+      toast.warn(`Error: ${err}`, {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: false,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "dark",
+      })
       setError(err.message);
     }
   };
@@ -184,7 +169,7 @@ const PictureUser = () => {
   const handleAcceptRequest = async () => {
     try {
       // First get the pending request ID
-      const response = await fetch(`http://localhost:8001/api/friend-requests/`, {
+      const response = await fetch(`/api/usermanagement/api/friend-requests/`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -202,7 +187,7 @@ const PictureUser = () => {
       }
 
       // Accept the request
-      const acceptResponse = await fetch(`http://localhost:8001/api/friend-requests/${pendingRequest.id}/accept/`, {
+      const acceptResponse = await fetch(`/api/usermanagement/api/friend-requests/${pendingRequest.id}/accept/`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -216,14 +201,23 @@ const PictureUser = () => {
       setFriendStatus('friends');
       wsManager?.sendMessage(`${currentUser} accepted your friend request`, [username], `/dashboard/profil/${currentUser}`);
     } catch (err) {
-      console.error('Error accepting friend request:', err);
+      toast.warn(`Error accepting friend request: ${err}`, {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: false,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "dark",
+      })
       setError(err.message);
     }
   };
 
   const handleRejectRequest = async () => {
     try {
-      const response = await fetch(`http://localhost:8001/api/friend-requests/`, {
+      const response = await fetch(`/api/usermanagement/api/friend-requests/`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -240,7 +234,7 @@ const PictureUser = () => {
         throw new Error('Friend request not found');
       }
 
-      const rejectResponse = await fetch(`http://localhost:8001/api/friend-requests/${pendingRequest.id}/reject/`, {
+      const rejectResponse = await fetch(`/api/usermanagement/api/friend-requests/${pendingRequest.id}/reject/`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -254,14 +248,23 @@ const PictureUser = () => {
       setFriendStatus('none');
       wsManager.sendMessage(`${currentUser} Rejected your friend request`, [username], `/dashboard/profil/${currentUser}`);
     } catch (err) {
-      console.error('Error rejecting friend request:', err);
+      toast.warn(`Error rejecting friend request: ${err}`, {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: false,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "dark",
+      })
       setError(err.message);
     }
   };
 
   const handleCancelRequest = async () => {
     try {
-      const response = await fetch(`http://localhost:8001/api/friend-requests/`, {
+      const response = await fetch(`/api/usermanagement/api/friend-requests/`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -278,7 +281,7 @@ const PictureUser = () => {
         throw new Error('Friend request not found');
       }
 
-      const cancelResponse = await fetch(`http://localhost:8001/api/friend-requests/${pendingRequest.id}/cancel/`, {
+      const cancelResponse = await fetch(`/api/usermanagement/api/friend-requests/${pendingRequest.id}/cancel/`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -291,14 +294,23 @@ const PictureUser = () => {
 
       setFriendStatus('none');
     } catch (err) {
-      console.error('Error canceling friend request:', err);
+      toast.warn(`Error canceling friend request: ${err}`, {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: false,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "dark",
+      })
       setError(err.message);
     }
   };
 
   const handleRemoveFriend = async () => {
     try {
-      const response = await fetch('http://localhost:8001/api/friends/remove/', {
+      const response = await fetch('/api/usermanagement/api/friends/remove/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -313,7 +325,16 @@ const PictureUser = () => {
 
       setFriendStatus('none');
     } catch (err) {
-      console.error('Error removing friend:', err);
+      toast.warn(`Error removing friend: ${err}`, {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: false,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "dark",
+      })
       setError(err.message);
     }
   };
@@ -391,7 +412,7 @@ const PictureUser = () => {
     return (
       <>
         {friendButtons}
-        <button className="w-full py-2.5 px-4 bg-navy-700 hover:bg-navy-600 text-white rounded-lg flex items-center justify-center gap-2 transition-all">
+        <button onClick={() => handleGameInvite()} className="w-full py-2.5 px-4 bg-navy-700 hover:bg-navy-600 text-white rounded-lg flex items-center justify-center gap-2 transition-all">
                 <Gamepad2 className="w-4 h-4" />
                 {t('Invite to Game')}
         </button>
@@ -400,39 +421,34 @@ const PictureUser = () => {
   };
 
   if (error) {
-    // navigate('/dashboard')
-    return ;
-      // toast.error(`${error}`, {
-      //   position: "top-right",
-      //   autoClose: 5000,
-      //   hideProgressBar: false,
-      //   closeOnClick: false,
-      //   pauseOnHover: true,
-      //   draggable: true,
-      //   progress: undefined,
-      //   theme: "dark",
-      // })
-    
+    toast.warn(`${error}`, {
+      position: "top-right",
+      autoClose: 5000,
+      hideProgressBar: false,
+      closeOnClick: false,
+      pauseOnHover: true,
+      draggable: true,
+      progress: undefined,
+      theme: "dark",
+    })
   }
 
-  // if (isLoading) {
-  //   return (
-  //     <div className="flex items-center justify-center p-6">
-  //       <Loader2 className="w-8 h-8 text-indigo-400 animate-spin" />
-  //     </div>
-  //   );
-  // }
 
   return (
     <div className="space-y-6">
-      <div className="relative group">
+      {
+        loading ? (
+          <p>Loading...</p>
+        ) : (
+          <>
+            <div className="relative group">
         <div className="h-32 w-full bg-gradient-to-r from-indigo-600 to-purple-600 rounded-t-xl"></div>
         
         <div className="absolute -bottom-16 left-1/2 transform -translate-x-1/2">
           <div className="relative">
             <div className="w-32 h-32 rounded-full ring-4 ring-navy-800 bg-navy-700 overflow-hidden">
               <img 
-                src={`http://localhost:8001${profil?.img}`}
+                src={`/api/usermanagement${profil?.img}`}
                 alt="Profile"
                 className="w-full h-full object-cover"
               />
@@ -479,6 +495,9 @@ const PictureUser = () => {
           {renderActionButtons()}
         </div>
       </div>
+          </>
+        )
+      }
     </div>
   );
 };

@@ -13,21 +13,31 @@ export default AuthContext
 
 export const AuthProvider = ({ children }) => {
 
+    const navigate = useNavigate()
+
     //GETTING TOKEN
     const [authtoken, setAuthToken] = useState(() => {
         // Check localStorage for existing token
         const token = localStorage.getItem("authtoken");
-        return token ? JSON.parse(token) : null;
+        if (token)
+            return JSON.parse(token).access
+        return null
     });
 
     //GETTING NOW THE DECODE OF THE TOKEN AND STORE ==> {FULLNAME, USERNAME, EMAIL}
     // const [user, setUser] = useState(localStorage.getItem("authtoken") ? jwtDecode("authtoken") : null);
     const [user, setUser] = useState(() => {
         // Check localStorage for existing token and decode if exists
-        const token = localStorage.getItem("authtoken");
-        return token ? jwtDecode(JSON.parse(token).access) : null;
+        try {
+            const token = localStorage.getItem("authtoken");
+            const decoded = jwtDecode(JSON.parse(token).access)
+            return decoded
+        } catch (error) {
+            localStorage.removeItem("authtoken");
+            navigate("/login")
+        }
     });
-    
+
 
     // const [loading, setloading] = useState(true)
 
@@ -35,14 +45,14 @@ export const AuthProvider = ({ children }) => {
 
     const loginUsers = async (email, password, verificationCode = null) => {
         try {
-            let tokenUrl = "http://localhost:8001/api/token/"
+            let tokenUrl = "/api/usermanagement/api/token/";
             const response = await fetch(tokenUrl, {
                 credentials: 'include',
                 method: "POST",
-                body: JSON.stringify({ 
-                    email, 
+                body: JSON.stringify({
+                    email,
                     password,
-                    verification_code: verificationCode 
+                    verification_code: verificationCode
                 }),
                 headers: {
                     "Content-Type": "application/json"
@@ -52,7 +62,6 @@ export const AuthProvider = ({ children }) => {
             const data = await response.json();
 
             if (!response.ok) {
-                console.log("Error: ", data);
                 toast.error("you don't have an account you should to register", {
                     position: "top-right",
                     autoClose: 5000,
@@ -91,7 +100,7 @@ export const AuthProvider = ({ children }) => {
                     return;
                 }
 
-                setAuthToken(data);
+                setAuthToken(data.access);
                 setUser(jwtDecode(data.access));
                 localStorage.setItem("authtoken", JSON.stringify(data));
 
@@ -107,7 +116,7 @@ export const AuthProvider = ({ children }) => {
                     theme: "dark",
                     transition: Bounce,
                 });
-                
+
             } else {
                 toast.error("Failed to logged in", {
                     position: "top-right",
@@ -136,20 +145,19 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
-    
+
     const registerUsers = async (fullname, username, email, password, confirm_password) => {
 
-        let tokenUrlregister = "http://localhost:8001/api/register/"
+        let tokenUrlregister = "/api/usermanagement/api/register/";
         const response = await fetch(tokenUrlregister ,{
             method: 'POST',
-            body: JSON.stringify({fullname, username, email, password, confirm_password}),
+            body: JSON.stringify({ fullname, username, email, password, confirm_password }),
             headers: {
                 'Content-Type': 'application/json',
             },
         })
 
-        if (response.status === 201)
-        {
+        if (response.status === 201) {
             toast.success('you have successfully Registred', {
                 position: "top-right",
                 autoClose: 5000,
@@ -162,12 +170,10 @@ export const AuthProvider = ({ children }) => {
                 transition: Bounce,
             });
             // navigation("/login");
-            
-        } 
-        else 
-        {
+
+        }
+        else {
             const data = await response.json();
-            console.log("Error:  ", data);
             toast.error('There is some error in Your registration', {
                 position: "top-right",
                 autoClose: 5000,
@@ -185,16 +191,16 @@ export const AuthProvider = ({ children }) => {
 
 
 
-    const GoogleLogin = () =>{
+    const GoogleLogin = () => {
         const ClientId = import.meta.env.VITE_GCLIENT_ID;
-        const CallBackURI = "http://localhost:8001/api/v2/auth/googlelogin/callback/";
+        const CallBackURI = "http://localhost/api/usermanagement/api/v2/auth/googlelogin/callback/";
         window.location.replace(`https://accounts.google.com/o/oauth2/v2/auth?redirect_uri=${CallBackURI}&prompt=consent&response_type=code&client_id=${ClientId}&scope=openid%20email%20profile&access_type=offline`)
         // GoogleloginUsers( code )
     }
 
     const Intra42Login = () => {
         const clientId = import.meta.env.VITE_CLIENT_ID;
-        const callbackURI = "http://localhost:8001/api/42login/callback/";
+        const callbackURI = "http://localhost/api/usermanagement/api/42login/callback/";
         window.location.replace(`https://api.intra.42.fr/oauth/authorize?client_id=${clientId}&redirect_uri=${callbackURI}&response_type=code`);
     }
 
@@ -205,58 +211,69 @@ export const AuthProvider = ({ children }) => {
         const tmp_password = searchParams.get('tmp_password');
         const is_password_need = searchParams.get('is_password_need');
         const error = searchParams.get('error');
-        
+
         if (error) {
-            console.error('Google login error:', error);
-            Swal.fire({
-                position: "top-end",
-                icon: "error",
-                title: "Failed to log in with Google",
-                showConfirmButton: true,
-                timerProgressBar: true,
-                timer: 3000
-            });
+            toast.error(`Failed to log in with Google: ${error}`, {
+                position: "top-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: false,
+                pauseOnHover: true,
+                draggable: true,
+                progress: undefined,
+                theme: "dark",
+            })
             navigation('/login');
             return;
         }
 
-    
+
         if (token) {
             try {
-                console.log("hehre ",is_password_need)
                 // First handle password setup if needed
                 if (is_password_need && tmp_password) {
                     handlePasswordSetup(token, tmp_password);
                     return;
                 }
-    
+
                 // Then check if 2FA is required
-                fetch('http://localhost:8001/api/2fa/check/', {
+                fetch('/api/usermanagement/api/2fa/check/', {
                     headers: {
                         'Authorization': `Bearer ${token}`,
                         'Content-Type': 'application/json'
                     }
                 })
-                .then(response => response.json())
-                .then(async data => {
-                    if (data.requires_2fa) {
-                        await handle2FAVerification(token);
-                        return;
-                    }
-    
-                    // If no 2FA required, proceed with login
-                    completeLogin(token);
-                });
+                    .then(response => response.json())
+                    .then(async data => {
+                        if (data.requires_2fa) {
+                            await handle2FAVerification(token);
+                            return;
+                        }
+
+                        // If no 2FA required, proceed with login
+                        completeLogin(token);
+                        toast.success("Successfully logged in", {
+                            position: "top-right",
+                            autoClose: 5000,
+                            hideProgressBar: false,
+                            closeOnClick: true,
+                            pauseOnHover: true,
+                            draggable: true,
+                            progress: undefined,
+                            theme: "dark",
+                        })
+                    });
             } catch (error) {
-                console.error('Token processing error:', error);
-                Swal.fire({
-                    position: "top-end",
-                    icon: "error",
-                    title: "Failed to process login",
-                    showConfirmButton: true,
-                    timerProgressBar: true,
-                    timer: 3000
-                });
+                toast.error(`Failed to process login: ${error}`, {
+                    position: "top-right",
+                    autoClose: 5000,
+                    hideProgressBar: false,
+                    closeOnClick: false,
+                    pauseOnHover: true,
+                    draggable: true,
+                    progress: undefined,
+                    theme: "dark",
+                })
                 navigation('/login');
             }
         }
@@ -269,69 +286,82 @@ export const AuthProvider = ({ children }) => {
         const tmp_password = searchParams.get('tmp_password');
         const is_password_need = searchParams.get('is_password_need');
         const error = searchParams.get('error');
-    
+
         if (error) {
-            console.error('42 login error:', error);
-            Swal.fire({
-                position: "top-end",
-                icon: "error",
-                title: "Failed to log in with 42",
-                showConfirmButton: true,
-                timerProgressBar: true,
-                timer: 3000
-            });
+            toast.error(`Failed to log in with 42: ${error}`, {
+                position: "top-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: false,
+                pauseOnHover: true,
+                draggable: true,
+                progress: undefined,
+                theme: "dark",
+            })
             navigation('/login');
             return;
         }
-    
+
         if (token) {
             try {
-                console.log("hehre ", is_password_need)
                 // First handle password setup if needed
                 if (is_password_need && tmp_password) {
                     handlePasswordSetup(token, tmp_password);
                     return;
                 }
-    
+
                 // Then check if 2FA is required
-                fetch('http://localhost:8001/api/2fa/check/', {
+                fetch('/api/usermanagement/api/2fa/check/', {
                     headers: {
                         'Authorization': `Bearer ${token}`,
                         'Content-Type': 'application/json'
                     }
                 })
-                .then(response => response.json())
-                .then(async data => {
-                    if (data.requires_2fa) {
-                        await handle2FAVerification(token);
-                        return;
-                    }
-    
-                    // If no 2FA required, proceed with login
-                    completeLogin(token);
-                });
+                    .then(response => response.json())
+                    .then(async data => {
+                        if (data.requires_2fa) {
+                            await handle2FAVerification(token);
+                            return;
+                        }
+
+                        // If no 2FA required, proceed with login
+                        completeLogin(token);
+                        toast.success("Successfully logged in", {
+                            position: "top-right",
+                            autoClose: 1000,
+                            hideProgressBar: false,
+                            closeOnClick: true,
+                            pauseOnHover: true,
+                            // draggable: true,
+                            // progress: undefined,
+                            theme: "dark",
+                        })
+                    });
             } catch (error) {
-                console.error('Token processing error:', error);
-                Swal.fire({
-                    position: "top-end",
-                    icon: "error",
-                    title: "Failed to process login",
-                    showConfirmButton: true,
-                    timerProgressBar: true,
-                    timer: 3000
-                });
+                toast.error(`Token processing error: ${error}`, {
+                    position: "top-right",
+                    autoClose: 5000,
+                    hideProgressBar: false,
+                    closeOnClick: false,
+                    pauseOnHover: true,
+                    draggable: true,
+                    progress: undefined,
+                    theme: "dark",
+                })
                 navigation('/login');
             }
         }
-        else{
-            Swal.fire({
-                position: "top-end",
-                icon: "error",
-                title: "Failed to process login",
-                showConfirmButton: true,
-                timerProgressBar: true,
-                timer: 3000
-            });
+        else {
+            toast.error("Failed to process login", {
+                position: "top-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: false,
+                pauseOnHover: true,
+                draggable: true,
+                progress: undefined,
+                theme: "dark",
+            })
             navigation('/login');
         }
     }, [location.search, navigation, setAuthToken, setUser]);
@@ -342,12 +372,11 @@ export const AuthProvider = ({ children }) => {
 
             const authData = localStorage.getItem('authtoken');
             if (!authData) {
-                console.log('No auth token found');
                 throw new Error('No auth token found');
             }
-    
+
             const token = JSON.parse(authData).access;
-            const logouturl = "http://localhost:8001/api/logout/";
+            const logouturl = "/api/usermanagement/api/logout/";
             console.log("Attempting logout...");
     
             const response = await fetch(logouturl, {
@@ -359,17 +388,15 @@ export const AuthProvider = ({ children }) => {
                 // No need to send refresh token in body as it's in cookies
                 credentials: 'include' // Important: This ensures cookies are sent
             });
-    
+
             const data = await response.json();
-            
+
             if (!response.ok) {
                 throw new Error(data.error || 'Logout failed');
             }
-    
-            console.log("Logout successful");
-    
+
+
         } catch (error) {
-            console.error('Logout error:', error);
             toast.error(error.message, {
                 position: "top-right",
                 autoClose: 5000,
@@ -387,7 +414,7 @@ export const AuthProvider = ({ children }) => {
             setUser(null);
             localStorage.removeItem("authtoken");
             navigation("/login");
-            
+
             toast.success("Successfully logged out", {
                 position: "top-right",
                 autoClose: 5000,
@@ -401,7 +428,7 @@ export const AuthProvider = ({ children }) => {
             });
         }
     };
-    
+
     // Helper function to handle password setup
     const handlePasswordSetup = async (token, tmp_password) => {
         const { value: passwordData } = await Swal.fire({
@@ -415,32 +442,31 @@ export const AuthProvider = ({ children }) => {
             preConfirm: () => {
                 const password = document.getElementById('password').value;
                 const confirmPassword = document.getElementById('confirmPassword').value;
-                
-                console.log("isss===> ", password, confirmPassword)
+
                 if (!password || !confirmPassword) {
                     Swal.showValidationMessage('Please fill in both password fields');
                     return false;
                 }
-                
+
                 if (password !== confirmPassword) {
                     Swal.showValidationMessage('Passwords do not match');
                     return false;
                 }
-                
+
                 if (password.length < 8) {
                     Swal.showValidationMessage('Password must be at least 8 characters long');
                     return false;
                 }
-                
+
                 return { password, confirmPassword };
             }
         });
-    
+
         if (passwordData) {
             try {
                 console.log("isss===> before response ", passwordData.password, tmp_password)
                 console.log("Token===> before response ", token)
-                const response = await fetch('http://localhost:8001/api/api-set-password/', {
+                const response = await fetch('/api/usermanagement/api/api-set-password/', {
                     method: 'POST',
                     headers: {
                         'Authorization': `Bearer ${token}`,
@@ -451,53 +477,55 @@ export const AuthProvider = ({ children }) => {
                         tmp_password: tmp_password
                     })
                 });
-    
+
                 if (response.ok) {
-                    Swal.fire({
-                        position: "top-end",
-                        icon: "success",
-                        title: "Password set successfully",
-                        showConfirmButton: true,
-                        timerProgressBar: true,
-                        timer: 3000
-                    });
+                    toast.success("Password set successfully", {
+                        position: "top-right",
+                        autoClose: 5000,
+                        hideProgressBar: false,
+                        closeOnClick: false,
+                        pauseOnHover: true,
+                        draggable: true,
+                        progress: undefined,
+                        theme: "dark",
+                    })
                     // Continue with normal login flow
-                    fetch('http://localhost:8001/api/2fa/check/', {
+                    fetch('/api/usermanagement/api/2fa/check/', {
                         headers: {
                             'Authorization': `Bearer ${token}`,
                             'Content-Type': 'application/json'
                         }
                     })
-                    .then(response => response.json())
-                    .then(async data => {
-                        if (data.requires_2fa) {
-                            await handle2FAVerification(token);
-                            return;
-                        }
-                        completeLogin(token);
-                    });
+                        .then(response => response.json())
+                        .then(async data => {
+                            if (data.requires_2fa) {
+                                await handle2FAVerification(token);
+                                return;
+                            }
+                            completeLogin(token);
+                        });
                 } else {
-                    console.log(response.json());
                     throw new Error('Failed to set password');
                 }
             } catch (error) {
-                console.error('Password setup error:', error);
-                Swal.fire({
-                    position: "top-end",
-                    icon: "error",
-                    title: "Failed to set password",
-                    showConfirmButton: true,
-                    timerProgressBar: true,
-                    timer: 3000
-                });
+                toast.error(`Failed to set password ${error}`, {
+                    position: "top-right",
+                    autoClose: 5000,
+                    hideProgressBar: false,
+                    closeOnClick: false,
+                    pauseOnHover: true,
+                    draggable: true,
+                    progress: undefined,
+                    theme: "dark",
+                })
                 navigation('/login');
             }
         }
-        else{
+        else {
             handlePasswordSetup();
         }
     };
-    
+
     // Helper function for 2FA verification (existing code refactored into a function)
     const handle2FAVerification = async (token) => {
         const { value: code } = await Swal.fire({
@@ -513,9 +541,9 @@ export const AuthProvider = ({ children }) => {
                 }
             }
         });
-    
+
         if (code) {
-            const OTP42 = await fetch('http://localhost:8001/api/2fa/verify/', {
+            const OTP42 = await fetch('/api/usermanagement/api/2fa/verify/', {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -523,31 +551,35 @@ export const AuthProvider = ({ children }) => {
                 },
                 body: JSON.stringify({ otp: code })
             });
-    
+
             if (OTP42.ok) {
                 completeLogin(token);
-                Swal.fire({
-                    position: "top-end",
-                    title: "You successfully logged in using 2FA",
-                    icon: "success",
-                    showConfirmButton: true,
-                    timerProgressBar: true,
-                    timer: 3000
-                });
+                toast.success("You successfully logged in using 2FA", {
+                    position: "top-right",
+                    autoClose: 5000,
+                    hideProgressBar: false,
+                    closeOnClick: false,
+                    pauseOnHover: true,
+                    draggable: true,
+                    progress: undefined,
+                    theme: "dark",
+                })
             } else {
-                Swal.fire({
-                    position: "top-end",
-                    icon: "error",
-                    title: "Failed on 2FA verification",
-                    showConfirmButton: true,
-                    timerProgressBar: true,
-                    timer: 3000
-                });
+                toast.error("Failed on 2FA verification", {
+                    position: "top-right",
+                    autoClose: 5000,
+                    hideProgressBar: false,
+                    closeOnClick: false,
+                    pauseOnHover: true,
+                    draggable: true,
+                    progress: undefined,
+                    theme: "dark",
+                })
                 navigation('/login');
             }
         }
     };
-    
+
     // Helper function to complete the login process
     const completeLogin = (token) => {
         const decodedToken = jwtDecode(token);
@@ -555,14 +587,6 @@ export const AuthProvider = ({ children }) => {
         setUser(decodedToken);
         localStorage.setItem("authtoken", JSON.stringify({ access: token }));
         navigation("/dashboard");
-        Swal.fire({
-            position: "top-end",
-            title: "Successfully logged in",
-            icon: "success",
-            showConfirmButton: true,
-            timerProgressBar: true,
-            timer: 3000
-        });
     };
 
 
@@ -570,7 +594,7 @@ export const AuthProvider = ({ children }) => {
         if (location.pathname === '/google-callback') {
             handleGoogleLoginCallback(); // I have here the same fuction Login with google and 42 intra we should to change it and make it in one
         }
-        else if (location.pathname === '/42intra-callback'){
+        else if (location.pathname === '/42intra-callback') {
             handle42LoginCallback();
         }
     }, [location.pathname, handleGoogleLoginCallback, handle42LoginCallback]);
@@ -580,7 +604,7 @@ export const AuthProvider = ({ children }) => {
     }
 
     // Returning My context Provider
-    return ( 
+    return (
         <AuthContext.Provider value={contextData}>
             {children}
         </AuthContext.Provider>

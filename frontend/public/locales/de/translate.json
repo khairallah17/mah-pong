@@ -220,5 +220,21 @@
     "Accept Request": "Anfrage annehmen",
     "Reject Request": "Anfrage ablehnen",
     "Remove Friend": "Freund entfernen",
-    "Invite to Game": "Zum Spiel einladen"
+    "Invite to Game": "Zum Spiel einladen",
+
+    "_____________comment": "Profil Page Translator DE",
+    "total Games" : "Spiele insgesamt",
+    "win Rate" : "Gewinnrate",
+    "Statistics Overview" : "Statistikübersicht",
+    "Recent Matches" : "Letzte Spiele",
+    "Total Games" : "Spiele insgesamt",
+    "Win Rate" : "Gewinnrate",
+    "ELO Rating" : "ELO-Wertung",
+    "Sun": "Son", 
+    "Mon": "Mon", 
+    "Tue": "Die", 
+    "Wed": "Mitt", 
+    "Thu": "Don", 
+    "Fri": "Fre", 
+    "Sat": "Sam"
 }
