@@ -1,8 +1,15 @@
-from django.shortcuts import render # type: ignore
+from django.shortcuts import render
 from .models import Notification
 from .serializers import NotificationSerializer
-from rest_framework import generics # type: ignore
-from rest_framework.permissions import IsAuthenticated # type: ignore
+from rest_framework import generics
+from rest_framework.permissions import IsAuthenticated
+
+# ███╗   ██╗ ██████╗ ████████╗██╗███████╗██╗ ██████╗ █████╗ ████████╗██╗ ██████╗ ███╗   ██╗    ██╗     ██╗███████╗████████╗
+# ████╗  ██║██╔═══██╗╚══██╔══╝██║██╔════╝██║██╔════╝██╔══██╗╚══██╔══╝██║██╔═══██╗████╗  ██║    ██║     ██║██╔════╝╚══██╔══╝
+# ██╔██╗ ██║██║   ██║   ██║   ██║█████╗  ██║██║     ███████║   ██║   ██║██║   ██║██╔██╗ ██║    ██║     ██║███████╗   ██║   
+# ██║╚██╗██║██║   ██║   ██║   ██║██╔══╝  ██║██║     ██╔══██║   ██║   ██║██║   ██║██║╚██╗██║    ██║     ██║╚════██║   ██║   
+# ██║ ╚████║╚██████╔╝   ██║   ██║██║     ██║╚██████╗██║  ██║   ██║   ██║╚██████╔╝██║ ╚████║    ███████╗██║███████║   ██║   
+# ╚═╝  ╚═══╝ ╚═════╝    ╚═╝   ╚═╝╚═╝     ╚═╝ ╚═════╝╚═╝  ╚═╝   ╚═╝   ╚═╝ ╚═════╝ ╚═╝  ╚═══╝    ╚══════╝╚═╝╚══════╝   ╚═╝   
 
 class NotificationList(generics.ListCreateAPIView):
     serializer_class = NotificationSerializer

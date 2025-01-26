@@ -1,17 +1,23 @@
 import asyncio
-from channels.generic.websocket import AsyncWebsocketConsumer # type: ignore
+from channels.generic.websocket import AsyncWebsocketConsumer
 import json
 import logging
 import jwt
-from django.conf import settings # type: ignore
-from channels.db import database_sync_to_async # type: ignore
+from django.conf import settings
+from channels.db import database_sync_to_async
 from app.models import Notification
 from urllib.parse import parse_qs
-from django.core.cache import cache # type: ignore
+from django.core.cache import cache
 
 notif_user_channels = {}
 logger = logging.getLogger(__name__)
 
+# ███╗   ██╗ ██████╗ ████████╗██╗███████╗██╗ ██████╗ █████╗ ████████╗██╗ ██████╗ ███╗   ██╗███████╗     ██████╗ ██████╗ ███╗   ██╗███████╗██╗   ██╗███╗   ███╗███████╗██████╗ 
+# ████╗  ██║██╔═══██╗╚══██╔══╝██║██╔════╝██║██╔════╝██╔══██╗╚══██╔══╝██║██╔═══██╗████╗  ██║██╔════╝    ██╔════╝██╔═══██╗████╗  ██║██╔════╝██║   ██║████╗ ████║██╔════╝██╔══██╗
+# ██╔██╗ ██║██║   ██║   ██║   ██║█████╗  ██║██║     ███████║   ██║   ██║██║   ██║██╔██╗ ██║███████╗    ██║     ██║   ██║██╔██╗ ██║███████╗██║   ██║██╔████╔██║█████╗  ██████╔╝
+# ██║╚██╗██║██║   ██║   ██║   ██║██╔══╝  ██║██║     ██╔══██║   ██║   ██║██║   ██║██║╚██╗██║╚════██║    ██║     ██║   ██║██║╚██╗██║╚════██║██║   ██║██║╚██╔╝██║██╔══╝  ██╔══██╗
+# ██║ ╚████║╚██████╔╝   ██║   ██║██║     ██║╚██████╗██║  ██║   ██║   ██║╚██████╔╝██║ ╚████║███████║    ╚██████╗╚██████╔╝██║ ╚████║███████║╚██████╔╝██║ ╚═╝ ██║███████╗██║  ██║
+# ╚═╝  ╚═══╝ ╚═════╝    ╚═╝   ╚═╝╚═╝     ╚═╝ ╚═════╝╚═╝  ╚═╝   ╚═╝   ╚═╝ ╚═════╝ ╚═╝  ╚═══╝╚══════╝     ╚═════╝ ╚═════╝ ╚═╝  ╚═══╝╚══════╝ ╚═════╝ ╚═╝     ╚═╝╚══════╝╚═╝  ╚═╝
 
 class notificationsConsumer(AsyncWebsocketConsumer):
     def __init__(self, *args, **kwargs):

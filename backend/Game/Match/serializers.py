@@ -1,4 +1,4 @@
-from rest_framework import serializers # type: ignore
+from rest_framework import serializers
 from .models import Tournament, Match, Achievement, AchievementAssignment
 
 class TournamentSerializer(serializers.ModelSerializer):

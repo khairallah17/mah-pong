@@ -1,9 +1,9 @@
-from django.db import models # type: ignore
+from django.db import models
 import random
 import string 
-from django.contrib.postgres.fields import ArrayField # type: ignore
-from django.db.models.signals import post_migrate, post_save # type: ignore
-from django.dispatch import receiver # type: ignore
+from django.contrib.postgres.fields import ArrayField
+from django.db.models.signals import post_migrate, post_save
+from django.dispatch import receiver
 import requests
 
 class Match(models.Model):

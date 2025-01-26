@@ -25,7 +25,7 @@ import { ColorProvider } from "./context/ColorContext.jsx";
 
 import VerifyPsdEmail from "./pages/VerifyPsdEmail.jsx";
 import ResetPassword from "./pages/ResetPassword.jsx";
-// import ResetPassowrd from "./pages/ResetPassword"
+import ResetEmailSend from "./pages/ResetEmailSend.jsx"
 import SearchPage from "./pages/SearchPage.jsx";
 
 import Layout from './components/layout';
@@ -47,6 +47,7 @@ function App() {
                 <Route path="/" element={<HomePage />} />
                 <Route path="/login" element={<Authentication />} />
                 <Route path="/verify-email" element={<VerifyPsdEmail />} />
+                <Route path="/email-check" element={<ResetEmailSend />} />
                 <Route path="password-reset/confirm" element={<ResetPassword />} />
                 <Route path="/google-callback" element={<LoadingApi />} />
                 <Route path="/42intra-callback" element={<LoadingApi />} />
