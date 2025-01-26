@@ -40,20 +40,20 @@ services:
     volumes:
       - usermanagement_media_data:/app/media
 
-  # frontend:
-    # container_name: frontend
-    # build: 
-    #   context: "./frontend"
-    #   dockerfile: Dockerfile
-    # ports:
-    #   - "5173:5173"
-    # env_file:
-    #   - .env
-    # volumes:
-    #   - front_vm:/app
-    #   - /app/node_modules
-    # networks:
-    #   - microservices-network
+  frontend:
+    container_name: frontend
+    build: 
+      context: "./frontend"
+      dockerfile: Dockerfile
+    ports:
+      - "5173:5173"
+    env_file:
+      - .env
+    volumes:
+      - front_vm:/app
+      - /app/node_modules
+    networks:
+      - microservices-network
     
   notifications:
     container_name: notifications
@@ -94,6 +94,7 @@ services:
     ports:
       - "80:80"
     depends_on:
+      - frontend
       - game
       - usermanagement
       - notifications
@@ -164,6 +165,11 @@ volumes:
   chat_db_data:
   usermanagement_media_data:
   front_vm:
+    driver: local
+    driver_opts:
+      device: ${PWD}/frontend
+      type: none
+      o: bind
 
 networks:
   microservices-network:

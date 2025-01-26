@@ -7,6 +7,7 @@ class TournamentSerializer(serializers.ModelSerializer):
         fields = ['id', 'created_at', 'status', 'code', 'players']
 
 class MatchSerializer(serializers.ModelSerializer):
+    mode = serializers.CharField()
     player = serializers.SerializerMethodField()
     opponent = serializers.SerializerMethodField()
     score_player1 = serializers.SerializerMethodField()
@@ -16,7 +17,7 @@ class MatchSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Match
-        fields = ['id', 'datetime', 'player', 'opponent', 'score_player1', 'score_player2','result', 'time']
+        fields = ['id', 'datetime', 'player', 'opponent', 'score_player1', 'score_player2','result', 'time', 'mode']
 
     def get_player(self, obj):
         return self.context['player']
@@ -32,9 +33,19 @@ class MatchSerializer(serializers.ModelSerializer):
     def get_score_player2(self, obj):
         return obj.scoreP2
     def get_result(self, obj):
-        if obj.winner == self.context['player']:
-            return 'win'
-        return 'loss'
+        if obj.mode == 'pong':
+            if obj.winner == self.context['player']:
+                return 'win'
+            return 'loss'
+        else:
+            if obj.scoreP1 > obj.scoreP2:
+                if obj.username1 == self.context['player']:
+                    return 'win'
+                else:
+                    return 'loss'
+            elif obj.scoreP1 == obj.scoreP2:
+                return 'draw'
+
 
     def get_time(self, obj):
         return obj.datetime.strftime('%H:%M:%S')

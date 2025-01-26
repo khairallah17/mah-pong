@@ -503,6 +503,7 @@ class Pvp2dConsumer(AsyncWebsocketConsumer):
     @database_sync_to_async
     def create_game(self, username1, username2):
         Match.objects.create(
+            mode='pong',
             username1=username1,
             username2=username2,
             scoreP1=0,
@@ -866,7 +867,10 @@ class TictactoeConsumer(AsyncWebsocketConsumer):
                 await self.channel_layer.send(
                     tictactoe_user_channels[tictactoe_matched_users[self.username]].channel_name, {'type': 'processing'})
                 await self.send(text_data=json.dumps({'type': 'processing'}))
-                await self.update_results(self.username)
+                if game_state['winner'] != 'Draw':
+                    await self.update_results(self.username)
+                else:
+                    await self.update_results(None)
                 await self.channel_layer.send(
                     tictactoe_user_channels[tictactoe_matched_users[self.username]].channel_name,
                     {
@@ -968,16 +972,20 @@ class TictactoeConsumer(AsyncWebsocketConsumer):
         }))
 
     @database_sync_to_async
-    def update_results(self, winner_username):
+    def update_results(self, winner_username=None):
         try:
             opponent = tictactoe_matched_users.get(self.username)
             if not opponent:
                 return
             username1, username2 = self.username, opponent
-            scoreP1 = 1 if winner_username == username1 else 0
-            scoreP2 = 1 if winner_username == username2 else 0
+            if winner_username:
+                scoreP1 = 1 if winner_username == username1 else 0
+                scoreP2 = 1 if winner_username == username2 else 0
+            else:
+                scoreP1, scoreP2 = 0, 0
 
             Match.objects.create(
+                mode='tictactoe',
                 username1=username1,
                 username2=username2,
                 scoreP1=scoreP1,

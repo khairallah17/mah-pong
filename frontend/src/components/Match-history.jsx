@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import '../i18n';
 import { useTranslation } from 'react-i18next';
-import { Activity, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { jwtDecode } from "jwt-decode";
 import { useAuthContext } from '../hooks/useAuthContext';
 
@@ -83,17 +83,20 @@ export const MatchHistory = () => {
                   <div key={match.id} className="flex items-center justify-between p-4 bg-white/5 rounded-lg hover:bg-white/10 transition-colors">
                     <div className="flex items-center gap-4">
                       <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${
-                        match.result === 'win' ? 'from-green-500 to-emerald-500' : 'from-purple-500 to-pink-500'
+                        match.result === 'win' ? 'from-green-500 to-emerald-500' : match.result === 'loss' ? 'from-purple-500 to-pink-500' : 'from-gray-500 to-gray-500'
                       } flex items-center justify-center`}>
-                        <Activity size={20} />
+                        {match.mode === 'pong' ?
+                            <img src="../public/pongIcon.png" alt="Pong" className="w-6 h-6" />
+                          :
+                            <img src="../public/tictactoeIcon.png" alt="Pong" className="w-6 h-6" />                        }
                       </div>
                       <div>
-                        <div className="font-medium">Match #{match.id}</div>
+                        <div className="font-medium">Match #{match.id} </div>
                         <div className="text-sm text-gray-400">{match.player} vs {match.opponent}</div>
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className={`font-medium ${match.result === 'win' ? 'text-green-400' : 'text-red-400'}`}>
+                      <div className={`font-medium ${match.result === 'win' ? 'text-green-400' : match.result === 'loss' ? 'text-red-400' : 'text-gray-400'}`}>
                         {match.score_player1} - {match.score_player2}
                       </div>
                       <div className="text-sm text-gray-400">{match.time}</div>

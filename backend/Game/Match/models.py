@@ -7,11 +7,12 @@ from django.dispatch import receiver # type: ignore
 import requests
 
 class Match(models.Model):
-    username1 = models.CharField(max_length=100)
-    username2 = models.CharField(max_length=100)
+    mode = models.CharField(max_length=10)
+    username1 = models.CharField(max_length=20)
+    username2 = models.CharField(max_length=20)
     scoreP1 = models.IntegerField(default=0)
     scoreP2 = models.IntegerField(default=0)
-    winner = models.CharField(max_length=100, null=True, blank=True)
+    winner = models.CharField(max_length=20, null=True, blank=True)
     ratingP1 = models.IntegerField(default=1000)
     ratingP2 = models.IntegerField(default=1000)
     datetime = models.DateTimeField(auto_now_add=True)
