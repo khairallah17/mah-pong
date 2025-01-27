@@ -16,7 +16,7 @@ import useChatContext from "../hooks/useChatContext";
 import { useAuthContext } from "../hooks/useAuthContext";
 
 const Chat = () => {
-
+    const url_host = import.meta.env.VITE_HOST_URL
     const { user, authtoken } = useAuthContext()
     const { username } = user
 
@@ -101,9 +101,8 @@ const Chat = () => {
                 {/* Dynamic User List */}
                 <div className="flex flex-col gap-2 overflow-y-auto px-4"> {/* User list */}
                     {users.map((user) => {
-                        // console.log("User data:", user);
                         if (user.img.startsWith('http://usermanagement:8000')) {
-                            user.img = user.img.replace('usermanagement:8000', 'localhost/api/usermanagement');
+                            user.img = user.img.replace('http://usermanagement:8000', `${url_host}/api/usermanagement`);
                         }
                         const lastMessage = messages
                             .filter(msg => msg.sender === user.username || msg.receiver === user.username)

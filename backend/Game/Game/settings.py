@@ -157,8 +157,7 @@ CACHES = {
 }
 
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",
-    "https://localhost:5173",
+    os.getenv('VITE_HOST_URL'),
 ]
 
 LOGGING = {

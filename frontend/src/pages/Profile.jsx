@@ -297,7 +297,7 @@ export default function Profile() {
         </div>
         <div className="flex flex-col md:flex-row items-center gap-4">
           <img
-            src={`/api/usermanagement/` + profileData.avatar || "https://github.com/shadcn.png"}
+            src={`/api/usermanagement${profileData.avatar}`}
             alt="Profile Avatar"
             className="w-24 h-24 bg-blue-800 rounded-full border-2 border-white/90"
           />
