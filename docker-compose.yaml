@@ -51,9 +51,8 @@ services:
     env_file:
       - .env
     volumes:
-      - front_vm:/app
-      - /app/node_modules
-    
+      - front_vm_data:/app
+
   notifications:
     container_name: notifications
     build:
