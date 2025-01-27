@@ -6,13 +6,15 @@ import useAxios from "../hooks/useAxios";
 import Swal from "sweetalert2";
 
 import { toast, Bounce } from "react-toastify";
+import '../i18n';
+import { useTranslation } from 'react-i18next';
 
 const AuthContext = createContext()
 
 export default AuthContext
 
 export const AuthProvider = ({ children }) => {
-
+    const { t } = useTranslation();
     const navigate = useNavigate()
 
     //GETTING TOKEN
@@ -62,7 +64,7 @@ export const AuthProvider = ({ children }) => {
             const data = await response.json();
 
             if (!response.ok) {
-                toast.error("you don't have an account you should to register", {
+                toast.error(t("you don't have an account you should to register"), {
                     position: "top-right",
                     autoClose: 5000,
                     hideProgressBar: false,
@@ -81,14 +83,14 @@ export const AuthProvider = ({ children }) => {
                 if (data.requires_2fa) {
                     // Show 2FA verification dialog
                     const { value: code } = await Swal.fire({
-                        title: '2FA Verification Required',
+                        title: t('2FA Verification Required'),
                         input: 'text',
-                        inputLabel: 'Please enter your 2FA code',
-                        inputPlaceholder: 'Enter 6-digit code',
+                        inputLabel: t('Please enter your 2FA code'),
+                        inputPlaceholder: t('Enter 6-digit code'),
                         showCancelButton: true,
                         inputValidator: (value) => {
                             if (!value) {
-                                return 'You need to enter the code!';
+                                return t('You need to enter the code!');
                             }
                         }
                     });
@@ -105,7 +107,7 @@ export const AuthProvider = ({ children }) => {
                 localStorage.setItem("authtoken", JSON.stringify(data));
 
                 navigation("/dashboard");
-                toast.success("you have successfully logged in", {
+                toast.success(t("you have successfully logged in"), {
                     position: "top-right",
                     autoClose: 5000,
                     hideProgressBar: false,
@@ -118,7 +120,7 @@ export const AuthProvider = ({ children }) => {
                 });
 
             } else {
-                toast.error("Failed to logged in", {
+                toast.error(t("Failed to logged in"), {
                     position: "top-right",
                     autoClose: 5000,
                     hideProgressBar: false,
@@ -131,7 +133,7 @@ export const AuthProvider = ({ children }) => {
                 });
             }
         } catch (error) {
-            toast.error("error during login", {
+            toast.error(t("error during login"), {
                 position: "top-right",
                 autoClose: 5000,
                 hideProgressBar: false,
@@ -158,7 +160,7 @@ export const AuthProvider = ({ children }) => {
         })
 
         if (response.status === 201) {
-            toast.success('you have successfully Registred', {
+            toast.success(t('you have successfully Registred'), {
                 position: "top-right",
                 autoClose: 5000,
                 hideProgressBar: false,
@@ -174,7 +176,7 @@ export const AuthProvider = ({ children }) => {
         }
         else {
             const data = await response.json();
-            toast.error('There is some error in Your registration', {
+            toast.error(t('There is some error in Your registration'), {
                 position: "top-right",
                 autoClose: 5000,
                 hideProgressBar: false,
@@ -189,18 +191,18 @@ export const AuthProvider = ({ children }) => {
 
     }
 
-
+    const url_host = import.meta.env.VITE_HOST_URL
 
     const GoogleLogin = () => {
         const ClientId = import.meta.env.VITE_GCLIENT_ID;
-        const CallBackURI = "http://localhost/api/usermanagement/api/v2/auth/googlelogin/callback/";
+        const CallBackURI = `${url_host}/api/usermanagement/api/v2/auth/googlelogin/callback/`;
         window.location.replace(`https://accounts.google.com/o/oauth2/v2/auth?redirect_uri=${CallBackURI}&prompt=consent&response_type=code&client_id=${ClientId}&scope=openid%20email%20profile&access_type=offline`)
         // GoogleloginUsers( code )
     }
 
     const Intra42Login = () => {
         const clientId = import.meta.env.VITE_CLIENT_ID;
-        const callbackURI = "http://localhost/api/usermanagement/api/42login/callback/";
+        const callbackURI = `${url_host}/api/usermanagement/api/42login/callback/`;
         window.location.replace(`https://api.intra.42.fr/oauth/authorize?client_id=${clientId}&redirect_uri=${callbackURI}&response_type=code`);
     }
 
@@ -213,7 +215,7 @@ export const AuthProvider = ({ children }) => {
         const error = searchParams.get('error');
 
         if (error) {
-            toast.error(`Failed to log in with Google: ${error}`, {
+            toast.error(t('Failed to log in with Google') `: ${error}`, {
                 position: "top-right",
                 autoClose: 5000,
                 hideProgressBar: false,
@@ -252,7 +254,7 @@ export const AuthProvider = ({ children }) => {
 
                         // If no 2FA required, proceed with login
                         completeLogin(token);
-                        toast.success("Successfully logged in", {
+                        toast.success(t("Successfully logged in"), {
                             position: "top-right",
                             autoClose: 5000,
                             hideProgressBar: false,
@@ -264,7 +266,7 @@ export const AuthProvider = ({ children }) => {
                         })
                     });
             } catch (error) {
-                toast.error(`Failed to process login: ${error}`, {
+                toast.error(t('Failed to process login:') `${error}`, {
                     position: "top-right",
                     autoClose: 5000,
                     hideProgressBar: false,
@@ -288,7 +290,7 @@ export const AuthProvider = ({ children }) => {
         const error = searchParams.get('error');
 
         if (error) {
-            toast.error(`Failed to log in with 42: ${error}`, {
+            toast.error(t('Failed to log in with 42:') `: ${error}`, {
                 position: "top-right",
                 autoClose: 5000,
                 hideProgressBar: false,
@@ -326,19 +328,19 @@ export const AuthProvider = ({ children }) => {
 
                         // If no 2FA required, proceed with login
                         completeLogin(token);
-                        toast.success("Successfully logged in", {
+                        toast.success(t("Successfully logged in"), {
                             position: "top-right",
                             autoClose: 1000,
                             hideProgressBar: false,
                             closeOnClick: true,
                             pauseOnHover: true,
-                            // draggable: true,
-                            // progress: undefined,
+                            draggable: true,
+                            progress: undefined,
                             theme: "dark",
                         })
                     });
             } catch (error) {
-                toast.error(`Token processing error: ${error}`, {
+                toast.error(t('Token processing error:') `: ${error}`, {
                     position: "top-right",
                     autoClose: 5000,
                     hideProgressBar: false,
@@ -352,7 +354,7 @@ export const AuthProvider = ({ children }) => {
             }
         }
         else {
-            toast.error("Failed to process login", {
+            toast.error(t("Failed to process login"), {
                 position: "top-right",
                 autoClose: 5000,
                 hideProgressBar: false,
@@ -415,7 +417,7 @@ export const AuthProvider = ({ children }) => {
             localStorage.removeItem("authtoken");
             navigation("/login");
 
-            toast.success("Successfully logged out", {
+            toast.success(t("Successfully logged out"), {
                 position: "top-right",
                 autoClose: 5000,
                 hideProgressBar: false,
@@ -444,17 +446,17 @@ export const AuthProvider = ({ children }) => {
                 const confirmPassword = document.getElementById('confirmPassword').value;
 
                 if (!password || !confirmPassword) {
-                    Swal.showValidationMessage('Please fill in both password fields');
+                    Swal.showValidationMessage(t('Please fill in both password fields'));
                     return false;
                 }
 
                 if (password !== confirmPassword) {
-                    Swal.showValidationMessage('Passwords do not match');
+                    Swal.showValidationMessage(t('Passwords do not match'));
                     return false;
                 }
 
                 if (password.length < 8) {
-                    Swal.showValidationMessage('Password must be at least 8 characters long');
+                    Swal.showValidationMessage(t('Password must be at least 8 characters long'));
                     return false;
                 }
 
@@ -464,8 +466,6 @@ export const AuthProvider = ({ children }) => {
 
         if (passwordData) {
             try {
-                console.log("isss===> before response ", passwordData.password, tmp_password)
-                console.log("Token===> before response ", token)
                 const response = await fetch('/api/usermanagement/api/api-set-password/', {
                     method: 'POST',
                     headers: {
@@ -479,7 +479,7 @@ export const AuthProvider = ({ children }) => {
                 });
 
                 if (response.ok) {
-                    toast.success("Password set successfully", {
+                    toast.success(t("Password set successfully"), {
                         position: "top-right",
                         autoClose: 5000,
                         hideProgressBar: false,
@@ -505,10 +505,10 @@ export const AuthProvider = ({ children }) => {
                             completeLogin(token);
                         });
                 } else {
-                    throw new Error('Failed to set password');
+                    throw new Error(t('Failed to set password'));
                 }
             } catch (error) {
-                toast.error(`Failed to set password ${error}`, {
+                toast.error(t('Failed to set password') `: ${error}`, {
                     position: "top-right",
                     autoClose: 5000,
                     hideProgressBar: false,
@@ -529,15 +529,15 @@ export const AuthProvider = ({ children }) => {
     // Helper function for 2FA verification (existing code refactored into a function)
     const handle2FAVerification = async (token) => {
         const { value: code } = await Swal.fire({
-            title: '2FA Verification Required',
+            title: t('2FA Verification Required'),
             input: 'text',
-            inputLabel: 'Please enter your 2FA code',
-            inputPlaceholder: 'Enter 6-digit code',
-            showCancelButton: true,
+            inputLabel: t('Please enter your 2FA code'),
+            inputPlaceholder: t('Enter 6-digit code'),
             // className: bg-red-600,
+            confirmButtonText: t("Confirm"),
             inputValidator: (value) => {
                 if (!value) {
-                    return 'You need to enter the code!';
+                    return t('You need to enter the code!');
                 }
             }
         });
@@ -554,7 +554,7 @@ export const AuthProvider = ({ children }) => {
 
             if (OTP42.ok) {
                 completeLogin(token);
-                toast.success("You successfully logged in using 2FA", {
+                toast.success(t("You successfully logged in using 2FA"), {
                     position: "top-right",
                     autoClose: 5000,
                     hideProgressBar: false,
@@ -565,7 +565,7 @@ export const AuthProvider = ({ children }) => {
                     theme: "dark",
                 })
             } else {
-                toast.error("Failed on 2FA verification", {
+                toast.error(t("Failed on 2FA verification"), {
                     position: "top-right",
                     autoClose: 5000,
                     hideProgressBar: false,
@@ -577,6 +577,9 @@ export const AuthProvider = ({ children }) => {
                 })
                 navigation('/login');
             }
+        }
+        else{
+            handle2FAVerification()
         }
     };
 

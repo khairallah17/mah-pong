@@ -8,6 +8,7 @@ import { useAuthContext } from '../hooks/useAuthContext';
 import useChatContext from '../hooks/useChatContext';
 
 export const PlayerList = () => {
+  const url_host = import.meta.env.VITE_HOST_URL
   const navigate = useNavigate();
   const [friends, setFriends] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -150,7 +151,7 @@ export const PlayerList = () => {
             <div className="flex items-center gap-3">
               <button onClick={() => navigate(`/dashboard/profil/${friend.username}`)} className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-purple-500 p-0.5">
                 <img 
-                  src={friend.img.replace("http://localhost","/api/usermanagement") || 'https://github.com/shadcn.png'} 
+                  src={friend.img.replace(`${url_host}`,"/api/usermanagement") || 'https://github.com/shadcn.png'} 
                   alt={`${friend.username}'s Avatar`}
                   className="w-full h-full object-cover rounded-[5px]"
                 />

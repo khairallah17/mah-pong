@@ -1,27 +1,29 @@
 import requests
 from django.conf import settings
-from django.shortcuts import render # type: ignore
-from rest_framework.views import APIView # type: ignore
-from rest_framework.decorators import api_view, permission_classes, authentication_classes # type: ignore
-from rest_framework.response import Response # type: ignore
+from django.shortcuts import render
+from rest_framework.views import APIView
+from rest_framework.decorators import api_view, permission_classes, authentication_classes
+from rest_framework.response import Response
 from .models import Message, Conversation, BlockList
 from .models import Message, CustomUser as User
 from .serializers import MessageSerializer, UserSerializer, ConversationSerializer
-from rest_framework import authentication, permissions # type: ignore
-from rest_framework.permissions import AllowAny, IsAuthenticated # type: ignore
-from rest_framework.authentication import SessionAuthentication, TokenAuthentication # type: ignore
-from django.db.models import Q # type: ignore
-from django.contrib.auth.models import AnonymousUser # type: ignore
-from django.shortcuts import get_object_or_404  # type: ignore
+from rest_framework import authentication, permissions
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.authentication import SessionAuthentication, TokenAuthentication
+from django.db.models import Q
+from django.contrib.auth.models import AnonymousUser
+from django.shortcuts import get_object_or_404 
 from uuid import UUID
 from rest_framework import status
 from django.core.exceptions import ValidationError
 import logging
 import jwt
 
-logger = logging.getLogger(__name__)  # Changed from __name__ to 'chat'
+logger = logging.getLogger(__name__)
 
-
+class test(APIView):
+    def get(self, request):
+        return Response({"message":"working"})
 
 class ApiUsers(APIView):
 
@@ -37,6 +39,7 @@ class ApiUsers(APIView):
             username = payload.get('username')
             email = payload.get('email')
             fullname = payload.get('fullname')
+            is_online = payload.get('is_online')
 
             if not username:
                 raise jwt.InvalidTokenError("Username not found in token.")
@@ -51,16 +54,20 @@ class ApiUsers(APIView):
             # Store users in the Chat service's database
             for user_data in users_data:
                 for friend in user_data['friends']:
+                    logger.warning(f"FRIENDS ==> {friend}")
+                    logger.warning(f"FRIENDS ==> {User.objects}")
                     User.objects.update_or_create(
                         id=friend['id'],
                         defaults={
                             'username': friend['username'],
                             'fullname': friend.get('fullname', ''),
                             'email': friend['email'],
-                            'img': friend.get('img', 'profile_pics/default.jpg')
+                            'img': friend.get('img', 'profile_pics/default.jpg'),
+                            'is_online': friend.get('is_online')
                         }
                     )
 
+            logger.warning(f"BEFORE CURRENT USER")
             # Update or create the current user
             current_user = User.objects.get_or_create(
                 id=user_id,
@@ -68,8 +75,11 @@ class ApiUsers(APIView):
                     'username': username,
                     'email': email,
                     'fullname': fullname,
+                    'is_online': is_online
                 }
             )
+
+            logger.warning(f"AFTER CURRENT USER {current_user}")
 
             return Response(user_data.get('friends', []))
         except requests.ConnectionError as e:
@@ -86,7 +96,7 @@ class ApiUsers(APIView):
 @api_view(['GET'])
 def user_list(self, request):
     users = User.objects.all().values("id", "username")
-    return JsonResponse(list(users), safe=False) # type: ignore
+    return JsonResponse(list(users), safe=False)
 
 @api_view(['GET'])
 def get_conversation(request, id):
@@ -185,15 +195,10 @@ def get_block_status(request, user_id):
             return Response({"error": "Invalid UUID format for user_id"}, status=400)
 
         is_user1_blocking = BlockList.objects.filter(user=user1, blocked_users=user2).exists()
-        # is_user2_blocking = BlockList.objects.filter(user=user2, blocked_users=user1).exists()
 
         return Response({
             "block_status": is_user1_blocking
         })
-        # return Response({
-        #     "user2_blocking_user1": is_user1_blocking
-        #     "user2_blocking_user1": is_user2_blocking,
-        # })
 
     except ValidationError:
         return Response({"error": "Invalid UUID format for user2_id"}, status=400)

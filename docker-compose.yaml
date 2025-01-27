@@ -21,7 +21,9 @@ services:
     image: "redis:alpine"
     container_name: redis
     networks:
-      - microservices-network
+      - game-network
+      - chat-network
+      - notif-network
     expose:
       - 6379
 
@@ -106,13 +108,15 @@ services:
       - notifications
       - chat
     networks:
+      - chat-network
+      - game-network
+      - notif-network
+      - usermanagement-network
       - microservices-network
 
   usermanagement_db:
     image: postgres:15-alpine
     container_name: usermanagement_db
-    expose:
-      - 5432
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password
@@ -141,8 +145,6 @@ services:
   notif_db:
     image: postgres:15-alpine
     container_name: notif_db
-    expose:
-      - 5432
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password

@@ -10,6 +10,7 @@ function Cell({ value, onClick, className }) {
 }
 
 export default function Tictactoe() {
+  const websocket_url = import.meta.env.VITE_WEBSOCKET_URL
   const navigate = useNavigate();
   const [board, setBoard] = useState(Array(9).fill(null));
   const [currentPlayer, setCurrentPlayer] = useState('X');
@@ -24,7 +25,7 @@ export default function Tictactoe() {
   useEffect(() => {
     const tokenData = JSON.parse(localStorage.getItem('authtoken'));
     const accessToken = tokenData && tokenData.access;
-    wsRef.current = new WebSocket(`wss://localhost/api/game/ws/tictactoe/?token=${accessToken}`);
+    wsRef.current = new WebSocket(`${websocket_url}/api/game/ws/tictactoe/?token=${accessToken}`);
     wsRef.current.onmessage = (evt) => {
       const data = JSON.parse(evt.data);
       if (data.type === 'match_found') {

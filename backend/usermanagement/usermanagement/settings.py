@@ -79,19 +79,11 @@ MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'allauth.account.middleware.AccountMiddleware',
-    # 'api.middleware.UserActivityMiddleware'
 ]
 
-# Where allow Communication Django With React
-# The default port for create-react-app
-# CORS_ALLOWED_ORIGINS = [
-#     # 'http://127.0.0.1:8000'
-#     '/api/game'
-# ]
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOWED_ORIGINS = [
-    'http://localhost:5173',
-    'http://127.0.0.1:5173',  # Include this if you also access your frontend via 127.0.0.1
+    os.getenv('VITE_HOST_URL'),
 ]
 
 CORS_ALLOW_ALL_ORIGINS = True
@@ -249,13 +241,10 @@ SIMPLE_JWT = {
     "SLIDING_TOKEN_REFRESH_SERIALIZER": "rest_framework_simplejwt.serializers.TokenRefreshSlidingSerializer",
 }
 
-
-# SMTP GMAIL
-#include to .env
-EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_POST = 587
+EMAIL_BACKEND = os.getenv('EMAIL_BACKEND')
+EMAIL_HOST = os.getenv('EMAIL_HOST')
+EMAIL_POST = os.getenv('EMAIL_POST')
 EMAIL_USE_TLS = True
 EMAIL_USE_SSL = False  # Don't use both SSL and TLS
-EMAIL_HOST_USER = 'agoumi82@gmail.com'  # Create new email for the verification
-EMAIL_HOST_PASSWORD = 'eojjpvdixvviggbf'  # putting password of this email
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')  # Create new email for the verification
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')  # putting password of this email

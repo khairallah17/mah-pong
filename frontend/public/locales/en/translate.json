@@ -238,6 +238,22 @@
     "Wed": "Wed", 
     "Thu": "Thu", 
     "Fri": "Fri", 
-    "Sat": "Sat"
+    "Sat": "Sat",
+    "Confirm": "Confirm",
+
+
+    "______________comment": "Chat Page Translator EN",
+    "Messages": "Messages",
+    "Search": "Search",
+    "No messages yet": "Messages",
+    "Play Now": "Play Now",
+    "Type your message here...": "Type your message here...",
+    "Online": "Online",
+    "Offline": "Offline",
+    "Select a user": "Select a user",
+    "Details": "Details"
+
+
+
     
 }

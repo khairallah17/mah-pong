@@ -9,7 +9,7 @@ import '../../i18n';
 import { useTranslation } from 'react-i18next';
 
 export default function Pvp2d() {
-
+  const websocket_url = import.meta.env.VITE_WEBSOCKET_URL
   const navigate = useNavigate();
   const { t } = useTranslation();
   const [{ score1, score2 }, setScores] = useState({ score1: 0, score2: 0 });
@@ -121,7 +121,8 @@ export default function Pvp2d() {
 
   useEffect(() => {
     if (token && !wsRef.current) {
-        const wsUrl = `wss://localhost/api/game/ws/pvp2d/?token=${accessToken}${inviteCode ? `&invite=${inviteCode}` : ''}${matchId ? `&match_id=${matchId}` : ''}`;
+      setTimeout(() => {
+        const wsUrl = `${websocket_url}/api/game/ws/pvp2d/?token=${accessToken}${inviteCode ? `&invite=${inviteCode}` : ''}${matchId ? `&match_id=${matchId}` : ''}`;
         wsRef.current = new WebSocket(wsUrl);
         wsRef.current.onopen = () => {
           console.log('WebSocket connection established');
@@ -135,7 +136,7 @@ export default function Pvp2d() {
             if (newToken) {
               localStorage.setItem('authtoken', JSON.stringify(newToken));
               wsManagerInstance.close();
-              wsManagerInstance.setUrl('wss://localhost/api/notifications/ws/notifications/?token=' + newToken?.access);
+              wsManagerInstance.setUrl(`${websocket_url}/api/notifications/ws/notifications/?token=` + newToken?.access);
               wsManagerInstance.connect(handleMessage);
               console.log('WebSocket connection established with new token');
             } else {

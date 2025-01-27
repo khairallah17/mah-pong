@@ -1,15 +1,15 @@
 import asyncio
-from channels.generic.websocket import AsyncWebsocketConsumer # type: ignore
+from channels.generic.websocket import AsyncWebsocketConsumer
 import json
 import logging
 import jwt
-from django.conf import settings # type: ignore
-from channels.db import database_sync_to_async # type: ignore
+from django.conf import settings
+from channels.db import database_sync_to_async
 from Match.models import Match, Tournament, TournamentMatch
-from django.db import transaction # type: ignore
+from django.db import transaction
 from urllib.parse import parse_qs
-from django.core.cache import cache # type: ignore
-from django.db.models import Q, F # type: ignore
+from django.core.cache import cache
+from django.db.models import Q, F
 
 logger = logging.getLogger(__name__)
 
@@ -288,28 +288,7 @@ class TournamentConsumer(AsyncWebsocketConsumer):
             )
    
 
-    # @database_sync_to_async
-    # def handle_match_result(self, data):
-    #     try:
-    #         match_id = data.get('match_id')
-    #         winner = data.get('winner')
-    #         match = TournamentMatch.objects.get(id=match_id)
-
-    #         match.winner = winner
-    #         match.save()
-    #         if match.round == 1:
-    #             next_match, _ = TournamentMatch.objects.get(tournament=match.tournament, round=2, position=1)
-
-    #             if match.position % 2 == 0:
-    #                 next_match.player1 = winner
-    #             else:
-    #                 next_match.player2 = winner
-    #             next_match.save()
-    #     except Exception as e:
-    #         logger.error(f"Error handling match result: {e}")
-
     # Tournament State Management
-
     async def send_tournament_state(self, tournament):
         state = await self.get_tournament_state(tournament)
         await self.channel_layer.group_send(self.tournament_group_name, {"type": "tournament_update", "matches": state['matches']})

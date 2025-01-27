@@ -1,14 +1,14 @@
-from rest_framework_simplejwt.tokens import Token # type: ignore
+from rest_framework_simplejwt.tokens import Token
 from .models import User, TwoFactorAuthAttempt, Profil, FriendRequest, FriendList
-from django.contrib.auth.password_validation import validate_password # type: ignore
-from rest_framework_simplejwt.serializers import TokenObtainPairSerializer # type: ignore
-from rest_framework import serializers # type: ignore
+from django.contrib.auth.password_validation import validate_password
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from rest_framework import serializers
 import uuid
-from rest_framework_simplejwt.tokens import RefreshToken, TokenError # type: ignore
+from rest_framework_simplejwt.tokens import RefreshToken, TokenError
 # from rest_framework import serializers
-from django_otp.plugins.otp_totp.models import TOTPDevice # type: ignore
-from django_otp.util import random_hex # type: ignore
-import pyotp # type: ignore
+from django_otp.plugins.otp_totp.models import TOTPDevice
+from django_otp.util import random_hex
+import pyotp
 
 
 class   UserSerial(serializers.ModelSerializer):

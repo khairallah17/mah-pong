@@ -158,7 +158,6 @@ CACHES = {
 }
 
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost",
-    "http://localhost:3000",
+    os.getenv('VITE_HOST_URL'),
 ]
 

@@ -1,15 +1,15 @@
 import asyncio
-from channels.generic.websocket import AsyncWebsocketConsumer # type: ignore
+from channels.generic.websocket import AsyncWebsocketConsumer
 import json
 import logging
 import jwt
-from django.conf import settings # type: ignore
-from channels.db import database_sync_to_async # type: ignore
+from django.conf import settings
+from channels.db import database_sync_to_async
 from Match.models import Match, Tournament, TournamentMatch
-from django.db import transaction # type: ignore
+from django.db import transaction
 from urllib.parse import parse_qs
-from django.core.cache import cache # type: ignore
-from django.db.models import Q # type: ignore
+from django.core.cache import cache
+from django.db.models import Q
 
 logger = logging.getLogger(__name__)
 matchmaking_pool = []
@@ -21,7 +21,6 @@ present_players = {}
 disconnected_users = {}
 TABLE_LIMIT = 1.5
 PADDLE_WIDTH = 1
-
 
 class MatchmakingConsumer(AsyncWebsocketConsumer):
     async def connect(self):
@@ -71,7 +70,6 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
             else:
                 if self.username not in matchmaking_pool and self.username not in matched_users:
                     matchmaking_pool.append(self.username)
-                    # await self.channel_layer.group_add("matchmaking_pool", self.channel_name)
             
             if len(matchmaking_pool) >= 2:
                 await self.match_users()
@@ -87,7 +85,6 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
                 pools.pop(self.invite_code, None)
             elif self.username in matchmaking_pool:
                 matchmaking_pool.remove(self.username)
-            # await self.channel_layer.group_discard("matchmaking_pool", self.channel_name)
             
             if self.username in matched_users:
                 scoreP1, scoreP2, isPlayer1 = await self.get_latest_match_scores()
@@ -251,24 +248,6 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
                     'scoreP2': scoreP2
                 }
             )
-            # await self.channel_layer.send(
-            #     user_channels[matched_users[self.username]].channel_name,
-            #     {
-            #         'type': 'match_found',
-            #         'player_id': isPlayer1 and '2' or '1',
-            #         'scoreP1': scoreP1,
-            #         'scoreP2': scoreP2
-            #     }
-            # )
-
-    # @database_sync_to_async
-    # def get_latest_match_scores(self, user1, user2):
-    #     try:
-    #         match = Match.objects.filter(
-    #             Q(username1=user1, username2=user2) | Q(username1=user2, username2=user1)).latest('datetime')
-    #         return match.scoreP1, match.scoreP2
-    #     except Match.DoesNotExist:
-    #         return 0, 0
 
     @database_sync_to_async
     def create_game(self, username1, username2):

@@ -1,4 +1,4 @@
-from django.contrib.auth.tokens import PasswordResetTokenGenerator # type: ignore
+from django.contrib.auth.tokens import PasswordResetTokenGenerator
 
 
 class AccountActivationTokenGenerator(PasswordResetTokenGenerator):

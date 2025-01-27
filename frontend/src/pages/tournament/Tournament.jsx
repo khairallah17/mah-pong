@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuthContext } from '../../hooks/useAuthContext'
 
 export default function Tournament() {
+  const websocket_url = import.meta.env.VITE_WEBSOCKET_URL
   const { t } = useTranslation();
   const wsRef = useRef(null);
   const navigate = useNavigate();
@@ -30,7 +31,7 @@ export default function Tournament() {
 
   useEffect(() => {
     if (authtoken && !wsRef.current) {
-      wsRef.current = new WebSocket(`wss://localhost/api/game/ws/tournament/?token=${authtoken}&code=${tournamentCode}`);
+      wsRef.current = new WebSocket(`${websocket_url}/api/game/ws/tournament/?token=${authtoken}&code=${tournamentCode}`);
 
       wsRef.current.onopen = () => {
         console.log('WebSocket connection established');
@@ -42,7 +43,7 @@ export default function Tournament() {
           const newToken = await refreshToken();
           if (newToken) {
             localStorage.setItem('authtoken', JSON.stringify(newToken));
-            wsRef.current = new WebSocket('wss://localhost/api/game/ws/tournament/?token=' + JSON.stringify(newToken.access));
+            wsRef.current = new WebSocket(`${websocket_url}/api/game/ws/tournament/?token=` + JSON.stringify(newToken.access));
             console.log('WebSocket connection established with new token');
           } else {
             localStorage.removeItem('authtoken');

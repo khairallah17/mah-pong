@@ -5,6 +5,8 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { jwtDecode } from "jwt-decode";
 import { useAuthContext } from '../hooks/useAuthContext';
 import { ImSpinner2 } from "react-icons/im";
+import tictactoeIcon from "../assets/tictactoeIcon.png"
+import pongIcon from "../assets/pongIcon.png"
 
 import axios from 'axios';
 
@@ -72,9 +74,9 @@ export const MatchHistory = () => {
                         match.result === 'win' ? 'from-green-500 to-emerald-500' : match.result === 'loss' ? 'from-purple-500 to-pink-500' : 'from-gray-500 to-gray-500'
                       } flex items-center justify-center`}>
                         {match.mode === 'pong' ?
-                            <img src="../public/pongIcon.png" alt="Pong" className="w-6 h-6" />
+                            <img src={pongIcon} alt="Pong" className="w-6 h-6" />
                           :
-                            <img src="../public/tictactoeIcon.png" alt="Pong" className="w-6 h-6" />                        }
+                            <img src={tictactoeIcon} alt="tictac" className="w-6 h-6" />                        }
                       </div>
                       <div>
                         <div className="font-medium">Match #{match.id} </div>
