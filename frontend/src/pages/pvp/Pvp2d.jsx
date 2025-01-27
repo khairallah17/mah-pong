@@ -121,7 +121,6 @@ export default function Pvp2d() {
 
   useEffect(() => {
     if (token && !wsRef.current) {
-      setTimeout(() => {
         const wsUrl = `${websocket_url}/api/game/ws/pvp2d/?token=${accessToken}${inviteCode ? `&invite=${inviteCode}` : ''}${matchId ? `&match_id=${matchId}` : ''}`;
         wsRef.current = new WebSocket(wsUrl);
         wsRef.current.onopen = () => {
