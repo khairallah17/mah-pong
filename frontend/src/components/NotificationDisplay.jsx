@@ -40,12 +40,18 @@ const NotificationDisplay = () => {
   useEffect(() => {
     if (wsNotifications.length > 0) {
       setNotifications(prevNotifications => {
-        const updatedNotifications = [...wsNotifications, ...prevNotifications];
-        return updatedNotifications.sort((a, b) => 
-          new Date(b.created_at) - new Date(a.created_at)
-        );
+        const updated = [...prevNotifications];
+        wsNotifications.forEach(newNotif => {
+          const idx = updated.findIndex(n => n.id === newNotif.id);
+          if (idx >= 0) {
+            updated[idx] = newNotif;
+          } else {
+            updated.unshift(newNotif);
+          }
+        });
+        return updated.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
       });
-      setAlerts(prevAlerts => prevAlerts + 1);
+      setAlerts(prev => prev + 1);
     }
   }, [wsNotifications]);
 

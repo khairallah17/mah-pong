@@ -40,7 +40,7 @@ function Pve3d() {
     useEffect(() => {
         if (token && !wsRef.current) {
             const accessToken = JSON.parse(localStorage.getItem('authtoken')).access;
-            wsRef.current = new WebSocket('ws://localhost/api/game/ws/matchmaking/?token=' + accessToken);
+            wsRef.current = new WebSocket('wss://localhost/api/game/ws/matchmaking/?token=' + accessToken);
             wsRef.current.onopen = () => {
                 console.log('WebSocket connection established');
                 wsRef.current.send(JSON.stringify({ type: 'player_ready' }));
@@ -51,7 +51,7 @@ function Pve3d() {
                     const newToken = await refreshToken();
                     if (newToken) {
                         localStorage.setItem('authtoken', JSON.stringify(newToken));
-                        wsRef.current = new WebSocket('ws://localhost/api/game/ws/matchmaking/?token=' + newToken.access);
+                        wsRef.current = new WebSocket('wss://localhost/api/game/ws/matchmaking/?token=' + newToken.access);
                         console.log('WebSocket connection established with new token');
                     } else {
                         localStorage.removeItem('authtoken');

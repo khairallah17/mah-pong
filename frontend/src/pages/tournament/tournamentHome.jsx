@@ -3,16 +3,18 @@ import { useNavigate } from "react-router-dom";
 import { useSidebarContext } from "../../hooks/useSidebar";
 import '../../i18n';
 import { useTranslation } from 'react-i18next';
-
+import { useAuthContext } from "../../hooks/useAuthContext";
 
 const TournamentHome = () => {
     const { t } = useTranslation();
     const { setActiveLink } = useSidebarContext()
+    const { user } = useAuthContext()
 
     const navigate = useNavigate();
     const [tournamentCode, setTournamentCode] = useState("");
     const [tournaments, setTournaments] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [currentTournament, setCurrentTournament] = useState(null);
 
     useEffect(() => {
     
@@ -22,6 +24,8 @@ const TournamentHome = () => {
             try {
                 const response = await fetch("/api/game/api/tournaments");
                 const data = await response.json();
+                setCurrentTournament(data.filter(tournament => tournament.players.includes(user.username) && tournament.status !== 'completed'));
+                console.log(data.filter(tournament => tournament.players.includes(user.username)));
                 const waitingTournaments = data.filter(tournament => tournament.status === 'waiting');
                 setTournaments(waitingTournaments);
                 setIsLoading(false);
@@ -62,7 +66,7 @@ const TournamentHome = () => {
                             className="flex-1 p-3 bg-green-500 text-white rounded hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-400 transition duration-300 transform hover:scale-105"
                             onClick={() => navigate("/dashboard/tournament/live?code=" + tournamentCode)}
                         >
-                            {t('Create')}
+                            {currentTournament && currentTournament.length > 0 ? t('Join back ongoing Tournament') : t('Create')}
                         </button>
                     </div>
                 </div>

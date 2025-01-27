@@ -4,13 +4,7 @@ import { useNavigate, useLocation, Navigate } from 'react-router-dom'
 import { WebSocketContext } from '../../websockets/WebSocketProvider'
 import '../../i18n';
 import { useTranslation } from 'react-i18next';
-
-// class Match(models.Model):
-//   player1 = models.CharField(max_length=100)
-//   player2 = models.CharField(max_length=100)
-//   score = models.JSONField(default=dict)
-//   winner = models.CharField(max_length=100, null=True, blank=True)
-//   datetime = models.DateTimeField(auto_now_add=True)
+import { useAuthContext } from '../../hooks/useAuthContext'
 
 export default function Tournament() {
   const { t } = useTranslation();
@@ -18,24 +12,25 @@ export default function Tournament() {
   const navigate = useNavigate();
   const { wsManager } = useContext(WebSocketContext);
   const [matches, setMatches] = useState([
-    { id: 1, round: 1, position: 1, player1: t('Player')+' 1', player2: t('Player')+' 2' },
-    { id: 2, round: 1, position: 2, player1: t('Player')+' 3', player2: t('Player')+' 4' },
+    { id: 1, round: 1, position: 1, player1: t('Player') + ' 1', player2: t('Player') + ' 2' },
+    { id: 2, round: 1, position: 2, player1: t('Player') + ' 3', player2: t('Player') + ' 4' },
     { id: 3, round: 2, position: 1 },
   ]);
 
   const [loadingQuit, setLoadingQuit] = useState(false);
+  const { user, authtoken } = useAuthContext();
   const [wrongTournament, setWrongTournament] = useState(false);
   const [eliminated, setEliminated] = useState(false);
-  const [isTournamentStarted, setIsTournamentStarted] = useState(false);
-  const token = localStorage.getItem('authtoken');
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
   const [tournamentCode, setTournamentCode] = useState(queryParams.get('code'));
+  const [playersPresent, setPlayersPresent] = useState(0);
+  const [showMatchStartPopup, setShowMatchStartPopup] = useState(false);
+  const [matchStartData, setMatchStartData] = useState(null);
 
   useEffect(() => {
-    if (token && !wsRef.current) {
-      const accessToken = JSON.parse(token).access;
-      wsRef.current = new WebSocket(`ws://localhost/api/game/ws/tournament/?token=${accessToken}&code=${tournamentCode}`);
+    if (authtoken && !wsRef.current) {
+      wsRef.current = new WebSocket(`wss://localhost/api/game/ws/tournament/?token=${authtoken}&code=${tournamentCode}`);
 
       wsRef.current.onopen = () => {
         console.log('WebSocket connection established');
@@ -47,56 +42,62 @@ export default function Tournament() {
           const newToken = await refreshToken();
           if (newToken) {
             localStorage.setItem('authtoken', JSON.stringify(newToken));
-            wsRef.current = new WebSocket('ws://localhost/api/game/ws/tournament/?token=' + JSON.stringify(newToken.access));
+            wsRef.current = new WebSocket('wss://localhost/api/game/ws/tournament/?token=' + JSON.stringify(newToken.access));
             console.log('WebSocket connection established with new token');
           } else {
             localStorage.removeItem('authtoken');
             navigate('/login');
           }
         } else if (message.type === 'tournament_update') {
-          if (Array.isArray(message.matches) && message.matches.length > 0){
+          if (Array.isArray(message.matches) && message.matches.length > 0) {
             setMatches(message.matches);
-            console.log('Tournament updated:', message.matches);
           }
         } else if (message.type === 'match_start') {
-          console.log('Match started:', message.tournamentMatch_id);
-          setIsTournamentStarted(true);
-          navigate(`/dashboard/game/pvp2d?match_id=${message.tournamentMatch_id}`);
+          setMatchStartData({ opponent: message.opponent, yourName: user.username });
+          setShowMatchStartPopup(true);
+          setTimeout(() => {
+            setShowMatchStartPopup(false);
+            navigate(`/dashboard/game/pvp2d?match_id=${message.tournamentMatch_id}`);
+          }, 3000);
         } else if (message.type === 'tournament_code') {
           setTournamentCode(message.code);
         } else if (message.type === 'players_ready') {
           console.log('Players ready:', message.players);
-          setIsTournamentStarted(true);
-          wsManager.sendMessage('Tournament players Ready', message.players, "/dashboard/tournament/live");
-          //wsManager implement broadcastmsg and selfmsg (here we should use selfmsg)
-          //make this received only once
-          //navigate(`/dashboard/game/newpvp2d?match_id=${message.tournamentMatch_id}`);
+          const otherplayers = message.players.filter(player => player !== user.username);
+          if (otherplayers)
+            wsManager.sendMessage('Tournament players Ready: ' + message.players.length, otherplayers, "/dashboard/tournament/live");
         }
         else if (message.type === 'already_in_tournament') {
-          console.log('Already in tournament');
           setWrongTournament(true);
         }
         else if (message.type === 'eliminated')
           setEliminated(true);
+        else if (message.type === 'players_present')
+          setPlayersPresent(message.players.length);
       };
 
-      wsRef.current.onclose = () => console.log('WebSocket connection closed');
-      wsRef.current.onerror = (e) => console.error('WebSocket error:', e);
-    }
-
-    return () => {
-      if (wsRef.current) {
-        wsRef.current.close();
-        wsRef.current = null;
+      function isInitialMatchesState() {
+        return matches.length === 3 
+          && matches[0].player1 === 'Player 1' && matches[0].player2 === 'Player 2'
+          && matches[1].player1 === 'Player 3' && matches[1].player2 === 'Player 4'
       }
-    };
-  }, [token]);
 
-  // const handleReady = () => {
-  //   setLoadingReady(true);
-  //   wsRef.current.send(JSON.stringify({ type: 'player_ready' }));
-  //   setTimeout(() => setLoadingReady(false), 1000);
-  // };
+      wsRef.current.onclose = () => {
+        console.log('WebSocket connection closed');
+        // if (isInitialMatchesState()) {
+        //   navigate('/dashboard/tournament');//mochkil
+        // }
+      };
+      wsRef.current.onerror = (e) => console.error('WebSocket error:', e);
+
+      return () => {
+        if (wsRef.current) {
+          wsRef.current.close();
+          wsRef.current = null;
+        }
+      };
+    }
+  }, [authtoken]);
 
   const handleQuit = () => {
     setLoadingQuit(true);
@@ -210,9 +211,7 @@ export default function Tournament() {
       </div>
 
       <div className="w-full flex items-end flex-col  bottom-4 right-4">
-        {(matches.length > 0 && matches[matches.length - 1].winner 
-          || !isTournamentStarted
-        )&& (
+        {(
           <div className="flex gap-4">
             <button
               onClick={handleQuit}
@@ -224,16 +223,16 @@ export default function Tournament() {
           </div>)}
         {/* tournament code */}
         <div className="text-white mt-4">
-          {t('Tournament Code:')} {tournamentCode}
+          {t('Players Present:')} {playersPresent}
         </div>
       </div>
 
       {/* Popup for already in tournament */}
       {wrongTournament && (
-        <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-gray-900/95 p-8 rounded-lg text-center">
+        <div className="z-50 fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-gray-900/95 p-8 rounded-lg text-center">
           <h2 className="text-2xl font-bold text-white mb-4">{t('You are already in a tournament!')}</h2>
           <button
-            onClick={() => navigate('/dashboard')}
+            onClick={() => navigate('/dashboard/tournament')}
             className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
           >
             {t('Go to Dashboard')}
@@ -243,10 +242,18 @@ export default function Tournament() {
 
       {/* Popup for eliminated */}
       {eliminated && (
-        <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-gray-900/95 p-8 rounded-lg text-center">
+        <div className="z-50 fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-gray-900/95 p-8 rounded-lg text-center">
           <h2 className="text-2xl font-bold text-white mb-4">{t('You have been eliminated from the tournament!')}</h2>
           <button
-            onClick={() => navigate('/dashboard')}
+            onClick={() => setEliminated(false)}
+            className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors">
+            {t('Close')}
+          </button>
+          <button
+            onClick={() => {
+                wsRef.current.send(JSON.stringify({ type: 'quit_tournament' }));
+                navigate('/dashboard')
+              }}
             className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
           >
             {t('Go to Dashboard')}
@@ -254,18 +261,26 @@ export default function Tournament() {
         </div>
       )}
 
-      {matches.length > 0 && matches[matches.length - 1].winner && (
-        <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-gray-900/95 p-8 rounded-lg text-center z-50">
+      {matches.length > 0 && matches[matches.length - 1].winner && !eliminated && (
+        <div className="z-50 fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-gray-900/95 p-8 rounded-lg text-center ">
           <h2 className="text-2xl font-bold text-white mb-4">{t('Congratulations')} {matches[matches.length - 1].winner}! {t('You are the champion!')}</h2>
           <button
             onClick={() => {
-              wsRef.current.send(JSON.stringify({ type: 'tournament_complete' }));
+              wsRef.current.send(JSON.stringify({ type: 'quit_tournament' }));
               navigate('/dashboard')
             }}
             className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
           >
             {t('Finish Tournament')}
           </button>
+        </div>
+      )}
+
+      {showMatchStartPopup && (
+        <div className="z-50 fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-gray-900/95 p-8 rounded-lg text-center">
+          <h2 className="text-2xl font-bold text-white mb-4">
+            {matchStartData?.yourName} vs {matchStartData?.opponent} {t('Match starting soon...')}
+          </h2>
         </div>
       )}
     </div>

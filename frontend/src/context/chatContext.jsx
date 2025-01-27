@@ -88,7 +88,7 @@ const ChatContextProvider = ({ children }) => {
             socketRef.current.close();  
         }
 
-        const chatSocket = new WebSocket(`ws://localhost:8003/ws/chat/?user_id=${userId}&token=${authtoken}`);
+        const chatSocket = new WebSocket(`wss://localhost:8003/ws/chat/?user_id=${userId}&token=${authtoken}`);
 
         socketRef.current = chatSocket;
 

@@ -309,24 +309,24 @@ export default function Pve2d() {
     stripes[3].position.set(-2.5, 0.06, 0);
     stripes[4].position.set(0, 0.06, 0);
 
-    const hockeyLegShape = new THREE.Shape();
-    hockeyLegShape.moveTo(-1.8, 0);
-    hockeyLegShape.absarc(0, 0, 1.8, Math.PI, 0, false);
+    // const hockeyLegShape = new THREE.Shape();
+    // hockeyLegShape.moveTo(-1.8, 0);
+    // hockeyLegShape.absarc(0, 0, 1.8, Math.PI, 0, false);
 
-    const legGeometry = new THREE.ExtrudeGeometry(hockeyLegShape, {
-      depth: 0.07,
-      bevelEnabled: false
-    });
-    const legMaterial = new THREE.MeshStandardMaterial({ color: 0x333333 });
-    const arcLeft = new THREE.Mesh(legGeometry, legMaterial);
-    arcLeft.rotation.z = - Math.PI ;
-    arcLeft.position.set(0, -1, -1.6);
+    // const legGeometry = new THREE.ExtrudeGeometry(hockeyLegShape, {
+    //   depth: 0.07,
+    //   bevelEnabled: false
+    // });
+    // const legMaterial = new THREE.MeshStandardMaterial({ color: 0x333333 });
+    // const arcLeft = new THREE.Mesh(legGeometry, legMaterial);
+    // arcLeft.rotation.z = - Math.PI ;
+    // arcLeft.position.set(0, -1, -1.6);
 
-    const arcRight = arcLeft.clone();
-    arcRight.position.set(0, -1, 1.55);
+    // const arcRight = arcLeft.clone();
+    // arcRight.position.set(0, -1, 1.55);
 
     const group = new THREE.Group();
-    group.add(...stripes, arcLeft, arcRight);
+    group.add(...stripes);
     return group;
   }
   function createPaddles() {

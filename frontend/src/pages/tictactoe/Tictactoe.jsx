@@ -18,18 +18,22 @@ export default function Tictactoe() {
   const [isMatched, setIsMatched] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
   const [popupMessage, setPopupMessage] = useState('');
-  const [isProcessing, setIsProcessing] = useState(false); // Add a new state variable for processing popup
+  const [isProcessing, setIsProcessing] = useState(false);
   const wsRef = useRef(null);
 
   useEffect(() => {
     const tokenData = JSON.parse(localStorage.getItem('authtoken'));
     const accessToken = tokenData && tokenData.access;
-    wsRef.current = new WebSocket(`ws://localhost/api/game/ws/tictactoe/?token=${accessToken}`);
+    wsRef.current = new WebSocket(`wss://localhost/api/game/ws/tictactoe/?token=${accessToken}`);
     wsRef.current.onmessage = (evt) => {
       const data = JSON.parse(evt.data);
       if (data.type === 'match_found') {
         setRole(data.role);
         setIsMatched(true);
+        if (data.game_state) {
+          setBoard(data.game_state.board);
+          setCurrentPlayer(data.game_state.currentPlayer);
+        }
       }
       if (data.type === 'game_state') {
         setBoard(data.game_state.board);
@@ -42,6 +46,10 @@ export default function Tictactoe() {
       }
       if (data.type === 'processing') {
         setIsProcessing(true);
+      }
+      if (data.type === 'opponent_disconnected') {
+        setPopupMessage('Opponent disconnected, You Win!');
+        setShowPopup(true);
       }
       if (data.type === 'error') {
         alert(data.message);
@@ -88,7 +96,7 @@ export default function Tictactoe() {
       {isMatched && (
         <>
           <div className="mb-2">Your Role: {role}</div>
-          {winner && winner !== "Draw" && (
+          {/* {winner && winner !== "Draw" && (
             <div className="mb-2 text-black">
               {winner} Wins!
               <button onClick={resetGame} className="ml-2 px-4 py-2 bg-blue-500 text-white rounded">
@@ -103,7 +111,7 @@ export default function Tictactoe() {
                 Play Again
               </button>
             </div>
-          )}
+          )} */}
           <div className="grid grid-cols-3 gap-2 mt-5">
             {board.map((cell, idx) => (
               <Cell

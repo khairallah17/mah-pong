@@ -583,7 +583,7 @@ export const AuthProvider = ({ children }) => {
     // Helper function to complete the login process
     const completeLogin = (token) => {
         const decodedToken = jwtDecode(token);
-        setAuthToken({ access: token });
+        setAuthToken( token );
         setUser(decodedToken);
         localStorage.setItem("authtoken", JSON.stringify({ access: token }));
         navigation("/dashboard");

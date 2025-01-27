@@ -121,8 +121,7 @@ export default function Pvp2d() {
 
   useEffect(() => {
     if (token && !wsRef.current) {
-      setTimeout(() => {
-        const wsUrl = `ws://localhost/api/game/ws/pvp2d/?token=${accessToken}${inviteCode ? `&invite=${inviteCode}` : ''}${matchId ? `&match_id=${matchId}` : ''}`;
+        const wsUrl = `wss://localhost/api/game/ws/pvp2d/?token=${accessToken}${inviteCode ? `&invite=${inviteCode}` : ''}${matchId ? `&match_id=${matchId}` : ''}`;
         wsRef.current = new WebSocket(wsUrl);
         wsRef.current.onopen = () => {
           console.log('WebSocket connection established');
@@ -136,7 +135,7 @@ export default function Pvp2d() {
             if (newToken) {
               localStorage.setItem('authtoken', JSON.stringify(newToken));
               wsManagerInstance.close();
-              wsManagerInstance.setUrl('ws://localhost/api/notifications/ws/notifications/?token=' + newToken?.access);
+              wsManagerInstance.setUrl('wss://localhost/api/notifications/ws/notifications/?token=' + newToken?.access);
               wsManagerInstance.connect(handleMessage);
               console.log('WebSocket connection established with new token');
             } else {
@@ -157,13 +156,15 @@ export default function Pvp2d() {
           } else if (message.type === 'game_end') {
             setProcessingResults(false);
             setWinner(winnerRef.current);
+          } else if (message.type === 'invalid_match_id') {
+            // INVALID MATCHID
           }
         };
         wsRef.current.onclose = () => {
           console.log('WebSocket connection closed');
+          token = localStorage.getItem('authtoken');
         };
         wsRef.current.onerror = (e) => console.error('WebSocket error:', e);
-      }, 4000);
     }
 
     const refreshToken = async () => {
@@ -196,6 +197,10 @@ export default function Pvp2d() {
   useEffect(() => {
     if (gameState) {
       isPausedRef.current = gameState.is_paused;
+      setCountdown(gameState.countdown);
+      if (gameState.countdown === 0) {
+        setCountdown(null);
+      }
       ballDirectionRef.current.set(gameState.ball_direction_x, 0, gameState.ball_direction_z);
       ballSpeedRef.current = gameState.ball_speed / 10;
       if (isPlayer1Ref.current)
@@ -208,29 +213,11 @@ export default function Pvp2d() {
           winnerRef.current = gameState.scoreP1 >= 5 ? names.player1 : names.player2;
           wsRef.current.send(JSON.stringify({ type: 'game_event', event: 'end' }));
           setProcessingResults(true);
-        } else if (!countdownRef.current) {
-          startCountdown();
         }
         setScores({ score1: gameState.scoreP1, score2: gameState.scoreP2 });
       }
     }
   }, [gameState]);
-
-  const startCountdown = () => {
-    countdownRef.current = true;
-    setCountdown(3);
-    const countdownInterval = setInterval(() => {
-      setCountdown((prev) => {
-        if (prev === 1) {
-          clearInterval(countdownInterval);
-          wsRef.current.send(JSON.stringify({ type: 'game_event', event: 'start' }));
-          countdownRef.current = false;
-          return null;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-  };
 
   useEffect(() => {
     if (tableRef.current) {
@@ -331,21 +318,21 @@ export default function Pvp2d() {
     stripes[3].position.set(-2.5, 0.06, 0);
     stripes[4].position.set(0, 0.06, 0);
 
-    const legGeometry = new THREE.CylinderGeometry(0.1, 0.1, 1, 32);
-    const legMaterial = new THREE.MeshStandardMaterial({ color: 0x8B4513 });
-    const legs = [
-      new THREE.Mesh(legGeometry, legMaterial),
-      new THREE.Mesh(legGeometry, legMaterial),
-      new THREE.Mesh(legGeometry, legMaterial),
-      new THREE.Mesh(legGeometry, legMaterial),
-    ];
-    legs[0].position.set(2.4, -0.55, 1.4);
-    legs[1].position.set(-2.4, -0.55, 1.4);
-    legs[2].position.set(2.4, -0.55, -1.4);
-    legs[3].position.set(-2.4, -0.55, -1.4);
+    // const legGeometry = new THREE.CylinderGeometry(0.1, 0.1, 1, 32);
+    // const legMaterial = new THREE.MeshStandardMaterial({ color: 0x8B4513 });
+    // const legs = [
+    //   new THREE.Mesh(legGeometry, legMaterial),
+    //   new THREE.Mesh(legGeometry, legMaterial),
+    //   new THREE.Mesh(legGeometry, legMaterial),
+    //   new THREE.Mesh(legGeometry, legMaterial),
+    // ];
+    // legs[0].position.set(2.4, -0.55, 1.4);
+    // legs[1].position.set(-2.4, -0.55, 1.4);
+    // legs[2].position.set(2.4, -0.55, -1.4);
+    // legs[3].position.set(-2.4, -0.55, -1.4);
 
     const group = new THREE.Group();
-    group.add(...stripes, ...legs);
+    group.add(...stripes);
     return group;
   }
   function createPaddles() {

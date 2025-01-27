@@ -107,7 +107,7 @@ const Chat = () => {
                             if (!user)
                                 return
                             if (user?.img?.includes('usermanagement:8000'))
-                                user.img = user.img.replace('usermanagement:8000', 'localhost:8001');
+                                user.img = user.img.replace('usermanagement:8000', 'http://localhost/api/usermanagement');
                             const lastMessage = messages
                                 .filter(msg => msg.sender === user.id || msg.receiver === user.id)
                                 .slice(-1)[0]?.content || "No messages yet";

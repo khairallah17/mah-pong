@@ -1,14 +1,15 @@
 import React, { createContext, useEffect, useState } from "react";
 import WebSocketManager from "./WebSocketManager";
 import { Navigate, useNavigate } from "react-router-dom";
+import { useAuthContext } from "../hooks/useAuthContext";
 
 export const WebSocketContext = createContext();
 
 export const WebSocketProvider = ({ children }) => {
   const navigate = useNavigate();
+  const { authtoken } = useAuthContext();
   const [notifications, setNotifications] = useState([]);
-  const accessToken = JSON.parse(localStorage.getItem('authtoken'))?.access;
-  const webSocketUrl = 'ws://localhost/api/notifications/ws/notifications/?token=' + accessToken;
+  const webSocketUrl = 'wss://localhost/api/notifications/ws/notifications/?token=' + authtoken;
   const [wsManager, setWsManager] = useState(null);
 
   useEffect(() => {
@@ -23,7 +24,7 @@ export const WebSocketProvider = ({ children }) => {
         if (newToken) {
           localStorage.setItem('authtoken', JSON.stringify(newToken));
           wsManagerInstance.close();
-          wsManagerInstance.setUrl('ws://localhost/api/notifications/ws/notifications/?token=' + newToken?.access);
+          wsManagerInstance.setUrl('wss://localhost/api/notifications/ws/notifications/?token=' + newToken?.access);
           wsManagerInstance.connect(handleMessage);
           console.log('WebSocket connection established with new token');
         } else {
