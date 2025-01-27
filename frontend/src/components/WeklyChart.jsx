@@ -15,6 +15,8 @@ import { Line } from 'react-chartjs-2';
 import '../i18n';
 import { useTranslation } from 'react-i18next';
 
+import { ImSpinner2 } from "react-icons/im";
+
 ChartJS.register(
   CategoryScale,
   LinearScale,
@@ -34,9 +36,7 @@ export const WeeklyChart = ({ user }) => {
   const chartRef = useRef(null);
 
   // Validate username
-  console.log("user", user);
   const username = user?.trim() || '';
-  console.log("username", username);
 
   useEffect(() => {
     const fetchMatchData = async () => {
@@ -48,7 +48,7 @@ export const WeeklyChart = ({ user }) => {
       }
 
       try {
-        const response = await fetch(`http://localhost:8000/api/match-history/${username}/`);
+        const response = await fetch(`/api/game/api/match-history/${username}/`);
         const data = await response.json();
 
         // Handle the specific "No matches" error case
@@ -185,7 +185,10 @@ export const WeeklyChart = ({ user }) => {
 
   const renderContent = () => {
     if (loading) {
-      return <div className="text-center text-gray-400">{t('Loading...')}</div>;
+      return (
+        <div className="text-center text-gray-400">
+          <ImSpinner2 className="animate-spin" />
+        </div>);
     }
 
     if (error) {

@@ -15,14 +15,14 @@ const NotificationDisplay = () => {
   const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate();
 
+  const { user } = useAuthContext()
+    const { username } = user
+
   useEffect(() => {
     const fetchNotifications = async () => {
       try {
-        
-        const { user } = useAuthContext()
-        const { username } = user
 
-        const response = await fetch(`http://localhost:8002/api/notifications/${username}/`);
+        const response = await fetch(`/api/notifications/api/notifications/${username}/`);
         const data = await response.json();
         const sortedData = data.sort((a, b) => 
           new Date(b.created_at) - new Date(a.created_at)

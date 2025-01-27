@@ -8,7 +8,7 @@ import { useTranslation } from 'react-i18next';
 import React, { useState, useEffect } from 'react';
 import DefaultAvatar from '../assets/khr.jpg';
 
-
+import useUserContext from '../hooks/useUserContext'
 
 const navigation = [
   {
@@ -50,40 +50,15 @@ const navigation = [
 ]
 
 const Sidebar = () => {
+
   const { t } = useTranslation();
-  const { logoutUsers } = useAuthContext()
+  const { logoutUsers, user, authtoken } = useAuthContext()
   const { open } = useSidebarContext()
-  const [user, setUser] = useState([])
+  const { fetchUserData, loading } = useUserContext()
 
-
-
-  useEffect(() => {
-    const fetchUserData = async () => {
-      const authToken = localStorage.getItem('authtoken');
-      if (!authToken) return;
-  
-      try {
-        const parsedToken = JSON.parse(authToken);
-        const response = await fetch('http://localhost:8001/api/edit-profile/', {
-          headers: {
-            'Authorization': `Bearer ${parsedToken.access}`
-          }
-        });
-  
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-  
-        const userData = await response.json();
-        console.log(userData);
-        setUser(userData);
-      } catch (error) {
-        console.error('Error fetching user data:', error);
-      }
-    };
-  
+  useEffect(() => {  
     fetchUserData();
-  }, []);
+  }, [authtoken]);
 
   return (
     <aside 
@@ -124,7 +99,7 @@ const Sidebar = () => {
           `}
         >
 
-          <img src={user && user.img ? `http://localhost:8001/${user.img}` : DefaultAvatar} className='w-6 h-6 bg-white/20 rounded-full flex-shrink-0'/>
+          <img src={user && user.img ? `/api/usermanagement/${user.img}` : DefaultAvatar} className='w-6 h-6 bg-white/20 rounded-full flex-shrink-0'/>
         </NavLink>
 
         {/* Logout Button */}

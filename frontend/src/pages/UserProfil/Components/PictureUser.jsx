@@ -21,6 +21,7 @@ const PictureUser = () => {
   const [error, setError] = useState(null);
   const [pendingRequest, setPendingRequest] = useState(null);
   const [friendStatus, setFriendStatus] = useState('none');
+  const [loading, setLoading] = useState(true)
   const [users, setUsers] = useState(true);
   const { username } = useParams();
   const token = JSON.parse(localStorage.getItem('authtoken'))?.access;
@@ -47,7 +48,7 @@ const PictureUser = () => {
   const checkFriendStatus = async () => {
     try {
         // Check friend requests
-        const response = await fetch(`http://localhost:8001/api/friend-requests/`, {
+        const response = await fetch(`/api/usermanagement/api/friend-requests/`, {
             headers: {
                 'Authorization': `Bearer ${token}`
             }
@@ -78,7 +79,7 @@ const PictureUser = () => {
         }
 
         // If no request exists, check friends list
-        const friendsResponse = await fetch(`http://localhost:8001/api/friends/`, {
+        const friendsResponse = await fetch(`/api/usermanagement/api/friends/`, {
             headers: {
                 'Authorization': `Bearer ${token}`
             }
@@ -110,7 +111,8 @@ const PictureUser = () => {
   useEffect(() => {
     const fetchProfil = async () => {
       try {
-        const response = await fetch(`http://localhost:8001/api/user-profile/${username}/`);
+        setLoading(true)
+        const response = await fetch(`/api/usermanagement/api/user-profile/${username}/`);
         if (!response.ok) {
           throw new Error('Profile not found');
         }
@@ -119,6 +121,8 @@ const PictureUser = () => {
         await checkFriendStatus();
       } catch (err) {
         setError(err.message);
+      } finally {
+        setLoading(false)
       }
     };
 
@@ -129,7 +133,7 @@ const PictureUser = () => {
 
   const handleFriendRequest = async () => {
     try {
-      const response = await fetch('http://localhost:8001/api/friend-requests/', {
+      const response = await fetch('/api/usermanagement/api/friend-requests/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -165,7 +169,7 @@ const PictureUser = () => {
   const handleAcceptRequest = async () => {
     try {
       // First get the pending request ID
-      const response = await fetch(`http://localhost:8001/api/friend-requests/`, {
+      const response = await fetch(`/api/usermanagement/api/friend-requests/`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -183,7 +187,7 @@ const PictureUser = () => {
       }
 
       // Accept the request
-      const acceptResponse = await fetch(`http://localhost:8001/api/friend-requests/${pendingRequest.id}/accept/`, {
+      const acceptResponse = await fetch(`/api/usermanagement/api/friend-requests/${pendingRequest.id}/accept/`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -213,7 +217,7 @@ const PictureUser = () => {
 
   const handleRejectRequest = async () => {
     try {
-      const response = await fetch(`http://localhost:8001/api/friend-requests/`, {
+      const response = await fetch(`/api/usermanagement/api/friend-requests/`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -230,7 +234,7 @@ const PictureUser = () => {
         throw new Error('Friend request not found');
       }
 
-      const rejectResponse = await fetch(`http://localhost:8001/api/friend-requests/${pendingRequest.id}/reject/`, {
+      const rejectResponse = await fetch(`/api/usermanagement/api/friend-requests/${pendingRequest.id}/reject/`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -260,7 +264,7 @@ const PictureUser = () => {
 
   const handleCancelRequest = async () => {
     try {
-      const response = await fetch(`http://localhost:8001/api/friend-requests/`, {
+      const response = await fetch(`/api/usermanagement/api/friend-requests/`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -277,7 +281,7 @@ const PictureUser = () => {
         throw new Error('Friend request not found');
       }
 
-      const cancelResponse = await fetch(`http://localhost:8001/api/friend-requests/${pendingRequest.id}/cancel/`, {
+      const cancelResponse = await fetch(`/api/usermanagement/api/friend-requests/${pendingRequest.id}/cancel/`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -306,7 +310,7 @@ const PictureUser = () => {
 
   const handleRemoveFriend = async () => {
     try {
-      const response = await fetch('http://localhost:8001/api/friends/remove/', {
+      const response = await fetch('/api/usermanagement/api/friends/remove/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -331,7 +335,6 @@ const PictureUser = () => {
         progress: undefined,
         theme: "dark",
       })
-      // console.error('Error removing friend:', err);
       setError(err.message);
     }
   };
@@ -433,14 +436,19 @@ const PictureUser = () => {
 
   return (
     <div className="space-y-6">
-      <div className="relative group">
+      {
+        loading ? (
+          <p>Loading...</p>
+        ) : (
+          <>
+            <div className="relative group">
         <div className="h-32 w-full bg-gradient-to-r from-indigo-600 to-purple-600 rounded-t-xl"></div>
         
         <div className="absolute -bottom-16 left-1/2 transform -translate-x-1/2">
           <div className="relative">
             <div className="w-32 h-32 rounded-full ring-4 ring-navy-800 bg-navy-700 overflow-hidden">
               <img 
-                src={`http://localhost:8001${profil?.img}`}
+                src={`/api/usermanagement${profil?.img}`}
                 alt="Profile"
                 className="w-full h-full object-cover"
               />
@@ -487,6 +495,9 @@ const PictureUser = () => {
           {renderActionButtons()}
         </div>
       </div>
+          </>
+        )
+      }
     </div>
   );
 };

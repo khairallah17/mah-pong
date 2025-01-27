@@ -2,53 +2,18 @@ import React, { useState, useEffect } from 'react';
 import { GameModes } from '../components/GameModes';
 import { MatchHistory } from '../components/Match-history';
 import { Statistics } from '../components/StatisticUser';
-// import { Achievements } from '../components/AchievementBadgeProps';
+import { Achievements } from '../components/AchievementBadgeProps';
 import  PlayerList  from '../components/PlayerList';
 import '../i18n';
 import { useTranslation } from 'react-i18next';
+import useUserContext from '../hooks/useUserContext';
 
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState('matches');
   const [selectedMode, setSelectedMode] = useState(null);
-  const { t } = useTranslation();
-  
-  useEffect( () =>{
-    const fetchstats = async () => {
-    const response = await fetch("http://localhost:8000/api/player-stats/alemsafi");
-    const data = await response.json();
-    console.log("player stats:", data);
-    }
+  const { t } = useTranslation()  
 
-    fetchstats();
-
-    const fetchHistory = async () => {
-    const response = await fetch("http://localhost:8000/api/match-history/alemsafi");
-    const data = await response.json();
-    console.log("match history:", data);
-    }
-
-    fetchHistory();
-
-    const fetchFriends = async () => {
-    const response = await fetch("http://localhost:8001/api/friends/", 
-    {
-      credentials: "include",
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": "Bearer " + JSON.parse(localStorage.getItem("authtoken")).access,
-      },
-    }
-    );
-    const data = await response.json();
-    console.log("friends:", data);
-    }
-
-    fetchFriends();
-    
-  }, []);
-
-  
+  const { loading } = useUserContext()
 
   const renderTabContent = () => {
     switch (activeTab) {
@@ -58,8 +23,6 @@ const Dashboard = () => {
         return <Statistics />;
       default:
         return <MatchHistory />;
-      // case 'achievements':
-        // return <Achievements />;
     }
   };
   
@@ -89,28 +52,46 @@ const Dashboard = () => {
             </div>
           </div>
 
-          <div className="md:col-span-1 bg-black/50 rounded-xl border border-gray-800 p-4 backdrop-blur-sm">
-            <PlayerList />
-          </div>
+          {
+            loading ? (
+              <div role="status" className="min-h-56 h-full w-full animate-pulse md:col-span-1">
+                  <div className="h-full w-full bg-gray-700 rounded-xl"></div>
+              </div>
+            ) : (
+              <div className="md:col-span-1 bg-black/50 rounded-xl border border-gray-800 p-4 backdrop-blur-sm">
+                <PlayerList />
+              </div>
+            )
+          }
         </div>
 
         <div className="grid lg:grid-cols-3 gap-4 lg:gap-6">
-          <div className="lg:col-span-2 bg-black/50 rounded-xl border border-gray-800 p-4 backdrop-blur-sm">
-            <div className="flex items-center gap-4 mb-6">
-              {tabs.map((tab) => (
-                <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab)}
-                  className={`px-4 py-2 rounded-lg transition-colors capitalize ${
-                    activeTab === tab ? 'bg-blue-500 text-white' : 'text-gray-400 hover:bg-white/5'
-                  }`}
-                >
-                  {t(tab)}
-                </button>
-              ))}
-            </div>
-            {renderTabContent()}
-          </div>
+            {
+              
+              loading ? (
+                <div role="status" className="min-h-56 h-full w-full animate-pulse lg:col-span-2">
+                  <div className="h-full w-full bg-gray-700 rounded-xl"></div>
+              </div>
+              ) : (
+                <div className="lg:col-span-2 bg-black/50 rounded-xl border border-gray-800 p-4 backdrop-blur-sm">
+                  <div className="flex items-center gap-4 mb-6">
+                    {tabs.map((tab) => (
+                      <button
+                        key={tab}
+                        onClick={() => setActiveTab(tab)}
+                        className={`px-4 py-2 rounded-lg transition-colors capitalize ${
+                          activeTab === tab ? 'bg-blue-500 text-white' : 'text-gray-400 hover:bg-white/5'
+                        }`}
+                      >
+                        {t(tab)}
+                      </button>
+                    ))}
+                  </div>
+                  {renderTabContent()}
+                </div>
+              )
+
+            }
           <div className="bg-black/50 rounded-xl border border-gray-800 p-4 backdrop-blur-sm">
             <GameModes selectedMode={selectedMode} setSelectedMode={setSelectedMode} />
           </div>

@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -98,3 +99,117 @@
 .animate-spin-slow {
   animation: spin-slow 2s linear infinite;
 }
+=======
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.root-grid {
+  display: grid;
+  grid-template-areas: 
+  "a a a a"
+  "b c c c"
+  "b c c c";
+  grid-template-rows: 100px 1fr;
+}
+
+::-webkit-scrollbar {
+  visibility: hidden;
+}
+
+::-webkit-scrollbar-track {
+  visibility: hidden;
+}
+
+::-webkit-scrollbar-thumb {
+  visibility: hidden;
+}
+
+.homepage {
+  background-image: url("images/background.png");
+}
+
+.sidebar-grid {
+  grid-area: b;
+  grid-row-start: 2;
+}
+
+.navbar-grid {
+  grid-area: a;
+  z-index: 99;
+}
+
+.content-grid {
+  grid-area: c;
+}
+
+.zen-dots {
+  font-family: "Zen Dots", sans-serif;
+  font-weight: 400;
+  font-style: normal;
+}
+
+@layer base {
+
+  * {
+    font-family: "Rajdhani", serif;
+    font-weight: 400;
+    font-style: normal;
+  }
+
+}
+
+/*zouhair style*/
+@keyframes shine {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.animate-shine {
+  animation: shine 2s infinite;
+}
+
+.animate-float {
+  animation: float 3s infinite;
+}
+
+@keyframes flash {
+  0%, 100% { opacity: 0; }
+  50% { opacity: 0.5; }
+}
+
+@keyframes border-glow {
+  0%, 100% { box-shadow: 0 0 15px rgba(255,255,255,0.5); }
+  50% { box-shadow: 0 0 30px rgba(255,255,255,0.8); }
+}
+
+@keyframes spin-slow {
+  0% { transform: translate(-50%, 0) rotate(0deg); }
+  100% { transform: translate(-50%, 0) rotate(360deg); }
+}
+
+.animate-flash {
+  animation: flash 1s ease-in-out infinite;
+}
+
+.animate-border-glow {
+  animation: border-glow 1.5s ease-in-out infinite;
+}
+
+.animate-spin-slow {
+  animation: spin-slow 2s linear infinite;
+}
+>>>>>>> master

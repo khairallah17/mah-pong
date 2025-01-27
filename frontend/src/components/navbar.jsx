@@ -7,16 +7,11 @@ import ButtonLng from "../components/ButtonLng";
 import '../i18n';
 import { useTranslation } from 'react-i18next';
 import { NavLink, useNavigate } from 'react-router-dom';
+import { useAuthContext } from '../hooks/useAuthContext';
+import useUserContext from '../hooks/useUserContext';
 
 const Navbar = () => {
   const navigate = useNavigate();
-  const [user, setUser] = useState({ 
-    username: '', 
-    email: '', 
-    fullname: '', 
-    avatar: '', 
-    img: '' 
-  });
   const { toggleSidebar, open } = useSidebarContext();
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
@@ -24,58 +19,34 @@ const Navbar = () => {
   const [showResults, setShowResults] = useState(false);
   const searchRef = useRef(null);
 
-  useEffect(() => {
-    const fetchUserData = async () => {
-      const authToken = localStorage.getItem('authtoken');
-      if (authToken) {
-        try {
-          const response = await fetch('http://localhost:8001/api/edit-profile/', {
-            headers: {
-              'Authorization': `Bearer ${JSON.parse(authToken).access}`
-            }
-          });
-          if (response.ok) {
-            const userData = await response.json();
-            console.log('User data:', userData);
-            setUser({
-              username: userData.username,
-              email: userData.email,
-              fullname: userData.fullname,
-              avatar: userData.avatar,
-              img: userData.img
-            });
-          }
-        } catch (error) {
-          console.error('Error fetching user data:', error);
-        }
-      }
-    };
+  const { authtoken, user } = useAuthContext()
+  const { fetchUserData, loading } = useUserContext()
 
+  useEffect(() => {
     fetchUserData();
-  }, []);
+  }, [authtoken]);
 
   const searchUsers = async (query) => {
+
     if (!query.trim()) {
       setSearchResults([]);
       return;
     }
 
     setIsLoading(true);
-    const authToken = localStorage.getItem('authtoken');
-    const token = JSON.parse(authToken).access;
 
     try {
       // First, get the list of friends to filter them out
-      const friendsResponse = await fetch(`http://localhost:8001/api/friends/`, {
-        headers: { 'Authorization': `Bearer ${token}` }
+      const friendsResponse = await fetch(`/api/usermanagement/api/friends/`, {
+        headers: { 'Authorization': `Bearer ${authtoken}` }
       });
       const friendsData = await friendsResponse.json();
       const friendsList = friendsData[0]?.friends || [];
       const friendUsernames = new Set(friendsList.map(friend => friend.username));
 
       // Then, fetch all users
-      const allUsersResponse = await fetch(`http://localhost:8001/api/allusers/?search=${query}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
+      const allUsersResponse = await fetch(`/api/usermanagement/api/allusers/?search=${query}`, {
+        headers: { 'Authorization': `Bearer ${authtoken}` }
       });
       const allUsersData = await allUsersResponse.json();
 
@@ -83,8 +54,8 @@ const Navbar = () => {
       const filteredUsers = allUsersData.filter(searchedUser =>  
         searchedUser.username !== user.username &&
         (searchedUser.fullname?.toLowerCase().includes(query.toLowerCase()) ||
-         searchedUser.username.toLowerCase().includes(query.toLowerCase()) ||
-         searchedUser.email?.toLowerCase().includes(query.toLowerCase()))
+          searchedUser.username.toLowerCase().includes(query.toLowerCase()) ||
+          searchedUser.email?.toLowerCase().includes(query.toLowerCase()))
       );
 
       setSearchResults(filteredUsers);
@@ -167,7 +138,7 @@ const Navbar = () => {
                         }}
                       >
                         <img
-                          src={"http://localhost:8001/" + searchedUser.img || searchedUser.avatar || DefaultAvatar}
+                          src={"/api/usermanagement/" + searchedUser.img || searchedUser.avatar || DefaultAvatar}
                           alt={searchedUser.username}
                           className="h-10 w-10 rounded-full object-cover"
                           onError={(e) => {
@@ -194,32 +165,48 @@ const Navbar = () => {
           </div>
         </div>
 
-        <div className="flex items-center gap-4">
-          <ButtonLng />
-          <div 
-            className="p-4 rounded-md text-white/80 focus:outline-none"
-            aria-label="Notifications"
-          >
-            <NotificationDisplay className="h-5 w-5" />
-          </div>
-          
-          <div className="flex items-center gap-3">
-            <div className="hidden md:block text-right">
-              <div className="text-sm font-medium text-white">{user.fullname}</div>
-              <div className="text-xs text-white/60">{user.email}</div>
+
+            <div className="flex items-center gap-4">
+              <ButtonLng />
+              <div 
+                className="p-4 rounded-md text-white/80 focus:outline-none"
+                aria-label="Notifications"
+              >
+                <NotificationDisplay className="h-5 w-5" />
+              </div>
+              {
+
+                  loading ? (
+                    <div role="status" className="flex items-center gap-3 animate-pulse">
+                      <div className="hidden md:block text-right space-y-2">
+                        <div className="text-sm font-medium text-white w-12 h-2 rounded-full bg-white/20"></div>
+                        <div className="text-xs bg-white/20 h-2 w-16 rounded-full text-white/60"></div>
+                      </div>
+                        <NavLink to={`/dashboard/profil/${user.username}`}>
+                          <div className="h-12 w-12 rounded-full object-cover ring-2 bg-white/20 ring-white/20 cursor-pointer hidden md:block"/>
+                        </NavLink>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-3">
+                      <div className="hidden md:block text-right">
+                        <div className="text-sm font-medium text-white">{user.fullname}</div>
+                        <div className="text-xs text-white/60">{user.email}</div>
+                      </div>
+                        <NavLink to={`/dashboard/profil/${user.username}`}>
+                          <img
+                            src={user.img ? `/api/usermanagement/${user.img}` : DefaultAvatar}
+                            alt={`${user.fullname}'s avatar`}
+                            className="h-12 w-12 rounded-full object-cover ring-2 ring-white/20 cursor-pointer hidden md:block"
+                            onError={(e) => {
+                              e.target.src = DefaultAvatar;
+                            }}
+                          />
+                        </NavLink>
+                    </div>
+                  )
+
+              }
             </div>
-              <NavLink to={`/dashboard/profil/${user.username}`}>
-                <img
-                  src={user.img ? `http://localhost:8001/${user.img}` : DefaultAvatar}
-                  alt={`${user.fullname}'s avatar`}
-                  className="h-12 w-12 rounded-full object-cover ring-2 ring-white/20 cursor-pointer hidden md:block"
-                  onError={(e) => {
-                    e.target.src = DefaultAvatar;
-                  }}
-                />
-              </NavLink>
-          </div>
-        </div>
       </div>
     </nav>
   );

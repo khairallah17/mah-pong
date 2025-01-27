@@ -6,8 +6,10 @@ import { useParams } from 'react-router-dom';
 import { jwtDecode } from "jwt-decode";
 import '../i18n';
 import { useTranslation } from 'react-i18next';
+import { useAuthContext } from '../hooks/useAuthContext';
 
 export const Statistics = () => {
+
   const { t } = useTranslation();
   const [stats, setStats] = useState([
     { label: 'Total Games', value: '...', icon: <Gamepad2 size={20} />, color: 'from-blue-500 to-purple-500' },
@@ -19,23 +21,26 @@ export const Statistics = () => {
   const [weeklyPerformance, setWeeklyPerformance] = useState([0, 0, 0, 0, 0, 0, 0]);
   const [loading, setLoading] = useState(true);
   
+  const { authtoken } = useAuthContext()
+
   const params = useParams();
-  const token = JSON.parse(localStorage.getItem('authtoken')).access;
-  const currentUser = jwtDecode(token).username;
+  
+  const currentUser = jwtDecode(authtoken).username;
   const username = params.username || currentUser;
 
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const response = await fetch(`http://localhost:8000/api/player-stats/${username}/`, {
+        const response = await fetch(`/api/game/api/player-stats/${username}/`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
+            'Authorization': `Bearer ${authtoken}`
           }
         });
         const data = await response.json();
-        const totalGames = data.wins + data.losses;
+        console.log("STATS ==> ", data)
+        const totalGames = data?.wins + data?.losses;
         const winRate = totalGames > 0 ? Math.round((data.wins / totalGames) * 100) : 0;
         const eloRating = data.elo ?? 0;
         const dataWins = data.wins ?? 0;
@@ -45,7 +50,7 @@ export const Statistics = () => {
         setStats([
           {
             label: t('Total Games'),
-            value: totalGames.toString(),
+            value: `${totalGames || "0"}`,
             icon: <Gamepad2 size={20} />,
             color: 'from-blue-500 to-purple-500'
           },
@@ -88,7 +93,7 @@ export const Statistics = () => {
     fetchStats();
     const interval = setInterval(fetchStats, 10000);
     return () => clearInterval(interval);
-  }, [username, token]);
+  }, [username, authtoken]);
 
   return (
     <div className="space-y-6">

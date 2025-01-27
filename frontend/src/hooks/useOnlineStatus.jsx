@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import { useEffect } from 'react';
 
 const useOnlineStatus = () => {
@@ -64,3 +65,5 @@ const useOnlineStatus = () => {
 
 
 export default useOnlineStatus;
+=======
+>>>>>>> master
