@@ -15,42 +15,36 @@ export const GameModes = () => {
       id: '3d-mode',
       title: t('3d mode'),
       path: '/dashboard/game',
-      slideIndex: 1, // Index for 3D Games slide
+      slideIndex: 1,
       icon: <Swords className="w-6 h-6" />,
       description: t('Play in a 3D environment: Remote or AI'),
       color: 'from-cyan-400 to-blue-500',
       stats: {
-        players: '888',
         difficulty: t('Medium'),
-        xpMultiplier: '1.5x'
       }
     },
     {
       id: '2d-mode',
       title: t('2d mode'),
       path: '/dashboard/game',
-      slideIndex: 0, // Index for 2D Games slide
+      slideIndex: 0,
       icon: <Gamepad2 className="w-6 h-6" />,
       description: t('Play in a 2D environment: Remote or AI'),
       color: 'from-teal-400 to-green-500',
       stats: {
-        players: '777',
         difficulty: t('Medium'),
-        xpMultiplier: '1.25x'
       }
     },
     {
       id: 'tournament',
       title: t('Tournament'),
       path: '/dashboard/game',
-      slideIndex: 2, // Index for Tournament slide
+      slideIndex: 2,
       icon: <Trophy className="w-6 h-6" />,
       description: t('Join competitive tournaments'),
       color: 'from-violet-400 to-purple-500',
       stats: {
-        players: '456',
         difficulty: t('Expert'),
-        xpMultiplier: '3x'
       }
     }
   ];
@@ -64,24 +58,12 @@ export const GameModes = () => {
 
   return (
     <div>
-      {/* Header Section */}
       <div className="mb-8 text-center">
         <h2 className="text-3xl font-bold bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">
           {t('Game Modes')}
         </h2>
-        <div className="mt-2 flex items-center justify-center gap-8">
-          <div className="flex items-center gap-2">
-            <Users size={16} className="text-blue-400" />
-            <span className="text-sm text-gray-400">5,046 Online</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Clock size={16} className="text-green-400" />
-            <span className="text-sm text-gray-400">{t('Next Tournament: 2h 15m')}</span>
-          </div>
-        </div>
       </div>
 
-      {/* Game Modes Grid */}
       <div className="grid grid-cols-2 gap-4">
         {gameModes.map((mode) => (
           <button
@@ -108,10 +90,22 @@ export const GameModes = () => {
                   {mode.icon}
                 </div>
                 <div className="flex items-center gap-1">
-                  <Star size={14} className="text-yellow-400 fill-yellow-400" />
-                  <span className="text-sm font-semibold text-yellow-400">
-                    {mode.stats.xpMultiplier}
-                  </span>
+                    {mode.id === '2d-mode' && (
+                      <Star size={14} className="text-yellow-400 fill-yellow-400" />
+                    )}
+                    {mode.id === '3d-mode' && (
+                      <>
+                        <Star size={14} className="text-yellow-400 fill-yellow-400" />
+                        <Star size={14} className="text-yellow-400 fill-yellow-400" />
+                      </>
+                    )}
+                    {mode.id === 'tournament' && (
+                      <>
+                        <Star size={14} className="text-yellow-400 fill-yellow-400" />
+                        <Star size={14} className="text-yellow-400 fill-yellow-400" />
+                        <Star size={14} className="text-yellow-400 fill-yellow-400" />
+                      </>
+                    )}
                 </div>
               </div>
 
@@ -138,7 +132,6 @@ export const GameModes = () => {
         ))}
       </div>
 
-      {/* Action Button */}
       {selectedMode && (
         <div className="mt-8">
           <button

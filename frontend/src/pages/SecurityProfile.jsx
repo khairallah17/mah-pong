@@ -31,7 +31,7 @@ export default function Security() {
   const fetchQRCode = async () => {
     try {
       const token = JSON.parse(localStorage.getItem('authtoken')).access;
-      const response = await axios.get('/api/usermanagement/api/2fa/setup/', {
+      const response = await axios.get('http://localhost:8001/api/2fa/setup/', {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -99,7 +99,7 @@ export default function Security() {
       const parsed = JSON.parse(token);
       const accessToken = parsed.access;
 
-      const response = await axios.post('/api/usermanagement/api/change-password/', 
+      const response = await axios.post('http://localhost:8001/api/change-password/', 
         { old_password: oldPassword, new_password: newPassword, confirm_password: confirmPassword },
         {
           headers: {
@@ -172,7 +172,7 @@ export default function Security() {
 
     try {
       const token = JSON.parse(localStorage.getItem('authtoken')).access;
-      const response = await axios.post('/api/usermanagement/api/2fa/verify/', 
+      const response = await axios.post('http://localhost:8001/api/2fa/verify/', 
         { otp: mfaCode },
         {
           headers: {
@@ -211,7 +211,7 @@ export default function Security() {
   const handleDisable2FA = async () => {
     try {
       const token = JSON.parse(localStorage.getItem('authtoken')).access;
-      const response = await axios.post('/api/usermanagement/api/2fa/disable/', 
+      const response = await axios.post('http://localhost:8001/api/2fa/disable/', 
         {},
         {
           headers: {
