@@ -46,13 +46,15 @@ class notificationsConsumer(AsyncWebsocketConsumer):
         logger.warning(f"user_channels: {notif_user_channels}")
         for user in users:
             logger.warning(f"User: {user}")
-            await self.create_notification(message, user, link)
+            notif = await self.create_notification(message, user, link)
             if user in notif_user_channels:
                 logger.warning(f"Sending notification to user: {user}")
                 await self.channel_layer.send(notif_user_channels[user], {
                     "type": "notification",
+                    "id": notif.id,
                     "message": message,
-                    "link": link
+                    "link": link,
+                    "created_at": str(notif.created_at)
                 })
             else:
                 logger.warning(f"User {user} not found in notif_user_channels")
@@ -70,8 +72,8 @@ class notificationsConsumer(AsyncWebsocketConsumer):
 
     @database_sync_to_async
     def create_notification(self, message, user, link):
-        Notification.objects.create(message=message, user=user, link=link)
-        return True
+        notification = Notification.objects.create(message=message, user=user, link=link)
+        return notification
     
     @database_sync_to_async
     def mark_notifications_as_read(self):
@@ -83,8 +85,10 @@ class notificationsConsumer(AsyncWebsocketConsumer):
         message = event['message']
         await self.send(text_data=json.dumps({
             'type': 'notification',
+            'id': event.get('id', ''),
             'message': message,
-            'link': event.get('link', '')
+            'link': event.get('link', ''),
+            'created_at': event.get('created_at', '')
         }))
 
     async def disconnect(self, code):

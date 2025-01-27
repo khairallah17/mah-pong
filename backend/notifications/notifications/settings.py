@@ -158,7 +158,7 @@ CACHES = {
 }
 
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",
-    "https://localhost:5173",
+    "http://localhost",
+    "http://localhost:3000",
 ]
 

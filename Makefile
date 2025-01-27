@@ -1,30 +1,18 @@
 
-all: packs makemigrations migrate runserver #runfront
+all: up
 
-# runfront:
-# 	( cd auth_front && npm start )
-packs:
-	( python -m pip install djangorestframework )
-	( python -m pip install django-cors-headers )
-	( python -m pip install djangorestframework-simplejwt )
-	( python -m pip install django-allauth )
-	( python -m pip install requests )
+up:
+	docker-compose up --build -d
 
-makemigrations:
-	( cd auth_backend && python manage.py makemigrations )
+down:
+	docker-compose down -t 0
 
-migrate:
-	( cd auth_backend && python manage.py migrate )
+clean:
+	docker-compose down -t 0
+	docker system prune -af
 
-runserver:
-	( cd auth_backend && python manage.py runserver)
-
-fclean:
-	rm -rf auth_backend/*.sqlite3
-	rm -rf auth_backend/api/__pycache__
-	rm -rf auth_backend/auth_backend/__pycache__
-	rm -rf auth_backend/api/migrations/__pycache__
-	rm -rf auth_backend/api/migrations/0*_initial.py
+fclean: clean
+	docker volume prune -f
 
 re: fclean all
 
@@ -33,22 +21,9 @@ re: fclean all
 #     @sh -c "$$(curl -fsSL https://42tools.me/install.sh)"
 #     # @echo "Fetching and installing..."
 
-reactpacks:
-	( npm install axios dayjs jwt-decode sweetalert2 react-router-dom )
-
-install:
-	( sh -c "$$(curl -fsSL https://42tools.me/install.sh)" )
-
-startfront:
-	(cd auth_front && npm start)
-
 push:
 	git add .
 	git commit -m "auto-commit"
 	git push
 
 p: push
-
-r: reactpacks
-
-sf: startfront
