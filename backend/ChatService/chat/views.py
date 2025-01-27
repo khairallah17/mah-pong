@@ -39,6 +39,7 @@ class ApiUsers(APIView):
             username = payload.get('username')
             email = payload.get('email')
             fullname = payload.get('fullname')
+            is_online = payload.get('is_online')
 
             if not username:
                 raise jwt.InvalidTokenError("Username not found in token.")
@@ -61,7 +62,8 @@ class ApiUsers(APIView):
                             'username': friend['username'],
                             'fullname': friend.get('fullname', ''),
                             'email': friend['email'],
-                            'img': friend.get('img', 'profile_pics/default.jpg')
+                            'img': friend.get('img', 'profile_pics/default.jpg'),
+                            'is_online': friend.get('is_online')
                         }
                     )
 
@@ -73,6 +75,7 @@ class ApiUsers(APIView):
                     'username': username,
                     'email': email,
                     'fullname': fullname,
+                    'is_online': is_online
                 }
             )
 

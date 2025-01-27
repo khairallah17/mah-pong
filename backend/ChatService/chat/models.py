@@ -8,6 +8,7 @@ class CustomUser(AbstractUser):
     fullname = models.CharField(max_length=250)
     username = models.CharField(max_length=50, unique=True)
     email = models.EmailField(unique=True)
+    is_online = models.BooleanField(default=False)
     img = models.ImageField(
         upload_to='profile_pics/',  # Store images in a profile_pics/ directory
         default='profile_pics/default.jpg'

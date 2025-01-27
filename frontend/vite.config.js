@@ -11,7 +11,8 @@ export default defineConfig(({ mode }) => {
       port: 5173,
       watch: {
         usePolling: true
-      }
+      },
+      allowedHosts: ['frontend', 'localhost', '0.0.0.0'],
     },
     define: {
       // Enable env variables

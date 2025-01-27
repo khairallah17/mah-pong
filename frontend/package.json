@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@lottiefiles/react-lottie-player": "^3.6.0",
     "axios": "^1.7.9",
     "chart.js": "^4.4.7",
     "country-flag-icons": "^1.5.14",
@@ -19,6 +20,7 @@
     "i18next-http-backend": "^3.0.1",
     "js-cookie": "^3.0.5",
     "jwt-decode": "^4.0.0",
+    "lottie-react": "^2.4.1",
     "lucide-react": "^0.460.0",
     "motion": "^11.15.0",
     "qrcode.react": "^4.2.0",
