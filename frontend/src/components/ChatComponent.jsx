@@ -15,8 +15,11 @@ import { Player, Controls } from "@lottiefiles/react-lottie-player";
 
 import useChatContext from "../hooks/useChatContext";
 import { useAuthContext } from "../hooks/useAuthContext";
+import '../i18n';
+import { useTranslation } from 'react-i18next';
 
 const Chat = () => {
+    const { t } = useTranslation();
     const url_host = import.meta.env.VITE_HOST_URL
     const { user, authtoken } = useAuthContext()
     const { username } = user
@@ -107,12 +110,12 @@ const Chat = () => {
                 `}
       >
         <div className="flex flex-col gap-2 pt-4 px-4">
-          <h1 className="font-bold text-white text-xl pl-1 my-1">Messages</h1>
+          <h1 className="font-bold text-white text-xl pl-1 my-1">{t('Messages')}</h1>
           <div className="flex gap-2 p-1 items-center bg-white   rounded-full ">
             <IoSearchOutline className=" text-black text-2xl mx-2" />
             <input
               type="text"
-              placeholder="Search"
+              placeholder={t("Search")}
               className="rounded-lg p-1 px-3 w-full outline-none "
             />
           </div>
@@ -140,7 +143,7 @@ const Chat = () => {
               ? lastMessage.length > 20
                 ? lastMessage.substring(0, 20) + "..."
                 : lastMessage
-              : "No messages yet";
+              : t("No messages yet");
 
             const isOnline = onlineStatuses[user.id];
 
@@ -226,14 +229,14 @@ const Chat = () => {
                     {selectedUserId
                       ? users.find((user) => user.id === selectedUserId)
                           ?.fullname
-                      : "Select a user"}
+                      : t("Select a user")}
                   </p>
                   <p
                     className={`font-medium ${
                       onlineStatuses[selectedUserId] ? "text-green-600" : "text-red-600"
                     }`}
                   >
-                    {onlineStatuses[selectedUserId] ? "Online" : "Offline"}
+                    {onlineStatuses[selectedUserId] ? t("Online") : t("Offline")}
                   </p>
                 </div>
               </div>
@@ -286,7 +289,7 @@ const Chat = () => {
                           className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
                           onClick={() => startGame(msg.sender)}
                         >
-                          Play Now
+                          {t('Play Now')}
                         </button>
                       </div>
                     ) : (
@@ -369,7 +372,7 @@ const Chat = () => {
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
                     onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
-                    placeholder="Type your message here..."
+                    placeholder={t("Type your message here...")}
                     className="w-full  focus:outline-none bg-transparent text-white focus-none"
                   />
                   <RiSendPlaneFill
@@ -399,7 +402,7 @@ const Chat = () => {
                 </button>
                 <div className="self-center">
                   <h1 className="font-bold text-3xl text-white text-center ">
-                    Details
+                    {t('Details')}
                   </h1>
                 </div>
               </div>
