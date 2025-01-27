@@ -242,7 +242,7 @@ const Chat = () => {
               />
             </div>
 
-            <div id="message" className="overflow-auto h-full max-h-full   grid  px-4 gap-2">
+            <div id="message" className="overflow-auto h-full w-full pl-4">
               {messages.length === 0 ? (
                 <div className="flex w-full h-full relative justify-center items-center">
                   <Player
@@ -266,9 +266,9 @@ const Chat = () => {
                 messages.map((msg, index) => (
                   <div
                     key={index}
-                    className={`p-2 rounded-2xl flex flex-col break-words px-3 w-fit ${
+                    className={`block p-2 mb-2 rounded-2xl break-words px-3 w-fit ${
                       msg.sender === username
-                        ? "place-self-end h-fit bg-blue-600 text-white"
+                        ? "ml-auto h-fit bg-blue-600 text-white"
                         : "bg-gray-700 h-fit text-white"
                     }`}
                     style={{
