@@ -9,7 +9,7 @@ export const ChatContext = createContext();
 const ChatContextProvider = ({ children }) => {
 
     const { wsManager } = useWebsocketContext()
-
+    const websocket_url = import.meta.env.VITE_WEBSOCKET_URL
     const { authtoken } = useAuthContext()
     const { user } = useAuthContext()
     const { username } = user
@@ -121,7 +121,7 @@ const ChatContextProvider = ({ children }) => {
             socketRef.current.close();  
         }
 
-        const chatSocket = new WebSocket(`ws://localhost/api/chat/ws/chat/?user_id=${userId}&token=${authtoken}`);
+        const chatSocket = new WebSocket(`${websocket_url}/api/chat/ws/chat/?user_id=${userId}&token=${authtoken}`);
 
         socketRef.current = chatSocket;
 

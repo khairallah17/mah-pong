@@ -236,5 +236,17 @@
     "Wed": "Mer", 
     "Thu": "Jeu", 
     "Fri": "Ven", 
-    "Sat": "Sam"
+    "Sat": "Sam",
+    "Confirm": "Confirmer",
+
+    "______________comment": "Chat Page Translator EN",
+    "Messages": "Messages",
+    "Search": "Rechercher",
+    "No messages yet": "Pas encore de messages",
+    "Play Now": "Jouer maintenant",
+    "Type your message here...": "Écrivez votre message ici...",
+    "Online": "En ligne",
+    "Offline": "Hors ligne",
+    "Select a user": "Sélectionner un utilisateur",
+    "Details": "Détails"
 }

@@ -5,10 +5,11 @@ import { Navigate, useNavigate } from "react-router-dom";
 export const WebSocketContext = createContext();
 
 export const WebSocketProvider = ({ children }) => {
+  const websocket_url = import.meta.env.VITE_WEBSOCKET_URL
   const navigate = useNavigate();
   const [notifications, setNotifications] = useState([]);
   const accessToken = JSON.parse(localStorage.getItem('authtoken'))?.access;
-  const webSocketUrl = 'ws://localhost/api/notifications/ws/notifications/?token=' + accessToken;
+  const webSocketUrl = `${websocket_url}/api/notifications/ws/notifications/?token=` + accessToken;
   const [wsManager, setWsManager] = useState(null);
 
   useEffect(() => {
@@ -23,7 +24,7 @@ export const WebSocketProvider = ({ children }) => {
         if (newToken) {
           localStorage.setItem('authtoken', JSON.stringify(newToken));
           wsManagerInstance.close();
-          wsManagerInstance.setUrl('ws://localhost/api/notifications/ws/notifications/?token=' + newToken?.access);
+          wsManagerInstance.setUrl(`${websocket_url}/api/notifications/ws/notifications/?token=` + newToken?.access);
           wsManagerInstance.connect(handleMessage);
           console.log('WebSocket connection established with new token');
         } else {

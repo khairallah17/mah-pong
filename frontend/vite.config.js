@@ -17,7 +17,9 @@ export default defineConfig(({ mode }) => {
     define: {
       // Enable env variables
       '__VITE_GCLIENT_ID__': `"${env.VITE_GCLIENT_ID}"`,
-      '__VITE_CLIENT_ID__': `"${env.VITE_CLIENT_ID}"`
+      '__VITE_CLIENT_ID__': `"${env.VITE_CLIENT_ID}"`,
+      '__VITE_HOST_URL__': `"${env.VITE_HOST_URL}"`,
+      '__VITE_WEBSOCKET_URL__': `"${env.VITE_WEBSOCKET_URL}"`
     }
   }
 })

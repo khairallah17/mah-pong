@@ -60,6 +60,11 @@ CLIENT_ID = os.environ.get('CLIENT_ID')
 CLIENT_SECRET = os.environ.get('CLIENT_SECRET')
 GCLIENT_ID = os.environ.get('GCLIENT_ID')
 GCLIENT_SECRET = os.environ.get('GCLIENT_SECRET')
+HOST_URL = os.environ.get('VITE_HOST_URL')
+
+
+print(HOST_URL)
+
 
 
 # """
@@ -214,7 +219,7 @@ class RegisterationView(generics.CreateAPIView):
 # Creating Views For Google Login/Signup User using dj-rest-auth's Package
 class GoogleLoginView(SocialLoginView):
     adapter_class = GoogleOAuth2Adapter
-    callback_url = "http://localhost/"
+    callback_url = f"{HOST_URL}"f"/"
     client_class = OAuth2Client
     
 def generate_temp_password(length=12):
@@ -228,7 +233,7 @@ class GoogleLoginCallback(APIView):
     def get(self, request):
         code = request.GET.get("code")
         if code is None:
-            return redirect("http://localhost/login")
+            return redirect(f"{HOST_URL}"f"/login")
     
         token_url  = "https://oauth2.googleapis.com/token"
         try:
@@ -236,27 +241,27 @@ class GoogleLoginCallback(APIView):
                 "code"          : code,
                 "client_id"     : GCLIENT_ID,
                 "client_secret" : GCLIENT_SECRET,
-                "redirect_uri"  : "http://localhost/api/usermanagement/api/v2/auth/googlelogin/callback/",
+                "redirect_uri"  : f"{HOST_URL}"f"/api/usermanagement/api/v2/auth/googlelogin/callback/",
                 "grant_type"    : "authorization_code"
             }
 
 
             token_response = requests.post(token_url, data = token_data)
             if not token_response.ok:
-                return redirect("http://localhost/login")
+                return redirect(f"{HOST_URL}"f"/login")
         
             token_JSON = token_response.json()
             if 'access_token' not in token_JSON:
-                return redirect("http://localhost/login")
+                return redirect(f"{HOST_URL}"f"/login")
 
             getInfo = requests.get("https://www.googleapis.com/oauth2/v2/userinfo", params = {'access_token': token_JSON["access_token"]}) # Getting Token To Extraction User Data
             if not getInfo.ok:
-                return redirect("http://localhost/login")
+                return redirect(f"{HOST_URL}"f"/login")
             
             email = getInfo.json()["email"]
             username = getInfo.json()['email'].split('@')[0]
         except Exception as e:
-            return redirect("http://localhost/login?error=authentication_failed")
+            return redirect(f"{HOST_URL}"f"/login?error=authentication_failed")
         
         #telechargit imaghe dyal google
         urllib.request.urlretrieve(getInfo.json()['picture'], "./media/" + username + ".jpg")
@@ -292,7 +297,7 @@ class GoogleLoginCallback(APIView):
         access_token = str(refresh.access_token)
         refresh_token = str(refresh)
         
-        url_redirect = (f"http://localhost/google-callback"
+        url_redirect = (f"{HOST_URL}"f"/google-callback"
                         f"?access_token={access_token}"
                         f"&is_password_need={is_password_need}")
 
@@ -325,7 +330,7 @@ class Login42Auth(APIView):
     def get(self, request):
         code = request.GET.get('code')
         if code is None:
-            return redirect("http://localhost/login")
+            return redirect(f"{HOST_URL}"f"/login")
         
         # Sending request to 42 API to Get Token
         get_Token_url = "https://api.intra.42.fr/oauth/token"
@@ -335,29 +340,29 @@ class Login42Auth(APIView):
                 'code'          : code,
                 "client_id"     : CLIENT_ID,
                 "client_secret" : CLIENT_SECRET,
-                "redirect_uri"  : "http://localhost/api/usermanagement/api/42login/callback/",
+                "redirect_uri"  : f"{HOST_URL}/api/usermanagement/api/42login/callback/",
                 "grant_type"    : "authorization_code"
             }
         
             # Sendding Now Request to 42 API to getting return the Access_Token
             request_token = requests.post(get_Token_url, data = Token_data)
             if not request_token.ok:
-                return redirect("http://localhost/login")
+                return redirect(f"{HOST_URL}"f"/login")
         
             token_json = request_token.json()
             if 'access_token' not in token_json:
-                return redirect("http://localhost/login")
+                return redirect(f"{HOST_URL}"f"/login")
 
             # extracting information From Token Now Hnaya
             getInfoUser = requests.get("https://api.intra.42.fr/v2/me", headers={'Authorization': f'Bearer {token_json["access_token"]}'})
             if not getInfoUser.ok:
-                return redirect("http://localhost/login")
+                return redirect(f"{HOST_URL}"f"/login")
         
 
             username = getInfoUser.json().get('login')
             email = getInfoUser.json().get('email')
         except Exception as e:
-            return redirect("http://localhost/login?error=authentication_failed")
+            return redirect(f"{HOST_URL}"f"/login?error=authentication_failed")
         
         #telechargit imaghe dyal intra
         urllib.request.urlretrieve(getInfoUser.json().get('image')['link'], "./media/" + username + ".jpg")
@@ -391,7 +396,7 @@ class Login42Auth(APIView):
         access_token = str(refresh.access_token)
         refresh_token = str(refresh)
 
-        url_redirect = (f"http://localhost/42intra-callback" 
+        url_redirect = (f"{HOST_URL}"f"/42intra-callback" 
                             f"?access_token={access_token}"
                             f"&is_password_need={is_password_need}")
 
@@ -461,7 +466,7 @@ def send_resetpass(request): #sending email
         user = User.objects.get(email=email)
         uidb64 = urlsafe_base64_encode(force_bytes(str(user.id)))
         gen_token = account_activation_token.make_token(user)
-        reset_url = f"/api/usermanagement/api/password-reset/{uidb64}/{gen_token}/"
+        reset_url = f"{HOST_URL}/api/usermanagement/api/password-reset/{uidb64}/{gen_token}/"
         
         subject = 'Password Reset Request'
         message = f"""
@@ -497,15 +502,15 @@ class   Confirm_reset_Password(View):
             
             if not account_activation_token.check_token(user, token): # checking if the token are valid or not
                 return HttpResponseRedirect(
-                    f"http://localhost/password-reset/error"
+                    f"{HOST_URL}"f"/password-reset/error"
                 ) # if the token are not valid kan redirectih l error front page
             # o ila kan Token valide so khassni nsift bach ibdel password
             return HttpResponseRedirect(
-                    f"http://localhost/password-reset/confirm?uidb64={uidb64}&token={token}" # hady katsma Query Method kay3ni kansifto lfront o kaninjikti fih <uidb64> o <token>
+                    f"{HOST_URL}"f"/password-reset/confirm?uidb64={uidb64}&token={token}" # hady katsma Query Method kay3ni kansifto lfront o kaninjikti fih <uidb64> o <token>
             )
         except(TypeError, ValueError, User.DoesNotExist):
             return HttpResponseRedirect(
-                f"http://localhost/password-reset/error" # hnaya aya error jani awla ila makansh user kanredirectih lpage error
+                f"{HOST_URL}"f"/password-reset/error" # hnaya aya error jani awla ila makansh user kanredirectih lpage error
             )
 
     def post(self, request, uidb64, token):
