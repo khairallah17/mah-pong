@@ -128,16 +128,13 @@ export default function Pvp2d() {
         };
         wsRef.current.onmessage = async (event) => {
           const message = JSON.parse(event.data);
-          console.log('WebSocket message:', message);
           if (message.type === 'token_expired') {
-            console.log('Token expired, refreshing...');
             const newToken = await refreshToken();
             if (newToken) {
               localStorage.setItem('authtoken', JSON.stringify(newToken));
               wsManagerInstance.close();
               wsManagerInstance.setUrl(`${websocket_url}/api/notifications/ws/notifications/?token=` + newToken?.access);
               wsManagerInstance.connect(handleMessage);
-              console.log('WebSocket connection established with new token');
             } else {
               localStorage.removeItem('authtoken');
               navigate('/login');
@@ -161,7 +158,6 @@ export default function Pvp2d() {
           }
         };
         wsRef.current.onclose = () => {
-          console.log('WebSocket connection closed');
           token = localStorage.getItem('authtoken');
         };
         wsRef.current.onerror = (e) => console.error('WebSocket error:', e);

@@ -36,9 +36,8 @@ const SignupForm = ({setSwap}) => {
                 data.password,
                 data.confPassword
             )
-
-            if (res)
-                setSwap()
+            
+            setSwap()
 
         } catch (error) {
             console.log("signup error ==> ", error.message)

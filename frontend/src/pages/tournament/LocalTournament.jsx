@@ -109,24 +109,24 @@ export default function LocalTournament() {
   };
 
   return (
-    <div className="w-full h-full justify-between flex flex-col bg-[#1a1464] p-8 pt-24">
+    <div className="w-full h-full justify-between flex flex-col p-8 pt-24">
       <div className="mx-auto w-full">
         {!tournamentStarted ? (
           <div className="text-center mb-12">
-            <h1 className="text-6xl font-bold text-white tracking-wider zen-dots" style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.3)' }}>
+            <h1 className="text-6xl font-bold tracking-wider zen-dots" style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.3)' }}>
               {t('LOCAL TOURNAMENT')}
             </h1>
-            <div className="w-48 h-1 bg-white mx-auto mt-2"></div>
+            <div className="w-48 h-1 mx-auto mt-2"></div>
             <div className="mt-8 space-y-4">
               {[t('player')+'1', t('player')+'2', t('player')+'3', t('player')+'4'].map((player, index) => (
-                <div key={index} className="flex items-center justify-center space-x-2">
+                <div key={index} className="flex items-center justify-center bg-transparent space-x-2">
                   <input
                     type="text"
                     name={player}
                     value={players[player]}
                     onChange={handleInputChange}
                     placeholder={`${t('Enter alias for')} ${player}`}
-                    className="px-4 py-2 bg-gray-200 rounded-lg w-1/2"
+                    className="px-4 py-2 text-black rounded-lg w-1/2"
                   />
                 </div>
               ))}
@@ -149,8 +149,8 @@ export default function LocalTournament() {
             </div>
 
             {/* Tournament Bracket */}
-            <div className="flex justify-between items-center text-white">
-              <div className="flex-1">
+            <div className="flex flex-wrap justify-between items-center text-white">
+              <div className="flex-grow-1">
                 <div className="grid grid-cols-2 gap-36 mr-20">
                   {/* Round 1 */}
                   <div className="space-y-16 mt-16">
@@ -205,7 +205,7 @@ export default function LocalTournament() {
               </div>
 
               {/* Champion Section */}
-              <div className="w-[30%] flex flex-col items-center">
+              <div className="w-full flex flex-col items-center">
                 <div className="mb-4">
                   <Trophy className="w-24 h-24 text-yellow-400" />
                   <div className="text-yellow-400 text-2xl font-bold text-center mt-2">CHAMPION</div>

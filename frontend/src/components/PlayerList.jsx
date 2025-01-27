@@ -145,7 +145,7 @@ export const PlayerList = () => {
     }
 
     return (
-      <div className="space-y-2 max-h-[calc(100vh-20rem)] overflow-y-auto custom-scrollbar">
+      <div className="space-y-2 max-h-[calc(100vh-20rem)] overflow-y-auto ">
         {filteredFriends.map((friend) => (
           <div key={friend.id} className="flex items-center justify-between p-3 hover:bg-blue-500/5 rounded-lg transition-all border border-transparent hover:border-blue-500/20">
             <div className="flex items-center gap-3">
