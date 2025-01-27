@@ -21,7 +21,9 @@ import jwt
 
 logger = logging.getLogger(__name__)
 
-
+class test(APIView):
+    def get(self, request):
+        return Response({"message":"working"})
 
 class ApiUsers(APIView):
 
@@ -51,6 +53,8 @@ class ApiUsers(APIView):
             # Store users in the Chat service's database
             for user_data in users_data:
                 for friend in user_data['friends']:
+                    logger.warning(f"FRIENDS ==> {friend}")
+                    logger.warning(f"FRIENDS ==> {User.objects}")
                     User.objects.update_or_create(
                         id=friend['id'],
                         defaults={
@@ -61,6 +65,7 @@ class ApiUsers(APIView):
                         }
                     )
 
+            logger.warning(f"BEFORE CURRENT USER")
             # Update or create the current user
             current_user = User.objects.get_or_create(
                 id=user_id,
@@ -70,6 +75,8 @@ class ApiUsers(APIView):
                     'fullname': fullname,
                 }
             )
+
+            logger.warning(f"AFTER CURRENT USER {current_user}")
 
             return Response(user_data.get('friends', []))
         except requests.ConnectionError as e:

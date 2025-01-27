@@ -52,7 +52,7 @@ class Message(models.Model):
     sender = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="message_sender")
     receiver = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="message_receiver")
     content = models.TextField()
-    message_type = models.TextField()
+    message_type = models.CharField(max_length=20, blank=True, null=True)
     timestamp = models.DateTimeField(auto_now_add=True)
 
     seen = models.BooleanField(default=False)

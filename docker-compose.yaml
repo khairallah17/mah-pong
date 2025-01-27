@@ -14,13 +14,15 @@ services:
     env_file:
       - .env
     networks:
-      - microservices-network
+      - game-network
 
   redis:
     image: "redis:alpine"
     container_name: redis
     networks:
-      - microservices-network
+      - game-network
+      - chat-network
+      - notif-network
     expose:
       - 6379
 
@@ -36,7 +38,7 @@ services:
     env_file:
       - .env
     networks:
-      - microservices-network
+      - usermanagement-network
     volumes:
       - usermanagement_media_data:/app/media
 
@@ -68,7 +70,7 @@ services:
     env_file:
       - .env
     networks:
-      - microservices-network
+      - notif-network
 
   chat:
     container_name: chat
@@ -83,7 +85,8 @@ services:
     env_file:
       - .env
     networks:
-      - microservices-network
+      - chat-network
+      - usermanagement-network
 
   nginx:
     image: nginx:alpine
@@ -100,13 +103,15 @@ services:
       - notifications
       - chat
     networks:
+      - chat-network
+      - game-network
+      - notif-network
+      - usermanagement-network
       - microservices-network
 
   usermanagement_db:
     image: postgres:15-alpine
     container_name: usermanagement_db
-    expose:
-      - 5432
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password
@@ -114,13 +119,11 @@ services:
     volumes:
       - usermanagement_db_data:/var/lib/postgresql/data
     networks:
-      - microservices-network
+      - usermanagement-network
 
   game_db:
     image: postgres:15-alpine
     container_name: game_db
-    expose:
-      - 5432
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password
@@ -128,13 +131,11 @@ services:
     volumes:
       - game_db_data:/var/lib/postgresql/data
     networks:
-      - microservices-network
+      - game-network
 
   notif_db:
     image: postgres:15-alpine
     container_name: notif_db
-    expose:
-      - 5432
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password
@@ -142,7 +143,7 @@ services:
     volumes:
       - notif_db_data:/var/lib/postgresql/data
     networks:
-      - microservices-network
+      - notif-network
   
   chat_db:
     image: postgres:15-alpine
@@ -156,7 +157,7 @@ services:
     volumes:
       - chat_db_data:/var/lib/postgresql/data
     networks:
-      - microservices-network
+      - chat-network
 
 volumes:
   game_db_data:
@@ -173,4 +174,12 @@ volumes:
 
 networks:
   microservices-network:
+    driver: bridge
+  chat-network:
+    driver: bridge
+  game-network:
+    driver: bridge
+  notif-network:
+    driver: bridge
+  usermanagement-network:
     driver: bridge

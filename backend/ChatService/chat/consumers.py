@@ -17,6 +17,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         query_params = self._parse_query_params()
         # self.user_id = query_params.get('user_id', [None])[0]
         token = query_params.get('token', [None])[0]
+        logger.warning(f"TOKEN ==> {token}")
         self.username = self._decode_token(token)
         self.user = await self.get_user(username=self.username)
         self.room_group_name = f"chat_{self.user.id}"
@@ -140,12 +141,13 @@ class ChatConsumer(AsyncWebsocketConsumer):
         return conversation
 
     @database_sync_to_async
-    def create_message(self, sender, receiver_id, content, conversation):
+    def create_message(self, sender, receiver_id, content, conversation, message_type):
         return  Message.objects.create(
             sender=sender,
             receiver_id=receiver_id,
             content=content,
             conversation=conversation,
+            message_type= message_type
         )
 
     async def chat_message(self, event):

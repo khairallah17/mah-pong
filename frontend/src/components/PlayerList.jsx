@@ -8,6 +8,7 @@ import { useAuthContext } from '../hooks/useAuthContext';
 import useChatContext from '../hooks/useChatContext';
 
 export const PlayerList = () => {
+
   const navigate = useNavigate();
   const [friends, setFriends] = useState([]);
   const [loading, setLoading] = useState(true);

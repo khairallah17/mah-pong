@@ -11,6 +11,18 @@
   grid-template-rows: 100px 1fr;
 }
 
+::-webkit-scrollbar {
+  visibility: hidden;
+}
+
+::-webkit-scrollbar-track {
+  visibility: hidden;
+}
+
+::-webkit-scrollbar-thumb {
+  visibility: hidden;
+}
+
 .homepage {
   background-image: url("images/background.png");
 }

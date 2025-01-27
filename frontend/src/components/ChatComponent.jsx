@@ -11,25 +11,37 @@ import { CgBlock } from "react-icons/cg";
 import { CgUnblock } from "react-icons/cg";
 import { PiGameControllerFill } from "react-icons/pi";
 import React, { useState, useEffect, useRef } from "react";
-import axios from 'axios';
-import { jwtDecode } from "jwt-decode";
 
 import useChatContext from "../hooks/useChatContext";
 import { useAuthContext } from "../hooks/useAuthContext";
-import useWebsocketContext from "../hooks/useWebsocketContext";
 
 const Chat = () => {
-    const [users, setUsers] = useState([]);
-    const [messages, setMessages] = useState([]);
-    const [newMessage, setNewMessage] = useState("");
-    const [selectedUserId, setSelectedUserId] = useState(null);
-    const [loading, setLoading] = useState(false);
-    const socketRef = useRef(null);
-    const [hand, setHand] = useState(false);
-    const [isBlocked, setIsBlocked] = useState(false);
-    const accessToken = JSON.parse(localStorage.getItem('authtoken')).access;
-    const { username, fullname } = jwtDecode(accessToken);
-    const messagesEndRef = useRef(null);
+
+    const { user, authtoken } = useAuthContext()
+    const { username } = user
+
+    const { 
+        users, setUsers,
+        messages, setMessages,
+        newMessage, setNewMessage,
+        selectedUserId, setSelectedUserId,
+        loading, setLoading,
+        hand, setHand,
+        isBlocked, setIsBlocked,
+        handleClick,
+        fetchBlockStatus,
+        unblock,
+        block,
+        loadUsers,
+        loadConversation,
+        initializeWebSocket,
+        handleUserSelect,
+        handleSendMessage,
+        scrollToBottom,
+        socketRef,
+        messagesEndRef,
+        sendGameInvitation, formatTime
+     } = useChatContext()
 
     useEffect(() => {
         loadUsers();
@@ -47,181 +59,6 @@ const Chat = () => {
         scrollToBottom();
     }, [messages]);
 
-    const handleClick = () => {
-        console.log("is user blocker ====================>",isBlocked)
-        if (isBlocked) {
-            console.log("Unblocking user...");
-            unblock(selectedUserId);
-            setIsBlocked(false);
-        } else {
-            console.log("Blocking user...");
-            block(selectedUserId);
-            setIsBlocked(true);
-            // setIsBlocked(isBlocked)
-        }
-    };
-
-    const fetchBlockStatus = async (userId) => {
-            console.log("Fetching block status...");
-            const response = await axios.get(`http://localhost:8003/chat/api/block-status/${userId}/`, {
-                headers: {
-                    Authorization: `Bearer ${accessToken}`,
-                },
-            });
-            console.log("Block status response:", response.data.block_status);
-            setIsBlocked(response.data.block_status);
-    };
-    const unblock = async (userId) => {
-        try {
-            await axios.post(`http://localhost:8003/chat/api/block_user/${userId}/`, {
-                action: 'unblock'
-            }, {
-                headers: {
-                    'Authorization': `Bearer ${accessToken}`
-                }
-            });
-        } catch (error) {
-            console.error(error.response?.data?.error || 'Failed to block user');
-        }
-    };
-    
-    const block = async (userId) => {
-        try {
-            await axios.post(`http://localhost:8003/chat/api/block_user/${userId}/`, {
-                action: 'block'
-            }, {
-                headers: {
-                    'Authorization': `Bearer ${accessToken}`
-                }
-            });
-        } catch (error) {
-            console.error(error.response?.data?.error || 'Failed to block user');
-        }
-    };
-
-    const loadUsers = async () => {
-        try {
-            const response = await axios.get("http://localhost:8003/chat/api/users/", {
-                headers: {
-                    Authorization: `Bearer ${accessToken}`
-                },
-                withCredentials: true
-            });
-            console.log(response.data);
-            setUsers(response.data);
-        } catch (error) {
-            console.error("Error loading users:", error);
-        }
-    };
-
-    const loadConversation = async (userId) => {
-        setLoading(true);
-        try {
-            console.log("hette", userId);
-            const response = await axios.get(`http://localhost:8003/chat/api/conversation/${userId}/`, {
-                headers: {
-                    Authorization: `Bearer ${accessToken}`
-                },
-                withCredentials: true
-            });
-            console.log("all data",response.data)
-            setMessages(response.data.messages);
-        } catch (error) {
-            console.error("Error loading conversation:", error);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const initializeWebSocket = (userId) => {
-        if (socketRef.current) {
-            socketRef.current.close();  
-        }
-
-        const chatSocket = new WebSocket(`ws://localhost:8003/ws/chat/?user_id=${userId}&token=${accessToken}`);
-
-        socketRef.current = chatSocket;
-
-        chatSocket.onmessage = (e) => {
-            const data = JSON.parse(e.data);
-            console.log("received mesage =>> ", e.data)
-            if (data.type === "chat_message") {
-                setMessages((prev) => [...prev, data]);
-            } else if (data.type === "blocked") {
-                toast.error(data.content, {
-                    position: "top-right",
-                    autoClose: 5000,
-                    hideProgressBar: false,
-                    closeOnClick: false,
-                    pauseOnHover: true,
-                    draggable: true,
-                    progress: undefined,
-                    theme: "dark",
-                })
-            } else if (data.type === "game_invitation") {
-                setMessages((prev) => [
-                    ...prev,
-                    {
-                        content: (
-                            <div className="flex items-center space-x-2 p-2 border rounded-lg bg-blue-100">
-                                <p>{data.sender} has invited you to play a game!</p>
-                                <button
-                                    className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600"
-                                >
-                                    Play Now
-                                </button>
-                            </div>
-                        ),
-                        sender: data.sender,
-                        receiver: data.receiver,
-                        type: "game_invitation",
-                    },
-                ]);
-            }
-        };
-
-        chatSocket.onclose = () => {
-            console.error("Chat socket closed unexpectedly");
-        };
-    };
-
-    const handleUserSelect = (userId) => {
-        setSelectedUserId(userId);
-    };
-    
-    const handleSendMessage = () => {
-        if (newMessage.trim() !== "") {
-            if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
-                socketRef.current.send(JSON.stringify({
-                    message: newMessage,
-                    user_id: selectedUserId,
-                    message_type: "message",
-                }));
-                setNewMessage("");
-            }
-        }
-    };
-
-    const scrollToBottom = () => {
-        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    };
-
-    const sendGameInvitation = () => {
-        if (socketRef.current) {
-            socketRef.current.send(
-                JSON.stringify({
-                    type: "game_invitation",
-                    user_id: receiverId,
-                    message_type: "invite"
-                })
-            );
-        }
-    };    
-
-    const formatTime = (timestamp) => {
-        const date = new Date(timestamp);
-        return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }); 
-      };
 
     return (
         <div className="flex h-full py-[20px] w-full px-[0px] sm:px-0 relative"    >
@@ -266,12 +103,17 @@ const Chat = () => {
                     {users.map((user) => {
                         // console.log("User data:", user);
                         if (user.img.startsWith('http://usermanagement:8000')) {
-                            user.img = user.img.replace('usermanagement:8000', 'localhost:8001');
+                            user.img = user.img.replace('usermanagement:8000', 'localhost/api/usermanagement');
                         }
-                        console.log("user img", user.img)
                         const lastMessage = messages
                             .filter(msg => msg.sender === user.username || msg.receiver === user.username)
-                            .slice(-1)[0]?.content || "No messages yet";
+                            .slice(-1)[0]?.content;
+
+                        const displayedMessage = lastMessage 
+                            ? lastMessage.length > 20
+                                ? lastMessage.substring(0, 20) + "..."
+                                : lastMessage
+                            : "No messages yet";
 
                         return (
                             <div key={user.id}
@@ -288,7 +130,7 @@ const Chat = () => {
                                 {/* User Information */}
                                 <div className="md:flex flex-col">
                                     <p className="font-semibold">{user.fullname}</p>
-                                    <p className="text-sm text-gray-300">{lastMessage}</p>
+                                    <p className="text-sm text-gray-300">{displayedMessage}</p>
                                 </div>
                             </div>
                         );
@@ -328,7 +170,53 @@ const Chat = () => {
                         <MdInfoOutline onClick={()=> setHand(!hand)} className="text-[30px] cursor-pointer"/>
                 </div>
 
-                <div className="overflow-auto h-full justify-end px-4 gap-2 flex flex-col">
+
+                <div id="message" className="overflow-auto h-full grid px-4 gap-2">
+                    {messages.map((msg, index) => (
+                        <div 
+                            key={index} 
+                            className={`p-2 rounded-2xl flex flex-col break-words px-3 w-fit ${
+                                msg.sender === username 
+                                ? 'place-self-end bg-blue-600 text-white' 
+                                : 'bg-gray-700 text-white'
+                            }`}
+                            style={{ 
+                                maxWidth: "60%", 
+                                wordWrap: "break-word", 
+                                overflowWrap: "break-word", 
+                                wordBreak: "break-word" 
+                            }}
+                        >
+                            {msg.message_type === "invite" ? (
+                                <div className="game-invitation bg-blue-100 p-4 rounded-lg flex items-center justify-between">
+                                    <span>{msg.message}</span>
+                                    <button
+                                        className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+                                        onClick={() => startGame(msg.sender)}
+                                    >
+                                        Play Now
+                                    </button>
+                                </div>
+                            ) : (
+                                <p>{msg.content}</p>
+                            )}
+                            <div className="flex place-self-end justify-end gap-1 items-center">
+                                <p className="text-xs">{formatTime(msg.timestamp)}</p>
+                                <IoCheckmarkDoneOutline 
+                                    className={`text-sm ${msg.sender === username 
+                                        ? msg.seen
+                                            ? "text-green-600" 
+                                            : "text-gray-400"
+                                        : "hidden" 
+                                    }`}
+                                />
+                            </div>
+                        </div>
+                    ))}
+                    <div ref={messagesEndRef} />
+                </div>
+
+                {/* <div className="overflow-auto h-full justify-end px-4 gap-2 flex flex-col">
                     {messages.map((msg, index) => (
                         <div 
                             key={index} 
@@ -370,7 +258,7 @@ const Chat = () => {
                         </div>
                     ))}
                     <div ref={messagesEndRef} />
-                </div>
+                </div> */}
 
                 {/* Message Input */}
                 <div className=""> {/* send msg footer*/}
