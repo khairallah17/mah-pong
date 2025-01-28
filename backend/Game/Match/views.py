@@ -2,17 +2,17 @@ from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import generics, status
+import jwt
+from django.conf import settings
 from django.db.models import Q
-from .models import Tournament, Match, AchievementAssignment
-from .serializers import TournamentSerializer, MatchSerializer, PlayerStatsSerializer, AchievementAssignmentSerializer
-import requests
+from .models import Tournament, Match
+from .serializers import TournamentSerializer, MatchSerializer, PlayerStatsSerializer
 import logging
 logger = logging.getLogger(__name__)
 
 
 # ████████╗ ██████╗ ██╗   ██╗██████╗ ███╗   ██╗ █████╗ ███╗   ███╗███████╗███╗   ██╗████████╗    ██╗     ██╗███████╗████████╗
 # ╚══██╔══╝██╔═══██╗██║   ██║██╔══██╗████╗  ██║██╔══██╗████╗ ████║██╔════╝████╗  ██║╚══██╔══╝    ██║     ██║██╔════╝╚══██╔══╝
-#    ██║   ██║   ██║██║   ██║██████╔╝██╔██╗ ██║███████║██╔████╔██║█████╗  ██╔██╗ ██║   ██║       ██║     ██║███████╗   ██║   
 #    ██║   ██║   ██║██║   ██║██╔══██╗██║╚██╗██║██╔══██║██║╚██╔╝██║██╔══╝  ██║╚██╗██║   ██║       ██║     ██║╚════██║   ██║   
 #    ██║   ╚██████╔╝╚██████╔╝██║  ██║██║ ╚████║██║  ██║██║ ╚═╝ ██║███████╗██║ ╚████║   ██║       ███████╗██║███████║   ██║   
 #    ╚═╝    ╚═════╝  ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═══╝╚═╝  ╚═╝╚═╝     ╚═╝╚══════╝╚═╝  ╚═══╝   ╚═╝       ╚══════╝╚═╝╚══════╝   ╚═╝   
@@ -31,6 +31,24 @@ class TournamentList(generics.ListCreateAPIView):
 
 class PlayerMatchHistory(APIView):
     def get(self, request, username=None):
+        try:
+            auth_header = request.headers.get('Authorization')
+            if not auth_header:
+                return Response({"error": "Authorization header missing"}, status=400)
+
+            token = auth_header.split(' ')[1]
+            payload = jwt.decode(token, settings.SECRET_KEY, algorithms=['HS256'])
+            user_id = payload.get('user_id')
+            username = payload.get('username')
+            email = payload.get('email')
+            fullname = payload.get('fullname')
+
+            if not username or not user_id or not email or not fullname:
+                raise jwt.InvalidTokenError("invalid token.")
+        except jwt.InvalidTokenError as e:
+            return Response({'error': str(e)}, status=status.HTTP_401_UNAUTHORIZED)
+        except jwt.ExpiredSignatureError:
+            return Response({'error': 'Token expired'}, status=status.HTTP_401_UNAUTHORIZED)
         logger.warning("MATCH HISTORY API")
         matches = Match.objects.filter(Q(username1=username) | Q(username2=username))
         serializer = MatchSerializer(matches, many=True, context={'player': username})
@@ -47,6 +65,24 @@ class PlayerMatchHistory(APIView):
 
 class PlayerStats(APIView):
     def get(self, request, username=None):
+        try:
+            auth_header = request.headers.get('Authorization')
+            if not auth_header:
+                return Response({"error": "Authorization header missing"}, status=400)
+
+            token = auth_header.split(' ')[1]
+            payload = jwt.decode(token, settings.SECRET_KEY, algorithms=['HS256'])
+            user_id = payload.get('user_id')
+            username = payload.get('username')
+            email = payload.get('email')
+            fullname = payload.get('fullname')
+
+            if not username or not user_id or not email or not fullname:
+                raise jwt.InvalidTokenError("invalid token.")
+        except jwt.InvalidTokenError as e:
+            return Response({'error': str(e)}, status=status.HTTP_401_UNAUTHORIZED)
+        except jwt.ExpiredSignatureError:
+            return Response({'error': 'Token expired'}, status=status.HTTP_401_UNAUTHORIZED)
         if not username:
             return Response({'error': 'Username is required'}, status=status.HTTP_400_BAD_REQUEST)
         try:
@@ -80,25 +116,3 @@ class PlayerStats(APIView):
 # ██║   ██║╚════██║██╔══╝  ██╔══██╗    ██╔══██║██║     ██╔══██║██║██╔══╝  ╚██╗ ██╔╝██╔══╝  ██║╚██╔╝██║██╔══╝  ██║╚██╗██║   ██║   ╚════██║
 # ╚██████╔╝███████║███████╗██║  ██║    ██║  ██║╚██████╗██║  ██║██║███████╗ ╚████╔╝ ███████╗██║ ╚═╝ ██║███████╗██║ ╚████║   ██║   ███████║
 #  ╚═════╝ ╚══════╝╚══════╝╚═╝  ╚═╝    ╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝╚═╝╚══════╝  ╚═══╝  ╚══════╝╚═╝     ╚═╝╚══════╝╚═╝  ╚═══╝   ╚═╝   ╚══════╝
-
-
-class UserAchievements(APIView):
-    def get(self, request, username=None):
-        if not username:
-            return Response({'error': 'Username is required'}, status=status.HTTP_400_BAD_REQUEST)
-        user_data = self.get_user_data(username)
-        if not user_data:
-            return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
-        user_id = user_data['id']
-        achievements = AchievementAssignment.objects.filter(user_id=user_id)
-        serializer = AchievementAssignmentSerializer(achievements, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
-    def get_user_data(self, username):
-        try:
-            response = requests.get(f'http://usermanagement:8000/api/users/{username}/')
-            if response.status_code == 200:
-                return response.json()
-        except requests.RequestException as e:
-            print(f"Error fetching user data: {e}")
-        return None

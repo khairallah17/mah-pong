@@ -30,9 +30,6 @@ export default function Pve2d() {
   const aiInterval = useRef(null);
 
   useEffect(() => {
-    document.body.style.overflow = 'none';
-    document.documentElement.style.overflow = 'none';
-
     const gameContainer = document.getElementById('game-container');
     const scene = new THREE.Scene();
 
@@ -135,10 +132,6 @@ export default function Pve2d() {
     startCountdown();
 
     return () => {
-      document.body.style.overflow = 'auto';
-      document.documentElement.style.overflow = 'auto';
-      
-      document.body.style.overflow = 'auto';
       document.removeEventListener('keydown', onDocumentKeyDown);
       document.removeEventListener('keyup', onDocumentKeyUp);
       window.removeEventListener('resize', onWindowResize);

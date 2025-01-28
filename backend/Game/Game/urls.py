@@ -16,7 +16,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-from Match.views import TournamentList, PlayerMatchHistory, PlayerStats, UserAchievements
+from Match.views import TournamentList, PlayerMatchHistory, PlayerStats
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -24,6 +24,5 @@ urlpatterns = [
     path('api/match-history/<str:username>/', PlayerMatchHistory.as_view(), name='player-match-history'),
     path('api/match-history/', PlayerMatchHistory.as_view(), name='current-player-match-history'),
     path('api/player-stats/<str:username>/', PlayerStats.as_view(), name='player-stats'),
-    path('api/user-achievements/<str:username>/', UserAchievements.as_view(), name='user-achievements'),
 ]
 

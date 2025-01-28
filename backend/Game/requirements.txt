@@ -10,3 +10,4 @@ django-redis
 pyjwt
 psycopg2-binary
 requests
+djangorestframework-simplejwt

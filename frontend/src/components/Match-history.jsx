@@ -18,15 +18,20 @@ export const MatchHistory = () => {
   const [totalPages, setTotalPages] = useState(1);
   const matchesPerPage = 6;
 
-  const { user } = useAuthContext()
+  const { user , authtoken} = useAuthContext()
   const { username } = user
 
   useEffect(() => {
     const fetchMatches = async () => {
       try {
-        // Fetch all matches first
         setLoading(true)
-        const response = await axios.get(`/api/game/api/match-history/${username}/`);
+        const response = await axios.get(`/api/game/api/match-history/${username}/`, 
+          {
+            headers: {
+              'Authorization': `Bearer ${authtoken}`
+            }
+          }
+        );
         const allMatches = response.data;
         
         // Calculate total pages based on all matches

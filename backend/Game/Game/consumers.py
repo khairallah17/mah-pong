@@ -531,16 +531,20 @@ class Pvp2dConsumer(AsyncWebsocketConsumer):
             if game_state['ball_direction_x'] < 0:
                 game_state['ball_direction_x'] *= -1
             game_state['ball_direction_z'] = (game_state['ball_z'] - game_state['paddle1_z']) * 1.5
-            game_state['ball_speed'] *= 1.02
+            game_state['ball_speed'] *= 1.05
+            if game_state['ball_speed'] > 0.2:
+                game_state['ball_speed'] = 0.2
         
         if (game_state['ball_x'] > 2.4 and abs(game_state['ball_z'] - game_state['paddle2_z']) < 0.5):
             if game_state['ball_direction_x'] > 0:
                 game_state['ball_direction_x'] *= -1
             game_state['ball_direction_z'] = (game_state['ball_z'] - game_state['paddle2_z']) * 1.5
-            game_state['ball_speed'] *= 1.02
+            game_state['ball_speed'] *= 1.05
+            if game_state['ball_speed'] > 0.2:
+                game_state['ball_speed'] = 0.2
 
         # goal scored
-        if game_state['ball_x'] < -2.6 or game_state['ball_x'] > 2.6:
+        if game_state['ball_x'] < -2.7 or game_state['ball_x'] > 2.7:
             game_state['ball_direction_x'] = 1
             game_state['ball_direction_z'] = 1
             if game_state['ball_x'] < 0:
@@ -552,6 +556,7 @@ class Pvp2dConsumer(AsyncWebsocketConsumer):
                 asyncio.create_task(self.game_countdown(game_state))
             game_state['ball_x'] = 0
             game_state['ball_z'] = 0
+            game_state['ball_speed'] = BALL_SPEED
 
 
     async def game_countdown(self, game_state):
@@ -640,25 +645,25 @@ class Pvp2dConsumer(AsyncWebsocketConsumer):
                 pvp2d_send_tasks[pair_key].cancel()
                 pvp2d_send_tasks.pop(pair_key, None)
 
-    def update_tournament_match(self, match_id, winner, player1, player2):
+    def update_tournament_match(self, match_id, winner):
         try:
             match = TournamentMatch.objects.get(id=match_id)
-            match.winner = player2 if winner == 'player1' else player1
+            match.winner = winner
             match.save()
 
             next_match, _ = TournamentMatch.objects.get_or_create(tournament=match.tournament, round=2, position=1)
             if next_match == match:
                 return
             if match.position % 2 != 0:
-                next_match.player1 = match.winner
+                next_match.player1 = winner
             else:
-                next_match.player2 = match.winner
+                next_match.player2 = winner
             next_match.save()
         except Exception as e:
             logger.error(f"Error updating tournament match: {e}")
 
     @database_sync_to_async
-    def update_game_result(self, gamestate, winner=None):
+    def update_game_result(self, gamestate):
         if self.username not in pvp2d_matched_users or pvp2d_matched_users[self.username] not in pvp2d_matched_users:
             return
 
@@ -666,15 +671,14 @@ class Pvp2dConsumer(AsyncWebsocketConsumer):
         username1 = pvp2d_matched_users.pop(self.username)
 
         scoreP1, scoreP2 = gamestate['scoreP1'], gamestate['scoreP2']
-        if not winner:
-            winner = 'player1' if scoreP1 > scoreP2 else 'player2'
+        winner = username1 if scoreP1 > scoreP2 else username2
 
         try:
             match = Match.objects.filter(
                 Q(username1=username1, username2=username2) | Q(username1=username2, username2=username1)
             ).latest('datetime')
 
-            match.winner = username1 if winner == 'player1' else username2
+            match.winner = winner
             match.scoreP1 = scoreP1
             match.scoreP2 = scoreP2
             # Use simplified Elo calculation
@@ -683,7 +687,7 @@ class Pvp2dConsumer(AsyncWebsocketConsumer):
             match.save()
 
             if self.match_id:
-                self.update_tournament_match(self.match_id, winner, username1, username2)
+                self.update_tournament_match(self.match_id, winner)
 
         except Match.DoesNotExist:
             logger.error(f"Match does not exist for users: {username1}, {username2}")
