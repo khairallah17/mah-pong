@@ -16,6 +16,7 @@ from django.shortcuts import get_object_or_404
 from uuid import UUID
 from rest_framework import status
 from django.core.exceptions import ValidationError
+from django.http import JsonResponse
 import logging
 import jwt
 
@@ -41,8 +42,7 @@ class ApiUsers(APIView):
             fullname = payload.get('fullname')
 
             if not username:
-                raise jwt.InvalidTokenError("Username not found in token.")
-
+                raise jwt.InvalidTokenError("invalid token.")
             response = requests.get(
                 f"{settings.USERMANAGEMENT_SERVICE_URL}/api/friends/",
                 headers={"Authorization": f"Bearer {token}"}
@@ -74,21 +74,20 @@ class ApiUsers(APIView):
             )
 
             return Response(user_data.get('friends', []))
+        except jwt.InvalidTokenError as e:
+            return Response({'error': str(e)}, status=status.HTTP_401_UNAUTHORIZED)
+        except jwt.ExpiredSignatureError:
+            return Response({'error': 'Token expired'}, status=status.HTTP_401_UNAUTHORIZED)
         except requests.ConnectionError as e:
             logger.error(f"ConnectionError: {e}")
-            return Response({"error": "Failed to connect to UserManagement service"}, status=500)
+            return Response({"error": "Failed to connect to UserManagement service"}, status=400)
         except requests.RequestException as e:
             logger.error(f"RequestException: {e}")
-            return Response({"error": str(e)}, status=500)
+            return Response({"error": str(e)}, status=400)
         except Exception as e:
             logger.error(f"Exception: {e}")
-            return Response({"error": str(e)}, status=500)
+            return Response({"error": str(e)}, status=400)
 
-
-@api_view(['GET'])
-def user_list(self, request):
-    users = User.objects.all().values("id", "username")
-    return JsonResponse(list(users), safe=False)
 
 @api_view(['GET'])
 def get_conversation(request, id):

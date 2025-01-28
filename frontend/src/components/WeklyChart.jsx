@@ -1,5 +1,6 @@
 import { useParams } from 'react-router-dom';
 import React, { useState, useEffect, useRef } from 'react';
+import { useAuthContext } from '../hooks/useAuthContext';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -34,6 +35,7 @@ export const WeeklyChart = ({ user }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const chartRef = useRef(null);
+  const { authtoken } = useAuthContext();
 
   // Validate username
   const username = user?.trim() || '';
@@ -48,7 +50,13 @@ export const WeeklyChart = ({ user }) => {
       }
 
       try {
-        const response = await fetch(`/api/game/api/match-history/${username}/`);
+        const response = await fetch(`/api/game/api/match-history/${username}/`, 
+          {
+            headers: {
+              'Authorization': `Bearer ${authtoken}`
+            }
+          }
+        );
         const data = await response.json();
 
         // Handle the specific "No matches" error case

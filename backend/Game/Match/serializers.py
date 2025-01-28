@@ -1,6 +1,5 @@
 from rest_framework import serializers
-from .models import Tournament, Match, Achievement, AchievementAssignment
-
+from .models import Tournament, Match
 class TournamentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tournament
@@ -56,14 +55,3 @@ class PlayerStatsSerializer(serializers.Serializer):
     losses = serializers.IntegerField()
     elo = serializers.IntegerField()
 
-class AchievementSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Achievement
-        fields = ['name', 'description']
-
-class AchievementAssignmentSerializer(serializers.ModelSerializer):
-    achievement = AchievementSerializer()
-
-    class Meta:
-        model = AchievementAssignment
-        fields = ['achievement', 'assigned_at']
