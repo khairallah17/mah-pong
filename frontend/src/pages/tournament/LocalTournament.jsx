@@ -14,6 +14,7 @@ export default function LocalTournament() {
   const [tournamentStarted, setTournamentStarted] = useState(false);
   const [champion, setChampion] = useState('');
   const [showMatchStartPopup, setShowMatchStartPopup] = useState(false);
+  const [matchStartData, setMatchStartData] = useState(null);
 
   useEffect(() => {
     const queryParams = new URLSearchParams(location.search);
@@ -108,7 +109,21 @@ export default function LocalTournament() {
   };
 
   const startNextMatch = () => {
-    navigateToMatch(currentMatch);
+    let nextIndex = currentMatch;
+    while (nextIndex < matches.length && matches[nextIndex].winner) {
+      nextIndex++;
+    }
+    if (nextIndex >= matches.length) return;
+
+    const match = matches[nextIndex];
+    setMatchStartData({ yourName: match.player1, opponent: match.player2 });
+    setShowMatchStartPopup(true);
+
+    setTimeout(() => {
+      setShowMatchStartPopup(false);
+      navigateToMatch(nextIndex);
+      setCurrentMatch(nextIndex);
+    }, 3000);
   };
 
   const handleQuit = () => {

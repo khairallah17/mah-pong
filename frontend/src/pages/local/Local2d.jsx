@@ -133,6 +133,16 @@ export default function Local2d() {
     }
   }, [tableMainColor, tableSecondaryColor, paddlesColor]);
 
+  useEffect(() => {
+    const storedMatches = JSON.parse(localStorage.getItem('matches'));
+    if (matchId && storedMatches) {
+      const currentMatch = storedMatches.find(m => m.id === parseInt(matchId));
+      if (currentMatch && currentMatch.winner) {
+        navigate('/dashboard/tournament/local');
+      }
+    }
+  }, [matchId, navigate]);
+
   function handleCollisions(ball, paddle1, paddle2) {
     const paddle1Box = new THREE.Box3().setFromObject(paddle1);
     const paddle2Box = new THREE.Box3().setFromObject(paddle2);
@@ -204,11 +214,11 @@ export default function Local2d() {
   let keyPressed = { KeyW: false, ArrowDown: false, ArrowUp: false, KeyS: false };
 
   function onDocumentKeyDown(event) {
-    if ((event.code === 'KeyW' || event.code === 'KeyS')) {
-      clearInterval(paddle1Ref.current.userData.intervalId)
+    if ((event.code === 'KeyW' || event.code === 'KeyS') && !keyPressed[event.code]) {
       keyPressed[event.code] = true;
+      clearInterval(paddle1Ref.current.userData.intervalId)
       const moveDirection = event.code === 'KeyW' ? -1 : 1;
-      const PADDLE_SPEED = 0.05;
+      const PADDLE_SPEED = 0.07;
       const intervalId = setInterval(() => {
         if (winner) return;
         isPausedRef.current = false;
@@ -222,14 +232,14 @@ export default function Local2d() {
           paddleRef.current.position.z = newPosition;
         }
         paddleRef.current.userData.intervalId = intervalId;
-      }, 60);
+      }, 30);
     }
 
-    if ((event.code === 'ArrowUp' || event.code === 'ArrowDown')) {
-      clearInterval(paddle2Ref.current.userData.intervalId)
+    if ((event.code === 'ArrowUp' || event.code === 'ArrowDown') && !keyPressed[event.code]) {
       keyPressed[event.code] = true;
+      clearInterval(paddle2Ref.current.userData.intervalId)
       const moveDirection = event.code === 'ArrowDown' ? 1 : -1;
-      const PADDLE_SPEED = 0.05;
+      const PADDLE_SPEED = 0.07;
       const intervalId = setInterval(() => {
         if (winner) return;
         isPausedRef.current = false;
@@ -243,7 +253,7 @@ export default function Local2d() {
           paddleRef.current.position.z = newPosition;
         }
         paddleRef.current.userData.intervalId = intervalId;
-      }, 60);
+      }, 30);
     }
   }
 
