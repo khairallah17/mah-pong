@@ -531,16 +531,20 @@ class Pvp2dConsumer(AsyncWebsocketConsumer):
             if game_state['ball_direction_x'] < 0:
                 game_state['ball_direction_x'] *= -1
             game_state['ball_direction_z'] = (game_state['ball_z'] - game_state['paddle1_z']) * 1.5
-            game_state['ball_speed'] *= 1.02
+            game_state['ball_speed'] *= 1.05
+            if game_state['ball_speed'] > 0.2:
+                game_state['ball_speed'] = 0.2
         
         if (game_state['ball_x'] > 2.4 and abs(game_state['ball_z'] - game_state['paddle2_z']) < 0.5):
             if game_state['ball_direction_x'] > 0:
                 game_state['ball_direction_x'] *= -1
             game_state['ball_direction_z'] = (game_state['ball_z'] - game_state['paddle2_z']) * 1.5
-            game_state['ball_speed'] *= 1.02
+            game_state['ball_speed'] *= 1.05
+            if game_state['ball_speed'] > 0.2:
+                game_state['ball_speed'] = 0.2
 
         # goal scored
-        if game_state['ball_x'] < -2.6 or game_state['ball_x'] > 2.6:
+        if game_state['ball_x'] < -2.7 or game_state['ball_x'] > 2.7:
             game_state['ball_direction_x'] = 1
             game_state['ball_direction_z'] = 1
             if game_state['ball_x'] < 0:
@@ -552,6 +556,7 @@ class Pvp2dConsumer(AsyncWebsocketConsumer):
                 asyncio.create_task(self.game_countdown(game_state))
             game_state['ball_x'] = 0
             game_state['ball_z'] = 0
+            game_state['ball_speed'] = BALL_SPEED
 
 
     async def game_countdown(self, game_state):
