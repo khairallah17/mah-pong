@@ -144,7 +144,6 @@ export default function Pvp2d() {
             setNames({ player1: message.names.player1, player2: message.names.player2 });
             setIsMatched(true);
             isPlayer1Ref.current = message.player_id === '1';
-            startCountdown();
           } else if (message.type === 'game_state') {
             setGameState(message.game_state);
           } else if (message.type === 'opponent_disconnected') {

@@ -8,7 +8,7 @@ import { useAuthContext } from '../hooks/useAuthContext';
 import useChatContext from '../hooks/useChatContext';
 
 export const PlayerList = () => {
-  const url_host = import.meta.env.VITE_HOST_URL
+  const url_host = String(import.meta.env.VITE_HOST_URL)
   const navigate = useNavigate();
   const [friends, setFriends] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -21,6 +21,8 @@ export const PlayerList = () => {
   const { username } = user
 
   const { setSelectedUserId } = useChatContext()
+
+  console.log(url_host)
   
   const { t } = useTranslation();
   useEffect(() => {
@@ -145,7 +147,7 @@ export const PlayerList = () => {
     }
 
     return (
-      <div className="space-y-2 max-h-[calc(100vh-20rem)] overflow-y-auto ">
+      <div className="space-y-2 h-[290px] max-h-[290px] overflow-y-auto ">
         {filteredFriends.map((friend) => (
           <div key={friend.id} className="flex items-center justify-between p-3 hover:bg-blue-500/5 rounded-lg transition-all border border-transparent hover:border-blue-500/20">
             <div className="flex items-center gap-3">
@@ -160,9 +162,6 @@ export const PlayerList = () => {
                 <div className="font-medium text-blue-50">{friend.username}</div>
                 <div className="text-xs text-blue-300/60">
                   {friend.fullname}
-                </div>
-                <div className="text-xs text-blue-300/60">
-                  {t('Wins')}: {friend.nbwin || 0} | {t('Losses')}: {friend.nblose || 0}
                 </div>
               </div>
             </div>
@@ -202,11 +201,11 @@ export const PlayerList = () => {
         <div className="flex items-center gap-2">
           <Users className="text-blue-400" />
           <h2 className="text-lg font-bold bg-gradient-to-r from-blue-400 to-purple-400 text-transparent bg-clip-text">
-            {t('Friends List')}
+            {t('Friends')}
           </h2>
         </div>
         <span className="bg-blue-500/10 text-blue-400 px-3 py-1 rounded-full border border-blue-500/20">
-          {friends.length} {t('Friends')}
+          {friends.length}
         </span>
       </div>
       

@@ -3,6 +3,7 @@ import { useAuthContext } from "../hooks/useAuthContext";
 import useWebsocketContext from "../hooks/useWebsocketContext";
 import axios from "axios";
 import { toast } from "react-toastify"
+import { useNavigate } from "react-router-dom"
 
 export const ChatContext = createContext();
 
@@ -12,7 +13,7 @@ const ChatContextProvider = ({ children }) => {
     const websocket_url = import.meta.env.VITE_WEBSOCKET_URL
     const { authtoken } = useAuthContext()
     const { user } = useAuthContext()
-    const { username } = user
+    const username = user?.username
 
     const [users, setUsers] = useState([]);
     const [messages, setMessages] = useState([]);
@@ -29,14 +30,24 @@ const ChatContextProvider = ({ children }) => {
     const socketRef = useRef(null);
     const messagesEndRef = useRef(null);
 
+    const navigate = useNavigate()
+
+    const startGame = async (link) => {
+        try {
+            console.log("START GAME FROM ==> ", link)
+            navigate(link , {
+                replace: true
+            });
+        } catch (error) {
+            console.error('Error generating invite:', error);
+        }
+    };
+
     const handleClick = () => {
-        console.log("is user blocker ====================>",isBlocked)
         if (isBlocked) {
-            console.log("Unblocking user...");
             unblock(selectedUserId);
             setIsBlocked(false);
         } else {
-            console.log("Blocking user...");
             block(selectedUserId);
             setIsBlocked(true);
             // setIsBlocked(isBlocked)
@@ -44,14 +55,18 @@ const ChatContextProvider = ({ children }) => {
     };
 
     const fetchBlockStatus = async (userId) => {
-            console.log("Fetching block status...");
+            
+        try {
             const response = await axios.get(`/api/chat/api/block-status/${userId}/`, {
                 headers: {
                     Authorization: `Bearer ${authtoken}`,
                 },
             });
-            console.log("Block status response:", response.data.block_status);
             setIsBlocked(response.data.block_status);
+        } catch (error) {
+            console.error("ERROR FETCHING BLOCK STATUS")
+        }
+
     };
 
     const unblock = async (userId) => {
@@ -90,7 +105,7 @@ const ChatContextProvider = ({ children }) => {
                 },
                 withCredentials: true
             });
-            console.log(response.data);
+
             setUsers(response.data);
         } catch (error) {
             console.error("Error loading users:", error);
@@ -100,14 +115,13 @@ const ChatContextProvider = ({ children }) => {
     const loadConversation = async (userId) => {
         setLoading(true);
         try {
-            console.log("hette", userId);
             const response = await axios.get(`/api/chat/api/conversation/${userId}/`, {
                 headers: {
                     Authorization: `Bearer ${authtoken}`
                 },
                 withCredentials: true
             });
-            console.log("all data",response.data)
+
             setMessages(response.data.messages);
         } catch (error) {
             console.error("Error loading conversation:", error);
@@ -145,7 +159,7 @@ const ChatContextProvider = ({ children }) => {
         };
 
         chatSocket.onclose = () => {
-            console.error("Chat socket closed unexpectedly");
+            console.log("Chat socket closed");
         };
     };
 
@@ -176,10 +190,13 @@ const ChatContextProvider = ({ children }) => {
 
     const sendGameInvitation = () => {
         if (socketRef.current) {
+            const code = Math.random().toString(36).substring(2, 15);
+
             socketRef.current.send(
                 JSON.stringify({
                     user_id: selectedUserId,
-                    message_type: "invite"
+                    message_type: "invite",
+                    link : `/dashboard/game/pvp2d?invite=${code}`,
                 })
             );
         }
@@ -216,7 +233,8 @@ const ChatContextProvider = ({ children }) => {
         showSide, setShowSide,
         handleClick,
         sendGameInvitation,
-        formatTime
+        formatTime,
+        startGame
     }
 
     return (

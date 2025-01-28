@@ -64,7 +64,7 @@ export const GameModes = () => {
         </h2>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid md:grid-cols-1 lg:grid-cols-1 xl:grid-cols-2 gap-4">
         {gameModes.map((mode) => (
           <button
             key={mode.id}

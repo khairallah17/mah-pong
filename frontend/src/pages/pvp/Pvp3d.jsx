@@ -621,7 +621,7 @@ function Pve3d() {
             )}
             {isMatched && (
                 <div id="game-container">
-                    <GameScore
+                    <Gameore
                         player1={{
                             username: username1,
                             avatar: "/player1.png?height=40&width=40",

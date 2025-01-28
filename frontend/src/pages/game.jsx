@@ -70,8 +70,8 @@ const GameCard = ({ title, description, accentColor, buttonColor, image, icon: I
 };
 
 const GameSlide = ({ title, cards }) => (
-  <div className="min-w-full px-4">
-    <h3 className="text-3xl font-bold text-white mb-8 text-center">
+  <div className="min-w-full">
+    <h3 className="text-xl md:text-3xl font-bold text-white mb-8 text-center">
       {title}
     </h3>
     <div className={`grid grid-cols-1 md:grid-cols-2 items-center justify-center gap-12 max-w-6xl mx-auto ${cards.length === 1 ? 'justify-center' : ''}`}>
@@ -170,8 +170,8 @@ const Games = () => {
 
   return (
     <div className="max-w-[1400px] mx-auto">
-      <div className="m-4 sm:m-8 p-8 rounded-2xl bg-gradient-to-br from-indigo-950 to-indigo-900 shadow-2xl border-4 border-indigo-900">
-        <h2 className="text-4xl font-bold text-white mb-12 text-center uppercase tracking-wide">
+      <div className="m-4 sm:m-8 p-4 md:p-8 rounded-2xl bg-gradient-to-br from-indigo-950 to-indigo-900 shadow-2xl border-4 border-indigo-900">
+        <h2 className="text-2xl md:text-4xl font-bold text-white mb-4 md:mb-12 text-center uppercase tracking-wide">
           {t('Select Your Battleground')}
         </h2>
 

@@ -110,7 +110,7 @@ export default function Tournament() {
   };
 
   const refreshToken = async () => {
-    let refreshtokenUrl = "http://localhost:8001/api/token/refresh/"
+    let refreshtokenUrl = "/api/usermanagement/api/token/refresh/"
     try {
       const response = await fetch(refreshtokenUrl, {
         method: 'POST',

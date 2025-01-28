@@ -17,7 +17,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
         query_params = self._parse_query_params()
         # self.user_id = query_params.get('user_id', [None])[0]
         token = query_params.get('token', [None])[0]
-        logger.warning(f"TOKEN ==> {token}")
         self.username = self._decode_token(token)
         self.user = await self.get_user(username=self.username)
         self.room_group_name = f"chat_{self.user.id}"
@@ -38,11 +37,13 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     async def receive(self, text_data):
         data = json.loads(text_data)
+        logger.warning(f"play game data ==> {data}")
         sender = await self.get_user(username=self.username)
         receiver_id = data['user_id']
         receiver = await self.get_user(user_id=receiver_id)
         content = data.get('message', '')
         message_type = data.get("message_type", '')
+        link = data.get('link', '')
 
         block_status = await self.get_blocklists(sender, receiver)
 
@@ -69,7 +70,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
         conversation = await self.get_or_create_conversation(sender, receiver_id)
 
         # Save the message to the database
-        message = await self.create_message(sender, receiver_id, content, conversation, message_type)
+        message = await self.create_message(sender, receiver_id, content, conversation, message_type, link)
+        
+        logger.warning(f"receive ==> {link}")
         
         # Broadcast the message to the chat group
         await self.channel_layer.group_send(
@@ -80,7 +83,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 'sender': sender.username,
                 'receiver': receiver.username,
                 'timestamp': str(now()),
-                'message_type': message_type
+                'message_type': message_type,
+                'link': link
             }
         )
         await self.channel_layer.group_send(
@@ -91,7 +95,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 'sender': sender.username,
                 'receiver': receiver.username,
                 'timestamp': str(now()),
-                'message_type': message_type
+                'message_type': message_type,
+                'link': link
             }
         )
 
@@ -141,13 +146,15 @@ class ChatConsumer(AsyncWebsocketConsumer):
         return conversation
 
     @database_sync_to_async
-    def create_message(self, sender, receiver_id, content, conversation, message_type):
+    def create_message(self, sender, receiver_id, content, conversation, message_type, link):
+        logger.warning(f"create_message ==> {link}")
         return  Message.objects.create(
             sender=sender,
             receiver_id=receiver_id,
             content=content,
             conversation=conversation,
-            message_type= message_type
+            message_type= message_type,
+            link=link
         )
 
     async def chat_message(self, event):
@@ -156,6 +163,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
         receiver = event["receiver"]
         timestamp = event["timestamp"]
         message_type = event["message_type"]
+        link = event["link"]
+        
+        logger.warning(f"chat_message ==> {link}")
 
         # Send the message to WebSocket
         await self.send(text_data=json.dumps({
@@ -164,7 +174,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
             'sender': sender,
             'receiver': receiver,
             'timestamp': timestamp,
-            'message_type': message_type
+            'message_type': message_type,
+            'link': link
         }))
         
     # utils

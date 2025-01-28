@@ -17,6 +17,7 @@ export const AuthProvider = ({ children }) => {
     const { t } = useTranslation();
     const navigate = useNavigate()
 
+
     //GETTING TOKEN
     const [authtoken, setAuthToken] = useState(() => {
         // Check localStorage for existing token
@@ -39,8 +40,6 @@ export const AuthProvider = ({ children }) => {
             navigate("/login")
         }
     });
-
-
     // const [loading, setloading] = useState(true)
 
     const navigation = useNavigate()

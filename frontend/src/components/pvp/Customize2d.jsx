@@ -10,7 +10,6 @@ export default function GameSettingsButton() {
   const togglePopup = () => setIsOpen(!isOpen);
 
   useEffect(() => {
-    // Apply the theme to the document when it changes
     document.documentElement.classList.toggle('dark', isDarkTheme);
   }, [isDarkTheme]);
 
@@ -36,7 +35,6 @@ export default function GameSettingsButton() {
           <div className="space-y-6">
             <div className="space-y-2">
               <label htmlFor="tableMainColor" className="block text-sm font-medium text-gray-700 dark:text-gray-200">
-                Table Main Color
               </label>
               <div className="flex items-center space-x-2">
                 <input
@@ -57,7 +55,6 @@ export default function GameSettingsButton() {
 
             <div className="space-y-2">
               <label htmlFor="tableSecondaryColor" className="block text-sm font-medium text-gray-700 dark:text-gray-200">
-                Table Secondary Color
               </label>
               <div className="flex items-center space-x-2">
                 <input
@@ -78,7 +75,6 @@ export default function GameSettingsButton() {
 
             <div className="space-y-2">
               <label htmlFor="paddlesColor" className="block text-sm font-medium text-gray-700 dark:text-gray-200">
-                Paddles Color
               </label>
               <div className="flex items-center space-x-2">
                 <input
@@ -95,20 +91,6 @@ export default function GameSettingsButton() {
                   className="flex h-10 w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
                 />
               </div>
-            </div>
-
-            <div className="flex items-center space-x-2">
-              <label htmlFor="theme-toggle" className="relative inline-flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  id="theme-toggle"
-                  className="sr-only peer"
-                  checked={isDarkTheme}
-                  onChange={(e) => setIsDarkTheme(e.target.checked)}
-                />
-                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
-                <span className="ml-3 text-sm font-medium text-gray-900 dark:text-gray-300">Dark Theme</span>
-              </label>
             </div>
           </div>
         </div>

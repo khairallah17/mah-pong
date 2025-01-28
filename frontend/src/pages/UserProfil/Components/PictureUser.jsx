@@ -23,12 +23,11 @@ const PictureUser = () => {
   const [friendStatus, setFriendStatus] = useState('none');
   const [loading, setLoading] = useState(true)
   const [users, setUsers] = useState(true);
-  const { username } = useParams();
-  const token = JSON.parse(localStorage.getItem('authtoken'))?.access;
-  const currentUser = token ? jwtDecode(token).username : null;
   const { wsManager } = useWebsocketContext();
-
-  const { user } = useAuthContext()
+  
+  const { username } = useParams();
+  const { user , authtoken } = useAuthContext()
+  const currentUser = user?.username
 
   const handleGameInvite = async () => {
     try {
@@ -50,7 +49,7 @@ const PictureUser = () => {
         // Check friend requests
         const response = await fetch(`/api/usermanagement/api/friend-requests/`, {
             headers: {
-                'Authorization': `Bearer ${token}`
+                'Authorization': `Bearer ${authtoken}`
             }
         });
         
@@ -81,7 +80,7 @@ const PictureUser = () => {
         // If no request exists, check friends list
         const friendsResponse = await fetch(`/api/usermanagement/api/friends/`, {
             headers: {
-                'Authorization': `Bearer ${token}`
+                'Authorization': `Bearer ${authtoken}`
             }
         });
 
@@ -126,10 +125,10 @@ const PictureUser = () => {
       }
     };
 
-    if (username && token) {
+    if (username && authtoken) {
       fetchProfil();
     }
-  }, [username, token]);
+  }, [username, authtoken]);
 
   const handleFriendRequest = async () => {
     try {
@@ -137,7 +136,7 @@ const PictureUser = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${authtoken}`
         },
         body: JSON.stringify({ receiver: username })
       });
@@ -171,7 +170,7 @@ const PictureUser = () => {
       // First get the pending request ID
       const response = await fetch(`/api/usermanagement/api/friend-requests/`, {
         headers: {
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${authtoken}`
         }
       });
       const requests = await response.json();
@@ -190,7 +189,7 @@ const PictureUser = () => {
       const acceptResponse = await fetch(`/api/usermanagement/api/friend-requests/${pendingRequest.id}/accept/`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${authtoken}`
         }
       });
 
@@ -219,7 +218,7 @@ const PictureUser = () => {
     try {
       const response = await fetch(`/api/usermanagement/api/friend-requests/`, {
         headers: {
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${authtoken}`
         }
       });
       const requests = await response.json();
@@ -237,7 +236,7 @@ const PictureUser = () => {
       const rejectResponse = await fetch(`/api/usermanagement/api/friend-requests/${pendingRequest.id}/reject/`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${authtoken}`
         }
       });
 
@@ -266,7 +265,7 @@ const PictureUser = () => {
     try {
       const response = await fetch(`/api/usermanagement/api/friend-requests/`, {
         headers: {
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${authtoken}`
         }
       });
       const requests = await response.json();
@@ -284,7 +283,7 @@ const PictureUser = () => {
       const cancelResponse = await fetch(`/api/usermanagement/api/friend-requests/${pendingRequest.id}/cancel/`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${authtoken}`
         }
       });
 
@@ -314,12 +313,12 @@ const PictureUser = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${authtoken}`
         },
         body: JSON.stringify({ username })
       });
 
-      if (!response.ok) {
+      if (!response.ok && response.status != 404) {
         throw new Error('Failed to remove friend');
       }
 

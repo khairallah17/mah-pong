@@ -11,9 +11,10 @@ export default function Local2d() {
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
   const matchId = queryParams.get('match_id');
-  const player1 = queryParams.get('player1');
-  const player2 = queryParams.get('player2');
+  const player1 = queryParams.get('player1') ? queryParams.get('player1') : 'player 1';
+  const player2 = queryParams.get('player2') ? queryParams.get('player2') : 'player 2';
   const [winner, setWinner] = useState('');
+  const winnerRef = useRef(null);
 
   const handleWinnerSelection = (winner) => {
     setWinner(winner);
@@ -32,6 +33,8 @@ export default function Local2d() {
   const tableRef = useRef(null);
   const tableAddonsRef = useRef(null);
   const isPausedRef = useRef(true);
+
+  const [gameEnd, setGameEnd] = useState(false)
 
   const { tableMainColor, tableSecondaryColor, paddlesColor } = useContext(ColorContext);
 
@@ -57,7 +60,6 @@ export default function Local2d() {
 
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
-    controls.dampingFactor = 0.75;
     controls.enableZoom = true;
     controls.mouseButtons = {
       LEFT: THREE.MOUSE.ROTATE,
@@ -89,9 +91,11 @@ export default function Local2d() {
 
     const animate = () => {
       requestAnimationFrame(animate);
-
+      if (winnerRef.current) {
+        return;
+      }
       if (!isPausedRef.current) {
-        ball.position.add(ballDirection.clone().multiplyScalar(0.01));
+        ball.position.add(ballDirection.clone().multiplyScalar(0.03));
         handleCollisions(ball, paddle1, paddle2);
       }
 
@@ -159,9 +163,11 @@ export default function Local2d() {
       isPausedRef.current = true;
       setScores(prev => {
         const updated = { score1: prev.score1, score2: prev.score2 + 1 };
-        if (updated.score2 >= 10) {
+        if (updated.score2 >= 5) {
           setWinner(player2);
-          handleWinnerSelection(player2);
+          winnerRef.current = player2
+          if (matchId)
+            handleWinnerSelection(player2);
         }
         return updated;
       });
@@ -172,9 +178,11 @@ export default function Local2d() {
       isPausedRef.current = true;
       setScores(prev => {
         const updated = { score1: prev.score1 + 1, score2: prev.score2 };
-        if (updated.score1 >= 10) {
+        if (updated.score1 >= 5) {
           setWinner(player1);
-          handleWinnerSelection(player1);
+          winnerRef.current = player1
+          if (matchId)
+            handleWinnerSelection(player1);
         }
         return updated;
       });
@@ -196,10 +204,11 @@ export default function Local2d() {
   let keyPressed = { KeyW: false, ArrowDown: false, ArrowUp: false, KeyS: false };
 
   function onDocumentKeyDown(event) {
-    if (!keyPressed[event.code] && (event.code === 'KeyW' || event.code === 'KeyS')) {
+    if ((event.code === 'KeyW' || event.code === 'KeyS')) {
+      clearInterval(paddle1Ref.current.userData.intervalId)
       keyPressed[event.code] = true;
       const moveDirection = event.code === 'KeyW' ? -1 : 1;
-      const PADDLE_SPEED = 0.1;
+      const PADDLE_SPEED = 0.05;
       const intervalId = setInterval(() => {
         if (winner) return;
         isPausedRef.current = false;
@@ -213,13 +222,14 @@ export default function Local2d() {
           paddleRef.current.position.z = newPosition;
         }
         paddleRef.current.userData.intervalId = intervalId;
-      }, 30);
+      }, 60);
     }
 
-    if (!keyPressed[event.code] && (event.code === 'ArrowUp' || event.code === 'ArrowDown')) {
+    if ((event.code === 'ArrowUp' || event.code === 'ArrowDown')) {
+      clearInterval(paddle2Ref.current.userData.intervalId)
       keyPressed[event.code] = true;
       const moveDirection = event.code === 'ArrowDown' ? 1 : -1;
-      const PADDLE_SPEED = 0.1;
+      const PADDLE_SPEED = 0.05;
       const intervalId = setInterval(() => {
         if (winner) return;
         isPausedRef.current = false;
@@ -233,17 +243,17 @@ export default function Local2d() {
           paddleRef.current.position.z = newPosition;
         }
         paddleRef.current.userData.intervalId = intervalId;
-      }, 30);
+      }, 60);
     }
   }
 
   function onDocumentKeyUp(event) {
-    if ((event.code === 'KeyW' || event.code === 'KeyS') && keyPressed[event.code]) {
+    if ((event.code === 'KeyW' || event.code === 'KeyS')) {
       keyPressed[event.code] = false;
       clearInterval(paddle1Ref.current.userData.intervalId);
     }
 
-    if ((event.code === 'ArrowUp' || event.code === 'ArrowDown') && keyPressed[event.code]) {
+    if ((event.code === 'ArrowUp' || event.code === 'ArrowDown')) {
       keyPressed[event.code] = false;
       clearInterval(paddle2Ref.current.userData.intervalId);
     }
@@ -259,7 +269,7 @@ export default function Local2d() {
 
   function createSpaceBackground(scene) {
     const starsGeometry = new THREE.BufferGeometry();
-    const starsMaterial = new THREE.PointsMaterial({ color: 0xffffff, size: 0.1 });
+    const starsMaterial = new THREE.PointsMaterial({ color: 0xffffff, size: 0.2 });
     const starsVertices = [];
     for (let i = 0; i < 3000; i++) {
       starsVertices.push(
@@ -296,21 +306,10 @@ export default function Local2d() {
     stripes[3].position.set(-2.5, 0.06, 0);
     stripes[4].position.set(0, 0.06, 0);
 
-    const legGeometry = new THREE.CylinderGeometry(0.1, 0.1, 1, 32);
-    const legMaterial = new THREE.MeshStandardMaterial({ color: 0x8B4513 });
-    const legs = [
-      new THREE.Mesh(legGeometry, legMaterial),
-      new THREE.Mesh(legGeometry, legMaterial),
-      new THREE.Mesh(legGeometry, legMaterial),
-      new THREE.Mesh(legGeometry, legMaterial),
-    ];
-    legs[0].position.set(2.4, -0.55, 1.4);
-    legs[1].position.set(-2.4, -0.55, 1.4);
-    legs[2].position.set(2.4, -0.55, -1.4);
-    legs[3].position.set(-2.4, -0.55, -1.4);
+
 
     const group = new THREE.Group();
-    group.add(...stripes, ...legs);
+    group.add(...stripes);
     return group;
   }
   function createPaddles() {

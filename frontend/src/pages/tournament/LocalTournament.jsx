@@ -149,26 +149,26 @@ export default function LocalTournament() {
             </div>
 
             {/* Tournament Bracket */}
-            <div className="flex flex-wrap justify-between items-center text-white">
-              <div className="flex-grow-1">
-                <div className="grid grid-cols-2 gap-36 mr-20">
+            <div className="grid xl:grid-cols-[2fr_1fr] gap-24 grid-cols-1 w-full justify-between items-center text-white">
+              <div className="w-full">
+                <div className="grid grid-cols lg:grid-cols-2 items-center gap-36 mr-20">
                   {/* Round 1 */}
-                  <div className="space-y-16 mt-16">
+                  <div className="space-y-16 mt-16 px-4 lg:px-4">
                     {matches.filter(m => m.round === 1).map((match) => (
                       <div key={match.id} className="relative">
                         <div className="flex flex-col gap-4">
                           <div className={`p-0 bg-transparent relative flex items-center overflow-visible rounded-xl transition-all duration-300 ${match.winner === match.player1 ? 'ring-1 ring-white' : ''}`}>
-                            <div className="absolute z-[1] w-[40px] h-full rounded-l-xl bg-[#9a77ff]"></div>
                             <div className="relative bg-black/50 border border-gray-800 overflow-hidden backdrop-blur-sm w-[100%] h-[100px] flex items-center clip-card rounded-xl">
-                              <span className="absolute left-[20%] pl-12">{match.player1 || 'TBD'}</span>
+                              <div className="w-[40px] h-full rounded-l-xl bg-[#9a77ff]"></div>
+                              <span className="pl-12">{match.player1 || 'TBD'}</span>
                             </div>
                             <div className="absolute left-[100%] top-[50%] w-[13%] h-[2px] bg-white"></div>
                             <div className='absolute left-[113%] top-[50%] w-[2px] h-[118%] bg-white'></div>
                           </div>
                           <div className={`p-0 bg-transparent relative flex items-center overflow-visible transition-all duration-300 rounded-xl ${match.winner === match.player2 ? 'ring-1 ring-white' : ''}`}>
-                            <div className="absolute z-[1] w-[40px] h-full rounded-l-xl bg-[#9a77ff]"></div>
                             <div className="relative bg-black/50 border border-gray-800 overflow-hidden backdrop-blur-sm w-[100%] h-[100px] flex items-center clip-card rounded-xl">
-                              <span className="absolute left-[20%] pl-12">{match.player2 || 'TBD'}</span>
+                              <div className="w-[40px] h-full rounded-l-xl bg-[#9a77ff]"></div>
+                              <span className="pl-12">{match.player2 || 'TBD'}</span>
                             </div>
                             <div className="absolute left-[100%] top-[50%] w-[13%] h-[2px] bg-white"></div>
                           </div>
@@ -178,7 +178,7 @@ export default function LocalTournament() {
                   </div>
 
                   {/* Final Round */}
-                  <div className="mt-52">
+                  <div className="px-4 lg:px-4">
                     {matches.filter(m => m.round === 2).map((match) => (
                       <div key={match.id} className="relative">
                         <div className="flex flex-col gap-4">

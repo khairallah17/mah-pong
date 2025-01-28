@@ -10,7 +10,7 @@ export const UserContextProvider = ({ children }) => {
     const { authtoken, user, setUser } = useAuthContext()
 
     const fetchUserData = async () => {
-  
+
         try {
 
             setLoading(true)
@@ -24,14 +24,13 @@ export const UserContextProvider = ({ children }) => {
             const userData = await response.json();
             setUser(userData);
 
-            console.log("user ==> ", user)
 
         } catch (error) {
-          console.error('Error fetching user data:', error);
+            console.error('Error fetching user data:', error);
         } finally {
             setLoading(false)
         }
-  
+
     };
 
     const values = {

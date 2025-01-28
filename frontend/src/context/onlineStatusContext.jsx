@@ -1,10 +1,12 @@
 import { useEffect, createContext } from 'react';
 import { useAuthContext } from '../hooks/useAuthContext';
+import { useState } from 'react';
 
 const OnlineContext = createContext({})
 
 export const OnlineContextProvider = ({ children }) =>{
 
+    const [count, setCount] = useState(0)
 
     const { authtoken } = useAuthContext()
 
@@ -21,17 +23,17 @@ export const OnlineContextProvider = ({ children }) =>{
                 credentials: 'include'
             });
         } catch (error) {
-            console.error('Error updating status:', error);
+            console.error('Error updating status 123123:', error.message);
         }
     };
 
     useEffect(() => {
-        // Handle tab visibility change
+        // // Handle tab visibility change
         const handleVisibilityChange = () => {
             updateOnlineStatus(!document.hidden);
         };
 
-        // Handle before unload
+        // // Handle before unload
         const handleBeforeUnload = () => {
             updateOnlineStatus(false);
         };

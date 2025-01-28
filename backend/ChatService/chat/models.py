@@ -8,7 +8,6 @@ class CustomUser(AbstractUser):
     fullname = models.CharField(max_length=250)
     username = models.CharField(max_length=50, unique=True)
     email = models.EmailField(unique=True)
-    is_online = models.BooleanField(default=False)
     img = models.ImageField(
         upload_to='profile_pics/',  # Store images in a profile_pics/ directory
         default='profile_pics/default.jpg'
@@ -55,6 +54,7 @@ class Message(models.Model):
     content = models.TextField()
     message_type = models.CharField(max_length=20, blank=True, null=True)
     timestamp = models.DateTimeField(auto_now_add=True)
+    link = models.CharField(max_length=255, blank=True, null=True)
 
     seen = models.BooleanField(default=False)
 

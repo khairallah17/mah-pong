@@ -20,7 +20,7 @@ import { useTranslation } from 'react-i18next';
 
 const Chat = () => {
     const { t } = useTranslation();
-    const url_host = import.meta.env.VITE_HOST_URL
+    const url_host = String(import.meta.env.VITE_HOST_URL).replace("http","https")
     const { user, authtoken } = useAuthContext()
     const { username } = user
     const [onlineStatuses, setOnlineStatuses] = useState({});
@@ -54,6 +54,7 @@ const Chat = () => {
     messagesEndRef,
     sendGameInvitation,
     formatTime,
+    startGame
   } = useChatContext();
 
   useEffect(() => {
@@ -287,8 +288,8 @@ const Chat = () => {
                         <span>{msg.message}</span>
                         <button
                           className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
-                          onClick={() => startGame(msg.sender)}
-                        >
+                          onClick={() => startGame(msg.link)}
+                      >
                           {t('Play Now')}
                         </button>
                       </div>

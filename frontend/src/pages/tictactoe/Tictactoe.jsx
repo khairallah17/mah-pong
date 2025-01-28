@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
+import { useAuthContext } from '../../hooks/useAuthContext';
 
 function Cell({ value, onClick, className }) {
   return (
@@ -22,10 +23,12 @@ export default function Tictactoe() {
   const [isProcessing, setIsProcessing] = useState(false);
   const wsRef = useRef(null);
 
+  const { authtoken, user } = useAuthContext()
+
   useEffect(() => {
-    const tokenData = JSON.parse(localStorage.getItem('authtoken'));
-    const accessToken = tokenData && tokenData.access;
-    wsRef.current = new WebSocket(`${websocket_url}/api/game/ws/tictactoe/?token=${accessToken}`);
+
+    
+    wsRef.current = new WebSocket(`${websocket_url}/api/game/ws/tictactoe/?token=${authtoken}`);
     wsRef.current.onmessage = (evt) => {
       const data = JSON.parse(evt.data);
       if (data.type === 'match_found') {

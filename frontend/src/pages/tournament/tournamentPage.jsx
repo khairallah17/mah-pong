@@ -90,7 +90,7 @@ const tournamentPage = () => {
 
   return (
     <div className="max-w-[1400px] mx-auto">
-      <div className="m-4 sm:m-8 p-20 rounded-2xl bg-gradient-to-br from-indigo-950 to-indigo-900 shadow-2xl border-4 border-indigo-900">
+      <div className="m-4 sm:m-8 p-4 md:p-8 rounded-2xl bg-gradient-to-br from-indigo-950 to-indigo-900 shadow-2xl border-4 border-indigo-900">
         <h2 className="text-4xl font-bold text-white mb-12 text-center uppercase tracking-wide">
           {t('Tournaments')}
         </h2>

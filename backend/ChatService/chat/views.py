@@ -39,7 +39,6 @@ class ApiUsers(APIView):
             username = payload.get('username')
             email = payload.get('email')
             fullname = payload.get('fullname')
-            is_online = payload.get('is_online')
 
             if not username:
                 raise jwt.InvalidTokenError("Username not found in token.")
@@ -54,32 +53,25 @@ class ApiUsers(APIView):
             # Store users in the Chat service's database
             for user_data in users_data:
                 for friend in user_data['friends']:
-                    logger.warning(f"FRIENDS ==> {friend}")
-                    logger.warning(f"FRIENDS ==> {User.objects}")
+                    logger.warning(f"USERS {friend}")
                     User.objects.update_or_create(
                         id=friend['id'],
                         defaults={
                             'username': friend['username'],
                             'fullname': friend.get('fullname', ''),
                             'email': friend['email'],
-                            'img': friend.get('img', 'profile_pics/default.jpg'),
-                            'is_online': friend.get('is_online')
+                            'img': friend.get('img', 'profile_pics/default.jpg')
                         }
                     )
-
-            logger.warning(f"BEFORE CURRENT USER")
             # Update or create the current user
             current_user = User.objects.get_or_create(
                 id=user_id,
                 defaults={
                     'username': username,
                     'email': email,
-                    'fullname': fullname,
-                    'is_online': is_online
+                    'fullname': fullname
                 }
             )
-
-            logger.warning(f"AFTER CURRENT USER {current_user}")
 
             return Response(user_data.get('friends', []))
         except requests.ConnectionError as e:
@@ -128,7 +120,6 @@ def get_conversation(request, id):
         return Response(serializer.data)
     except Exception as e:
         return Response({'error': str(e)}, status=401)
-   
 
 @api_view(['POST'])
 def block_user(request, user_id):

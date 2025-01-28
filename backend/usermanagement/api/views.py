@@ -62,8 +62,10 @@ GCLIENT_ID = os.environ.get('GCLIENT_ID')
 GCLIENT_SECRET = os.environ.get('GCLIENT_SECRET')
 HOST_URL = os.environ.get('VITE_HOST_URL')
 
-
-print(HOST_URL)
+@permission_classes([IsAuthenticated])
+class CheckAuth(APIView):
+    def get(self, request):
+        return Response({"message":"authenticated"}, status=200)
 
 
 
@@ -1086,17 +1088,20 @@ class RemoveFriendView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        friend_request = get_object_or_404(FriendRequest)
-        friend = get_object_or_404(User, username=request.data.get('username'))
-        friend_list = get_object_or_404(FriendList, user=request.user)
-        friend_list.friends.remove(friend)
-        
-        # Remove from friend's list as well
-        friend_friend_list = get_object_or_404(FriendList, user=friend)
-        friend_friend_list.friends.remove(request.user)
-        friend_request.delete()
-        
-        return Response({'status': 'friend removed'})
+        try:
+                
+            friend_request = get_object_or_404(FriendRequest)
+            friend = get_object_or_404(User, username=request.data.get('username'))
+            friend_list = get_object_or_404(FriendList, user=request.user)
+            friend_list.friends.remove(friend)
+            
+            # Remove from friend's list as well
+            friend_friend_list = get_object_or_404(FriendList, user=friend)
+            friend_friend_list.friends.remove(request.user)
+            friend_request.delete()
+            return Response({'status': 'friend removed'})
+        except FriendRequest.MultipleObjectsReturned:
+            return Response({'Error': 'Failed friend removed'}, status=400)
 
 # """
 # ███████╗ █████╗ ██╗  ██╗██╗███╗   ██╗ ██████╗     ██████╗ ███████╗ █████╗ ██╗  ████████╗██╗███╗   ███╗███████╗     ██████╗ ███╗   ██╗██╗     ██╗███╗   ██╗███████╗    ███████╗████████╗ █████╗ ████████╗██╗   ██╗███████╗

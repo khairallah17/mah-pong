@@ -31,9 +31,9 @@ const Dashboard = () => {
   return (
     <div className="w-full h-full">
       <div className="p-4 lg:p-6 space-y-6">
-        <div className="grid md:grid-cols-3 lg:grid-cols-4 gap-4 lg:gap-6">
-          <div className="md:col-span-2 lg:col-span-3 bg-black/50 rounded-xl border border-gray-800 overflow-hidden backdrop-blur-sm">
-            <div className="relative h-[450px] lg:h-90">
+        <div className="grid xl:grid-cols-3 gap-4 xl:gap-6">
+          <div className="xl:col-span-2 bg-black/50 rounded-xl border border-gray-800 overflow-hidden backdrop-blur-sm">
+            <div className="relative hidden md:block h-[450px] xl:h-90">
               <img 
                 src="play-1vs1.jpg"
                 alt="Ping Pong Arena"
@@ -41,7 +41,7 @@ const Dashboard = () => {
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent">
                 <div className="absolute bottom-24 left-8 p-6">
-                  <h1 className="text-2xl lg:text-4xl font-bold mb-2 bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent">
+                  <h1 className="text-2xl xl:text-4xl font-bold mb-2 bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent">
                     {t('Ping Pong Pro League')}
                   </h1>
                   <p className="text-gray-300 max-w-xl">
@@ -54,11 +54,11 @@ const Dashboard = () => {
 
           {
             loading ? (
-              <div role="status" className="min-h-56 h-full w-full animate-pulse md:col-span-1">
+              <div role="status" className="min-h-56 h-full w-full animate-pulse xl:col-span-1">
                   <div className="h-full w-full bg-gray-700 rounded-xl"></div>
               </div>
             ) : (
-              <div className="md:col-span-1 bg-black/50 rounded-xl border border-gray-800 p-4 backdrop-blur-sm">
+              <div className="lg:col-span-1 bg-black/50 rounded-xl border border-gray-800 p-2 backdrop-blur-sm">
                 <PlayerList />
               </div>
             )

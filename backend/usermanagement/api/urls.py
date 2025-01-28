@@ -5,6 +5,8 @@ from . import views
 # from . import adapter
 
 urlpatterns = [
+
+    path('test/', views.CheckAuth.as_view(), name="check-auth"),
     
     #zouhair urls Path
     path('allusers/', views.get_allusers.as_view(), name="all-users"),
