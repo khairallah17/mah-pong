@@ -13,6 +13,7 @@ export default function LocalTournament() {
   const [currentMatch, setCurrentMatch] = useState(0);
   const [tournamentStarted, setTournamentStarted] = useState(false);
   const [champion, setChampion] = useState('');
+  const [showMatchStartPopup, setShowMatchStartPopup] = useState(false);
 
   useEffect(() => {
     const queryParams = new URLSearchParams(location.search);
@@ -21,6 +22,7 @@ export default function LocalTournament() {
     const storedPlayers = JSON.parse(localStorage.getItem('players'));
     const storedMatches = JSON.parse(localStorage.getItem('matches'));
     const storedTournamentStarted = JSON.parse(localStorage.getItem('tournamentStarted'));
+
 
     if (storedPlayers) setPlayers(storedPlayers);
     if (storedMatches) setMatches(storedMatches);
@@ -44,6 +46,7 @@ export default function LocalTournament() {
   };
 
   const startTournament = () => {
+
     const initialMatches = [
       { id: 1, round: 1, position: 1, player1: players.player1, player2: players.player2 },
       { id: 2, round: 1, position: 2, player1: players.player3, player2: players.player4 },
@@ -54,13 +57,18 @@ export default function LocalTournament() {
     localStorage.setItem('players', JSON.stringify(players));
     localStorage.setItem('matches', JSON.stringify(initialMatches));
     localStorage.setItem('tournamentStarted', JSON.stringify(true));
+
   };
 
   const navigateToMatch = (matchIndex) => {
-    const match = matches[matchIndex];
-    if (match) {
-      navigate(`/dashboard/game/local2d?match_id=${match.id}&player1=${match.player1}&player2=${match.player2}`);
-    }
+    setShowMatchStartPopup(true);
+    setTimeout(() => {
+      setShowMatchStartPopup(false);
+      const match = matches[matchIndex];
+      if (match) {
+        navigate(`/dashboard/game/local2d?match_id=${match.id}&player1=${match.player1}&player2=${match.player2}`);
+      }
+    }, 3000);
   };
 
   const handleMatchWinner = (winner, matchId) => {
@@ -118,7 +126,7 @@ export default function LocalTournament() {
             </h1>
             <div className="w-48 h-1 mx-auto mt-2"></div>
             <div className="mt-8 space-y-4">
-              {[t('player')+'1', t('player')+'2', t('player')+'3', t('player')+'4'].map((player, index) => (
+              {[t('player') + '1', t('player') + '2', t('player') + '3', t('player') + '4'].map((player, index) => (
                 <div key={index} className="flex items-center justify-center bg-transparent space-x-2">
                   <input
                     type="text"
@@ -222,6 +230,13 @@ export default function LocalTournament() {
         )}
       </div>
 
+      {showMatchStartPopup && (
+        <div className="z-50 fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-gray-900/95 p-8 rounded-lg text-center">
+          <h2 className="text-2xl font-bold text-white mb-4">
+            {matchStartData?.yourName} vs {matchStartData?.opponent} {t('Match starting soon...')}
+          </h2>
+        </div>
+      )}
       <div className="w-full flex items-end flex-col  bottom-4 right-4">
         <div className="flex gap-4">
           <button
