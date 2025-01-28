@@ -15,6 +15,8 @@ import { Line } from 'react-chartjs-2';
 import '../i18n';
 import { useTranslation } from 'react-i18next';
 
+import { UseProfilContext } from '../hooks/useProfilContext';
+
 import { ImSpinner2 } from "react-icons/im";
 
 ChartJS.register(

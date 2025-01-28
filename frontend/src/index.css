@@ -13,14 +13,17 @@
 
 ::-webkit-scrollbar {
   visibility: hidden;
+  display: none;
 }
 
 ::-webkit-scrollbar-track {
   visibility: hidden;
+  display: none;
 }
 
 ::-webkit-scrollbar-thumb {
   visibility: hidden;
+  display: none;
 }
 
 .homepage {

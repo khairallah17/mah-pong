@@ -26,7 +26,7 @@ const SidebarList = ({ item, list, icon, link }) => {
           `}
         >
           <span className="flex-shrink-0">{icon}</span>
-          {open && <span className="text-sm">{item}</span>}
+          {open && <span className="text-sm lg:block hidden">{item}</span>}
         </NavLink>
 
         {/* Dropdown Toggle Button */}

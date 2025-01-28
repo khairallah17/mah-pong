@@ -4,6 +4,7 @@ import { gsap } from 'gsap';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import GameScore from '../../components/pvp/GameScore';
 import { Navigate } from 'react-router-dom';
+import { useAuthContext } from '../../hooks/useAuthContext';
 
 function Pve3d() {
     const websocket_url = import.meta.env.VITE_WEBSOCKET_URL
@@ -31,8 +32,10 @@ function Pve3d() {
     const TABLE_DIMENSIONS = { width: 1.45, length: 2.6 };
     const isPlayer1Ref = useRef(isPlayer1);
     const initBallPos = new THREE.Vector3(0, 1, 0);
-    let token = localStorage.getItem('authtoken');
+
     let paddleWidth = 0;
+
+    const { authtoken } = useAuthContext()
 
     useEffect(() => {
         isPlayer1Ref.current = isPlayer1;
@@ -40,8 +43,8 @@ function Pve3d() {
 
     useEffect(() => {
         if (token && !wsRef.current) {
-            const accessToken = JSON.parse(localStorage.getItem('authtoken')).access;
-            wsRef.current = new WebSocket(`${websocket_url}/api/game/ws/matchmaking/?token=` + accessToken);
+            
+            wsRef.current = new WebSocket(`${websocket_url}/api/game/ws/matchmaking/?token=` + authtoken);
             wsRef.current.onopen = () => {
                 console.log('WebSocket connection established');
                 wsRef.current.send(JSON.stringify({ type: 'player_ready' }));

@@ -6,7 +6,7 @@ import { WebSocketProvider } from "../websockets/WebSocketProvider";
 import ChatContextProvider from "../context/chatContext";
 import { OnlineContextProvider } from "../context/onlineStatusContext";
 import { UserContextProvider } from "../context/userContext";
-import { jwtDecode } from "jwt-decode"
+import { ProfilContextProvider } from "../context/profilContext";
 
 const ProtectRouter = () => {
 
@@ -22,9 +22,11 @@ const ProtectRouter = () => {
             <WebSocketProvider>
                 <ChatContextProvider>
                     <UserContextProvider>
-                        <OnlineContextProvider>
-                            <Outlet />
-                        </OnlineContextProvider>
+                        <ProfilContextProvider>
+                            <OnlineContextProvider>
+                                <Outlet />
+                            </OnlineContextProvider>
+                        </ProfilContextProvider>
                     </UserContextProvider>
                 </ChatContextProvider>
             </WebSocketProvider>

@@ -129,7 +129,7 @@ export default function Tournament() {
   };
 
   return (
-    <div className="w-full h-full justify-between flex flex-col bg-[#1a1464] p-8 pt-24">
+    <div className="w-full h-full justify-between flex flex-col p-8 pt-24">
       <div className="mx-auto w-full">
         {/* Tournament Title */}
         <div className="text-center mb-12">
@@ -140,11 +140,11 @@ export default function Tournament() {
         </div>
 
         {/* Tournament Bracket */}
-        <div className="flex justify-between items-center text-white">
-          <div className="flex-1">
-            <div className="grid grid-cols-2 gap-36 mr-20">
+        <div className="grid xl:grid-cols-[2fr_1fr] gap-24 grid-cols-1 w-full justify-between items-center text-white">
+          <div className="w-full">
+            <div className="grid grid-cols lg:grid-cols-2 items-center gap-36 mr-20">
               {/* Round 1 */}
-              <div className="space-y-16 mt-16">
+              <div className="space-y-16 mt-16 px-4 lg:px-4">
                 {matches.filter(m => m.round === 1).map((match) => (
                   <div key={match.id} className="relative">
                     <div className="flex flex-col gap-4">
@@ -196,14 +196,14 @@ export default function Tournament() {
           </div>
 
           {/* Champion Section */}
-          <div className="w-[30%] flex flex-col items-center">
+          <div className="w-full flex flex-col items-center">
             <div className="mb-4">
               <Trophy className="w-24 h-24 text-yellow-400" />
               <div className="text-yellow-400 text-2xl font-bold text-center mt-2">CHAMPION</div>
             </div>
-            <div className="w-[80%] h-12 bg-black/50 border border-gray-800 backdrop-blur-sm rounded-md relative overflow-hidden">
-              <div className="absolute left-0 top-0 bottom-0 w-8 bg-violet-400"></div>
-              <span className="pl-12">
+            <div className="w-[80%] bg-black/50 border border-gray-800 backdrop-blur-sm rounded-md relative overflow-hidden clip-card h-[100px] flex items-center gap-12">
+              <div className='bg-[url("https://cdn.intra.42.fr/users/3feda8640ab21b2af32e1c3cd703646d/zlaarous.jpg")] bg-cover w-auto h-full aspect-square bg-violet-400'></div>
+              <span className="">
                 {matches.length > 0 && matches[matches.length - 1].winner || 'TBD'}
               </span>
             </div>

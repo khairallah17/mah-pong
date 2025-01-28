@@ -67,7 +67,7 @@ const Sidebar = () => {
         fixed left-0 top-16 bottom-0
         flex flex-col justify-between
         transition-all duration-300 ease-in-out
-        ${open ? "w-[190px]" : "w-[80px]"}
+        ${open ? "lg:w-[190px] max-w-[190px] w-[80px]" : "w-[80px]"}
         px-4 py-6
         border-r border-white/10
       `}

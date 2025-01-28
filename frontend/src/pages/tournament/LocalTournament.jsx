@@ -181,24 +181,24 @@ export default function LocalTournament() {
                   <div className="px-4 lg:px-4">
                     {matches.filter(m => m.round === 2).map((match) => (
                       <div key={match.id} className="relative">
-                        <div className="flex flex-col gap-4">
-                          <div className={`p-0 bg-transparent relative flex items-center overflow-visible transition-all duration-300 rounded-xl ${match.winner === match.player1 ? 'ring-1 ring-white' : ''}`}>
-                            <div className="absolute z-[1] w-[40px] h-full rounded-l-xl bg-[#9a77ff]"></div>
-                            <div className="relative bg-black/50 border border-gray-800 overflow-hidden backdrop-blur-sm w-[100%] h-[100px] flex items-center clip-card rounded-xl">
-                              <span className="absolute left-[20%] pl-12">{match.player1 || 'TBD'}</span>
-                            </div>
-                            <div className="absolute left-[100%] top-[50%] w-[13%] h-[2px] bg-white"></div>
-                            <div className='absolute left-[113%] top-[50%] w-[2px] h-[118%] bg-white'></div>
+                      <div className="flex flex-col gap-4">
+                        <div className={`p-0 bg-transparent relative flex items-center overflow-visible rounded-xl transition-all duration-300 ${match.winner === match.player1 ? 'ring-1 ring-white' : ''}`}>
+                          <div className="relative bg-black/50 border border-gray-800 overflow-hidden backdrop-blur-sm w-[100%] h-[100px] flex items-center clip-card rounded-xl">
+                            <div className="w-[40px] h-full rounded-l-xl bg-[#9a77ff]"></div>
+                            <span className="pl-12">{match.player1 || 'TBD'}</span>
                           </div>
-                          <div className={`p-0 bg-transparent relative flex items-center overflow-visible transition-all duration-300 rounded-xl ${match.winner === match.player2 ? 'ring-1 ring-white' : ''}`}>
-                            <div className="absolute z-[1] w-[40px] h-full rounded-l-xl bg-[#9a77ff]"></div>
-                            <div className="relative bg-black/50 border border-gray-800 overflow-hidden backdrop-blur-sm w-[100%] h-[100px] flex items-center clip-card rounded-xl">
-                              <span className="absolute left-[20%] pl-12">{match.player2 || 'TBD'}</span>
-                            </div>
-                            <div className="absolute left-[100%] top-[50%] w-[13%] h-[2px] bg-white"></div>
+                          <div className="absolute left-[100%] top-[50%] w-[13%] h-[2px] bg-white"></div>
+                          <div className='absolute left-[113%] top-[50%] w-[2px] h-[118%] bg-white'></div>
+                        </div>
+                        <div className={`p-0 bg-transparent relative flex items-center overflow-visible transition-all duration-300 rounded-xl ${match.winner === match.player2 ? 'ring-1 ring-white' : ''}`}>
+                          <div className="relative bg-black/50 border border-gray-800 overflow-hidden backdrop-blur-sm w-[100%] h-[100px] flex items-center clip-card rounded-xl">
+                            <div className="w-[40px] h-full rounded-l-xl bg-[#9a77ff]"></div>
+                            <span className="pl-12">{match.player2 || 'TBD'}</span>
                           </div>
+                          <div className="absolute left-[100%] top-[50%] w-[13%] h-[2px] bg-white"></div>
                         </div>
                       </div>
+                    </div>
                     ))}
                   </div>
                 </div>
@@ -210,9 +210,9 @@ export default function LocalTournament() {
                   <Trophy className="w-24 h-24 text-yellow-400" />
                   <div className="text-yellow-400 text-2xl font-bold text-center mt-2">CHAMPION</div>
                 </div>
-                <div className="w-[80%] h-12 bg-black/50 border border-gray-800 backdrop-blur-sm rounded-md relative overflow-hidden">
-                  <div className="absolute left-0 top-0 bottom-0 w-8 bg-violet-400"></div>
-                  <span className="pl-12">
+                <div className="w-[80%] bg-black/50 border border-gray-800 backdrop-blur-sm rounded-md relative overflow-hidden clip-card h-[100px] flex items-center gap-12">
+                  <div className='bg-[url("https://cdn.intra.42.fr/users/3feda8640ab21b2af32e1c3cd703646d/zlaarous.jpg")] bg-cover w-auto h-full aspect-square bg-violet-400'></div>
+                  <span className="">
                     {matches.length > 0 && matches[matches.length - 1].winner || 'TBD'}
                   </span>
                 </div>

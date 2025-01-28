@@ -3,340 +3,36 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { jwtDecode } from "jwt-decode";
 import { WebSocketContext } from '../../../websockets/WebSocketProvider.jsx';
 import { Shield, Gamepad2, UserPlus, UserMinus, UserX, Check, X, Loader2 } from 'lucide-react';
-import { toast } from 'react-toastify';
 import '../../../i18n.js';
 import { useTranslation } from 'react-i18next';
 import { NavLink } from 'react-router-dom';
 
-import useWebsocketContext from '../../../hooks/useWebsocketContext.jsx';
+import { UseProfilContext } from '../../../hooks/useProfilContext.jsx';
 
 import { useAuthContext } from '../../../hooks/useAuthContext.jsx';
 
 const PictureUser = () => {
-  const navigate = useNavigate();
+
   const { t } = useTranslation();
-  const [profil, setProfil] = useState([]);
-  const [playerStats, setPlayerStats] = useState([]);
-  const [requests, setRequests] = useState([]);
-  const [error, setError] = useState(null);
-  const [pendingRequest, setPendingRequest] = useState(null);
-  const [friendStatus, setFriendStatus] = useState('none');
-  const [loading, setLoading] = useState(true)
-  const [users, setUsers] = useState(true);
-  const { wsManager } = useWebsocketContext();
-  
-  const { username } = useParams();
-  const { user , authtoken } = useAuthContext()
-  const currentUser = user?.username
+  const { user: { username } } = useAuthContext()
+  const currentUser = username
 
-  const handleGameInvite = async () => {
-    try {
-      const code = Math.random().toString(36).substring(2, 15);
-      // setInviteCode(code);
-      
-      navigate(`/dashboard/game/pvp2d?invite=${code}`, {
-        replace: true
-      });
-      wsManager.sendMessage(`${user.username} has invited you to a game!`, [username], `/dashboard/game/pvp2d?invite=${code}`);
-    } catch (error) {
-      console.error('Error generating invite:', error);
-      alert('Failed to generate game invite');
-    }
-  };
-
-  const checkFriendStatus = async () => {
-    try {
-        // Check friend requests
-        const response = await fetch(`/api/usermanagement/api/friend-requests/`, {
-            headers: {
-                'Authorization': `Bearer ${authtoken}`
-            }
-        });
-        
-        if (!response.ok) {
-            throw new Error('Failed to fetch friend requests');
-        }
-
-        const requests = await response.json();
-        setRequests(requests);
-        // Check for any pending or accepted requests between the users
-        const existingRequest = requests.find(request => 
-            (request.sender_username === currentUser && request.receiver_username === username) ||
-            (request.sender_username === username && request.receiver_username === currentUser)
-        );
-
-        if (existingRequest) {
-          setPendingRequest(existingRequest);
-          if (existingRequest.status === 'pending') {
-              setFriendStatus('pending');
-              return;
-          } else if (existingRequest.status === 'accepted') {
-              setFriendStatus('friends');
-              return;
-          }
-          // setFriendStatus()
-        }
-
-        // If no request exists, check friends list
-        const friendsResponse = await fetch(`/api/usermanagement/api/friends/`, {
-            headers: {
-                'Authorization': `Bearer ${authtoken}`
-            }
-        });
-
-        if (!friendsResponse.ok) {
-            throw new Error('Failed to fetch friends list');
-        }
-
-        const friendsData = await friendsResponse.json();
-        const isFriend = friendsData.friends?.some(friend => friend.username === username);
-
-        setFriendStatus(isFriend ? 'friends' : 'none');
-    } catch (err) {
-      toast.warn(`Error checking friend status: ${err}`, {
-        position: "top-right",
-        autoClose: 5000,
-        hideProgressBar: false,
-        closeOnClick: false,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-        theme: "dark",
-      })
-        setFriendStatus('none');
-    }
-  };
-
-  useEffect(() => {
-    const fetchProfil = async () => {
-      try {
-        setLoading(true)
-        const response = await fetch(`/api/usermanagement/api/user-profile/${username}/`);
-        if (!response.ok) {
-          throw new Error('Profile not found');
-        }
-        const data = await response.json();
-        setProfil(data);
-        await checkFriendStatus();
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false)
-      }
-    };
-
-    if (username && authtoken) {
-      fetchProfil();
-    }
-  }, [username, authtoken]);
-
-  const handleFriendRequest = async () => {
-    try {
-      const response = await fetch('/api/usermanagement/api/friend-requests/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${authtoken}`
-        },
-        body: JSON.stringify({ receiver: username })
-      });
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.detail || 'Failed to send friend request');
-      }
-
-      const newRequest = await response.json();
-      setPendingRequest(newRequest);
-      setFriendStatus('pending');
-      wsManager?.sendMessage(`${currentUser} sent you a friend request`, [username], `/dashboard/profil/${currentUser}`);
-    } catch (err) {
-      toast.warn(`Error: ${err}`, {
-        position: "top-right",
-        autoClose: 5000,
-        hideProgressBar: false,
-        closeOnClick: false,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-        theme: "dark",
-      })
-      setError(err.message);
-    }
-  };
-
-  const handleAcceptRequest = async () => {
-    try {
-      // First get the pending request ID
-      const response = await fetch(`/api/usermanagement/api/friend-requests/`, {
-        headers: {
-          'Authorization': `Bearer ${authtoken}`
-        }
-      });
-      const requests = await response.json();
-      
-      const pendingRequest = requests.find(request => 
-        request.sender_username === username && 
-        request.receiver_username === currentUser &&
-        request.status === 'pending'
-      );
-
-      if (!pendingRequest) {
-        throw new Error('Friend request not found');
-      }
-
-      // Accept the request
-      const acceptResponse = await fetch(`/api/usermanagement/api/friend-requests/${pendingRequest.id}/accept/`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${authtoken}`
-        }
-      });
-
-      if (!acceptResponse.ok) {
-        throw new Error('Failed to accept friend request');
-      }
-
-      setFriendStatus('friends');
-      wsManager?.sendMessage(`${currentUser} accepted your friend request`, [username], `/dashboard/profil/${currentUser}`);
-    } catch (err) {
-      toast.warn(`Error accepting friend request: ${err}`, {
-        position: "top-right",
-        autoClose: 5000,
-        hideProgressBar: false,
-        closeOnClick: false,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-        theme: "dark",
-      })
-      setError(err.message);
-    }
-  };
-
-  const handleRejectRequest = async () => {
-    try {
-      const response = await fetch(`/api/usermanagement/api/friend-requests/`, {
-        headers: {
-          'Authorization': `Bearer ${authtoken}`
-        }
-      });
-      const requests = await response.json();
-      
-      const pendingRequest = requests.find(request => 
-        request.sender_username === username && 
-        request.receiver_username === currentUser &&
-        request.status === 'pending'
-      );
-
-      if (!pendingRequest) {
-        throw new Error('Friend request not found');
-      }
-
-      const rejectResponse = await fetch(`/api/usermanagement/api/friend-requests/${pendingRequest.id}/reject/`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${authtoken}`
-        }
-      });
-
-      if (!rejectResponse.ok) {
-        throw new Error('Failed to reject friend request');
-      }
-
-      setFriendStatus('none');
-      wsManager.sendMessage(`${currentUser} Rejected your friend request`, [username], `/dashboard/profil/${currentUser}`);
-    } catch (err) {
-      toast.warn(`Error rejecting friend request: ${err}`, {
-        position: "top-right",
-        autoClose: 5000,
-        hideProgressBar: false,
-        closeOnClick: false,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-        theme: "dark",
-      })
-      setError(err.message);
-    }
-  };
-
-  const handleCancelRequest = async () => {
-    try {
-      const response = await fetch(`/api/usermanagement/api/friend-requests/`, {
-        headers: {
-          'Authorization': `Bearer ${authtoken}`
-        }
-      });
-      const requests = await response.json();
-      
-      const pendingRequest = requests.find(request => 
-        request.sender_username === currentUser && 
-        request.receiver_username === username &&
-        request.status === 'pending'
-      );
-
-      if (!pendingRequest) {
-        throw new Error('Friend request not found');
-      }
-
-      const cancelResponse = await fetch(`/api/usermanagement/api/friend-requests/${pendingRequest.id}/cancel/`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${authtoken}`
-        }
-      });
-
-      if (!cancelResponse.ok) {
-        throw new Error('Failed to cancel friend request');
-      }
-
-      setFriendStatus('none');
-    } catch (err) {
-      toast.warn(`Error canceling friend request: ${err}`, {
-        position: "top-right",
-        autoClose: 5000,
-        hideProgressBar: false,
-        closeOnClick: false,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-        theme: "dark",
-      })
-      setError(err.message);
-    }
-  };
-
-  const handleRemoveFriend = async () => {
-    try {
-      const response = await fetch('/api/usermanagement/api/friends/remove/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${authtoken}`
-        },
-        body: JSON.stringify({ username })
-      });
-
-      if (!response.ok && response.status != 404) {
-        throw new Error('Failed to remove friend');
-      }
-
-      setFriendStatus('none');
-    } catch (err) {
-      toast.warn(`Error removing friend: ${err}`, {
-        position: "top-right",
-        autoClose: 5000,
-        hideProgressBar: false,
-        closeOnClick: false,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-        theme: "dark",
-      })
-      setError(err.message);
-    }
-  };
+  const {
+    profil, setProfil,
+    playerStats,
+    error, setError,
+    loading, setLoading,
+    pendingRequest,
+    friendStatus,
+    handleGameInvite,
+    handleFriendRequest,
+    handleAcceptRequest,
+    handleRejectRequest,
+    handleCancelRequest,
+    handleRemoveFriend,
+    fetchProfil,
+    currentFriend
+  } = UseProfilContext()
 
   const renderActionButtons = () => {
     if (currentUser === profil?.username) {
@@ -355,6 +51,9 @@ const PictureUser = () => {
     }
 
     const friendButtons = (() => {
+
+      console.log(friendStatus)
+
       switch (friendStatus) {
         case 'none':
           return (
@@ -418,20 +117,6 @@ const PictureUser = () => {
       </>
     );
   };
-
-  if (error) {
-    toast.warn(`${error}`, {
-      position: "top-right",
-      autoClose: 5000,
-      hideProgressBar: false,
-      closeOnClick: false,
-      pauseOnHover: true,
-      draggable: true,
-      progress: undefined,
-      theme: "dark",
-    })
-  }
-
 
   return (
     <div className="space-y-6">

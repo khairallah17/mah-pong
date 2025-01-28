@@ -5,6 +5,7 @@ import Swal from 'sweetalert2';
 import { useSidebarContext } from '../hooks/useSidebar';
 import '../i18n';
 import { useTranslation } from 'react-i18next';
+import { useAuthContext } from '../hooks/useAuthContext';
 
 export default function Security() {
   const { t } = useTranslation();
@@ -14,6 +15,7 @@ export default function Security() {
   const [mfaCode, setMfaCode] = useState("");
   const [showOldPassword, setShowOldPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
+  const [passErr, setPassErr] = useState("")
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [is2FAEnabled, setIs2FAEnabled] = useState(false);
   const [showQRCode, setShowQRCode] = useState(false);
@@ -23,17 +25,33 @@ export default function Security() {
 
   const { setActiveLink } = useSidebarContext()
 
+  const { authtoken } = useAuthContext()
+
   useEffect(() => {
     setActiveLink('security')
     fetchQRCode();
   }, []);
 
+  useEffect(() => {
+    let regularExpression = /^(?=.*[0-9])(?=.*[!@#$%^&*])[a-zA-Z0-9!@#$%^&*]{6,16}$/;
+    if (newPassword != confirmPassword) {
+      setPassErr("Passwords does not match")
+    }
+    else if (!newPassword.match(regularExpression)) {
+      console.log("password exact")
+      setPassErr("Password should at least has one charachtere, number and special character")
+    } else if(newPassword == confirmPassword) {
+      console.log("test")
+      setPassErr(null)
+    }
+  },[newPassword, confirmPassword])
+
   const fetchQRCode = async () => {
     try {
-      const token = JSON.parse(localStorage.getItem('authtoken')).access;
+      
       const response = await axios.get('/api/usermanagement/api/2fa/setup/', {
         headers: {
-          'Authorization': `Bearer ${token}`,
+          'Authorization': `Bearer ${authtoken}`,
           'Content-Type': 'application/json'
         }
       });
@@ -84,26 +102,13 @@ export default function Security() {
     }
     // Password update logic
     try {
-      
-      let token = localStorage.getItem('authtoken');
-      if (!token) {
-        console.error('No authentication token found');
-        Swal.fire({
-          icon: 'error',
-          title: 'No authentication token found. Please try again.',
-          showConfirmButton: false,
-          timer: 3000
-        });
-        return;
-      }
-      const parsed = JSON.parse(token);
-      const accessToken = parsed.access;
+    
 
       const response = await axios.post('/api/usermanagement/api/change-password/', 
         { old_password: oldPassword, new_password: newPassword, confirm_password: confirmPassword },
         {
           headers: {
-            'Authorization': `Bearer ${accessToken}`,
+            'Authorization': `Bearer ${authtoken}`,
             'Content-Type': 'application/json'
           }
         }
@@ -171,12 +176,12 @@ export default function Security() {
     setVerificationError("");
 
     try {
-      const token = JSON.parse(localStorage.getItem('authtoken')).access;
+      
       const response = await axios.post('/api/usermanagement/api/2fa/verify/', 
         { otp: mfaCode },
         {
           headers: {
-            'Authorization': `Bearer ${token}`,
+            'Authorization': `Bearer ${authtoken}`,
             'Content-Type': 'application/json'
           }
         }
@@ -210,12 +215,12 @@ export default function Security() {
 
   const handleDisable2FA = async () => {
     try {
-      const token = JSON.parse(localStorage.getItem('authtoken')).access;
+      
       const response = await axios.post('/api/usermanagement/api/2fa/disable/', 
         {},
         {
           headers: {
-            'Authorization': `Bearer ${token}`,
+            'Authorization': `Bearer ${authtoken}`,
             'Content-Type': 'application/json'
           }
         }
@@ -309,6 +314,11 @@ export default function Security() {
                 {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
               </button>
             </div>
+              {
+                passErr && (
+                  <p className='text-red-500'>{passErr}</p>
+                )
+              }
           </div>
         </div>
         <button type="submit" className="px-6 py-2 bg-white text-black rounded-lg hover:bg-white/90 transition-colors">

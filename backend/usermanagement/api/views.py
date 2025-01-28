@@ -1090,7 +1090,7 @@ class RemoveFriendView(APIView):
     def post(self, request):
         try:
                 
-            friend_request = get_object_or_404(FriendRequest)
+            # friend_request = get_object_or_404(FriendRequest)
             friend = get_object_or_404(User, username=request.data.get('username'))
             friend_list = get_object_or_404(FriendList, user=request.user)
             friend_list.friends.remove(friend)
@@ -1098,8 +1098,17 @@ class RemoveFriendView(APIView):
             # Remove from friend's list as well
             friend_friend_list = get_object_or_404(FriendList, user=friend)
             friend_friend_list.friends.remove(request.user)
-            friend_request.delete()
-            return Response({'status': 'friend removed'})
+            friend_request = FriendRequest.objects.filter(
+                (Q(sender=request.user, receiver=friend) |
+                Q(sender=friend, receiver=request.user)),
+                status='accepted'
+            ).first()
+            
+            if friend_request:
+                friend_request.delete()
+                return Response({'status': 'friend request record removed successfully'}, status=200)
+            else:
+                return Response({'error': 'No accepted friend request found between these users'}, status=404)
         except FriendRequest.MultipleObjectsReturned:
             return Response({'Error': 'Failed friend removed'}, status=400)
 

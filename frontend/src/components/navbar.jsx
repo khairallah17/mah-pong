@@ -10,6 +10,8 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuthContext } from '../hooks/useAuthContext';
 import useUserContext from '../hooks/useUserContext';
 
+import Logo from "../assets/logo.png"
+
 const Navbar = () => {
   const navigate = useNavigate();
   const { toggleSidebar, open } = useSidebarContext();
@@ -96,12 +98,14 @@ const Navbar = () => {
         <div className="flex items-center gap-4">
           <button
             onClick={toggleSidebar}
-            className="p-1.5 rounded-md text-white/80 hover:text-white hover:bg-white/10 focus:outline-none"
+            className="p-1.5 rounded-md text-white/80 hover:text-white hover:bg-white/10 focus:outline-none lg:flex hidden"
             aria-label={open ? "Close sidebar" : "Open sidebar"}
           >
             {open ? <X size={20} /> : <Menu size={20} />}
           </button>
-          <span className="text-white font-semibold">Logo</span>
+          <NavLink to="/dashboard">
+            <img src={Logo} className='w-16 h-auto aspect-auto ml-[-10px]' alt="" />
+          </NavLink>
         </div>
 
         <div className="flex-1 max-w-2xl mx-4" ref={searchRef}>

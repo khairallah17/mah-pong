@@ -81,7 +81,6 @@ export default function Pve2d() {
     window.addEventListener('resize', onWindowResize);
 
     const animate = () => {
-      console.log("akjshflkadsbfjkabsdfk")
       requestAnimationFrame(animate);
       if (winnerRef.current) {
         return;
@@ -376,7 +375,7 @@ export default function Pve2d() {
           <h2 className="text-2xl font-bold text-white mb-4">{countdown}</h2>
         </div>
       )}
-      <div id="game-container">
+      <div id="game-container" className='overflow-hidden'>
         <GameScore
           player1={{
             username: 'You',

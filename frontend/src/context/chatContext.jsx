@@ -1,3 +1,4 @@
+
 import { createContext, useState, useRef } from "react";
 import { useAuthContext } from "../hooks/useAuthContext";
 import useWebsocketContext from "../hooks/useWebsocketContext";
@@ -34,7 +35,6 @@ const ChatContextProvider = ({ children }) => {
 
     const startGame = async (link) => {
         try {
-            console.log("START GAME FROM ==> ", link)
             navigate(link , {
                 replace: true
             });
@@ -99,6 +99,7 @@ const ChatContextProvider = ({ children }) => {
 
     const loadUsers = async () => {
         try {
+            setLoading(true)
             const response = await axios.get("/api/chat/api/users/", {
                 headers: {
                     Authorization: `Bearer ${authtoken}`
@@ -109,6 +110,8 @@ const ChatContextProvider = ({ children }) => {
             setUsers(response.data);
         } catch (error) {
             console.error("Error loading users:", error);
+        } finally {
+            setLoading(false);
         }
     };
 

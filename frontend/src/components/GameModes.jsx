@@ -38,7 +38,7 @@ export const GameModes = () => {
     {
       id: 'tournament',
       title: t('Tournament'),
-      path: '/dashboard/game',
+      path: '/dashboard/tournament/tournamentPage',
       slideIndex: 2,
       icon: <Trophy className="w-6 h-6" />,
       description: t('Join competitive tournaments'),

@@ -6,6 +6,7 @@ import Swal from 'sweetalert2';
 import { useSidebarContext } from '../hooks/useSidebar';
 import '../i18n';
 import { useTranslation } from 'react-i18next';
+import { useAuthContext } from '../hooks/useAuthContext';
 
 export default function Profile() {
   const { t } = useTranslation();
@@ -19,26 +20,13 @@ export default function Profile() {
 
   const { setActiveLink } = useSidebarContext()
 
+  const { authtoken } = useAuthContext()
+
   const fetchProfile = async () => {
     try {
-      let token = localStorage.getItem('authtoken');
-      if (!token) {
-        console.error('No authentication token found');
-        Swal.fire({
-          icon: 'error',
-          title: 'No authentication token found. Please try again.',
-          showConfirmButton: false,
-          timer: 1500
-        });
-        return;
-      }
-      
-      const parsed = JSON.parse(token);
-      const accessToken = parsed.access;
-
       const response = await axios.get('/api/usermanagement/api/edit-profile/', {
         headers: {
-          'Authorization': `Bearer ${accessToken}`
+          'Authorization': `Bearer ${authtoken}`
         }
       });
       console.log(response.data);
@@ -68,18 +56,10 @@ export default function Profile() {
     formData.append('img', file);
 
     try {
-      let token = localStorage.getItem('authtoken');
-      if (!token) {
-        console.error('No authentication token found');
-        return;
-      }
-      
-      const parsed = JSON.parse(token);
-      const accessToken = parsed.access;
 
       const response = await axios.put('/api/usermanagement/api/edit-profile/', formData, {
         headers: {
-          'Authorization': `Bearer ${accessToken}`,
+          'Authorization': `Bearer ${authtoken}`,
           'Content-Type': 'multipart/form-data'
         }
       });
@@ -114,18 +94,10 @@ export default function Profile() {
     formData.append('avatar', file);
 
     try {
-      let token = localStorage.getItem('authtoken');
-      if (!token) {
-        console.error('No authentication token found');
-        return;
-      }
-      
-      const parsed = JSON.parse(token);
-      const accessToken = parsed.access;
 
       const response = await axios.put('/api/usermanagement/api/edit-profile/', formData, {
         headers: {
-          'Authorization': `Bearer ${accessToken}`,
+          'Authorization': `Bearer ${authtoken}`,
           'Content-Type': 'multipart/form-data'
         }
       });
@@ -154,18 +126,11 @@ export default function Profile() {
 
   const handleImageDelete = async () => {
     try {
-      let token = localStorage.getItem('authtoken');
-      if (!token) {
-        console.error('No authentication token found');
-        return;
-      }
-      
-      const parsed = JSON.parse(token);
-      const accessToken = parsed.access;
+
 
       await axios.delete('/api/usermanagement/api/edit-profile/', {
         headers: {
-          'Authorization': `Bearer ${accessToken}`
+          'Authorization': `Bearer ${authtoken}`
         }
       });
       
@@ -197,20 +162,13 @@ export default function Profile() {
 
   const handleSubmit = async () => {
     try {
-      let token = localStorage.getItem('authtoken');
-      if (!token) {
-        console.error('No authentication token found');
-        return;
-      }
-      
-      const parsed = JSON.parse(token);
-      const accessToken = parsed.access;
+
 
       const response = await axios.put('/api/usermanagement/api/edit-profile/', {
         fullname: profileData.fullname
       }, {
         headers: {
-          'Authorization': `Bearer ${accessToken}`
+          'Authorization': `Bearer ${authtoken}`
         }
       });
       
@@ -279,27 +237,6 @@ export default function Profile() {
               >
                 {t('Delete')}
               </button>
-            </div>
-          </div>
-        </div>
-        <div className="flex flex-col md:flex-row items-center gap-4">
-          <img
-            src={`/api/usermanagement${profileData.avatar}`}
-            alt="Profile Avatar"
-            className="w-24 h-24 bg-blue-800 rounded-full border-2 border-white/90"
-          />
-          <div className="space-y-2 text-center md:text-left">
-            <h3 className="font-inter text-white text-sm">{t('Profile Avatar')}</h3>
-            <div className="flex flex-wrap justify-center md:justify-start gap-3">
-              <label className="px-6 py-2 bg-white text-black rounded-md hover:bg-white/90 transition-colors cursor-pointer">
-                <input 
-                  type="file" 
-                  className="hidden"
-                  accept="media/*" 
-                  onChange={handleAvatarUpload}
-                />
-                {t('Upload an avatar')}
-              </label>
             </div>
           </div>
         </div>
