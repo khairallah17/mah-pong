@@ -22,7 +22,7 @@ const GameCard = ({ title, description, accentColor, buttonColor, image, icon: I
         bg-gradient-to-br from-sky-900 to-sky-800
         flex flex-col items-center
         transition-all duration-300 ease-in-out
-        transform ${isHovered ? 'scale-105' : ''}
+        transform
         hover:shadow-[0_0_15px_rgba(0,0,0,0.3)]
         cursor-pointer
         max-w-sm mx-auto w-full
@@ -124,15 +124,6 @@ const Games = () => {
     {
       title: t('Other Games'),
       cards: [
-        {
-          title: "PvE 3D",
-          description: t('Experience next-gen 3D gameplay against AI.'),
-          accentColor: "border-purple-500",
-          buttonColor: "bg-gradient-to-r from-purple-600 to-purple-400",
-          image: "/play-bot.jpg",
-          icon: Gamepad2,
-          path: "/dashboard/game/pve3d"
-        },
         {
           title: "TicTacToe",
           description: t('Play the classic TicTacToe game against other players.'),

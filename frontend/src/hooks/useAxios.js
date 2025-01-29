@@ -41,7 +41,6 @@ const useAxios = (url) => {
         fetchData(url)
 
         const cleanup = () => {
-            console.log("CLEANUP FUNCTION")
             isMounted = false
             source.cancel()
         }

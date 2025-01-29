@@ -21,8 +21,6 @@ export const PlayerList = () => {
   const { username } = user
 
   const { setSelectedUserId } = useChatContext()
-
-  console.log(url_host)
   
   const { t } = useTranslation();
   useEffect(() => {

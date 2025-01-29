@@ -18,19 +18,19 @@ const Profile = () => {
     fetchStats,
     profil,
     fetchProfil,
-    currentFriend
+    currentFriend,
+    username,
+    loading
   } = UseProfilContext();
-
-  const [loading, setLoading] = useState(true)
 
   const { t } = useTranslation();
 
 
   useEffect(() => {
 
-      Promise.all([setLoading(true), fetchStats(), fetchProfil()]).then(() => setLoading(false))
+      Promise.all([fetchStats(), fetchProfil()])
 
-  }, [currentFriend]);
+  }, [currentFriend, username]);
   
   return (
     <div className="min-h-screen bg-gradient-to-br from-navy-950 via-navy-900 to-navy-950">
@@ -45,7 +45,7 @@ const Profile = () => {
         loading ? (
           <p>Loading...</p>
         ): (
-          profil?.length > 0 ? (
+          profil?.username ? (
             <>
                 {/* Mobile Profile Section */}
                 <div className="lg:hidden mb-6">
@@ -130,9 +130,9 @@ const Profile = () => {
             </>
           ) : (
             <div className='flex flex-col items-center justify-center'>
-              <h3 className='text-7xl border-b-2 pb-4 uppercase'>{t("we can't find this user")}</h3>
-              <p className='uppercase text-[30rem] leading-[1] font-bold'>404</p>
-              <h3 className='text-7xl border-t-2 pt-4 uppercase'>{t("user lost")}</h3>
+              <h3 className='lg:text-7xl sm:text-4xl text-xl border-b-2 pb-4 uppercase'>{t("we can't find this user")}</h3>
+              <p className='uppercase md:text-[30rem] sm:text-[15rem] text-[8rem] leading-[1] font-bold'>404</p>
+              <h3 className='md:text-7xl sm:text-4xl text-xl border-t-2 pt-4 uppercase'>{t("user lost")}</h3>
             </div>
           )
         )

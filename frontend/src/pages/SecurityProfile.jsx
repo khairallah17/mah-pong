@@ -38,10 +38,8 @@ export default function Security() {
       setPassErr("Passwords does not match")
     }
     else if (!newPassword.match(regularExpression)) {
-      console.log("password exact")
       setPassErr("Password should at least has one charachtere, number and special character")
     } else if(newPassword == confirmPassword) {
-      console.log("test")
       setPassErr(null)
     }
   },[newPassword, confirmPassword])
@@ -113,7 +111,6 @@ export default function Security() {
           }
         }
       );
-      console.log(response);
       if (response.data.error) {
         Swal.fire({
           icon: 'error',
@@ -121,7 +118,6 @@ export default function Security() {
           text: t('An error occurred.'),
           showConfirmButton: true
         });
-        console.log("here");
         return;
       }
       Swal.fire({

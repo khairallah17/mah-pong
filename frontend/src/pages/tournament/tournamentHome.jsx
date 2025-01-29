@@ -25,7 +25,6 @@ const TournamentHome = () => {
                 const response = await fetch("/api/game/api/tournaments");
                 const data = await response.json();
                 setCurrentTournament(data.filter(tournament => tournament.players.includes(user.username) && tournament.status !== 'completed'));
-                console.log(data.filter(tournament => tournament.players.includes(user.username)));
                 const waitingTournaments = data.filter(tournament => tournament.status === 'waiting');
                 setTournaments(waitingTournaments);
                 setIsLoading(false);
@@ -44,24 +43,12 @@ const TournamentHome = () => {
 
     return (
         <div className="w-full h-full flex">
-            <div className="mx-auto self-center justify-self-center">
-                <h1 className="text-4xl font-bold mb-8 text-center animate-fade-in-down zen-dots">
+            <div className="p-8 w-full">
+                <h1 className="text-4xl font-bold mb-8 animate-fade-in-down zen-dots ">
                     {t('Tournament Home')}
                 </h1>
-                <div className="mb-8 bg-black/50 rounded-xl border border-gray-800 overflow-hidden backdrop-blur-sm p-6 animate-fade-in">
-                    {/* <input
-                        className="w-full p-3 border border-blue-300 rounded mb-4 bg-white/20 text-white placeholder-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-400 transition duration-300"
-                        placeholder={t('Tournament Name')}
-                        value={tournamentCode}
-                        onChange={(e) => setTournamentCode(e.target.value)}
-                    /> */}
+                <div className="mb-8 bg-black/50 rounded-xl border border-gray-800 overflow-hidden backdrop-blur-sm p-6 animate-fade-in w-[250px]">
                     <div className="flex space-x-4">
-                        {/* <button
-                            className="flex-1 p-3 bg-blue-500 text-white rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 transition duration-300 transform hover:scale-105"
-                            onClick={() => navigate(`/dashboard/tournament/live?code=${tournamentCode}`)}
-                        >
-                            {t('Join')}
-                        </button> */}
                         <button
                             className="flex-1 p-3 bg-green-500 text-white rounded hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-400 transition duration-300 transform hover:scale-105"
                             onClick={() => navigate("/dashboard/tournament/live?code=" + tournamentCode)}
@@ -76,11 +63,11 @@ const TournamentHome = () => {
                         <p className="mt-2">{t('Loading tournaments...')}</p>
                     </div>
                 ) : (
-                    <ul className="space-y-4">
+                    <ul className="grid xl:grid-cols-4 lg:grid-cols-3 md:grid-cols-2 grid-cols w-full gap-4">
                         {tournaments.map((tournament, index) => (
                             <li 
                                 key={tournament.id} 
-                                className="border border-blue-300 rounded-lg shadow-lg p-4 bg-white/10 backdrop-blur-sm hover:bg-white/20 transition duration-300 transform hover:scale-102 animate-fade-in-up"
+                                className="border border-blue-300 rounded-lg shadow-lg p-4 bg-white/10 backdrop-blur-sm hover:bg-white/20 transition duration-300 transform hover:scale-102 animate-fade-in-up w-full"
                                 style={{ animationDelay: `${index * 100}ms` }}
                             >
                                 <button

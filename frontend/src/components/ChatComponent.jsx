@@ -13,6 +13,8 @@ import { PiGameControllerFill } from "react-icons/pi";
 import React, { useState, useEffect, useRef } from "react";
 import { Player, Controls } from "@lottiefiles/react-lottie-player";
 
+import Loading from "./loading";
+
 import { useNavigate } from "react-router-dom"
 
 import useChatContext from "../hooks/useChatContext";
@@ -100,7 +102,9 @@ const Chat = () => {
 
       {
         loading ? (
-          <p>Loading...</p>
+          <div className="w-full flex items-center justify-center">
+            <Loading test="!w-20"/>
+          </div>
         ) : (
           <>
                   <div
@@ -327,15 +331,6 @@ const Chat = () => {
                                       )}
                                       <div className="flex place-self-end justify-end gap-1 items-center">
                                         <p className="text-xs">{formatTime(msg.timestamp)}</p>
-                                        <IoCheckmarkDoneOutline
-                                          className={`text-sm ${
-                                            msg.sender === username
-                                            ? msg.seen
-                                            ? "text-green-600"
-                                            : "text-gray-400"
-                                            : "hidden"
-                                          }`}
-                                          />
                                       </div>
                                     </div>
                                   ))

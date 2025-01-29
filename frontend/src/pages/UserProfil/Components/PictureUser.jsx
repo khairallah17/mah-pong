@@ -52,8 +52,6 @@ const PictureUser = () => {
 
     const friendButtons = (() => {
 
-      console.log(friendStatus)
-
       switch (friendStatus) {
         case 'none':
           return (
@@ -132,7 +130,7 @@ const PictureUser = () => {
           <div className="relative">
             <div className="w-32 h-32 rounded-full ring-4 ring-navy-800 bg-navy-700 overflow-hidden">
               <img 
-                src={`/api/usermanagement${profil?.img}`}
+                src={`/api/usermanagement/${profil?.img}`}
                 alt="Profile"
                 className="w-full h-full object-cover"
               />

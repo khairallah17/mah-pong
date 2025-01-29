@@ -32,7 +32,7 @@ export const MatchHistory = () => {
             }
           }
         );
-        const allMatches = response.data;
+        const allMatches = response.data.reverse();
         
         // Calculate total pages based on all matches
         const total = Math.ceil(allMatches.length / matchesPerPage);

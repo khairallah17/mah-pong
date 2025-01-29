@@ -1,6 +1,7 @@
 version: '3.8'
 
 services:
+  
   game:
     container_name: game
     build:
@@ -52,7 +53,7 @@ services:
     expose:
       - 5173
     env_file:
-      - .env
+      - ./frontend/.env
     volumes:
       - front_vm:/app
       - /app/node_modules
@@ -130,8 +131,8 @@ services:
   game_db:
     image: postgres:15-alpine
     container_name: game_db
-    ports:
-      - 5432:5432
+    expose:
+      - 5432
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password
@@ -179,15 +180,9 @@ volumes:
   front_vm:
     driver: local
     driver_opts:
-      device: ${PWD}/frontend
       type: none
       o: bind
-  # nginx_vm:
-  #   driver: local
-  #   driver_opts:
-  #     device: ${PWD}/frontend/dist
-  #     type: none
-  #     o: bind
+      device: ./frontend
 
 networks:
   microservices-network:

@@ -7,6 +7,7 @@ import  PlayerList  from '../components/PlayerList';
 import '../i18n';
 import { useTranslation } from 'react-i18next';
 import useUserContext from '../hooks/useUserContext';
+import { UseProfilContext } from '../hooks/useProfilContext';
 
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState('matches');
@@ -14,6 +15,12 @@ const Dashboard = () => {
   const { t } = useTranslation()  
 
   const { loading } = useUserContext()
+
+  const { fetchStats } = UseProfilContext()
+
+  useEffect(() => {
+    fetchStats()
+  }, [])
 
   const renderTabContent = () => {
     switch (activeTab) {

@@ -198,7 +198,7 @@ const Navbar = () => {
                       </div>
                         <NavLink to={`/dashboard/profil/${user.username}`}>
                           <img
-                            src={user.img ? `/api/usermanagement/${user.img}` : DefaultAvatar}
+                            src={user.img ? `/api/usermanagement${user.img}` : DefaultAvatar}
                             alt={`${user.fullname}'s avatar`}
                             className="h-12 w-12 rounded-full object-cover ring-2 ring-white/20 cursor-pointer hidden md:block"
                             onError={(e) => {

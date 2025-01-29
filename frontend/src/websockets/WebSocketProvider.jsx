@@ -21,7 +21,6 @@ export const WebSocketProvider = ({ children }) => {
     const handleMessage = async (data) => {
       const message = JSON.parse(data);
       if (message.type === 'token_expired' || message.type === 'invalid_token') {
-        console.log('Token expired, refreshing...');
         const newToken = await refreshToken();
         if (newToken) {
           localStorage.setItem('authtoken', JSON.stringify(newToken));

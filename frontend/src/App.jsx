@@ -9,7 +9,6 @@ import SecurityPage from './pages/SecurityProfile.jsx';
 import Pve3d from './pages/pve/Pve3d';
 import Pvp2d from './pages/pvp/Pvp2d';
 import Pve2d from './pages/pve/Pve2d';
-import Pvp3d from './pages/pvp/Pvp3d';
 import Tictactoe from "./pages/tictactoe/Tictactoe.jsx";
 import Local2d from "./pages/local/Local2d";
 import Profile from './pages/Profile.jsx'
@@ -63,8 +62,6 @@ function App() {
 
                     <Route path="game">
                       <Route index element={<Game />} />
-                      <Route path="pve3d" element={<Pve3d />} />
-                      <Route path="pvp3d" element={<Pvp3d />} />
                       <Route path="pvp2d" element={<ColorProvider><Pvp2d /></ColorProvider>} />
                       <Route path="pve2d" element={<ColorProvider><Pve2d /></ColorProvider>} />
                       <Route path="tictactoe" element={<Tictactoe />} />

@@ -56,7 +56,6 @@ function Pve3d() {
                 paddle1.position.set(0, 1, 1);
                 paddle2.position.set(0, 1, -1);
                 const tablebox = new THREE.Box3().setFromObject(table);
-                console.log(tablebox.min.z, tablebox.max.z);
                 addLights(scene);
                 startGameListeners(mouse, paddle1, camera, table, paddle2, velocity, renderer, scene);
                 animate();
@@ -266,7 +265,6 @@ function Pve3d() {
                     let scoringPlayer;
                     if (tableHitCount === 0) {
                         scoringPlayer = lastHitByPlayer1 ? 2 : 1;
-                        console.log('scoringPlayer', scoringPlayer);
                     } else {
                         scoringPlayer = lastHitByPlayer1 ? 1 : 2;
                     }
@@ -291,7 +289,6 @@ function Pve3d() {
                         paddlePositionDiffRef.current.x = Math.sign(paddlePositionDiffRef.current.x) * 13;
                     if (Math.abs(paddlePositionDiffRef.current.z) > 13)
                         paddlePositionDiffRef.current.z = Math.sign(paddlePositionDiffRef.current.z) * 13;
-                    console.log(paddlePositionDiffRef.current);
                     firstIntersectionPosition = null;
                     lastIntersectionPosition = null;
                 }
@@ -326,7 +323,6 @@ function Pve3d() {
                     lastIntersectionPosition = paddle1.position.clone();
 
                 if (!waitforpaddle2) {
-                    console.log('hit');
                     const relativePosition = ball.position.clone().sub(table.position);
                     velocity.z = -mapRange(relativePosition.z, { min: -1.5, max: 1.5 }, { min: -0.04, max: 0.04 });
                     velocity.y = mapRange(relativePosition.z, { min: -1.5, max: 1.5 }, { min: 0.015, max: 0.019 });
@@ -342,6 +338,7 @@ function Pve3d() {
                 }
                 waitforpaddle2 = true;
             }
+            
             function handlePaddle2Collision(ballBox, paddleBox) {
                 lastHitByPlayer1 = false;
                 tableHitCount = 0;
@@ -394,7 +391,6 @@ function Pve3d() {
             }
 
             function restartGame() {
-                console.log('restart');
                 velocityRef.current?.copy(INITIAL_VELOCITY);
                 paddlePositionDiffRef.current?.set(0, 0, 0);
                 ballRef.current?.position.copy(initBallPos);
@@ -435,7 +431,6 @@ function Pve3d() {
                 document.body.style.cursor = 'auto';
                 window.removeEventListener('click', onToggleListening);
                 window.removeEventListener('mousemove', (event) => onMouseMove(event, mouse, paddle1, camera, table));
-                console.log('cleanup');
                 if (gameContainer && renderer.domElement) {
                     gameContainer.removeChild(renderer.domElement);
                 }

@@ -7,9 +7,13 @@ import { ColorContext } from '../../context/ColorContext';
 import { useNavigate } from 'react-router-dom';
 import '../../i18n';
 import { useTranslation } from 'react-i18next';
+import { useSearchParams } from 'react-router-dom';
 
 export default function Pvp2d() {
   const websocket_url = import.meta.env.VITE_WEBSOCKET_URL
+
+  const [searchParams, setSearchParams] = useSearchParams()
+
   const navigate = useNavigate();
   const { t } = useTranslation();
   const [{ score1, score2 }, setScores] = useState({ score1: 0, score2: 0 });
@@ -26,17 +30,23 @@ export default function Pvp2d() {
   const tableAddonsRef = useRef(null);
   const isPausedRef = useRef(true);
   const wsRef = useRef(null);
+  
   let token = localStorage.getItem('authtoken');
   const accessToken = JSON.parse(token).access;
-  const inviteCode = new URLSearchParams(window.location.search).get('invite');
-  const matchId = new URLSearchParams(window.location.search).get('match_id');
+
+  const inviteCode = searchParams.get('invite');
+  const matchId = searchParams.get('match_id');
+
   const [isMatched, setIsMatched] = useState(false);
   const [gameState, setGameState] = useState(null);
   const [names, setNames] = useState({ player1: '', player2: '' });
+  const [invalidId, setInvalidId] = useState(false);
   const winnerRef = useRef(null);
   const isPlayer1Ref = useRef(true);
   const [processingResults, setProcessingResults] = useState(false);
   const [opponentDisconnected, setOpponentDisconnected] = useState(false);
+
+  const gameRef = useRef(null)
 
   const { tableMainColor, tableSecondaryColor, paddlesColor } = useContext(ColorContext);
 
@@ -153,14 +163,15 @@ export default function Pvp2d() {
             setProcessingResults(false);
             setWinner(winnerRef.current);
           } else if (message.type === 'invalid_match_id') {
-            // INVALID MATCHID
-          }
-        };
+            // gameRef?.current?.remove()
+            setInvalidId(true);
+          };
         wsRef.current.onclose = () => {
           token = localStorage.getItem('authtoken');
         };
         wsRef.current.onerror = (e) => console.error('WebSocket error:', e);
     }
+  }
 
     const refreshToken = async () => {
       let refreshtokenUrl = "/api/usermanagement/api/token/refresh/"
@@ -313,19 +324,6 @@ export default function Pvp2d() {
     stripes[3].position.set(-2.5, 0.06, 0);
     stripes[4].position.set(0, 0.06, 0);
 
-    // const legGeometry = new THREE.CylinderGeometry(0.1, 0.1, 1, 32);
-    // const legMaterial = new THREE.MeshStandardMaterial({ color: 0x8B4513 });
-    // const legs = [
-    //   new THREE.Mesh(legGeometry, legMaterial),
-    //   new THREE.Mesh(legGeometry, legMaterial),
-    //   new THREE.Mesh(legGeometry, legMaterial),
-    //   new THREE.Mesh(legGeometry, legMaterial),
-    // ];
-    // legs[0].position.set(2.4, -0.55, 1.4);
-    // legs[1].position.set(-2.4, -0.55, 1.4);
-    // legs[2].position.set(2.4, -0.55, -1.4);
-    // legs[3].position.set(-2.4, -0.55, -1.4);
-
     const group = new THREE.Group();
     group.add(...stripes);
     return group;
@@ -359,18 +357,29 @@ export default function Pvp2d() {
   return (
     <>
       <GameSettingsButton />
-      {!isMatched && (
+      {!isMatched && !invalidId && (
         <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center text-white">
           <h2 className="text-2xl font-bold mb-4">{t('Waiting for Opponent...')}</h2>
           <div className="loader border-t-white border-2 border-solid rounded-full w-8 h-8 animate-spin mx-auto"></div>
         </div>
       )}
+      {invalidId && (
+        <div className="z-50 fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center text-white">
+          <h2 className="text-2xl font-bold mb-4">{t('Invalid Match Id')}</h2>
+          <button
+              onClick={() => navigate('/dashboard')}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors mt-4"
+            >
+              {t('Back to Dashboard')}
+            </button>
+        </div>
+      )}
       {winner && (
-        <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-gray-900/95 p-8 rounded-lg text-center">
+        <div className="z-50 fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-gray-900/95 p-8 rounded-lg text-center">
           <h2 className="text-2xl font-bold text-white mb-4">{winner} {t('Wins!')}</h2>
           {!matchId && (
             <button
-              onClick={() => window.location.reload()}
+              onClick={() => navigate(0)}
               className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
             >
               {t('Play Again')}
@@ -398,7 +407,7 @@ export default function Pvp2d() {
         </div>
       )}
       {isMatched && (
-        <div id="game-container" >
+        <div id="game-container" ref={gameRef} >
           <GameScore
             player1={{
               username: names.player1,
@@ -413,7 +422,7 @@ export default function Pvp2d() {
           />
         </div>
       )}
-      {countdown !== null && (
+      {countdown !== null && !opponentDisconnected && (
         <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-gray-900/95 p-8 rounded-lg text-center">
           <h2 className="text-2xl font-bold text-white mb-4">{countdown}</h2>
         </div>

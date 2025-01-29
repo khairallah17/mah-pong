@@ -1,4 +1,4 @@
-import React, { useContext, useRef } from 'react'
+import React, { useContext, useRef, useState } from 'react'
 
 import AuthContext from '../../context/AuthContext';
 
@@ -12,6 +12,8 @@ import '../../i18n';
 import { useTranslation } from 'react-i18next';
 import ButtonLng from "../../components/ButtonLng";
 
+import Loading from '../loading';
+
 const SignupForm = ({setSwap}) => {
     const { t } = useTranslation();
     const { registerUsers, GoogleLogin, Intra42Login } = useContext(AuthContext)
@@ -23,11 +25,17 @@ const SignupForm = ({setSwap}) => {
         formState: { errors }
     } = useForm()
 
+    const [loading, setLoading] = useState(false)
+    const [show1, setShow1] = useState(false)
+    const [show2, setShow2] = useState(false)
+
     const password = useRef({})
     password.current = watch("password")
 
     const onSubmit = async (data) => {
         try {
+
+            setLoading(true)
 
             const res = await registerUsers(
                 data.fullname,
@@ -40,7 +48,9 @@ const SignupForm = ({setSwap}) => {
             setSwap()
 
         } catch (error) {
-            console.log("signup error ==> ", error.message)
+            console.error("signup error ==> ", error.message)
+        } finally {
+            setLoading(false)
         }
     }
 
@@ -157,8 +167,13 @@ const SignupForm = ({setSwap}) => {
                     }
                 </div>
 
-                <button type="submit" className="bg-black w-1/4 self-center rounded-lg py-2 font-bold text-2xl hover:bg-white hover:text-black">
-                {t('SIGN UP')}
+                <button type="submit" className="bg-black w-1/4 self-center rounded-lg py-2 font-bold text-2xl hover:bg-white hover:text-black flex items-center justify-center gap-2">
+                    {
+                        loading && (<Loading/>)
+                    }
+                    <p>
+                        {t('SIGN UP')}
+                    </p>
                 </button>
             </form>
 

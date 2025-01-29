@@ -129,70 +129,70 @@ export default function Tournament() {
   };
 
   return (
-    <div className="w-full h-full justify-between flex flex-col p-8 pt-24">
-      <div className="mx-auto w-full">
+    <div className="w-full h-full justify-between flex flex-col p-8">
+      <div className="mx-auto w-full h-full">
         {/* Tournament Title */}
         <div className="text-center mb-12">
-          <h1 className="text-6xl font-bold text-white tracking-wider zen-dots sm:text-4xl md:text-5xl" style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.3)' }}>
+          <h1 className="sm:text-6xl font-bold text-white tracking-wider zen-dots md:text-4xl text-2xl" style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.3)' }}>
             {t('TOURNAMENT')}
           </h1>
           <div className="w-48 h-1 bg-white mx-auto mt-2"></div>
         </div>
 
         {/* Tournament Bracket */}
-        <div className="grid xl:grid-cols-[2fr_1fr] gap-24 grid-cols-1 w-full justify-between items-center text-white">
-          <div className="w-full">
-            <div className="grid grid-cols lg:grid-cols-2 items-center gap-36 mr-20">
+        <div className="h-full text-white">
+          <div className="grid xl:grid-cols-[2fr_1fr] gap-24 grid-cols-1 w-full justify-between items-center">
+            <div className="mr-4 md:mr-20 lg:mr-0">
               {/* Round 1 */}
-              <div className="space-y-16 mt-16 px-4 lg:px-4">
-              <div className="space-y-16 mt-16 px-4 lg:px-4">
-                {matches.filter(m => m.round === 1).map((match) => (
-                  <div key={match.id} className="relative">
-                    <div className="flex flex-col gap-4">
-                      <div className={`p-0 bg-transparent relative flex items-center overflow-visible rounded-xl transition-all duration-300 ${match.winner === match.player1 ? 'ring-1 ring-white' : ''}`}>
-                        <div className="relative bg-black/50 border border-gray-800 overflow-hidden backdrop-blur-sm w-[100%] h-[100px] flex items-center clip-card rounded-xl">
-                          <div className="w-[40px] h-full rounded-l-xl bg-[#9a77ff]"></div>
-                          <span className="pl-12">{match.player1 || 'TBD'}</span>
+              <div className="grid grid-cols lg:grid-cols-2 items-center gap-36  space-y-16 mt-16 px-4 lg:px-4">
+                <div className="space-y-16 mt-16 px-4 lg:px-4">
+                  {matches.filter(m => m.round === 1).map((match) => (
+                    <div key={match.id} className="relative">
+                      <div className="flex flex-col gap-4">
+                        <div className={`p-0 bg-transparent relative flex items-center overflow-visible rounded-xl transition-all duration-300 ${match.winner === match.player1 ? 'ring-1 ring-white' : ''}`}>
+                          <div className="relative bg-black/50 border border-gray-800 overflow-hidden backdrop-blur-sm w-[100%] h-[100px] flex items-center clip-card rounded-xl">
+                            <div className="w-[40px] h-full rounded-l-xl bg-[#9a77ff]"></div>
+                            <span className="pl-12">{match.player1 || 'TBD'}</span>
+                          </div>
+                          <div className="absolute left-[100%] top-[50%] w-[13%] h-[2px] bg-white"></div>
+                          <div className='absolute left-[113%] top-[50%] w-[2px] h-[118%] bg-white'></div>
                         </div>
-                        <div className="absolute left-[100%] top-[50%] w-[13%] h-[2px] bg-white"></div>
-                        <div className='absolute left-[113%] top-[50%] w-[2px] h-[118%] bg-white'></div>
-                      </div>
-                      <div className={`p-0 bg-transparent relative flex items-center overflow-visible transition-all duration-300 rounded-xl ${match.winner === match.player2 ? 'ring-1 ring-white' : ''}`}>
-                        <div className="relative bg-black/50 border border-gray-800 overflow-hidden backdrop-blur-sm w-[100%] h-[100px] flex items-center clip-card rounded-xl">
-                          <div className="w-[40px] h-full rounded-l-xl bg-[#9a77ff]"></div>
-                          <span className="pl-12">{match.player2 || 'TBD'}</span>
+                        <div className={`p-0 bg-transparent relative flex items-center overflow-visible transition-all duration-300 rounded-xl ${match.winner === match.player2 ? 'ring-1 ring-white' : ''}`}>
+                          <div className="relative bg-black/50 border border-gray-800 overflow-hidden backdrop-blur-sm w-[100%] h-[100px] flex items-center clip-card rounded-xl">
+                            <div className="w-[40px] h-full rounded-l-xl bg-[#9a77ff]"></div>
+                            <span className="pl-12">{match.player2 || 'TBD'}</span>
+                          </div>
+                          <div className="absolute left-[100%] top-[50%] w-[13%] h-[2px] bg-white"></div>
                         </div>
-                        <div className="absolute left-[100%] top-[50%] w-[13%] h-[2px] bg-white"></div>
                       </div>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
 
-              {/* Final Round */}
-              <div className="px-4 lg:px-4">
-                {matches.filter(m => m.round === 2).map((match) => (
-                  <div key={match.id} className="relative">
-                    <div className="flex flex-col gap-4">
-                      <div className={`p-0 bg-transparent relative flex items-center overflow-visible transition-all duration-300 rounded-xl ${match.winner === match.player1 ? 'ring-1 ring-white' : ''}`}>
-                        <div className="absolute z-[1] w-[40px] h-full rounded-l-xl bg-[#9a77ff]"></div>
-                        <div className="relative bg-black/50 border border-gray-800 overflow-hidden backdrop-blur-sm w-[100%] h-[100px] flex items-center clip-card rounded-xl">
-                          <span className="pl-12">{match.player1 || 'TBD'}</span>
+                {/* Final Round */}
+                <div className="px-4 lg:px-4">
+                  {matches.filter(m => m.round === 2).map((match) => (
+                    <div key={match.id} className="relative">
+                      <div className="flex flex-col gap-4">
+                        <div className={`p-0 bg-transparent relative flex items-center overflow-visible transition-all duration-300 rounded-xl ${match.winner === match.player1 ? 'ring-1 ring-white' : ''}`}>
+                          <div className="absolute z-[1] w-[40px] h-full rounded-l-xl bg-[#9a77ff]"></div>
+                          <div className="relative bg-black/50 border border-gray-800 overflow-hidden backdrop-blur-sm w-[100%] h-[100px] flex items-center clip-card rounded-xl">
+                            <span className="pl-12">{match.player1 || 'TBD'}</span>
+                          </div>
+                          <div className="absolute left-[100%] top-[50%] w-[13%] h-[2px] bg-white"></div>
+                          <div className='absolute left-[113%] top-[50%] w-[2px] h-[118%] bg-white'></div>
                         </div>
-                        <div className="absolute left-[100%] top-[50%] w-[13%] h-[2px] bg-white"></div>
-                        <div className='absolute left-[113%] top-[50%] w-[2px] h-[118%] bg-white'></div>
-                      </div>
-                      <div className={`p-0 bg-transparent relative flex items-center overflow-visible transition-all duration-300 rounded-xl ${match.winner === match.player2 ? 'ring-1 ring-white' : ''}`}>
-                        <div className="absolute z-[1] w-[40px] h-full rounded-l-xl bg-[#9a77ff]"></div>
-                        <div className="relative bg-black/50 border border-gray-800 overflow-hidden backdrop-blur-sm w-[100%] h-[100px] flex items-center clip-card rounded-xl">
-                          <span className="pl-12">{match.player2 || 'TBD'}</span>
+                        <div className={`p-0 bg-transparent relative flex items-center overflow-visible transition-all duration-300 rounded-xl ${match.winner === match.player2 ? 'ring-1 ring-white' : ''}`}>
+                          <div className="absolute z-[1] w-[40px] h-full rounded-l-xl bg-[#9a77ff]"></div>
+                          <div className="relative bg-black/50 border border-gray-800 overflow-hidden backdrop-blur-sm w-[100%] h-[100px] flex items-center clip-card rounded-xl">
+                            <span className="pl-12">{match.player2 || 'TBD'}</span>
+                          </div>
+                          <div className="absolute left-[100%] top-[50%] w-[13%] h-[2px] bg-white"></div>
                         </div>
-                        <div className="absolute left-[100%] top-[50%] w-[13%] h-[2px] bg-white"></div>
                       </div>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
             </div>
           </div>
 
@@ -286,6 +286,8 @@ export default function Tournament() {
           </h2>
         </div>
       )}
+      </div>
+      </div>
     </div>
   )
 }

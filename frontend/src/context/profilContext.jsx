@@ -87,11 +87,10 @@ export const ProfilContextProvider = ({ children }) => {
 
             const totalGames = data?.wins + data?.losses;
             const winRate = totalGames > 0 ? Math.round((data.wins / totalGames) * 100) : 0;
-            const eloRating = data.elo ?? 0;
+            const eloRating = totalGames * 10 || 0 ;
             const dataWins = data.wins ?? 0;
             const dataLosses = data.losses ?? 0;
     
-            
             setStats([
                 {
                     label: t('Total Games'),
@@ -173,8 +172,6 @@ export const ProfilContextProvider = ({ children }) => {
                 (request.sender_username === currentUser && request.receiver_username === username) ||
                 (request.sender_username === username && request.receiver_username === currentUser)
             );
-
-            console.log(existingRequest)
 
             if (existingRequest) {
                 setPendingRequest(existingRequest);

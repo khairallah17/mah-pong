@@ -12,18 +12,6 @@ export const GameModes = () => {
 
   const gameModes = [
     {
-      id: '3d-mode',
-      title: t('3d mode'),
-      path: '/dashboard/game',
-      slideIndex: 1,
-      icon: <Swords className="w-6 h-6" />,
-      description: t('Play in a 3D environment: Remote or AI'),
-      color: 'from-cyan-400 to-blue-500',
-      stats: {
-        difficulty: t('Medium'),
-      }
-    },
-    {
       id: '2d-mode',
       title: t('2d mode'),
       path: '/dashboard/game',

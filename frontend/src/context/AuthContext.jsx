@@ -378,7 +378,6 @@ export const AuthProvider = ({ children }) => {
 
             const token = JSON.parse(authData).access;
             const logouturl = "/api/usermanagement/api/logout/";
-            console.log("Attempting logout...");
     
             const response = await fetch(logouturl, {
                 method: 'POST',

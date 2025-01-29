@@ -1,8 +1,11 @@
-import { BarLoader } from 'react-spinners'
+import jeff from "../assets/jeff.png"
 
-const Loading = () => {
+const Loading = ({ test }) => {
     return (
-        <BarLoader/>
+        
+        <div className=''>
+            <img src={jeff} className={`animate-spin h-auto ${!test && "w-8"}`} alt="" />
+        </div>
     )
 }
 

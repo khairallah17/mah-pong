@@ -671,7 +671,12 @@ class Pvp2dConsumer(AsyncWebsocketConsumer):
         username1 = pvp2d_matched_users.pop(self.username)
 
         scoreP1, scoreP2 = gamestate['scoreP1'], gamestate['scoreP2']
-        winner = username1 if scoreP1 > scoreP2 else username2
+        if self.player_id == '1':
+            winner = username1 if scoreP1 < scoreP2 else username2
+        else:
+            winner = username1 if scoreP1 > scoreP2 else username2
+
+        logger.warning(f"username1 {username1}, username2 {username2}, scoreP1 {scoreP1}, scoreP2 {scoreP2}, winner {winner}")
 
         try:
             match = Match.objects.filter(
@@ -703,7 +708,7 @@ class Pvp2dConsumer(AsyncWebsocketConsumer):
 
         win_rate = wins / total_matches
         # Lower rating change as more games are played
-        rating_change = 200 * (win_rate - 0.5) / (1 + total_matches ** 0.5)
+        rating_change = 400 * (win_rate - 0.5) / (1 + total_matches ** 0.5)
 
         new_rating = 1000 + rating_change  # Base rating of 1000
         return new_rating

@@ -1,4 +1,4 @@
-import React, { useContext } from 'react'
+import React, { useContext, useState } from 'react'
 
 import { NavLink } from 'react-router-dom'
 
@@ -17,9 +17,13 @@ import '../../i18n';
 import { useTranslation } from 'react-i18next';
 import ButtonLng from "../../components/ButtonLng";
 
+import Loading from '../loading';
+
 const LoginForm = ({setSwap}) => {
 
     const { loginUsers, GoogleLogin, Intra42Login } = useContext(AuthContext)
+
+    const [loading, setLoading] = useState(false)
     
     const {
         register,
@@ -30,6 +34,7 @@ const LoginForm = ({setSwap}) => {
     const onSubmit = async (data) => {
         try {
 
+            setLoading(true)
             const res = await loginUsers(data.email, data.password)
             
         } catch (error) {
@@ -44,11 +49,13 @@ const LoginForm = ({setSwap}) => {
                 theme: "dark",
                 transition: Bounce,
             })
+        } finally {
+            setLoading(false)
         }
         
-    }
+    } 
     const { t } = useTranslation();
-    
+
     return (
         <div className='h-full flex flex-col justify-center items-center gap-8 '>
             <h3 className="zen-dots text-5xl w-3/4 self-center">{t('Login')}</h3>
@@ -83,13 +90,13 @@ const LoginForm = ({setSwap}) => {
                         {
                             required: t('You must specify a password'),
                             minLength: {
-                            value: 8,
-                            message: t('Password must have at least 8 character')
+                                value: 8,
+                                message: t('Password must have at least 8 character')
                             }
                         })}
                     />
                     {
-                        errors.password?.type == "required" &&
+                        errors.password?.type &&
                         <span className="text-red-500 flex items-center gap-1 mt-1">
                             <CiWarning />
                             {errors.password?.message}
@@ -98,7 +105,14 @@ const LoginForm = ({setSwap}) => {
                     <NavLink to="/verify-email" className='text-red-500 uppercase hover:underline'>{t('forget password?')}</NavLink>
                 </div>
 
-                <button type="submit" className="bg-black w-1/4 self-center rounded-lg py-2 font-bold text-2xl hover:bg-white hover:text-black">{t('SIGN IN')}</button>
+                <button type="submit" className="bg-black w-1/4 self-center rounded-lg py-2 font-bold text-2xl hover:bg-white hover:text-black flex items-center justify-center min-w-fit gap-2 px-3">
+                    {
+                        loading && (<Loading/>)
+                    }
+                    <p>
+                        {t('SIGN IN')}
+                    </p>
+                </button>
             </form>
 
             <div className="flex items-center gap-8 w-3/4 self-center">
