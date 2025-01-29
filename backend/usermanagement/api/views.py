@@ -233,196 +233,202 @@ def generate_temp_password(length=12):
 # Creating Google login CallBack views
 class GoogleLoginCallback(APIView):
     def get(self, request):
-        code = request.GET.get("code")
-        if code is None:
-            return redirect(f"{HOST_URL}"f"/login")
-    
-        token_url  = "https://oauth2.googleapis.com/token"
+            # if code is None:
+            #     return redirect(f"{HOST_URL}"f"/login")
         try:
-            token_data = {
-                "code"          : code,
-                "client_id"     : GCLIENT_ID,
-                "client_secret" : GCLIENT_SECRET,
-                "redirect_uri"  : f"{HOST_URL}"f"/api/usermanagement/api/v2/auth/googlelogin/callback/",
-                "grant_type"    : "authorization_code"
-            }
-
-
-            token_response = requests.post(token_url, data = token_data)
-            if not token_response.ok:
-                return redirect(f"{HOST_URL}"f"/login")
         
-            token_JSON = token_response.json()
-            if 'access_token' not in token_JSON:
-                return redirect(f"{HOST_URL}"f"/login")
+            code = request.GET.get('code')
+            token_url  = "https://oauth2.googleapis.com/token"
+            try:
+                token_data = {
+                    "code"          : code,
+                    "client_id"     : GCLIENT_ID,
+                    "client_secret" : GCLIENT_SECRET,
+                    "redirect_uri"  : f"{HOST_URL}"f"/api/usermanagement/api/v2/auth/googlelogin/callback/",
+                    "grant_type"    : "authorization_code"
+                }
 
-            getInfo = requests.get("https://www.googleapis.com/oauth2/v2/userinfo", params = {'access_token': token_JSON["access_token"]}) # Getting Token To Extraction User Data
-            if not getInfo.ok:
-                return redirect(f"{HOST_URL}"f"/login")
+
+                token_response = requests.post(token_url, data = token_data)
+                if not token_response.ok:
+                    return redirect(f"{HOST_URL}"f"/login")
             
-            email = getInfo.json()["email"]
-            username = getInfo.json()['email'].split('@')[0]
-        except Exception as e:
-            return redirect(f"{HOST_URL}"f"/login?error=authentication_failed")
-        
-        #telechargit imaghe dyal google
-        urllib.request.urlretrieve(getInfo.json()['picture'], "./media/" + username + ".jpg")
-        # Here i want to getting info from database or create if dosent exist
+                token_JSON = token_response.json()
+                if 'access_token' not in token_JSON:
+                    return redirect(f"{HOST_URL}"f"/login")
 
-        # Generating Random Password
-        tmp_password = generate_temp_password()
+                getInfo = requests.get("https://www.googleapis.com/oauth2/v2/userinfo", params = {'access_token': token_JSON["access_token"]}) # Getting Token To Extraction User Data
+                if not getInfo.ok:
+                    return redirect(f"{HOST_URL}"f"/login")
+                
+                email = getInfo.json()["email"]
+                username = getInfo.json()['email'].split('@')[0]
+            except Exception as e:
+                return redirect(f"{HOST_URL}"f"/login?error=authentication_failed")
+            
+            #telechargit imaghe dyal google
+            urllib.request.urlretrieve(getInfo.json()['picture'], "./media/" + username + ".jpg")
+            # Here i want to getting info from database or create if dosent exist
 
-        try:
-            user = User.objects.get(email=email)
-            if not user.password:
+            # Generating Random Password
+            tmp_password = generate_temp_password()
+
+            try:
+                user = User.objects.get(email=email)
+                if not user.password:
+                    is_password_need = True
+                else:
+                    is_password_need = False
+            except User.DoesNotExist:
+                user = User.objects.create(
+                    fullname=getInfo.json()['name'],
+                    username=username,
+                    email=email,
+                    img="./" + username + ".jpg"
+                )
                 is_password_need = True
-            else:
-                is_password_need = False
-        except User.DoesNotExist:
-            user = User.objects.create(
-                fullname=getInfo.json()['name'],
-                username=username,
-                email=email,
-                img="./" + username + ".jpg"
+                user.save()
+            
+
+            # Set user as online before generating tokens
+            user.is_online = True
+            user.save(update_fields=['is_online'])
+            #create Token for This user using JWT "we use RefreshToken because it automaticly create both refresh_token and access_token"
+            #we didn't use AccessToken because it automaticly create just access_token"
+            # acces_token = Get_Token_serial.get_token(user)
+            refresh = Get_Token_serial.get_token(user)
+            access_token = str(refresh.access_token)
+            refresh_token = str(refresh)
+            
+            url_redirect = (f"{HOST_URL}"f"/google-callback"
+                            f"?access_token={access_token}"
+                            f"&is_password_need={is_password_need}")
+
+            if is_password_need:
+                url_redirect += f"&tmp_password={tmp_password}"
+
+
+            response = redirect(url_redirect)
+            # Set cookies for ggoole API
+            response.set_cookie(
+                key='access_token',
+                value=access_token,
+                httponly=True,
+                secure=False,  # Set to True if using HTTPS
+                samesite='Lax'
             )
-            is_password_need = True
-            user.save()
-        
+            response.set_cookie(
+                key='refresh_token',
+                value=refresh_token,
+                httponly=True,
+                secure=False,  # Set to True if using HTTPS
+                samesite='Lax'
+            )
 
-        # Set user as online before generating tokens
-        user.is_online = True
-        user.save(update_fields=['is_online'])
-        #create Token for This user using JWT "we use RefreshToken because it automaticly create both refresh_token and access_token"
-        #we didn't use AccessToken because it automaticly create just access_token"
-        # acces_token = Get_Token_serial.get_token(user)
-        refresh = Get_Token_serial.get_token(user)
-        access_token = str(refresh.access_token)
-        refresh_token = str(refresh)
-        
-        url_redirect = (f"{HOST_URL}"f"/google-callback"
-                        f"?access_token={access_token}"
-                        f"&is_password_need={is_password_need}")
-
-        if is_password_need:
-            url_redirect += f"&tmp_password={tmp_password}"
-
-
-        response = redirect(url_redirect)
-        # Set cookies for ggoole API
-        response.set_cookie(
-            key='access_token',
-            value=access_token,
-            httponly=True,
-            secure=False,  # Set to True if using HTTPS
-            samesite='Lax'
-        )
-        response.set_cookie(
-            key='refresh_token',
-            value=refresh_token,
-            httponly=True,
-            secure=False,  # Set to True if using HTTPS
-            samesite='Lax'
-        )
-
-        return response
-
+            return response
+        except Exception as e:
+            return Response({'error': 'Failed To Login'}, status=400)
+            
 
 
 class Login42Auth(APIView):
     def get(self, request):
-        code = request.GET.get('code')
-        if code is None:
-            return redirect(f"{HOST_URL}"f"/login")
-        
-        # Sending request to 42 API to Get Token
-        get_Token_url = "https://api.intra.42.fr/oauth/token"
+        # if code is None:
+        #     return redirect(f"{HOST_URL}"f"/login")
         try:
-            # this is Requarments data should to get Token from 42 API
-            Token_data = {
-                'code'          : code,
-                "client_id"     : CLIENT_ID,
-                "client_secret" : CLIENT_SECRET,
-                "redirect_uri"  : f"{HOST_URL}/api/usermanagement/api/42login/callback/",
-                "grant_type"    : "authorization_code"
-            }
-        
-            # Sendding Now Request to 42 API to getting return the Access_Token
-            request_token = requests.post(get_Token_url, data = Token_data)
-            if not request_token.ok:
-                return redirect(f"{HOST_URL}"f"/login")
-        
-            token_json = request_token.json()
-            if 'access_token' not in token_json:
-                return redirect(f"{HOST_URL}"f"/login")
+            
+            code = request.GET.get('code')
+            # Sending request to 42 API to Get Token
+            get_Token_url = "https://api.intra.42.fr/oauth/token"
+            try:
+                # this is Requarments data should to get Token from 42 API
+                Token_data = {
+                    'code'          : code,
+                    "client_id"     : CLIENT_ID,
+                    "client_secret" : CLIENT_SECRET,
+                    "redirect_uri"  : f"{HOST_URL}/api/usermanagement/api/42login/callback/",
+                    "grant_type"    : "authorization_code"
+                }
+            
+                # Sendding Now Request to 42 API to getting return the Access_Token
+                request_token = requests.post(get_Token_url, data = Token_data)
+                if not request_token.ok:
+                    return redirect(f"{HOST_URL}"f"/login")
+            
+                token_json = request_token.json()
+                if 'access_token' not in token_json:
+                    return redirect(f"{HOST_URL}"f"/login")
 
-            # extracting information From Token Now Hnaya
-            getInfoUser = requests.get("https://api.intra.42.fr/v2/me", headers={'Authorization': f'Bearer {token_json["access_token"]}'})
-            if not getInfoUser.ok:
-                return redirect(f"{HOST_URL}"f"/login")
-        
+                # extracting information From Token Now Hnaya
+                getInfoUser = requests.get("https://api.intra.42.fr/v2/me", headers={'Authorization': f'Bearer {token_json["access_token"]}'})
+                if not getInfoUser.ok:
+                    return redirect(f"{HOST_URL}"f"/login")
+            
 
-            username = getInfoUser.json().get('login')
-            email = getInfoUser.json().get('email')
-        except Exception as e:
-            return redirect(f"{HOST_URL}"f"/login?error=authentication_failed")
-        
-        #telechargit imaghe dyal intra
-        urllib.request.urlretrieve(getInfoUser.json().get('image')['link'], "./media/" + username + ".jpg")
-        
+                username = getInfoUser.json().get('login')
+                email = getInfoUser.json().get('email')
+            except Exception as e:
+                return redirect(f"{HOST_URL}"f"/login?error=authentication_failed")
+            
+            #telechargit imaghe dyal intra
+            urllib.request.urlretrieve(getInfoUser.json().get('image')['link'], "./media/" + username + ".jpg")
+            
 
-        # Creating Random Password for user logged using 42API
-        tmp_password = generate_temp_password()
-        try:
-            user = User.objects.get(email=email)
-            valid_password = check_password(tmp_password, user.password)
-            if not user.password:
+            # Creating Random Password for user logged using 42API
+            tmp_password = generate_temp_password()
+            try:
+                user = User.objects.get(email=email)
+                valid_password = check_password(tmp_password, user.password)
+                if not user.password:
+                    is_password_need = True
+                else:
+                    is_password_need = False
+            except User.DoesNotExist:
+                user = User.objects.create(
+                    fullname=getInfoUser.json().get('displayname'),
+                    username=username,
+                    email=email,
+                    img="./" + username + ".jpg"
+                )
                 is_password_need = True
-            else:
-                is_password_need = False
-        except User.DoesNotExist:
-            user = User.objects.create(
-                fullname=getInfoUser.json().get('displayname'),
-                username=username,
-                email=email,
-                img="./" + username + ".jpg"
+                user.save()
+
+            # Set user as online before generating tokens
+            user.is_online = True
+            user.save(update_fields=['is_online'])
+            # now sending access token to Front
+                    # Generate tokens
+            refresh = Get_Token_serial.get_token(user)
+            access_token = str(refresh.access_token)
+            refresh_token = str(refresh)
+
+            url_redirect = (f"{HOST_URL}"f"/42intra-callback" 
+                                f"?access_token={access_token}"
+                                f"&is_password_need={is_password_need}")
+
+            if is_password_need:
+                url_redirect += f"&tmp_password={tmp_password}"
+            
+            response = redirect(url_redirect)
+            # Set cookies
+            response.set_cookie(
+                key='access_token',
+                value=access_token,
+                httponly=True,
+                secure=False,  # Set to True if using HTTPS
+                samesite='Lax'
             )
-            is_password_need = True
-            user.save()
+            response.set_cookie(
+                key='refresh_token',
+                value=refresh_token,
+                httponly=True,
+                secure=False,  # Set to True if using HTTPS
+                samesite='Lax'
+            )
 
-        # Set user as online before generating tokens
-        user.is_online = True
-        user.save(update_fields=['is_online'])
-        # now sending access token to Front
-                # Generate tokens
-        refresh = Get_Token_serial.get_token(user)
-        access_token = str(refresh.access_token)
-        refresh_token = str(refresh)
-
-        url_redirect = (f"{HOST_URL}"f"/42intra-callback" 
-                            f"?access_token={access_token}"
-                            f"&is_password_need={is_password_need}")
-
-        if is_password_need:
-            url_redirect += f"&tmp_password={tmp_password}"
-        
-        response = redirect(url_redirect)
-        # Set cookies
-        response.set_cookie(
-            key='access_token',
-            value=access_token,
-            httponly=True,
-            secure=False,  # Set to True if using HTTPS
-            samesite='Lax'
-        )
-        response.set_cookie(
-            key='refresh_token',
-            value=refresh_token,
-            httponly=True,
-            secure=False,  # Set to True if using HTTPS
-            samesite='Lax'
-        )
-
-        return response
+            return response
+        except Exception as e:
+            return Response({'error': 'Failed To Login'}, status=400)
 
 # """
 # ███████╗███████╗████████╗████████╗██╗███╗   ██╗ ██████╗     ██████╗  █████╗ ███████╗███████╗██╗    ██╗ ██████╗ ██████╗ ██████╗     ███████╗ ██████╗ ██████╗     ██╗  ██╗██████╗     ██╗ ██████╗      █████╗ ██████╗ ██╗

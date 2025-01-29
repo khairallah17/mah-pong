@@ -16,3 +16,4 @@ django-otp
 qrcode
 pyotp
 psycopg2-binary
+gunicorn
